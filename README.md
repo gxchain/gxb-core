@@ -1,9 +1,7 @@
 # GXB-Core
 ---------------
 
-GXB-Core is the GXB blockchain implementation and command-line interface.
-
-Visit [gxb.io](https://www.gxb.io/) to learn about GXB.
+GXB-Core is the GXB blockchain implementation and command-line interface.  Visit [gxb.io](https://www.gxb.io/) to learn about GXB.
 
 **NOTE:** The official GXB git repository location, default branch, and submodule remotes were recently changed. Existing
 repositories can be updated with the following steps:
@@ -45,15 +43,14 @@ To build after all dependencies are installed:
 Alternate Boost versions can be specified using the `DBOOST_ROOT` CMake argument. 
 
 ### Running
-After building, the witness node can
-be launched with:
+After building, the witness node can be launched with:
 ```
     ./programs/witness_node/witness_node --rpc-endpoint="127.0.0.1:8090"
 ```
 The node will automatically create a data directory including a config file. It may take several minutes to fully synchronize
 the blockchain. 
 
-After starting the witness node again, in a separate terminal you can run:
+After starting the witness node, in a separate terminal you can run cli_wallet:
 ```
     ./programs/cli_wallet/cli_wallet -s ws://127.0.0.1:8090
 ```
@@ -68,9 +65,9 @@ To import your wif_key(active key):
 ```
 Import balances:
 ```
-    unlocked >>> import_balance nathan ["5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"] true
+    unlocked >>> import_balance <ACCOUNT NAME> [<WIF_KEY>] true
 ```   
-Transfer:
+Transferring Currency:
 ```
     unlocked >>> transfer nathan init0 100 GXS "" true 
 ```
