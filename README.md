@@ -69,7 +69,7 @@ Import balances:
 ```   
 Transferring Currency:
 ```
-    unlocked >>> transfer nathan init0 100 GXS "" true 
+    unlocked >>> transfer <FROM ACCOUNT> <TO ACCOUNT> 100 GXC "" true 
 ```
 
 If you send private keys over this connection, `rpc-endpoint` should be bound to localhost for security.
