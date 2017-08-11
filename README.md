@@ -1,25 +1,15 @@
 # GXB-Core
 ---------------
 
-GXB-Core is the GXB blockchain implementation and command-line interface.  Visit [gxb.io](https://www.gxb.io/) to learn about GXB.
-
-**NOTE:** The official GXB git repository location, default branch, and submodule remotes were recently changed. Existing
-repositories can be updated with the following steps:
-
-    git remote set-url origin https://github.com/gxchain/gxb-core.git
-    git checkout master
-    git remote set-head origin --auto
-    git pull
-    git submodule sync --recursive
-    git submodule update --init --recursive
+GXB-Core is the GXB blockchain implementation and command-line interface.  Binary version of the GXB-Core software, see [here](https://github.com/gxchain/gxb-release/releases). Visit [gxb.io](https://www.gxb.io/) to learn about GXB.
 
 ## Getting Started
 ---------------
 
 ### Dependencies
-A decent C++11 compiler (GNU GCC 4.8.2+). CMake version 2.8+. Boost version 1.57.0.
+A decent C++11 compiler (GNU GCC 5.4.1+). CMake version 2.8+. Boost version 1.57.0.
 ```
-# dependencies for OS X, 10.12.6 recommended
+# dependencies for OS X, macOS Sierra 10.12.6 recommended
 brew install openssl cmake git openssl autoconf automake doxygen autoreconfls libtool
 
 
@@ -33,7 +23,7 @@ sudo apt-get install cmake make libbz2-dev libdb++-dev libdb-dev libssl-dev open
 
 To build after all dependencies are installed:
 
-    git clone https://github.com/gxb/gxb-core.git
+    git clone https://github.com/gxchain/gxb-core.git
     cd gxb-core
     git checkout <LATEST_RELEASE_TAG>
     git submodule update --init --recursive
@@ -76,7 +66,10 @@ If you send private keys over this connection, `rpc-endpoint` should be bound to
 
 Use `help` to see all available wallet commands. 
 
+## Need Help ?
+---------------
+Report bugs, issues using [GitHub issues](https://github.com/gxchain/gxb-core/issues/new).
+
 ## License
--------
-GXB-Core is under the MIT license. See [LICENSE](https://github.com/gxchain/gxb-core/blob/master/LICENSE)
-for more information.
+---------------
+GXB-Core is under the GNU General Public License v3. See [LICENSE](https://github.com/gxchain/gxb-core/blob/master/LICENSE).
