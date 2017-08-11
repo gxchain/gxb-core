@@ -1,4 +1,4 @@
-# GXB-Core
+# GXB-Core (source code will be pushed later)
 ---------------
 
 GXB-Core is the GXB blockchain implementation and command-line interface.  Binary version of the GXB-Core software, see [here](https://github.com/gxchain/gxb-release/releases). Visit [gxb.io](https://www.gxb.io/) to learn about GXB.
