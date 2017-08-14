@@ -8,6 +8,7 @@ GXB-Core is the GXB blockchain implementation and command-line interface.  Binar
 
 ### Dependencies
 A decent C++11 compiler (GNU GCC 5.4.1+ on ubuntu, or Apple LLVM version 8.1.0 (clang-802.0.42) on MacOS). CMake version 2.8+. Boost version 1.57.0.
+The repository contains the install scripts for gcc5 and boost 1.57.0, see [here](https://github.com/gxchain/gxb-core/tree/master/script).
 ```
 # dependencies for OS X, macOS Sierra 10.12.6 recommended
 brew install openssl cmake git openssl autoconf automake doxygen autoreconfls libtool
