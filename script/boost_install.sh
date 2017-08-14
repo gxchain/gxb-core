@@ -24,7 +24,7 @@ else
     if [ $(id -u) != 0 ]; then
         SUDO="sudo"
     fi
-    $SUDO ./b2 --buildtype=complete install cxxflags=-fPIC cflags=-fPIC  link=static,shared
+    $SUDO ./b2 --buildtype=complete install
 fi
 
 
