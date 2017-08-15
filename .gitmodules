@@ -1,3 +1,6 @@
 [submodule "libraries/fc"]
 	path = libraries/fc
 	url = https://github.com/gxchain/gxb-fc.git
+[submodule "docs"]
+	path = docs
+	url = https://github.com/gxchain/gxb-core.wiki.git
