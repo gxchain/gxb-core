@@ -70,6 +70,8 @@ Use `help` to see all available wallet commands.
 ---------------
 Report bugs, issues using [GitHub issues](https://github.com/gxchain/gxb-core/issues/new).
 
+[GXB-Core Documents](https://doc.gxb.io/core/)
+
 ## License
 ---------------
 GXB-Core is under the GNU General Public License v3. See [LICENSE](https://github.com/gxchain/gxb-core/blob/master/LICENSE).
