@@ -46,7 +46,21 @@
 namespace graphene { namespace app {
 using namespace boost;
 
-
+template<class T>
+optional<T> maybe_id( const string& name_or_id )
+{
+   if( std::isdigit( name_or_id.front() ) )
+   {
+      try
+      {
+         return fc::variant(name_or_id).as<T>();
+      }
+      catch (const fc::exception&)
+      {
+      }
+   }
+   return optional<T>();
+}
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Constructors                                                     //
@@ -168,6 +182,17 @@ global_property_object database_api_impl::get_global_properties()const
 {
    dlog("id=${id}................", ("id", global_property_id_type()));
    return _db.get(global_property_id_type());
+}
+
+data_transaction_commission_rate_t database_api_impl::get_commission_rate() const
+{
+    const chain_parameters& params = get_global_properties().parameters;
+    for (auto& ext : params.extensions) {
+        if (ext.which() == future_extensions::tag<data_transaction_commission_rate_t>::value) {
+            return ext.get<data_transaction_commission_rate_t>();
+        }
+    }
+    FC_THROW("no ommission_rate");
 }
 
 chain_property_object database_api_impl::get_chain_properties()const
@@ -586,6 +611,190 @@ vector<optional<asset_object>> database_api_impl::lookup_asset_symbols(const vec
       return itr == assets_by_symbol.end()? optional<asset_object>() : *itr;
    });
    return result;
+}
+
+uint64_t database_api_impl::get_data_transaction_product_costs(fc::time_point_sec start, fc::time_point_sec end) const
+{
+    uint64_t result = 0;
+    const auto& data_transaction_by_id = _db.get_index_type<data_transaction_index>().indices().get<by_id>();
+    for(const auto& data_transaction_obj:data_transaction_by_id)
+    {
+        if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
+            result += data_transaction_obj.product_pay;
+        }
+    }
+    return result;
+}
+
+uint64_t database_api_impl::get_data_transaction_total_count(fc::time_point_sec start, fc::time_point_sec end) const
+{
+    uint64_t result = 0;
+    const auto& data_transaction_by_id = _db.get_index_type<data_transaction_index>().indices().get<by_id>();
+    for(const auto& data_transaction_obj:data_transaction_by_id)
+    {
+        if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
+            ++result;
+        }
+    }
+    return result;
+}
+
+uint64_t database_api_impl::get_data_transaction_commission(fc::time_point_sec start, fc::time_point_sec end) const
+{
+    uint64_t result = 0;
+    const auto& data_transaction_by_id = _db.get_index_type<data_transaction_index>().indices().get<by_id>();
+    for(const auto& data_transaction_obj:data_transaction_by_id)
+    {
+        if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
+            result += data_transaction_obj.commission;
+        }
+    }
+    return result;
+}
+
+uint64_t database_api_impl::get_data_transaction_pay_fee(fc::time_point_sec start, fc::time_point_sec end) const
+{
+    uint64_t result = 0;
+    const auto& data_transaction_by_id = _db.get_index_type<data_transaction_index>().indices().get<by_id>();
+    for(const auto& data_transaction_obj:data_transaction_by_id)
+    {
+        if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
+            result += data_transaction_obj.commission;
+        }
+    }
+    return result;   
+}
+
+
+uint64_t database_api_impl::get_data_transaction_product_costs_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const
+{
+    uint64_t result = 0;
+    account_id_type account_id;
+    if (std::isdigit(requester.front())) {
+        account_id = fc::variant(requester).as<account_id_type>();
+    }
+    else {
+        auto rec = lookup_account_names({requester}).front();
+        if (rec && rec->name == requester) {
+            account_id = rec->get_id();
+        }
+        else 
+            return result;
+    }
+    const auto& data_transaction_by_requester = _db.get_index_type<data_transaction_index>().indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
+    for(const auto& data_transaction_obj:boost::make_iterator_range( data_transaction_by_requester.first, data_transaction_by_requester.second ))
+    {
+        if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
+            result += data_transaction_obj.product_pay;
+        }
+    }
+    return result;
+}
+
+uint64_t database_api_impl::get_data_transaction_total_count_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const 
+{
+    uint64_t result = 0;
+    account_id_type account_id;
+    if (std::isdigit(requester.front())) {
+        account_id = fc::variant(requester).as<account_id_type>();
+    }
+    else {
+        auto rec = lookup_account_names({requester}).front();
+        if (rec && rec->name == requester) {
+            account_id = rec->get_id();
+        }
+        else 
+            return result;
+    }
+    const auto& data_transaction_by_requester = _db.get_index_type<data_transaction_index>().indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
+    for(const auto& data_transaction_obj:boost::make_iterator_range( data_transaction_by_requester.first, data_transaction_by_requester.second ))
+    {
+        if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
+            ++result;
+        }
+    }
+    return result;
+}
+
+uint64_t database_api_impl::get_data_transaction_pay_fees_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const
+{
+    uint64_t result = 0;
+    account_id_type account_id;
+    if (std::isdigit(requester.front())) {
+        account_id = fc::variant(requester).as<account_id_type>();
+    }
+    else {
+        auto rec = lookup_account_names({requester}).front();
+        if (rec && rec->name == requester) {
+            account_id = rec->get_id();
+        }
+        else 
+            return result;
+    }
+    const auto& data_transaction_by_requester = _db.get_index_type<data_transaction_index>().indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
+    for(const auto& data_transaction_obj:boost::make_iterator_range( data_transaction_by_requester.first, data_transaction_by_requester.second ))
+    {
+        if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
+            result += data_transaction_obj.transaction_fee;
+        }
+    }
+    return result;
+}
+
+uint64_t database_api_impl::get_data_transaction_product_costs_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const
+{
+    uint64_t result = 0;
+    const auto& data_transaction_by_id = _db.get_index_type<data_transaction_index>().indices().get<by_id>();
+    fc::optional<free_data_product_id_type> free_data_product_id = maybe_id<free_data_product_id_type>(product_id);
+    fc::optional<league_data_product_id_type> league_data_product_id = maybe_id<league_data_product_id_type>(product_id);
+    if (free_data_product_id) {
+        for(const auto& data_transaction_obj:data_transaction_by_id)
+        {
+            if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end && data_transaction_obj.product_id == free_data_product_id){
+                result += data_transaction_obj.product_pay;
+            }
+        }
+    }
+    else if (league_data_product_id){
+        for(const auto& data_transaction_obj:data_transaction_by_id)
+        {
+            if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end && data_transaction_obj.product_id == league_data_product_id){
+                result += data_transaction_obj.product_pay;
+             }
+        }
+    }
+    else{
+        FC_ASSERT("product_id is invalid");
+    }
+    return result;
+}
+
+uint64_t database_api_impl::get_data_transaction_total_count_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const
+{
+    uint64_t result = 0;
+    const auto& data_transaction_by_id = _db.get_index_type<data_transaction_index>().indices().get<by_id>();
+    fc::optional<free_data_product_id_type> free_data_product_id = maybe_id<free_data_product_id_type>(product_id);
+    fc::optional<league_data_product_id_type> league_data_product_id = maybe_id<league_data_product_id_type>(product_id);
+    if (free_data_product_id) {
+        for(const auto& data_transaction_obj:data_transaction_by_id)
+        {
+            if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end && data_transaction_obj.product_id == free_data_product_id){
+                ++result;
+            }
+        }
+    }
+    else if (league_data_product_id){
+        for(const auto& data_transaction_obj:data_transaction_by_id)
+        {
+            if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end && data_transaction_obj.product_id == league_data_product_id){
+                ++result;
+             }
+        }
+    }
+    else{
+        FC_ASSERT("product_id is invalid");
+    }
+    return result;
 }
 
 /**

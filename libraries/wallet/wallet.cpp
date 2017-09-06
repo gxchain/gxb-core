@@ -574,6 +574,12 @@
        {
           return _remote_db->get_global_properties();
        }
+
+       data_transaction_commission_rate_t get_commission_rate() const 
+       {
+         return _remote_db->get_commission_rate();
+       }
+
        dynamic_global_property_object get_dynamic_global_properties() const
        {
           return _remote_db->get_dynamic_global_properties();
@@ -2665,6 +2671,24 @@
              return ss.str();
           };
 
+          m["get_relative_account_history"] = [this](variant result, const fc::variants& a)
+          {
+              auto r = result.as<vector<operation_detail>>();
+              std::stringstream ss;
+
+              for( operation_detail& d : r )
+              {
+                  operation_history_object& i = d.op;
+                  auto b = _remote_db->get_block_header(i.block_num);
+                  FC_ASSERT(b);
+                  ss << b->timestamp.to_iso_string() << " ";
+                  i.op.visit(operation_printer(ss, *this, i.result));
+                  ss << " \n";
+              }
+
+              return ss.str();
+          };
+
           m["list_account_balances"] = [this](variant result, const fc::variants& a)
           {
              auto r = result.as<vector<asset>>();
@@ -3408,6 +3432,51 @@
        return my->_remote_db->get_account_count();
     }
 
+    uint64_t wallet_api::get_data_transaction_product_costs(fc::time_point_sec start, fc::time_point_sec end) const
+    {
+       return my->_remote_db->get_data_transaction_product_costs(start, end);
+    }
+
+    uint64_t wallet_api::get_data_transaction_total_count(fc::time_point_sec start, fc::time_point_sec end) const
+    {
+       return my->_remote_db->get_data_transaction_total_count(start, end);
+    }
+
+    uint64_t wallet_api::get_data_transaction_commission(fc::time_point_sec start, fc::time_point_sec end) const
+    {
+       return my->_remote_db->get_data_transaction_commission(start, end);
+    }
+
+    uint64_t wallet_api::get_data_transaction_pay_fee(fc::time_point_sec start, fc::time_point_sec end) const
+    {
+       return my->_remote_db->get_data_transaction_pay_fee(start, end);
+    }
+
+    uint64_t wallet_api::get_data_transaction_product_costs_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const
+    {
+       return my->_remote_db->get_data_transaction_product_costs_by_requester(requester, start, end);
+    }
+
+    uint64_t wallet_api::get_data_transaction_total_count_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const
+    {
+        return my->_remote_db->get_data_transaction_total_count_by_requester(requester, start, end);
+    }
+
+    uint64_t wallet_api::get_data_transaction_pay_fees_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const
+    {
+       return my->_remote_db->get_data_transaction_pay_fees_by_requester(requester, start, end);
+    }
+
+    uint64_t wallet_api::get_data_transaction_product_costs_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const
+    {
+       return my->_remote_db->get_data_transaction_product_costs_by_product_id(product_id, start, end);
+    }
+
+    uint64_t wallet_api::get_data_transaction_total_count_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const 
+    {
+       return my->_remote_db->get_data_transaction_total_count_by_product_id(product_id, start, end);
+    }
+
     vector<account_object> wallet_api::list_my_accounts()
     {
        return vector<account_object>(my->_wallet.my_accounts.begin(), my->_wallet.my_accounts.end());
@@ -3459,6 +3528,29 @@
        return result;
     }
 
+    vector<operation_detail> wallet_api::get_relative_account_history(string name, uint32_t stop, int limit, uint32_t start)const
+    {
+        FC_ASSERT( start > 0 || limit <= 100 );
+
+        vector<operation_detail> result;
+        auto account_id = get_account(name).get_id();
+
+        while( limit > 0 )
+        {
+            vector <operation_history_object> current = my->_remote_hist->get_relative_account_history(account_id, stop, std::min<uint32_t>(100, limit), start);
+            for (auto &o : current) {
+                std::stringstream ss;
+                auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
+                result.push_back(operation_detail{memo, ss.str(), o});
+            }       
+            if (current.size() < std::min<uint32_t>(100, limit))
+                break;
+            limit -= current.size();
+            start -= 100;
+            if( start == 0 ) break;
+        }
+        return result;
+    }
 
     vector<bucket_object> wallet_api::get_market_history( string symbol1, string symbol2, uint32_t bucket , fc::time_point_sec start, fc::time_point_sec end )const
     {
@@ -3538,6 +3630,7 @@
 
     signed_transaction wallet_api::propose_data_market_category_update(const string &proposing_account,string category_id,string new_category_name,uint32_t new_order_num,uint8_t new_status,bool broadcast)
     {
+        return my->propose_data_market_category_update(proposing_account, category_id, new_category_name, new_order_num, new_status, broadcast);
     }
 
     signed_transaction wallet_api::create_free_data_product(string product_name,string brief_desc,string datasource_account,string category_id,double price,string icon,vector<schema_context_object> schema_contexts,string parent_id,string issuer,bool recommend,bool broadcast)
@@ -4223,6 +4316,11 @@
     dynamic_global_property_object wallet_api::get_dynamic_global_properties() const
     {
        return my->get_dynamic_global_properties();
+    }
+
+    data_transaction_commission_rate_t wallet_api::get_commission_rate() const 
+    {
+        return my->get_commission_rate();
     }
 
     string wallet_api::help()const

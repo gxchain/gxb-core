@@ -459,6 +459,84 @@ class wallet_api
        * @returns the number of registered accounts
        */
       uint64_t                          get_account_count()const;
+
+      /**
+      * @brief get_data_transaction_product_costs
+      * @param start
+      * @param end
+      * @return the number of the data transaction product costs during this time
+      */
+      uint64_t                          get_data_transaction_product_costs(fc::time_point_sec start, fc::time_point_sec end) const;
+
+      /**
+      * @brief get_data_transaction_total_count
+      * @param start
+      * @param end
+      * @return the number of the data transaction count during this time
+      */      
+      uint64_t                          get_data_transaction_total_count(fc::time_point_sec start, fc::time_point_sec end) const; 
+
+      /**
+      * @brief get_data_transaction_commission
+      * @param start
+      * @param end
+      * @return the number of the data transaction commission during this time
+      */         
+      uint64_t                          get_data_transaction_commission(fc::time_point_sec start, fc::time_point_sec end) const;
+
+      /**
+      * @brief get_data_transaction_pay_fee
+      * @param start
+      * @param end
+      * @return the number of the data transaction pay fee during this time
+      */        
+      uint64_t                          get_data_transaction_pay_fee(fc::time_point_sec start, fc::time_point_sec end) const;
+
+      /**
+      * @brief get_data_transaction_product_costs_by_requester
+      * @param requester
+      * @param start
+      * @param end
+      * @return the number of the data transaction product costs of the requester during this time
+      */       
+      uint64_t                          get_data_transaction_product_costs_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const;
+
+      /**
+      * @brief get_data_transaction_total_count_by_requester
+      * @param requester
+      * @param start
+      * @param end
+      * @return the number of the data transaction product count of the requester during this time
+      */      
+      uint64_t                          get_data_transaction_total_count_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const; 
+
+      /**
+      * @brief get_data_transaction_pay_fees_by_requester
+      * @param requester
+      * @param start
+      * @param end
+      * @return the number of the data transaction pay fees of the requester during this time
+      */      
+      uint64_t                          get_data_transaction_pay_fees_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const;
+
+      /**
+      * @brief get_data_transaction_pay_fees_by_requester
+      * @param product_id
+      * @param start
+      * @param end
+      * @return the number of the data transaction product costs of the product during this time
+      */   
+      uint64_t                          get_data_transaction_product_costs_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const;
+      
+      /**
+      * @brief get_data_transaction_total_count_by_product_id
+      * @param product_id
+      * @param start
+      * @param end
+      * @return the number of the data transaction total count of the product during this time
+      */ 
+      uint64_t                          get_data_transaction_total_count_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const;
+
       /** Lists all accounts controlled by this wallet.
        * This returns a list of the full account objects for all accounts whose private keys 
        * we possess.
@@ -507,6 +585,16 @@ class wallet_api
        */
       vector<operation_detail>  get_account_history(string name, int limit)const;
 
+      /** Returns the relative operations on the named account from start number.
+       *
+       * @param name the name or id of the account
+       * @param stop Sequence number of earliest operation.
+       * @param limit the number of entries to return
+       * @param start  the sequence number where to start looping back throw the history
+       * @returns a list of \c operation_history_objects
+       */
+      vector<operation_detail>  get_relative_account_history(string name, uint32_t stop, int limit, uint32_t start) const;
+
 
       vector<bucket_object>             get_market_history(string symbol, string symbol2, uint32_t bucket, fc::time_point_sec start, fc::time_point_sec end)const;
       vector<limit_order_object>        get_limit_orders(string a, string b, uint32_t limit)const;
@@ -521,6 +609,8 @@ class wallet_api
        * @returns the global properties
        */
       global_property_object            get_global_properties() const;
+
+      data_transaction_commission_rate_t get_commission_rate() const;
 
       /** Returns the block chain's rapidly-changing properties.
        * The returned object contains information that changes every block interval
@@ -1949,8 +2039,19 @@ FC_API( graphene::wallet::wallet_api,
         (get_account)
         (get_account_id)
         (get_block)
+        (get_commission_rate)
         (get_account_count)
         (get_account_history)
+        (get_relative_account_history)
+        (get_data_transaction_product_costs)
+        (get_data_transaction_total_count)
+        (get_data_transaction_commission)
+        (get_data_transaction_pay_fee)
+        (get_data_transaction_product_costs_by_requester)
+        (get_data_transaction_total_count_by_requester)
+        (get_data_transaction_pay_fees_by_requester)
+        (get_data_transaction_product_costs_by_product_id)
+        (get_data_transaction_total_count_by_product_id)
         (is_public_key_registered)
         (get_market_history)
         (get_global_properties)
