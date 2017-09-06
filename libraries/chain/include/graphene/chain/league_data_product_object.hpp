@@ -53,6 +53,8 @@ namespace graphene {
             uint64_t                                total; 
             // issuer of product  
             account_id_type                         issuer;
+            // Trigger pocs threshold
+            uint64_t                                pocs_threshold = 0;
         };
 
         class league_data_product_search_results_object

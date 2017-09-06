@@ -730,9 +730,13 @@ class database_api
      */
     vector<optional<league_object>> get_leagues(const vector<league_id_type>& league_ids) const;
 
+    
     optional<data_transaction_object> get_data_transaction_by_request_id(string request_id) const;
     data_transaction_search_results_object list_data_transactions_by_requester(string requester, uint32_t limit) const;
 
+
+    map<account_id_type, uint64_t> list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const;
+    uint32_t list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, account_id_type datasource_account) const;
 
    private:
       std::shared_ptr< database_api_impl > my;
@@ -858,6 +862,7 @@ FC_API(graphene::app::database_api,
    (get_leagues)
    (get_data_transaction_by_request_id)
    (list_data_transactions_by_requester)
-
+   (list_second_hand_datasources)
+   (list_total_second_hand_transaction_counts_by_datasource)
 
 )

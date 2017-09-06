@@ -764,7 +764,7 @@ uint64_t database_api_impl::get_data_transaction_product_costs_by_product_id(str
         }
     }
     else{
-        FC_ASSERT("product_id is invalid");
+        FC_ASSERT(false, "product_id is invalid");
     }
     return result;
 }
@@ -792,7 +792,7 @@ uint64_t database_api_impl::get_data_transaction_total_count_by_product_id(strin
         }
     }
     else{
-        FC_ASSERT("product_id is invalid");
+        FC_ASSERT(false, "product_id is invalid");
     }
     return result;
 }
@@ -1908,7 +1908,7 @@ data_transaction_search_results_object database_api_impl::list_data_transactions
     data_transaction_search_results_object search_result;
     vector<data_transaction_object> results_tmp;
 
-    const data_transaction_index & product_index = _db.get_index_type<data_transaction_index>();
+    // get accounte_id
     account_id_type account_id;
     if (std::isdigit(requester.front())) {
         account_id = fc::variant(requester).as<account_id_type>();
@@ -1922,6 +1922,7 @@ data_transaction_search_results_object database_api_impl::list_data_transactions
             return {};
     }
 
+    const data_transaction_index & product_index = _db.get_index_type<data_transaction_index>();
     auto range = product_index.indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
 
     for (const data_transaction_object& data_transaction : boost::make_iterator_range(range.first, range.second)) {
@@ -1937,6 +1938,42 @@ data_transaction_search_results_object database_api_impl::list_data_transactions
     search_result.total = results_tmp.size();
     return search_result;
 }
+
+map<account_id_type, uint64_t> database_api_impl::list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const {
+    // TODO
+    const second_hand_data_index& idx = _db.get_index_type<second_hand_data_index>();
+    auto range = idx.indices().get<by_create_date_time>().equal_range(boost::make_tuple(start_date_time, end_date_time));
+
+    std::map<account_id_type, uint64_t> tmp_results;
+    for (const second_hand_data_object& obj : boost::make_iterator_range(range.first, range.second)) {
+        tmp_results[obj.second_hand_datasource_id] = 0;
+    }
+    for (const second_hand_data_object& obj : boost::make_iterator_range(range.first, range.second)) {
+        tmp_results[obj.second_hand_datasource_id]++;
+    }
+    
+    // sort
+    typedef pair<account_id_type, uint64_t> PAIR;
+    struct cmp_by_value {
+        bool operator() (const PAIR& lhs, const PAIR& rhs) {
+            return lhs.second > rhs.second;
+        }
+    };
+    vector<PAIR> datasource_vec(tmp_results.begin(), tmp_results.end());
+    sort(datasource_vec.begin(), datasource_vec.end(), cmp_by_value());
+
+    std::map<account_id_type, uint64_t> results;
+    for (int i = 0; i < limit && i < datasource_vec.size(); ++i) {
+        results.insert(datasource_vec.at(i));
+    }
+
+    return results;
+}
+
+uint32_t database_api_impl::list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, account_id_type datasource_account) const {
+    // TODO
+    return _db.get_index_type<second_hand_data_index>().indices().size();
+ }
 
 optional<data_transaction_object> database_api_impl::get_data_transaction_by_request_id(string request_id) const {
     const data_transaction_index & product_index = _db.get_index_type<data_transaction_index>();
