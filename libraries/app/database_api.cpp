@@ -626,6 +626,14 @@ data_transaction_search_results_object database_api::list_data_transactions_by_r
     return my->list_data_transactions_by_requester(requester, limit);
 }
 
+map<account_id_type, uint64_t> database_api::list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const {
+    return my->list_second_hand_datasources(start_date_time, end_date_time, limit);
+}
+
+uint32_t database_api::list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, account_id_type datasource_account) const {
+    return my->list_total_second_hand_transaction_counts_by_datasource(start_date_time, end_date_time, datasource_account);
+}
+
 vector<optional<data_market_category_object>> database_api::get_data_market_categories(const vector<data_market_category_id_type>& data_market_category_ids)const{
    return my->get_data_market_categories(data_market_category_ids);
 

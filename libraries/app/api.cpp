@@ -302,29 +302,33 @@ namespace graphene { namespace app {
                                                                                 unsigned limit, 
                                                                                 uint32_t start) const
     {
-       FC_ASSERT( _app.chain_database() );
-       const auto& db = *_app.chain_database();
-       FC_ASSERT(limit <= 100);
-       vector<operation_history_object> result;
-       if( start == 0 )
-         start = account(db).statistics(db).total_ops;
-       else start = min( account(db).statistics(db).total_ops, start );
-       const auto& hist_idx = db.get_index_type<account_transaction_history_index>();
-       const auto& by_seq_idx = hist_idx.indices().get<by_seq>();
-       
-       auto itr = by_seq_idx.upper_bound( boost::make_tuple( account, start ) );
-       auto itr_stop = by_seq_idx.lower_bound( boost::make_tuple( account, stop ) );
-       --itr;
-       
-       while ( itr != itr_stop && result.size() < limit )
-       {
-          result.push_back( itr->operation_id(db) );
-          --itr;
-       }
-       
-       return result;
-    }
+        FC_ASSERT( _app.chain_database() );
+        const auto& db = *_app.chain_database();
+        FC_ASSERT(limit <= 100);
+        vector<operation_history_object> result;
+        const auto& stats = account(db).statistics(db);
+        if( start == 0 )
+            start = stats.total_ops;
+        else
+            start = min( stats.total_ops, start );
 
+        if( start >= stop && limit > 0 )
+        {
+            const auto& hist_idx = db.get_index_type<account_transaction_history_index>();
+            const auto& by_seq_idx = hist_idx.indices().get<by_seq>();
+
+            auto itr = by_seq_idx.upper_bound( boost::make_tuple( account, start ) );
+            auto itr_stop = by_seq_idx.lower_bound( boost::make_tuple( account, stop ) );
+
+            do
+            {
+                --itr;
+                result.push_back( itr->operation_id(db) );
+            }
+            while ( itr != itr_stop && result.size() < limit );
+        }
+        return result;
+    }
     flat_set<uint32_t> history_api::get_market_history_buckets()const
     {
        auto hist = _app.get_plugin<market_history_plugin>( "market_history" );

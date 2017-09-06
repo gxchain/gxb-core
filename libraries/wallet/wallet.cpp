@@ -1567,7 +1567,7 @@
            return sign_transaction(tx, broadcast);
        }
 
-       signed_transaction data_transaction_datasource_upload(string request_id, string requester, string datasource, bool broadcast)
+       signed_transaction data_transaction_datasource_upload(string request_id, string requester, string datasource, fc::optional<string> copyright_hash, bool broadcast)
        {
            FC_ASSERT(!self.is_locked());
            account_object requester_account = get_account(requester);
@@ -1580,6 +1580,12 @@
            update_op.request_id = request_id;
            update_op.datasource = datasource_account.id;
            update_op.requester = requester_account.id;
+
+           operation_ext_copyright_hash_t ext;
+           if (copyright_hash.valid()) {
+               ext.copyright_hash = copyright_hash;
+               update_op.extensions.insert(ext);
+           }
 
            signed_transaction tx;
            tx.operations.push_back(update_op);
@@ -1693,6 +1699,17 @@
        data_transaction_search_results_object list_data_transactions_by_requester(string requester, uint32_t limit) const {
            return _remote_db->list_data_transactions_by_requester(requester, limit);
        }
+
+       map<account_id_type, uint64_t> list_second_hand_datasources(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint32_t limit) const {
+           return _remote_db->list_second_hand_datasources(start_date_time, end_date_time, limit);
+       }
+
+       uint32_t list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, const string& datasource_account) const{
+           fc::optional<account_id_type> acct_id = maybe_id<account_id_type>(datasource_account);
+           if (!acct_id) acct_id = get_account(datasource_account).id;
+           return _remote_db->list_total_second_hand_transaction_counts_by_datasource(start_date_time, end_date_time, *acct_id);
+       }
+
 
        optional<data_transaction_object> get_data_transaction_by_request_id(string request_id) const {
            return _remote_db->get_data_transaction_by_request_id(request_id);
@@ -2575,13 +2592,6 @@
           fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
           FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
 
-          string fee_asset = ASSET_SYMBOL_GXC;
-          if (ASSET_SYMBOL_GXS == asset_symbol) {
-              fee_asset = ASSET_SYMBOL_GXS;
-          }
-          fc::optional<asset_object> fee_asset_obj = get_asset(fee_asset);
-          FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", fee_asset));
-
           account_object from_account = get_account(from);
           account_object to_account = get_account(to);
           account_id_type from_id = from_account.id;
@@ -2604,7 +2614,7 @@
 
           signed_transaction tx;
           tx.operations.push_back(xfer_op);
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, asset_obj);
           tx.validate();
 
           return sign_transaction(tx, broadcast);
@@ -3035,6 +3045,88 @@
 
           return sign_transaction(tx, broadcast);
        }
+
+       signed_transaction propose_deprecate_datasource(
+        string propose_account, 
+        string datasource_account, 
+        bool broadcast = false)
+        {try {
+            FC_ASSERT( !self.is_locked() );
+            account_object account_datasource_obj = get_account(datasource_account);
+            const account_object propose_account_obj = get_account(propose_account);
+            FC_ASSERT( account_datasource_obj.is_datasource_member() );
+            FC_ASSERT( propose_account_obj.is_lifetime_member() );
+
+            account_upgrade_datasource_operation op;
+            op.account_to_upgrade = account_datasource_obj.get_id();
+            op.upgrade_to_datasource_member = false;
+            op.auth_referrer = propose_account_obj.get_id();
+
+            operation_ext_version_t ext;
+            ext.version = operation_version_one;
+            op.extensions.insert(ext);
+
+            const chain_parameters& current_params = get_global_properties().parameters;
+            proposal_create_operation prop_op;
+            prop_op.expiration_time = fc::time_point::now() + std::min(fc::seconds(current_params.maximum_proposal_lifetime / 2), fc::days(1));
+            prop_op.fee_paying_account = propose_account_obj.get_id();
+            prop_op.proposed_ops.emplace_back(op);
+            current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
+
+            signed_transaction tx;
+            tx.operations.push_back(prop_op);
+            set_operation_fees(tx, current_params.current_fees);
+            tx.validate();
+
+            return sign_transaction(tx, broadcast);
+        } FC_CAPTURE_AND_RETHROW( (datasource_account) ) }
+
+        signed_transaction propose_deprecate_merchant(
+            string propose_account, 
+            string merchant_account, 
+            bool broadcast = false)
+        {try {
+            FC_ASSERT( !self.is_locked() );
+            account_object account_merchant_obj = get_account(merchant_account);
+            const account_object propose_account_obj = get_account(propose_account);
+            FC_ASSERT( propose_account_obj.is_lifetime_member() );
+            FC_ASSERT( account_merchant_obj.is_merchant_member() );
+            FC_ASSERT( account_merchant_obj.is_datasource_member() );
+
+            account_upgrade_merchant_operation op;
+            op.account_to_upgrade = account_merchant_obj.get_id();
+            op.upgrade_to_merchant_member = false;
+            op.auth_referrer = propose_account_obj.get_id();
+
+            operation_ext_version_t ext;
+            ext.version = operation_version_one;
+            op.extensions.insert(ext);
+
+            account_upgrade_datasource_operation opEx;
+            opEx.account_to_upgrade = account_merchant_obj.get_id();
+            opEx.upgrade_to_datasource_member = false;
+            opEx.auth_referrer = propose_account_obj.get_id();
+
+            operation_ext_version_t extEx;
+            extEx.version = operation_version_one;
+            opEx.extensions.insert(extEx);
+
+            const chain_parameters& current_params = get_global_properties().parameters;
+            proposal_create_operation prop_op;
+            prop_op.expiration_time = fc::time_point::now() + std::min(fc::seconds(current_params.maximum_proposal_lifetime / 2), fc::days(1));
+            prop_op.fee_paying_account = propose_account_obj.get_id();
+            prop_op.proposed_ops.emplace_back(op);
+            current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
+            prop_op.proposed_ops.emplace_back(opEx);
+            current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
+
+            signed_transaction tx;
+            tx.operations.push_back(prop_op);
+            set_operation_fees(tx, current_params.current_fees);
+            tx.validate();
+
+            return sign_transaction(tx, broadcast);
+        } FC_CAPTURE_AND_RETHROW( (merchant_account) ) }   
 
        signed_transaction approve_proposal(
           const string& fee_paying_account,
@@ -3673,9 +3765,9 @@
         return my->data_transaction_datasource_validate_error(request_id, datasource, broadcast);
     }
 
-    signed_transaction wallet_api::data_transaction_datasource_upload(string request_id, string requester, string datasource, bool broadcast)
+    signed_transaction wallet_api::data_transaction_datasource_upload(string request_id, string requester, string datasource, fc::optional<string> datasource_copyright_hash, bool broadcast)
     {
-        return my->data_transaction_datasource_upload(request_id, requester, datasource, broadcast);
+        return my->data_transaction_datasource_upload(request_id, requester, datasource, datasource_copyright_hash, broadcast);
     }
 
     signed_transaction wallet_api::data_transaction_update(string request_id, uint8_t new_status, string new_requester, fc::optional<string> memo, bool broadcast)
@@ -3731,6 +3823,15 @@
     optional<data_transaction_object> wallet_api::get_data_transaction_by_request_id(string request_id) const 
     {
         return my->get_data_transaction_by_request_id(request_id);
+    }
+
+    map<account_id_type, uint64_t> wallet_api::list_second_hand_datasources(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint32_t limit) const {
+        return my->list_second_hand_datasources(start_date_time, end_date_time, limit);
+    }
+
+    uint32_t wallet_api::list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, const string& datasource_account) const
+    {
+        return my->list_total_second_hand_transaction_counts_by_datasource(start_date_time, end_date_time, datasource_account);
     }
 
     string wallet_api::get_wallet_filename() const
@@ -4296,6 +4397,16 @@
        )
     {
        return my->propose_fee_change( proposing_account, expiration_time, changed_fees, broadcast );
+    }
+
+    signed_transaction wallet_api::propose_deprecate_datasource(string propose_account, string datasource_account, bool broadcast /*= false*/)
+    {
+        return my->propose_deprecate_datasource(propose_account, datasource_account, broadcast);
+    }
+
+    signed_transaction wallet_api::propose_deprecate_merchant(string propose_account, string merchant_account, bool broadcast/* = false*/)
+    {
+        return my->propose_deprecate_merchant(propose_account, merchant_account, broadcast);
     }
 
     signed_transaction wallet_api::approve_proposal(

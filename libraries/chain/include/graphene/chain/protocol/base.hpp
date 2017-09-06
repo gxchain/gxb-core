@@ -105,10 +105,12 @@ namespace graphene { namespace chain {
     *  compatibility.   
     */
    typedef static_variant<
-               void_t, 
-               operation_ext_version_t, 
-               data_transaction_commission_rate_t
-           > future_extensions;
+       void_t, 
+       operation_ext_version_t, 
+       operation_ext_copyright_hash_t,
+       data_transaction_commission_rate_t,
+       pocs_threshold_t
+       > future_extensions;
 
    /**
     *  A flat_set is used to make sure that only one extension of
