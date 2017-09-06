@@ -40,6 +40,7 @@
 #include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/chain/data_market_object.hpp>
 #include <graphene/chain/data_transaction_object.hpp>
+#include <graphene/chain/second_hand_data_object.hpp>
 #include <graphene/app/database_api_common.hpp>
 #include <graphene/chain/pocs_object.hpp>
 
@@ -218,6 +219,9 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
     optional<data_transaction_object> get_data_transaction_by_request_id(string request_id) const;
     data_transaction_search_results_object list_data_transactions_by_requester(string requester, uint32_t limit) const;
+
+    map<account_id_type, uint64_t> list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const;
+    uint32_t list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, account_id_type datasource_account) const;
 
     vector<optional<data_market_category_object>> get_data_market_categories(const vector<data_market_category_id_type>& data_market_category_ids)const;
     vector<optional<free_data_product_object>> get_free_data_products(const vector<free_data_product_id_type>& free_data_product_ids)const;

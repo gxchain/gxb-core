@@ -50,7 +50,8 @@ namespace graphene {
             // issuer of league
             account_id_type                         issuer;
             vector<account_id_type>                 members;
-
+            // Trigger pocs threshold
+            uint64_t                                pocs_threshold = 0;
         };
 
         // sort method for league_object

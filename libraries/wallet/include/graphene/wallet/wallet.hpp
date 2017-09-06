@@ -433,10 +433,11 @@ class wallet_api
         * @param request_id
         * @param requester
         * @param datasource
+        * @param datasource_copyright_hash
         * @param broadcast
         * @return
         */
-       signed_transaction data_transaction_datasource_upload(string request_id, string requester, string datasource, bool broadcast);
+       signed_transaction data_transaction_datasource_upload(string request_id, string requester, string datasource, fc::optional<string> copyright_hash, bool broadcast);
 
       /**
        * @brief data_transaction_update
@@ -1052,6 +1053,25 @@ class wallet_api
        */
       data_transaction_search_results_object list_data_transactions_by_requester(string requester, uint32_t limit) const;
 
+       /**
+       * @brief list second_hand datasource
+       * @param start_date_time
+       * @param end_date_time
+       * @param limit
+       * @return
+       */
+      map<account_id_type, uint64_t> list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const;
+
+       /**
+       * @brief list the number of the datasource account who sold second-hand datacource
+       * @param start_date_time
+       * @param end_date_time
+       * @param datasource_account
+       * @return
+       */
+       uint32_t list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, const string& datasource_account) const;
+
+      
       /**
        * @brief get data_transaction_object by request_id
        * @param request_id
@@ -1825,7 +1845,7 @@ class wallet_api
        * @param new_icon
        * @param new_status
        * @param new_recommend
-       * @param broadcast
+    * @param broadcast
        */
        signed_transaction propose_league_update(
           const string& proposing_account,
@@ -1856,6 +1876,20 @@ class wallet_api
          fc::time_point_sec expiration_time,
          const variant_object& changed_values,
          bool broadcast = false);
+
+       /**  For data sources that violate the rules, remove the data source permissions
+       * @param propose_account
+       * @param datasource_account
+       * @return the signed version of the transaction
+       */
+      signed_transaction propose_deprecate_datasource(string propose_account, string datasource_account, bool broadcast = false);
+
+       /**  For illegal merchants, remove merchant rights while removing data source permissions
+       * @param propose_account
+       * @param merchant_account
+       * @return the signed version of the transaction
+       */
+      signed_transaction propose_deprecate_merchant(string propose_account, string merchant_account, bool broadcast = false);
 
       /** Approve or disapprove a proposal.
        *
@@ -2099,6 +2133,8 @@ FC_API( graphene::wallet::wallet_api,
         (propose_free_data_product_update)
         (create_league_data_product)
         (propose_league_data_product_update)
+        (propose_deprecate_datasource)
+        (propose_deprecate_merchant)
         (create_league)
         (data_transaction_create)
         (data_transaction_update)
@@ -2117,6 +2153,8 @@ FC_API( graphene::wallet::wallet_api,
         (list_league_data_products)
         (list_leagues)
         (list_data_transactions_by_requester)
+        (list_second_hand_datasources)
+        (list_total_second_hand_transaction_counts_by_datasource)
         (get_data_transaction_by_request_id)
         (get_pocs_object)
 )
