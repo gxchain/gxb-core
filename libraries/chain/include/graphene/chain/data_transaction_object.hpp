@@ -64,6 +64,12 @@ namespace graphene {
             fc::optional<league_id_type>            league_id = fc::optional<league_id_type>();
             string                                  memo;
             vector<data_transaction_datasource_status_object>             datasources_status;
+            // product fee
+            uint64_t                                product_pay = 0;
+            // Data transaction fee
+            uint64_t                                transaction_fee = 0;
+            // commission
+            uint64_t                                commission = 0;
         };
 
         // data_transaction_object 的排序函数
@@ -127,7 +133,10 @@ FC_REFLECT_DERIVED(graphene::chain::data_transaction_object,
                    (requester)
                    (league_id)
                    (memo)
-                   (datasources_status))
+                   (datasources_status)
+                   (product_pay)
+                   (transaction_fee)
+                   (commission))
 FC_REFLECT_DERIVED(graphene::chain::data_transaction_search_results_object,
                    (graphene::db::object),
                    (total)

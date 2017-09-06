@@ -146,6 +146,12 @@ class database_api
        */
       global_property_object get_global_properties()const;
 
+
+      /**
+       *  @brief Retrieve data_transaction commission_rate
+       */
+      data_transaction_commission_rate_t get_commission_rate() const;
+
       /**
        * @brief Retrieve compile-time constants
        */
@@ -252,6 +258,83 @@ class database_api
        * @brief Get the total number of accounts registered with the blockchain
        */
       uint64_t get_account_count()const;
+
+      /**
+      * @brief get_data_transaction_product_costs
+      * @param start
+      * @param end
+      * @return the number of the data transaction product costs during this time
+      */
+      uint64_t get_data_transaction_product_costs(fc::time_point_sec start, fc::time_point_sec end) const;
+
+      /**
+      * @brief get_data_transaction_total_count
+      * @param start
+      * @param end
+      * @return the number of the data transaction count during this time
+      */      
+      uint64_t get_data_transaction_total_count(fc::time_point_sec start, fc::time_point_sec end) const; 
+
+      /**
+      * @brief get_data_transaction_commission
+      * @param start
+      * @param end
+      * @return the number of the data transaction commission during this time
+      */         
+      uint64_t get_data_transaction_commission(fc::time_point_sec start, fc::time_point_sec end) const;
+
+      /**
+      * @brief get_data_transaction_pay_fee
+      * @param start
+      * @param end
+      * @return the number of the data transaction pay fee during this time
+      */        
+      uint64_t get_data_transaction_pay_fee(fc::time_point_sec start, fc::time_point_sec end) const;
+
+      /**
+      * @brief get_data_transaction_product_costs_by_requester
+      * @param requester
+      * @param start
+      * @param end
+      * @return the number of the data transaction product costs of the requester during this time
+      */       
+      uint64_t get_data_transaction_product_costs_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const;
+
+      /**
+      * @brief get_data_transaction_total_count_by_requester
+      * @param requester
+      * @param start
+      * @param end
+      * @return the number of the data transaction product count of the requester during this time
+      */      
+      uint64_t get_data_transaction_total_count_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const; 
+
+      /**
+      * @brief get_data_transaction_pay_fees_by_requester
+      * @param requester
+      * @param start
+      * @param end
+      * @return the number of the data transaction pay fees of the requester during this time
+      */      
+      uint64_t get_data_transaction_pay_fees_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const;
+
+      /**
+      * @brief get_data_transaction_pay_fees_by_requester
+      * @param product_id
+      * @param start
+      * @param end
+      * @return the number of the data transaction product costs of the product during this time
+      */   
+      uint64_t get_data_transaction_product_costs_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const;
+      
+      /**
+      * @brief get_data_transaction_total_count_by_product_id
+      * @param product_id
+      * @param start
+      * @param end
+      * @return the number of the data transaction total count of the product during this time
+      */ 
+      uint64_t get_data_transaction_total_count_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const; 
 
       ////////////
       // Assets //
@@ -677,6 +760,7 @@ FC_API(graphene::app::database_api,
    // Globals
    (get_chain_properties)
    (get_global_properties)
+   (get_commission_rate)
    (get_config)
    (get_chain_id)
    (get_dynamic_global_properties)
@@ -693,6 +777,17 @@ FC_API(graphene::app::database_api,
    (lookup_account_names)
    (lookup_accounts)
    (get_account_count)
+
+   // statistic
+   (get_data_transaction_product_costs)
+   (get_data_transaction_total_count)
+   (get_data_transaction_commission)
+   (get_data_transaction_pay_fee)
+   (get_data_transaction_product_costs_by_requester)
+   (get_data_transaction_total_count_by_requester)
+   (get_data_transaction_pay_fees_by_requester)
+   (get_data_transaction_product_costs_by_product_id)
+   (get_data_transaction_total_count_by_product_id)
 
    // Balances
    (get_account_balances)
