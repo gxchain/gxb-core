@@ -106,8 +106,7 @@ namespace graphene { namespace chain {
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
 
-   enum asset_issuer_permission_flags
-   {
+   enum asset_issuer_permission_flags {
       charge_market_fee    = 0x01, /**< an issuer-specified percentage of all market trades in this asset is paid to the issuer */
       white_list           = 0x02, /**< accounts must be whitelisted in order to hold this asset */
       override_authority   = 0x04, /**< issuer may transfer asset back to himself */
@@ -122,59 +121,57 @@ namespace graphene { namespace chain {
       |witness_fed_asset|committee_fed_asset;
    const static uint32_t UIA_ASSET_ISSUER_PERMISSION_MASK = charge_market_fee|white_list|override_authority|transfer_restricted|disable_confidential;
 
-   enum reserved_spaces
-   {
+   enum reserved_spaces {
       relative_protocol_ids = 0,
       protocol_ids          = 1,
       implementation_ids    = 2
    };
 
-   //市场类型
-   enum data_market_type_enum
-   {
-      free_data_market   = 1,//自由数据市场
-      league_data_market = 2//联盟数据市场
+   // data market type
+   enum data_market_type_enum {
+      free_data_market   = 1,// free data market
+      league_data_market = 2// league data market
    };
 
    /**
-     数据产品的状态
+    * data market status enum
     * @brief The free_data_product_status enum
     */
-   enum data_market_category_status{
-        data_market_category_undo_status = 0,//待上线/待发布
-        data_market_category_enable_status  = 1,//可用/已上线
+   enum data_market_category_status {
+        data_market_category_undo_status = 0,// init, not enabled
+        data_market_category_enable_status  = 1,// online, enabled
    };
    /**
-     数据产品的状态
-    * @brief The free_data_product_status enum
+    * data product status enum
+    * @brief data_product_status enum
     */
-   enum data_product_status{
-        data_product_undo_status = 0,//待上线/待发布
-        data_product_enable_status  = 1,//可用/已上线
-        data_product_pause_status = 2//暂停 或者 维护中
+   enum data_product_status {
+        data_product_undo_status = 0,// init, not enabled
+        data_product_enable_status  = 1,// online 
+        data_product_pause_status = 2// disabled, offline
    };
    /**
-     联盟对象的状态
+    * the league status enum
     * @brief The league_status enum
     */
-   enum league_status{
-        league_undo_status = 0,//待上线/待发布
-        league_enable_status  = 1,//可用/已上线
-        league_pause_status = 2//暂停 或者 维护中
+   enum league_status {
+        league_undo_status = 0,// init status
+        league_enable_status  = 1,// enabled, online
+        league_pause_status = 2// disabled, offline
    };
 
    /**
-     联盟每部每一个成员的状态
+    * The league_data_product_status enum
     * @brief The league_data_product_status enum
     */
-   enum league_datasource_status{
-        league_datasource_undo_status = 0,//待上线
-        league_datasource_enable_status  = 1,//可用
-        league_datasource_pause_status = 2//暂停 或者 维护中
+   enum league_datasource_status {
+        league_datasource_undo_status = 0,// init status
+        league_datasource_enable_status  = 1,// enabled, online
+        league_datasource_pause_status = 2// disabled, offline
    };
 
    /**
-    * 数据交易的状态
+    * The data_transaction_status
     * @brief The data_transaction_status
     */
    enum data_transaction_status {
@@ -192,7 +189,7 @@ namespace graphene { namespace chain {
    };
 
    /**
-    *  增加operation version, 为了向前兼容
+    * operation version
     */
    enum operation_version {
        operation_version_one = 1,
@@ -337,7 +334,7 @@ namespace graphene { namespace chain {
    class special_authority_object;
    class buyback_object;
    class fba_accumulator_object;
-   class account_merchant_object;//账户下的商户对象
+   class account_merchant_object;
    class free_data_product_search_results_object;
    class league_data_product_search_results_object;
    class league_search_results_object;
