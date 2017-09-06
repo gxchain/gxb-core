@@ -143,6 +143,11 @@ global_property_object database_api::get_global_properties()const
    return my->get_global_properties();
 }
 
+data_transaction_commission_rate_t database_api::get_commission_rate() const
+{
+  return my->get_commission_rate();
+}
+
 fc::variant_object database_api::get_config()const
 {
    return my->get_config();
@@ -214,6 +219,51 @@ map<string,account_id_type> database_api::lookup_accounts(const string& lower_bo
 uint64_t database_api::get_account_count()const
 {
    return my->get_account_count();
+}
+
+uint64_t database_api::get_data_transaction_product_costs(fc::time_point_sec start, fc::time_point_sec end) const
+{
+   return my->get_data_transaction_product_costs(start, end);
+}
+
+uint64_t database_api::get_data_transaction_total_count(fc::time_point_sec start, fc::time_point_sec end) const
+{
+   return my->get_data_transaction_total_count(start, end);
+}
+
+uint64_t database_api::get_data_transaction_commission(fc::time_point_sec start, fc::time_point_sec end) const
+{
+   return my->get_data_transaction_commission(start, end);
+}
+
+uint64_t database_api::get_data_transaction_pay_fee(fc::time_point_sec start, fc::time_point_sec end) const
+{
+   return my->get_data_transaction_pay_fee(start, end);
+}
+
+uint64_t database_api::get_data_transaction_product_costs_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const
+{
+   return my->get_data_transaction_product_costs_by_requester(requester, start, end);
+}
+
+uint64_t database_api::get_data_transaction_total_count_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const
+{
+   return my->get_data_transaction_total_count_by_requester(requester, start, end);
+}
+
+uint64_t database_api::get_data_transaction_pay_fees_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const
+{
+   return my->get_data_transaction_pay_fees_by_requester(requester, start, end);
+}
+
+uint64_t database_api::get_data_transaction_product_costs_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const
+{
+   return my->get_data_transaction_product_costs_by_product_id(product_id, start, end);
+}
+
+uint64_t database_api::get_data_transaction_total_count_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const
+{
+   return my->get_data_transaction_total_count_by_product_id(product_id, start, end);
 }
 
 //////////////////////////////////////////////////////////////////////

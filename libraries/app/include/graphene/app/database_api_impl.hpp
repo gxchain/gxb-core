@@ -88,6 +88,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Globals
       chain_property_object get_chain_properties()const;
       global_property_object get_global_properties()const;
+      data_transaction_commission_rate_t get_commission_rate() const;
       fc::variant_object get_config()const;
       chain_id_type get_chain_id()const;
       dynamic_global_property_object get_dynamic_global_properties()const;
@@ -144,6 +145,18 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Votes
       vector<variant> lookup_vote_ids( const vector<vote_id_type>& votes )const;
+
+      // statistics
+      uint64_t get_data_transaction_product_costs(fc::time_point_sec start, fc::time_point_sec end) const;
+      uint64_t get_data_transaction_total_count(fc::time_point_sec start, fc::time_point_sec end) const; 
+      uint64_t get_data_transaction_commission(fc::time_point_sec start, fc::time_point_sec end) const;
+      uint64_t get_data_transaction_pay_fee(fc::time_point_sec start, fc::time_point_sec end) const;      
+      uint64_t get_data_transaction_product_costs_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const;
+      uint64_t get_data_transaction_total_count_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const; 
+      uint64_t get_data_transaction_pay_fees_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const;
+      uint64_t get_data_transaction_product_costs_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const;
+      uint64_t get_data_transaction_total_count_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const; 
+      
 
       // Authority / validation
       std::string get_transaction_hex(const signed_transaction& trx)const;

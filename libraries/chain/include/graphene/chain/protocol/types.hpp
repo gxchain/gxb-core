@@ -88,6 +88,12 @@ namespace graphene { namespace chain {
        uint8_t version = 0;
    };
 
+   struct data_transaction_commission_rate_t {
+       // 10 percent is 1000
+       uint16_t league_data_market_commission_rate = (10*GRAPHENE_1_PERCENT);
+       uint16_t free_data_market_commission_rate = (10*GRAPHENE_1_PERCENT);
+   };
+
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
 
@@ -532,6 +538,7 @@ FC_REFLECT_TYPENAME( graphene::chain::league_search_results_id_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 FC_REFLECT( graphene::chain::operation_ext_version_t, (version))
+FC_REFLECT( graphene::chain::data_transaction_commission_rate_t, (league_data_market_commission_rate)(free_data_market_commission_rate))
 
 FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)

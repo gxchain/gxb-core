@@ -49,6 +49,8 @@ namespace graphene {
             // schema of input/output in data_transaction
             vector<schema_context_object>           schema_contexts;
             time_point_sec                          create_date_time;
+            // total data_transaction count 
+            uint64_t                                total; 
             // issuer of product  
             account_id_type                         issuer;
         };
@@ -92,7 +94,7 @@ FC_REFLECT_DERIVED(graphene::chain::league_data_product_object,
                    (graphene::db::object),
                    (product_name)(brief_desc)
                    (category_id)(refer_price)
-                   (status)(icon)(schema_contexts)(issuer)(create_date_time))
+                   (status)(icon)(schema_contexts)(issuer)(total)(create_date_time))
 
 FC_REFLECT_DERIVED(graphene::chain::league_data_product_search_results_object,
                    (graphene::db::object),
