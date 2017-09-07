@@ -1567,7 +1567,7 @@
            return sign_transaction(tx, broadcast);
        }
 
-       signed_transaction data_transaction_datasource_upload(string request_id, string requester, string datasource, fc::optional<string> copyright_hash, bool broadcast)
+       signed_transaction data_transaction_datasource_upload(string request_id, string requester, string datasource, string datasource_copyright_hash, bool broadcast)
        {
            FC_ASSERT(!self.is_locked());
            account_object requester_account = get_account(requester);
@@ -1580,12 +1580,6 @@
            update_op.request_id = request_id;
            update_op.datasource = datasource_account.id;
            update_op.requester = requester_account.id;
-
-           operation_ext_copyright_hash_t ext;
-           if (copyright_hash.valid()) {
-               ext.copyright_hash = copyright_hash;
-               update_op.extensions.insert(ext);
-           }
 
            signed_transaction tx;
            tx.operations.push_back(update_op);
@@ -1700,14 +1694,8 @@
            return _remote_db->list_data_transactions_by_requester(requester, limit);
        }
 
-       map<account_id_type, uint64_t> list_second_hand_datasources(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint32_t limit) const {
-           return _remote_db->list_second_hand_datasources(start_date_time, end_date_time, limit);
-       }
-
        uint32_t list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, const string& datasource_account) const{
-           fc::optional<account_id_type> acct_id = maybe_id<account_id_type>(datasource_account);
-           if (!acct_id) acct_id = get_account(datasource_account).id;
-           return _remote_db->list_total_second_hand_transaction_counts_by_datasource(start_date_time, end_date_time, *acct_id);
+        return _remote_db->list_total_second_hand_transaction_counts_by_datasource(start_date_time, end_date_time, datasource_account);
        }
 
 
@@ -3115,9 +3103,9 @@
             proposal_create_operation prop_op;
             prop_op.expiration_time = fc::time_point::now() + std::min(fc::seconds(current_params.maximum_proposal_lifetime / 2), fc::days(1));
             prop_op.fee_paying_account = propose_account_obj.get_id();
-            prop_op.proposed_ops.emplace_back(op);
-            current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
             prop_op.proposed_ops.emplace_back(opEx);
+            current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
+            prop_op.proposed_ops.emplace_back(op);
             current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
 
             signed_transaction tx;
@@ -3765,7 +3753,7 @@
         return my->data_transaction_datasource_validate_error(request_id, datasource, broadcast);
     }
 
-    signed_transaction wallet_api::data_transaction_datasource_upload(string request_id, string requester, string datasource, fc::optional<string> datasource_copyright_hash, bool broadcast)
+    signed_transaction wallet_api::data_transaction_datasource_upload(string request_id, string requester, string datasource, string datasource_copyright_hash, bool broadcast)
     {
         return my->data_transaction_datasource_upload(request_id, requester, datasource, datasource_copyright_hash, broadcast);
     }
@@ -3820,18 +3808,14 @@
         return my->list_data_transactions_by_requester(requester, limit);
     }
 
-    optional<data_transaction_object> wallet_api::get_data_transaction_by_request_id(string request_id) const 
-    {
-        return my->get_data_transaction_by_request_id(request_id);
-    }
-
-    map<account_id_type, uint64_t> wallet_api::list_second_hand_datasources(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint32_t limit) const {
-        return my->list_second_hand_datasources(start_date_time, end_date_time, limit);
-    }
-
     uint32_t wallet_api::list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, const string& datasource_account) const
     {
         return my->list_total_second_hand_transaction_counts_by_datasource(start_date_time, end_date_time, datasource_account);
+    }
+
+    optional<data_transaction_object> wallet_api::get_data_transaction_by_request_id(string request_id) const 
+    {
+        return my->get_data_transaction_by_request_id(request_id);
     }
 
     string wallet_api::get_wallet_filename() const
