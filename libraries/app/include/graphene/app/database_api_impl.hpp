@@ -77,6 +77,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Subscriptions
       void set_subscribe_callback( std::function<void(const variant&)> cb, bool notify_remove_create );
       void set_data_transaction_subscribe_callback( std::function<void(const variant&)> cb, bool notify_remove_create );
+      void set_data_transaction_products_subscribe_callback(std::function<void(const variant&)> cb, vector<object_id_type> ids);
       void set_pending_transaction_callback( std::function<void(const variant&)> cb );
       void set_block_applied_callback( std::function<void(const variant& block_id)> cb );
       void cancel_all_subscriptions();
@@ -299,6 +300,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // for data transaction subscribe
       std::function<void(const fc::variant&)> _data_transaction_subscribe_callback;
+      std::function<void(const fc::variant&)> _data_transaction_products_subscribe_callback;
+      std::vector<object_id_type> _data_transaction_subscribe_products;
       boost::signals2::scoped_connection                                                                                           _data_transaction_change_connection;
 
       std::function<void(const fc::variant&)> _subscribe_callback;

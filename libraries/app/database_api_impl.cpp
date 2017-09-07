@@ -140,6 +140,12 @@ void database_api_impl::set_data_transaction_subscribe_callback( std::function<v
    _data_transaction_subscribe_callback = cb;
 }
 
+void database_api_impl::set_data_transaction_products_subscribe_callback(std::function<void(const variant&)> cb, vector<object_id_type> ids)
+{
+    _data_transaction_subscribe_products = ids;
+    _data_transaction_products_subscribe_callback = cb;
+}
+
 void database_api_impl::set_pending_transaction_callback( std::function<void(const variant&)> cb )
 {
    _pending_trx_callback = cb;
@@ -155,6 +161,7 @@ void database_api_impl::cancel_all_subscriptions()
    set_subscribe_callback( std::function<void(const fc::variant&)>(), true);
    _market_subscriptions.clear();
    _data_transaction_subscribe_callback =  std::function<void(const fc::variant&)>();
+   _data_transaction_products_subscribe_callback =  std::function<void(const fc::variant&)>();
 }
 
 optional<block_header> database_api_impl::get_block_header(uint32_t block_num) const
@@ -1510,6 +1517,14 @@ void database_api_impl::broadcast_data_transaction_updates(const fc::variant& up
             capture_this->_data_transaction_subscribe_callback(update);
       });
    }
+
+   if (_data_transaction_products_subscribe_callback) {
+      auto capture_this = shared_from_this();
+      fc::async([capture_this,update](){
+          if(capture_this->_data_transaction_products_subscribe_callback)
+            capture_this->_data_transaction_products_subscribe_callback(update);
+      });
+   }
 }
 
 void database_api_impl::broadcast_updates( const vector<variant>& updates )
@@ -1618,12 +1633,28 @@ void database_api_impl::on_objects_changed(const vector<object_id_type>& ids, co
 
 void database_api_impl::on_data_transaction_objects_changed(const string& request_id)
 {
+    // data_transaction callback
     if (_data_transaction_subscribe_callback) {
         auto obj = get_data_transaction_by_request_id(request_id);
         if (obj.valid()) {
             broadcast_data_transaction_updates(obj->to_variant());
+        } else {
+            dlog("get no data_transaction_object, request_id ${r}", ("r", request_id));
         }
-        else {
+    }
+
+    // enhanced data_transaroction callback
+    if (_data_transaction_products_subscribe_callback && !_data_transaction_subscribe_products.empty()) {
+        auto obj = get_data_transaction_by_request_id(request_id);
+        if (obj.valid()) {
+            auto& products = _data_transaction_subscribe_products;
+            auto iter = std::find(products.begin(), products.end(), obj->product_id);
+            if (iter != products.end()) {
+                broadcast_data_transaction_updates(obj->to_variant());
+            } else {
+                dlog("product_id ${p} not subscribed", ("p", obj->product_id));
+            }
+        } else {
             dlog("get no data_transaction_object, request_id ${r}", ("r", request_id));
         }
     }
@@ -1940,9 +1971,8 @@ data_transaction_search_results_object database_api_impl::list_data_transactions
 }
 
 map<account_id_type, uint64_t> database_api_impl::list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const {
-    // TODO
-    const second_hand_data_index& idx = _db.get_index_type<second_hand_data_index>();
-    auto range = idx.indices().get<by_create_date_time>().equal_range(boost::make_tuple(start_date_time, end_date_time));
+    const auto& idx = _db.get_index_type<second_hand_data_index>().indices().get<by_create_date_time>();
+    auto range = idx.equal_range(boost::make_tuple(start_date_time, end_date_time));
 
     std::map<account_id_type, uint64_t> tmp_results;
     for (const second_hand_data_object& obj : boost::make_iterator_range(range.first, range.second)) {
@@ -1971,7 +2001,6 @@ map<account_id_type, uint64_t> database_api_impl::list_second_hand_datasources(t
 }
 
 uint32_t database_api_impl::list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, account_id_type datasource_account) const {
-    // TODO
     return _db.get_index_type<second_hand_data_index>().indices().size();
  }
 
