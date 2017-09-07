@@ -81,6 +81,11 @@ void database_api::set_data_transaction_subscribe_callback( std::function<void(c
    my->set_data_transaction_subscribe_callback( cb, notify_remove_create );
 }
 
+void database_api::set_data_transaction_products_subscribe_callback(std::function<void(const variant&)> cb, vector<object_id_type> ids)
+{
+    my->set_data_transaction_products_subscribe_callback(cb, ids);
+}
+
 void database_api::set_pending_transaction_callback( std::function<void(const variant&)> cb )
 {
    my->set_pending_transaction_callback( cb );
