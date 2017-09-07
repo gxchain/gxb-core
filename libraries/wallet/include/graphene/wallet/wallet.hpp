@@ -62,6 +62,12 @@ struct brain_key_info
    public_key_type pub_key;
 };
 
+struct second_hand_datasource_statistics
+{
+   account_id_type datasouce_account_id;
+   uint32_t usecond_hand_count = 0;
+};
+
 
 /**
  *  Contains the confirmation receipt the sender must give the receiver and
@@ -437,7 +443,7 @@ class wallet_api
         * @param broadcast
         * @return
         */
-       signed_transaction data_transaction_datasource_upload(string request_id, string requester, string datasource, fc::optional<string> copyright_hash, bool broadcast);
+       signed_transaction data_transaction_datasource_upload(string request_id, string requester, string datasource, string datasource_copyright_hash, bool broadcast);
 
       /**
        * @brief data_transaction_update
@@ -1054,13 +1060,13 @@ class wallet_api
       data_transaction_search_results_object list_data_transactions_by_requester(string requester, uint32_t limit) const;
 
        /**
-       * @brief list second_hand datasource
+       * @brief list second-hand datasource info
        * @param start_date_time
        * @param end_date_time
        * @param limit
        * @return
        */
-      map<account_id_type, uint64_t> list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const;
+      //vector<second_hand_datasource_statistics> list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const;
 
        /**
        * @brief list the number of the datasource account who sold second-hand datacource
@@ -2153,7 +2159,7 @@ FC_API( graphene::wallet::wallet_api,
         (list_league_data_products)
         (list_leagues)
         (list_data_transactions_by_requester)
-        (list_second_hand_datasources)
+        //(list_second_hand_datasources)
         (list_total_second_hand_transaction_counts_by_datasource)
         (get_data_transaction_by_request_id)
         (get_pocs_object)
