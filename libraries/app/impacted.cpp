@@ -269,10 +269,7 @@ struct get_impacted_account_visitor
    {
       _impacted.insert( op.datasource );
    }
-   void operator()(const data_transaction_complain_operation& op)
-   {
-      _impacted.insert( op.requester);
-   }
+   void operator() (const datasource_copyright_clear_operation& op) {}
 
 };
 

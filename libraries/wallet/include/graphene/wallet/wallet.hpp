@@ -62,12 +62,6 @@ struct brain_key_info
    public_key_type pub_key;
 };
 
-struct second_hand_datasource_statistics
-{
-   account_id_type datasouce_account_id;
-   uint32_t usecond_hand_count = 0;
-};
-
 
 /**
  *  Contains the confirmation receipt the sender must give the receiver and
@@ -434,35 +428,6 @@ class wallet_api
         */
        signed_transaction data_transaction_datasource_validate_error(string request_id, string datasource, bool broadcast);
 
-       /** data_transaction_complain_datasource Complaint data fraud.
-       *
-       * @param request_id
-       * @param requester Account id of the requester
-       * @param datasource Account id of the datasource
-       * @param merchant_copyright_hash
-       * @param datasource_copyright_hash
-       * @param broadcast true if you wish to broadcast the transaction
-       * @return signed_transaction
-       */
-       signed_transaction data_transaction_complain_datasource(string request_id, account_id_type requester, account_id_type datasource,
-         string merchant_copyright_hash, string datasource_copyright_hash, bool broadcast);
-
-       /** get_most_data_transaction_complain_requester_by_time.
-       *
-       * @param start
-       * @param end
-       * @return optional<data_transaction_complain_t>
-       */ 
-       optional<data_transaction_complain_t> get_most_data_transaction_complain_requester_by_time(fc::time_point_sec start, fc::time_point_sec end) const;
-
-       /** get_most_data_transaction_complain_datasource_by_time.
-       *
-       * @param start
-       * @param end
-       * @return optional<data_transaction_complain_t>
-       */
-       optional<data_transaction_complain_t> get_most_data_transaction_complain_datasource_by_time(fc::time_point_sec start, fc::time_point_sec end) const;
-
        /**
         * @brief data_transaction_datasource_upload
         * @param request_id
@@ -472,7 +437,7 @@ class wallet_api
         * @param broadcast
         * @return
         */
-       signed_transaction data_transaction_datasource_upload(string request_id, string requester, string datasource, string datasource_copyright_hash, bool broadcast);
+       signed_transaction data_transaction_datasource_upload(string request_id, string requester, string datasource, fc::optional<string> copyright_hash, bool broadcast);
 
       /**
        * @brief data_transaction_update
@@ -511,6 +476,12 @@ class wallet_api
       * @return the number of the data transaction count during this time
       */      
       uint64_t                          get_data_transaction_total_count(fc::time_point_sec start, fc::time_point_sec end) const; 
+
+      /**
+      * @brief get_merchants_total_count
+      * @return the total count of merchants
+      */
+      uint64_t                          get_merchants_total_count() const;
 
       /**
       * @brief get_data_transaction_commission
@@ -1089,13 +1060,13 @@ class wallet_api
       data_transaction_search_results_object list_data_transactions_by_requester(string requester, uint32_t limit) const;
 
        /**
-       * @brief list second-hand datasource info
+       * @brief list second_hand datasource
        * @param start_date_time
        * @param end_date_time
        * @param limit
        * @return
        */
-      //vector<second_hand_datasource_statistics> list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const;
+      map<account_id_type, uint64_t> list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const;
 
        /**
        * @brief list the number of the datasource account who sold second-hand datacource
@@ -2114,6 +2085,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_relative_account_history)
         (get_data_transaction_product_costs)
         (get_data_transaction_total_count)
+        (get_merchants_total_count)
         (get_data_transaction_commission)
         (get_data_transaction_pay_fee)
         (get_data_transaction_product_costs_by_requester)
@@ -2176,9 +2148,6 @@ FC_API( graphene::wallet::wallet_api,
         (pay_data_transaction)
         (data_transaction_datasource_upload)
         (data_transaction_datasource_validate_error)
-        (data_transaction_complain_datasource)
-        (get_most_data_transaction_complain_requester_by_time)
-        (get_most_data_transaction_complain_datasource_by_time)
         (upgrade_account_merchant)
         (upgrade_account_datasource)
         (upgrade_data_transaction_member)
@@ -2191,7 +2160,7 @@ FC_API( graphene::wallet::wallet_api,
         (list_league_data_products)
         (list_leagues)
         (list_data_transactions_by_requester)
-        //(list_second_hand_datasources)
+        (list_second_hand_datasources)
         (list_total_second_hand_transaction_counts_by_datasource)
         (get_data_transaction_by_request_id)
         (get_pocs_object)
