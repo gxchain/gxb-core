@@ -37,11 +37,12 @@
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/witness_object.hpp>
+#include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/chain/data_market_object.hpp>
 #include <graphene/chain/data_transaction_object.hpp>
-#include <graphene/chain/pocs_object.hpp>
-#include <graphene/market_history/market_history_plugin.hpp>
+#include <graphene/chain/second_hand_data_object.hpp>
 #include <graphene/app/database_api_common.hpp>
+#include <graphene/chain/pocs_object.hpp>
 
 #include <fc/api.hpp>
 #include <fc/optional.hpp>
@@ -76,6 +77,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Subscriptions
       void set_subscribe_callback( std::function<void(const variant&)> cb, bool notify_remove_create );
       void set_data_transaction_subscribe_callback( std::function<void(const variant&)> cb, bool notify_remove_create );
+      void set_data_transaction_products_subscribe_callback(std::function<void(const variant&)> cb, vector<object_id_type> ids);
       void set_pending_transaction_callback( std::function<void(const variant&)> cb );
       void set_block_applied_callback( std::function<void(const variant& block_id)> cb );
       void cancel_all_subscriptions();
@@ -149,6 +151,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // statistics
       uint64_t get_data_transaction_product_costs(fc::time_point_sec start, fc::time_point_sec end) const;
       uint64_t get_data_transaction_total_count(fc::time_point_sec start, fc::time_point_sec end) const; 
+      uint64_t get_merchants_total_count() const;
       uint64_t get_data_transaction_commission(fc::time_point_sec start, fc::time_point_sec end) const;
       uint64_t get_data_transaction_pay_fee(fc::time_point_sec start, fc::time_point_sec end) const;      
       uint64_t get_data_transaction_product_costs_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const;
@@ -156,8 +159,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       uint64_t get_data_transaction_pay_fees_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const;
       uint64_t get_data_transaction_product_costs_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const;
       uint64_t get_data_transaction_total_count_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const; 
-      optional<data_transaction_complain_t> get_most_data_transaction_complain_requester_by_time(fc::time_point_sec start, fc::time_point_sec end) const;
-      optional<data_transaction_complain_t> get_most_data_transaction_complain_datasource_by_time(fc::time_point_sec start, fc::time_point_sec end) const;      
+      
 
       // Authority / validation
       std::string get_transaction_hex(const signed_transaction& trx)const;
@@ -220,7 +222,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
     optional<data_transaction_object> get_data_transaction_by_request_id(string request_id) const;
     data_transaction_search_results_object list_data_transactions_by_requester(string requester, uint32_t limit) const;
 
-    uint32_t list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, const string& datasource_account) const;
+    map<account_id_type, uint64_t> list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const;
+    uint32_t list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, account_id_type datasource_account) const;
 
     vector<optional<data_market_category_object>> get_data_market_categories(const vector<data_market_category_id_type>& data_market_category_ids)const;
     vector<optional<free_data_product_object>> get_free_data_products(const vector<free_data_product_id_type>& free_data_product_ids)const;
@@ -298,6 +301,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // for data transaction subscribe
       std::function<void(const fc::variant&)> _data_transaction_subscribe_callback;
+      std::function<void(const fc::variant&)> _data_transaction_products_subscribe_callback;
+      std::vector<object_id_type> _data_transaction_subscribe_products;
       boost::signals2::scoped_connection                                                                                           _data_transaction_change_connection;
 
       std::function<void(const fc::variant&)> _subscribe_callback;

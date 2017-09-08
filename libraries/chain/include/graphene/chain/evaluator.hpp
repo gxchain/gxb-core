@@ -25,7 +25,6 @@
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/transaction_evaluation_state.hpp>
 #include <graphene/chain/protocol/operations.hpp>
-#include <graphene/chain/hardfork.hpp>
 
 namespace graphene { namespace chain {
 
@@ -74,14 +73,13 @@ namespace graphene { namespace chain {
        * @brief Fetch objects relevant to fee payer and set pointer members
        * @param account_id Account which is paying the fee
        * @param fee The fee being paid. May be in assets other than core.
-       * @param o The operation of this paying.
        *
        * This method verifies that the fee is valid and sets the object pointer members and the fee fields. It should
        * be called during do_evaluate.
        *
        * In particular, core_fee_paid field is set by prepare_fee().
        */
-       void prepare_fee(account_id_type account_id, asset fee, const operation& o);
+      void prepare_fee(account_id_type account_id, asset fee);
 
       /**
        * Convert the fee into GXC through the exchange pool.
@@ -147,9 +145,9 @@ namespace graphene { namespace chain {
       {
          auto* eval = static_cast<DerivedEvaluator*>(this);
          const auto& op = o.get<typename DerivedEvaluator::operation_type>();
-         eval->prepare_fee(op.fee_payer(), op.fee, o);
-         //head_block_time later than HRADFORK_1001_TIME we use pocs caculator fee, so the fee may be less than required_fee
-         if( !trx_state->skip_fee_schedule_check && db().head_block_time() >= HARDFORK_1001_TIME)
+
+         prepare_fee(op.fee_payer(), op.fee);
+         if( !trx_state->skip_fee_schedule_check )
          {
             share_type required_fee = calculate_fee_for_operation(op);
             GRAPHENE_ASSERT( core_fee_paid >= required_fee,
@@ -157,6 +155,7 @@ namespace graphene { namespace chain {
                        "Insufficient Fee Paid",
                        ("core_fee_paid",core_fee_paid)("required", required_fee) );
          }
+
          return eval->do_evaluate(op);
       }
 
