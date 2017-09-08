@@ -93,6 +93,7 @@ class database_api
 
       void set_subscribe_callback( std::function<void(const variant&)> cb, bool clear_filter );
       void set_data_transaction_subscribe_callback(std::function<void(const variant&)> cb, bool clear_filter);
+      void set_data_transaction_products_subscribe_callback(std::function<void(const variant&)> cb, vector<object_id_type> ids);
       void set_pending_transaction_callback( std::function<void(const variant&)> cb );
       void set_block_applied_callback( std::function<void(const variant& block_id)> cb );
       /**
@@ -272,8 +273,15 @@ class database_api
       * @param start
       * @param end
       * @return the number of the data transaction count during this time
-      */      
+      */
       uint64_t get_data_transaction_total_count(fc::time_point_sec start, fc::time_point_sec end) const; 
+
+
+      /**
+      * @brief get_merchants_total_count
+      * @return the total count of merchants
+      */
+      uint64_t get_merchants_total_count() const;
 
       /**
       * @brief get_data_transaction_commission
@@ -335,22 +343,6 @@ class database_api
       * @return the number of the data transaction total count of the product during this time
       */ 
       uint64_t get_data_transaction_total_count_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const; 
-
-      /** get_most_data_transaction_complain_requester_by_time.
-      *
-      * @param start
-      * @param end
-      * @return optional<data_transaction_complain_t>
-      */ 
-      optional<data_transaction_complain_t> get_most_data_transaction_complain_requester_by_time(fc::time_point_sec start, fc::time_point_sec end) const;
-
-      /** get_most_data_transaction_complain_datasource_by_time.
-      *
-      * @param start
-      * @param end
-      * @return optional<data_transaction_complain_t>
-      */ 
-      optional<data_transaction_complain_t> get_most_data_transaction_complain_datasource_by_time(fc::time_point_sec start, fc::time_point_sec end) const;
 
       ////////////
       // Assets //
@@ -750,7 +742,9 @@ class database_api
     optional<data_transaction_object> get_data_transaction_by_request_id(string request_id) const;
     data_transaction_search_results_object list_data_transactions_by_requester(string requester, uint32_t limit) const;
 
-    uint32_t list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, const string& datasource_account) const;
+
+    map<account_id_type, uint64_t> list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const;
+    uint32_t list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, account_id_type datasource_account) const;
 
    private:
       std::shared_ptr< database_api_impl > my;
@@ -765,6 +759,7 @@ FC_API(graphene::app::database_api,
    // Subscriptions
    (set_subscribe_callback)
    (set_data_transaction_subscribe_callback)
+   (set_data_transaction_products_subscribe_callback)
    (set_pending_transaction_callback)
    (set_block_applied_callback)
    (cancel_all_subscriptions)
@@ -799,6 +794,7 @@ FC_API(graphene::app::database_api,
    // statistic
    (get_data_transaction_product_costs)
    (get_data_transaction_total_count)
+   (get_merchants_total_count)
    (get_data_transaction_commission)
    (get_data_transaction_pay_fee)
    (get_data_transaction_product_costs_by_requester)
@@ -806,8 +802,6 @@ FC_API(graphene::app::database_api,
    (get_data_transaction_pay_fees_by_requester)
    (get_data_transaction_product_costs_by_product_id)
    (get_data_transaction_total_count_by_product_id)
-   (get_most_data_transaction_complain_requester_by_time)
-   (get_most_data_transaction_complain_datasource_by_time)
 
    // Balances
    (get_account_balances)
@@ -878,6 +872,7 @@ FC_API(graphene::app::database_api,
    (get_leagues)
    (get_data_transaction_by_request_id)
    (list_data_transactions_by_requester)
+   (list_second_hand_datasources)
    (list_total_second_hand_transaction_counts_by_datasource)
 
 )

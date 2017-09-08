@@ -82,7 +82,7 @@ namespace graphene { namespace chain {
    using                               fc::ecc::range_proof_type;
    using                               fc::ecc::range_proof_info;
    using                               fc::ecc::commitment_type;
-   struct void_t {};
+   struct void_t{};
 
    struct operation_ext_version_t {
        uint8_t version = 0;
@@ -90,17 +90,18 @@ namespace graphene { namespace chain {
 
    struct data_transaction_commission_rate_t {
     // 10 percent is 1000
-    uint16_t league_data_market_commission_rate = (10*GRAPHENE_1_PERCENT);
-    uint16_t free_data_market_commission_rate = (10*GRAPHENE_1_PERCENT);
+       uint16_t league_data_market_commission_rate = (10 * GRAPHENE_1_PERCENT);
+       uint16_t free_data_market_commission_rate = (10 * GRAPHENE_1_PERCENT);
    };
 
-   struct operation_ext_copyright_hash_t{
-       string copyright_hash;
+   struct operation_ext_copyright_hash_t {
+       fc::optional<string> copyright_hash;
    };
 
    struct pocs_threshold_t {
        uint64_t pocs_threshold = 0;
    };
+
 
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
@@ -234,9 +235,8 @@ namespace graphene { namespace chain {
       league_object_type,//19
       data_transaction_object_type, //20
       pocs_object_type,//21
-      datasource_copyright_object_type,//数据源版权登记类型 22
-      second_hand_data_object_type,//二手数据信息类型 23
-      data_transaction_complain_object_type,//24
+      datasource_copyright_object_type,//22
+      second_hand_data_object_type,//23
       OBJECT_TYPE_COUNT /////< Sentry value which contains the number of different object types
 
    };
@@ -244,7 +244,7 @@ namespace graphene { namespace chain {
    enum impl_object_type
    {
       impl_global_property_object_type,//2.0.x
-      impl_dynamic_global_property_object_type,
+      impl_dynamic_global_property_object_type,//1
       impl_reserved0_object_type,      // formerly index_meta_object_type, TODO: delete me
       impl_asset_dynamic_data_type,//3
       impl_asset_bitasset_data_type,//4
@@ -260,11 +260,11 @@ namespace graphene { namespace chain {
       impl_special_authority_object_type,//14
       impl_buyback_object_type,//15
       impl_fba_accumulator_object_type,//16
-      impl_account_merchant_object_type,// current not used
-      impl_free_data_product_search_results_object_type,//
-      impl_league_data_product_search_results_object_type,//
-      impl_league_search_results_object_type,//
-      impl_data_transaction_search_results_object_type,//
+      impl_account_merchant_object_type,//17
+      impl_free_data_product_search_results_object_type,//18
+      impl_league_data_product_search_results_object_type,//19
+      impl_league_search_results_object_type,//20
+      impl_data_transaction_search_results_object_type,//21
       //impl_search_results_object_type
    };
 
@@ -295,7 +295,6 @@ namespace graphene { namespace chain {
    class pocs_object;
    class datasource_copyright_object;
    class second_hand_data_object;
-   class data_transaction_complain_object;
 
 
 
@@ -321,7 +320,6 @@ namespace graphene { namespace chain {
    typedef object_id< protocol_ids, pocs_object_type, pocs_object>                                  pocs_id_type;
    typedef object_id< protocol_ids, datasource_copyright_object_type, datasource_copyright_object>      datasource_copyright_id_type;
    typedef object_id< protocol_ids, second_hand_data_object_type, second_hand_data_object>         second_hand_data_id_type;
-   typedef object_id< protocol_ids, data_transaction_complain_object_type, data_transaction_complain_object> data_transaction_complain_id_type;
 
    // implementation types
    class global_property_object;
@@ -379,17 +377,6 @@ namespace graphene { namespace chain {
    typedef safe<int64_t>                                        share_type;
    typedef uint16_t                                             weight_type;
 
-   struct data_transaction_complain_t{
-    account_id_type requester_or_datasource;
-    uint64_t complain_times = 0;
-   };
-
-   typedef pair<account_id_type, uint64_t> PAIR;
-   struct CmpByValue {    
-       bool operator()(const PAIR& lhs, const PAIR& rhs) {    
-           return lhs.second > rhs.second;    
-       }    
-   }; 
    struct public_key_type
    {
        struct binary_key
@@ -505,7 +492,6 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (pocs_object_type)
                  (datasource_copyright_object_type)
                  (second_hand_data_object_type)
-                 (data_transaction_complain_object_type)
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,
@@ -576,14 +562,12 @@ FC_REFLECT_TYPENAME( graphene::chain::league_search_results_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::pocs_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::datasource_copyright_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::second_hand_data_id_type)
-FC_REFLECT_TYPENAME( graphene::chain::data_transaction_complain_id_type)
 
 FC_REFLECT( graphene::chain::void_t, )
 FC_REFLECT( graphene::chain::operation_ext_version_t, (version))
 FC_REFLECT( graphene::chain::data_transaction_commission_rate_t, (league_data_market_commission_rate)(free_data_market_commission_rate))
 FC_REFLECT( graphene::chain::operation_ext_copyright_hash_t, (copyright_hash))
 FC_REFLECT( graphene::chain::pocs_threshold_t, (pocs_threshold))
-FC_REFLECT( graphene::chain::data_transaction_complain_t, (requester_or_datasource)(complain_times))
 
 FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)

@@ -30,7 +30,6 @@ namespace graphene { namespace chain {
 
          void_result do_evaluate( const pay_data_transaction_operation& op );
          void_result do_apply( const pay_data_transaction_operation& op );
-         void prepare_fee(account_id_type account_id, asset fee, const operation& o);
    };
 
 } } // graphene::chain

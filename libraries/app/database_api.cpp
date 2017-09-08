@@ -81,6 +81,11 @@ void database_api::set_data_transaction_subscribe_callback( std::function<void(c
    my->set_data_transaction_subscribe_callback( cb, notify_remove_create );
 }
 
+void database_api::set_data_transaction_products_subscribe_callback(std::function<void(const variant&)> cb, vector<object_id_type> ids)
+{
+    my->set_data_transaction_products_subscribe_callback(cb, ids);
+}
+
 void database_api::set_pending_transaction_callback( std::function<void(const variant&)> cb )
 {
    my->set_pending_transaction_callback( cb );
@@ -221,16 +226,6 @@ uint64_t database_api::get_account_count()const
    return my->get_account_count();
 }
 
-optional<data_transaction_complain_t> database_api::get_most_data_transaction_complain_requester_by_time(fc::time_point_sec start, fc::time_point_sec end) const
-{
-    return my->get_most_data_transaction_complain_requester_by_time(start, end);
-}
-
-optional<data_transaction_complain_t> database_api::get_most_data_transaction_complain_datasource_by_time(fc::time_point_sec start, fc::time_point_sec end) const
-{
-    return my->get_most_data_transaction_complain_datasource_by_time(start, end);
-}
-
 uint64_t database_api::get_data_transaction_product_costs(fc::time_point_sec start, fc::time_point_sec end) const
 {
    return my->get_data_transaction_product_costs(start, end);
@@ -239,6 +234,11 @@ uint64_t database_api::get_data_transaction_product_costs(fc::time_point_sec sta
 uint64_t database_api::get_data_transaction_total_count(fc::time_point_sec start, fc::time_point_sec end) const
 {
    return my->get_data_transaction_total_count(start, end);
+}
+
+uint64_t database_api::get_merchants_total_count() const
+{
+    return my->get_merchants_total_count();
 }
 
 uint64_t database_api::get_data_transaction_commission(fc::time_point_sec start, fc::time_point_sec end) const
@@ -636,7 +636,11 @@ data_transaction_search_results_object database_api::list_data_transactions_by_r
     return my->list_data_transactions_by_requester(requester, limit);
 }
 
-uint32_t database_api::list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, const string& datasource_account) const {
+map<account_id_type, uint64_t> database_api::list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const {
+    return my->list_second_hand_datasources(start_date_time, end_date_time, limit);
+}
+
+uint32_t database_api::list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, account_id_type datasource_account) const {
     return my->list_total_second_hand_transaction_counts_by_datasource(start_date_time, end_date_time, datasource_account);
 }
 

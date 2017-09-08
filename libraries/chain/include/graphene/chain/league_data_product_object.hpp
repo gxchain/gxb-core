@@ -96,7 +96,7 @@ FC_REFLECT_DERIVED(graphene::chain::league_data_product_object,
                    (graphene::db::object),
                    (product_name)(brief_desc)
                    (category_id)(refer_price)
-                   (status)(icon)(schema_contexts)(issuer)(total)(create_date_time)(pocs_threshold))
+                   (status)(icon)(schema_contexts)(issuer)(total)(create_date_time))
 
 FC_REFLECT_DERIVED(graphene::chain::league_data_product_search_results_object,
                    (graphene::db::object),
