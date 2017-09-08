@@ -140,12 +140,6 @@ void database_api_impl::set_data_transaction_subscribe_callback( std::function<v
    _data_transaction_subscribe_callback = cb;
 }
 
-void database_api_impl::set_data_transaction_products_subscribe_callback(std::function<void(const variant&)> cb, vector<object_id_type> ids)
-{
-    _data_transaction_subscribe_products = ids;
-    _data_transaction_products_subscribe_callback = cb;
-}
-
 void database_api_impl::set_pending_transaction_callback( std::function<void(const variant&)> cb )
 {
    _pending_trx_callback = cb;
@@ -161,7 +155,6 @@ void database_api_impl::cancel_all_subscriptions()
    set_subscribe_callback( std::function<void(const fc::variant&)>(), true);
    _market_subscriptions.clear();
    _data_transaction_subscribe_callback =  std::function<void(const fc::variant&)>();
-   _data_transaction_products_subscribe_callback =  std::function<void(const fc::variant&)>();
 }
 
 optional<block_header> database_api_impl::get_block_header(uint32_t block_num) const
@@ -804,6 +797,65 @@ uint64_t database_api_impl::get_data_transaction_total_count_by_product_id(strin
     return result;
 }
 
+optional<data_transaction_complain_t> database_api_impl::get_most_data_transaction_complain_requester_by_time(fc::time_point_sec start, fc::time_point_sec end) const
+{
+    data_transaction_complain_t result;
+    map<account_id_type, uint64_t> map_complain;
+    const auto& data_transaction_complain_by_id = _db.get_index_type<data_transaction_complain_index>().indices().get<by_id>();
+    for(auto& obj : data_transaction_complain_by_id){
+        elog("111");
+        if (obj.create_date_time >= start && obj.create_date_time <= end){
+            map<account_id_type, uint64_t>::iterator it = map_complain.find(obj.requester);
+            if (it != map_complain.end()){
+                ++it->second;
+            }
+            else{
+                map_complain.insert(make_pair(obj.requester, 1));
+            }
+        }
+    }
+    if (0 != map_complain.size()){
+        vector<PAIR> vec_complain(map_complain.begin(), map_complain.end());
+        sort(vec_complain.begin(), vec_complain.end(), CmpByValue());
+        result.requester_or_datasource = vec_complain.begin()->first;
+        result.complain_times = vec_complain.begin()->second;
+        return result;
+    }
+    else{
+        return {};
+    };
+}
+
+optional<data_transaction_complain_t> database_api_impl::get_most_data_transaction_complain_datasource_by_time(fc::time_point_sec start, fc::time_point_sec end) const
+{
+    data_transaction_complain_t result;
+    map<account_id_type, uint64_t> map_complain;
+    const auto& data_transaction_complain_by_id = _db.get_index_type<data_transaction_complain_index>().indices().get<by_id>();
+    for(auto& obj : data_transaction_complain_by_id){
+        elog("obj is ${obj}", ("obj", obj));
+        if (obj.create_date_time >= start && obj.create_date_time <= end){
+            map<account_id_type, uint64_t>::iterator it = map_complain.find(obj.datasource);
+            if (it != map_complain.end()){
+                ++it->second;
+            }
+            else{
+                map_complain.insert(make_pair(obj.datasource, 1));
+                elog("datasource is ${datasource}", ("datasource", obj.datasource));
+            }
+        }
+    }
+    if (0 != map_complain.size()){
+        vector<PAIR> vec_complain(map_complain.begin(), map_complain.end());
+        sort(vec_complain.begin(), vec_complain.end(), CmpByValue());
+        result.requester_or_datasource = vec_complain.begin()->first;
+        result.complain_times = vec_complain.begin()->second;
+        return result;
+    }
+    else{
+        return {};
+    };
+}
+
 /**
  *  @return the limit orders for both sides of the book for the two assets specified up to limit number on each side.
  */
@@ -1188,7 +1240,6 @@ uint64_t database_api_impl::get_witness_count()const
    return _db.get_index_type<witness_index>().indices().size();
 }
 
-
 vector<optional<committee_member_object>> database_api_impl::get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const
 {
    vector<optional<committee_member_object>> result; result.reserve(committee_member_ids.size());
@@ -1517,14 +1568,6 @@ void database_api_impl::broadcast_data_transaction_updates(const fc::variant& up
             capture_this->_data_transaction_subscribe_callback(update);
       });
    }
-
-   if (_data_transaction_products_subscribe_callback) {
-      auto capture_this = shared_from_this();
-      fc::async([capture_this,update](){
-          if(capture_this->_data_transaction_products_subscribe_callback)
-            capture_this->_data_transaction_products_subscribe_callback(update);
-      });
-   }
 }
 
 void database_api_impl::broadcast_updates( const vector<variant>& updates )
@@ -1633,28 +1676,12 @@ void database_api_impl::on_objects_changed(const vector<object_id_type>& ids, co
 
 void database_api_impl::on_data_transaction_objects_changed(const string& request_id)
 {
-    // data_transaction callback
     if (_data_transaction_subscribe_callback) {
         auto obj = get_data_transaction_by_request_id(request_id);
         if (obj.valid()) {
             broadcast_data_transaction_updates(obj->to_variant());
-        } else {
-            dlog("get no data_transaction_object, request_id ${r}", ("r", request_id));
         }
-    }
-
-    // enhanced data_transaroction callback
-    if (_data_transaction_products_subscribe_callback && !_data_transaction_subscribe_products.empty()) {
-        auto obj = get_data_transaction_by_request_id(request_id);
-        if (obj.valid()) {
-            auto& products = _data_transaction_subscribe_products;
-            auto iter = std::find(products.begin(), products.end(), obj->product_id);
-            if (iter != products.end()) {
-                broadcast_data_transaction_updates(obj->to_variant());
-            } else {
-                dlog("product_id ${p} not subscribed", ("p", obj->product_id));
-            }
-        } else {
+        else {
             dlog("get no data_transaction_object, request_id ${r}", ("r", request_id));
         }
     }
@@ -1939,7 +1966,7 @@ data_transaction_search_results_object database_api_impl::list_data_transactions
     data_transaction_search_results_object search_result;
     vector<data_transaction_object> results_tmp;
 
-    // get accounte_id
+    const data_transaction_index & product_index = _db.get_index_type<data_transaction_index>();
     account_id_type account_id;
     if (std::isdigit(requester.front())) {
         account_id = fc::variant(requester).as<account_id_type>();
@@ -1953,7 +1980,6 @@ data_transaction_search_results_object database_api_impl::list_data_transactions
             return {};
     }
 
-    const data_transaction_index & product_index = _db.get_index_type<data_transaction_index>();
     auto range = product_index.indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
 
     for (const data_transaction_object& data_transaction : boost::make_iterator_range(range.first, range.second)) {
@@ -1970,39 +1996,24 @@ data_transaction_search_results_object database_api_impl::list_data_transactions
     return search_result;
 }
 
-map<account_id_type, uint64_t> database_api_impl::list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const {
-    const auto& idx = _db.get_index_type<second_hand_data_index>().indices().get<by_create_date_time>();
-    auto range = idx.equal_range(boost::make_tuple(start_date_time, end_date_time));
-
-    std::map<account_id_type, uint64_t> tmp_results;
-    for (const second_hand_data_object& obj : boost::make_iterator_range(range.first, range.second)) {
-        tmp_results[obj.second_hand_datasource_id] = 0;
+ uint32_t database_api_impl::list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, const string& datasource_account) const {
+//undo    
+    account_id_type account_id;
+    if (std::isdigit(datasource_account.front())) {
+        account_id = fc::variant(datasource_account).as<account_id_type>();
     }
-    for (const second_hand_data_object& obj : boost::make_iterator_range(range.first, range.second)) {
-        tmp_results[obj.second_hand_datasource_id]++;
-    }
-    
-    // sort
-    typedef pair<account_id_type, uint64_t> PAIR;
-    struct cmp_by_value {
-        bool operator() (const PAIR& lhs, const PAIR& rhs) {
-            return lhs.second > rhs.second;
+    else {
+        auto rec = lookup_account_names({datasource_account}).front();
+        if (rec && rec->name == datasource_account) {
+            account_id = rec->get_id();
         }
-    };
-    vector<PAIR> datasource_vec(tmp_results.begin(), tmp_results.end());
-    sort(datasource_vec.begin(), datasource_vec.end(), cmp_by_value());
-
-    std::map<account_id_type, uint64_t> results;
-    for (int i = 0; i < limit && i < datasource_vec.size(); ++i) {
-        results.insert(datasource_vec.at(i));
-    }
-
-    return results;
-}
-
-uint32_t database_api_impl::list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, account_id_type datasource_account) const {
-    return _db.get_index_type<second_hand_data_index>().indices().size();
+        else{
+            return 0;
+        } 
+    }   
+    return 0;
  }
+
 
 optional<data_transaction_object> database_api_impl::get_data_transaction_by_request_id(string request_id) const {
     const data_transaction_index & product_index = _db.get_index_type<data_transaction_index>();
