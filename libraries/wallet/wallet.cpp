@@ -1567,6 +1567,30 @@
            return sign_transaction(tx, broadcast);
        }
 
+       signed_transaction data_transaction_complain_datasource(string request_id, account_id_type requester, account_id_type datasource,
+        string merchant_copyright_hash, string datasource_copyright_hash, bool broadcast)
+       {
+           FC_ASSERT(!self.is_locked());
+           account_object requester_account = get_account(requester);
+           account_object datasource_account = get_account(datasource);
+           FC_ASSERT(0 != (&requester_account));
+           FC_ASSERT(0 != (&datasource_account));
+
+           data_transaction_complain_operation complain_op;
+           complain_op.request_id = request_id;
+           complain_op.requester = requester;
+           complain_op.datasource = datasource;
+           complain_op.merchant_copyright_hash = merchant_copyright_hash;
+           complain_op.datasource_copyright_hash = datasource_copyright_hash;
+           complain_op.create_date_time = fc::time_point_sec(fc::time_point::now());
+
+           signed_transaction tx;
+           tx.operations.push_back(complain_op);
+           set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+           tx.validate();
+           return sign_transaction(tx, broadcast);
+       }
+
        signed_transaction data_transaction_datasource_upload(string request_id, string requester, string datasource, string datasource_copyright_hash, bool broadcast)
        {
            FC_ASSERT(!self.is_locked());
@@ -3079,7 +3103,6 @@
             const account_object propose_account_obj = get_account(propose_account);
             FC_ASSERT( propose_account_obj.is_lifetime_member() );
             FC_ASSERT( account_merchant_obj.is_merchant_member() );
-            FC_ASSERT( account_merchant_obj.is_datasource_member() );
 
             account_upgrade_merchant_operation op;
             op.account_to_upgrade = account_merchant_obj.get_id();
@@ -3090,21 +3113,22 @@
             ext.version = operation_version_one;
             op.extensions.insert(ext);
 
-            account_upgrade_datasource_operation opEx;
-            opEx.account_to_upgrade = account_merchant_obj.get_id();
-            opEx.upgrade_to_datasource_member = false;
-            opEx.auth_referrer = propose_account_obj.get_id();
-
-            operation_ext_version_t extEx;
-            extEx.version = operation_version_one;
-            opEx.extensions.insert(extEx);
-
             const chain_parameters& current_params = get_global_properties().parameters;
             proposal_create_operation prop_op;
             prop_op.expiration_time = fc::time_point::now() + std::min(fc::seconds(current_params.maximum_proposal_lifetime / 2), fc::days(1));
             prop_op.fee_paying_account = propose_account_obj.get_id();
-            prop_op.proposed_ops.emplace_back(opEx);
-            current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
+            if (account_merchant_obj.is_datasource_member()){
+                account_upgrade_datasource_operation opEx;
+                opEx.account_to_upgrade = account_merchant_obj.get_id();
+                opEx.upgrade_to_datasource_member = false;
+                opEx.auth_referrer = propose_account_obj.get_id();
+    
+                operation_ext_version_t extEx;
+                extEx.version = operation_version_one;
+                opEx.extensions.insert(extEx);
+                prop_op.proposed_ops.emplace_back(opEx);
+                current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
+            }
             prop_op.proposed_ops.emplace_back(op);
             current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
 
@@ -3522,6 +3546,16 @@
        return my->_remote_db->get_data_transaction_total_count(start, end);
     }
 
+    optional<data_transaction_complain_t> wallet_api::get_most_data_transaction_complain_requester_by_time(fc::time_point_sec start, fc::time_point_sec end) const
+    {
+        return my->_remote_db->get_most_data_transaction_complain_requester_by_time(start, end);
+    }
+
+    optional<data_transaction_complain_t> wallet_api::get_most_data_transaction_complain_datasource_by_time(fc::time_point_sec start, fc::time_point_sec end) const
+    {
+        return my->_remote_db->get_most_data_transaction_complain_datasource_by_time(start, end);
+    }
+
     uint64_t wallet_api::get_data_transaction_commission(fc::time_point_sec start, fc::time_point_sec end) const
     {
        return my->_remote_db->get_data_transaction_commission(start, end);
@@ -3751,6 +3785,12 @@
     signed_transaction wallet_api::data_transaction_datasource_validate_error(string request_id, string datasource, bool broadcast)
     {
         return my->data_transaction_datasource_validate_error(request_id, datasource, broadcast);
+    }
+
+    signed_transaction wallet_api::data_transaction_complain_datasource(string request_id, account_id_type requester, account_id_type datasource,
+        string merchant_copyright_hash, string datasource_copyright_hash, bool broadcast)
+    {
+        return my->data_transaction_complain_datasource(request_id, requester,datasource, merchant_copyright_hash, datasource_copyright_hash, broadcast);
     }
 
     signed_transaction wallet_api::data_transaction_datasource_upload(string request_id, string requester, string datasource, string datasource_copyright_hash, bool broadcast)
@@ -5300,7 +5340,6 @@
         account_id_type account_id = get_account(account).get_id();
         return my->_remote_db->get_pocs_object(league_id, account_id, product_id);
     }
-
 
     vesting_balance_object_with_info::vesting_balance_object_with_info( const vesting_balance_object& vbo, fc::time_point_sec now )
        : vesting_balance_object( vbo )

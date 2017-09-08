@@ -110,11 +110,33 @@ namespace graphene { namespace chain {
         }
     };
 
+    struct data_transaction_complain_operation : public base_operation
+    {
+        struct fee_parameters_type {
+           uint64_t fee = 0;
+        };
+        string                                          request_id;
+        account_id_type                                 requester;
+        account_id_type                                 datasource;
+        asset                                           fee;
+        string                                          merchant_copyright_hash;
+        string                                          datasource_copyright_hash;
+        time_point_sec                                  create_date_time;
+        extensions_type                                 extensions;
+
+        account_id_type fee_payer() const { return requester; }
+        void            validate() const{ }
+        share_type      calculate_fee(const fee_parameters_type& k) const{
+            return k.fee;
+        }
+    };
+
 } } // graphene::chain
 FC_REFLECT( graphene::chain::data_transaction_create_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::data_transaction_update_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::data_transaction_datasource_upload_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::data_transaction_datasource_validate_error_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::data_transaction_complain_operation::fee_parameters_type, (fee) )
 
 
 FC_REFLECT( graphene::chain::data_transaction_create_operation,
@@ -147,5 +169,16 @@ FC_REFLECT( graphene::chain::data_transaction_datasource_validate_error_operatio
             (request_id)
             (datasource)
             (fee)
+            (extensions)
+)
+
+FC_REFLECT( graphene::chain::data_transaction_complain_operation,
+            (request_id)
+            (requester)
+            (datasource)
+            (fee)
+            (merchant_copyright_hash)
+            (datasource_copyright_hash)
+            (create_date_time)
             (extensions)
 )
