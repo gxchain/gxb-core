@@ -59,5 +59,14 @@ namespace graphene { namespace chain {
         void_result do_evaluate( const data_transaction_datasource_validate_error_operation& o );
         void_result do_apply( const data_transaction_datasource_validate_error_operation& o );
     };
+
+    class data_transaction_complain_evaluator : public evaluator<data_transaction_complain_evaluator>
+    {
+    public:
+        typedef data_transaction_complain_operation operation_type;
+
+        void_result do_evaluate(const data_transaction_complain_operation& op);
+        void_result do_apply(const data_transaction_complain_operation& op);
+    };
 } } // graphene::chain
 

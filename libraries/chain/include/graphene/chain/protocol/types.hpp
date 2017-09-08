@@ -82,7 +82,7 @@ namespace graphene { namespace chain {
    using                               fc::ecc::range_proof_type;
    using                               fc::ecc::range_proof_info;
    using                               fc::ecc::commitment_type;
-   struct void_t{};
+   struct void_t {};
 
    struct operation_ext_version_t {
        uint8_t version = 0;
@@ -90,23 +90,23 @@ namespace graphene { namespace chain {
 
    struct data_transaction_commission_rate_t {
     // 10 percent is 1000
-       uint16_t league_data_market_commission_rate = (10 * GRAPHENE_1_PERCENT);
-       uint16_t free_data_market_commission_rate = (10 * GRAPHENE_1_PERCENT);
+    uint16_t league_data_market_commission_rate = (10*GRAPHENE_1_PERCENT);
+    uint16_t free_data_market_commission_rate = (10*GRAPHENE_1_PERCENT);
    };
 
-   struct operation_ext_copyright_hash_t {
-       fc::optional<string> copyright_hash;
+   struct operation_ext_copyright_hash_t{
+       string copyright_hash;
    };
 
    struct pocs_threshold_t {
        uint64_t pocs_threshold = 0;
    };
 
-
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
 
-   enum asset_issuer_permission_flags {
+   enum asset_issuer_permission_flags
+   {
       charge_market_fee    = 0x01, /**< an issuer-specified percentage of all market trades in this asset is paid to the issuer */
       white_list           = 0x02, /**< accounts must be whitelisted in order to hold this asset */
       override_authority   = 0x04, /**< issuer may transfer asset back to himself */
@@ -121,57 +121,59 @@ namespace graphene { namespace chain {
       |witness_fed_asset|committee_fed_asset;
    const static uint32_t UIA_ASSET_ISSUER_PERMISSION_MASK = charge_market_fee|white_list|override_authority|transfer_restricted|disable_confidential;
 
-   enum reserved_spaces {
+   enum reserved_spaces
+   {
       relative_protocol_ids = 0,
       protocol_ids          = 1,
       implementation_ids    = 2
    };
 
-   // data market type
-   enum data_market_type_enum {
-      free_data_market   = 1,// free data market
-      league_data_market = 2// league data market
+   //市场类型
+   enum data_market_type_enum
+   {
+      free_data_market   = 1,//自由数据市场
+      league_data_market = 2//联盟数据市场
    };
 
    /**
-    * data market status enum
+     数据产品的状态
     * @brief The free_data_product_status enum
     */
-   enum data_market_category_status {
-        data_market_category_undo_status = 0,// init, not enabled
-        data_market_category_enable_status  = 1,// online, enabled
+   enum data_market_category_status{
+        data_market_category_undo_status = 0,//待上线/待发布
+        data_market_category_enable_status  = 1,//可用/已上线
    };
    /**
-    * data product status enum
-    * @brief data_product_status enum
+     数据产品的状态
+    * @brief The free_data_product_status enum
     */
-   enum data_product_status {
-        data_product_undo_status = 0,// init, not enabled
-        data_product_enable_status  = 1,// online 
-        data_product_pause_status = 2// disabled, offline
+   enum data_product_status{
+        data_product_undo_status = 0,//待上线/待发布
+        data_product_enable_status  = 1,//可用/已上线
+        data_product_pause_status = 2//暂停 或者 维护中
    };
    /**
-    * the league status enum
+     联盟对象的状态
     * @brief The league_status enum
     */
-   enum league_status {
-        league_undo_status = 0,// init status
-        league_enable_status  = 1,// enabled, online
-        league_pause_status = 2// disabled, offline
+   enum league_status{
+        league_undo_status = 0,//待上线/待发布
+        league_enable_status  = 1,//可用/已上线
+        league_pause_status = 2//暂停 或者 维护中
    };
 
    /**
-    * The league_data_product_status enum
+     联盟每部每一个成员的状态
     * @brief The league_data_product_status enum
     */
-   enum league_datasource_status {
-        league_datasource_undo_status = 0,// init status
-        league_datasource_enable_status  = 1,// enabled, online
-        league_datasource_pause_status = 2// disabled, offline
+   enum league_datasource_status{
+        league_datasource_undo_status = 0,//待上线
+        league_datasource_enable_status  = 1,//可用
+        league_datasource_pause_status = 2//暂停 或者 维护中
    };
 
    /**
-    * The data_transaction_status
+    * 数据交易的状态
     * @brief The data_transaction_status
     */
    enum data_transaction_status {
@@ -189,7 +191,7 @@ namespace graphene { namespace chain {
    };
 
    /**
-    * operation version
+    *  operation version
     */
    enum operation_version {
        operation_version_one = 1,
@@ -232,8 +234,9 @@ namespace graphene { namespace chain {
       league_object_type,//19
       data_transaction_object_type, //20
       pocs_object_type,//21
-      datasource_copyright_object_type,//22
-      second_hand_data_object_type,//23
+      datasource_copyright_object_type,//数据源版权登记类型 22
+      second_hand_data_object_type,//二手数据信息类型 23
+      data_transaction_complain_object_type,//24
       OBJECT_TYPE_COUNT /////< Sentry value which contains the number of different object types
 
    };
@@ -241,7 +244,7 @@ namespace graphene { namespace chain {
    enum impl_object_type
    {
       impl_global_property_object_type,//2.0.x
-      impl_dynamic_global_property_object_type,//1
+      impl_dynamic_global_property_object_type,
       impl_reserved0_object_type,      // formerly index_meta_object_type, TODO: delete me
       impl_asset_dynamic_data_type,//3
       impl_asset_bitasset_data_type,//4
@@ -257,11 +260,11 @@ namespace graphene { namespace chain {
       impl_special_authority_object_type,//14
       impl_buyback_object_type,//15
       impl_fba_accumulator_object_type,//16
-      impl_account_merchant_object_type,//17
-      impl_free_data_product_search_results_object_type,//18
-      impl_league_data_product_search_results_object_type,//19
-      impl_league_search_results_object_type,//20
-      impl_data_transaction_search_results_object_type,//21
+      impl_account_merchant_object_type,// current not used
+      impl_free_data_product_search_results_object_type,//
+      impl_league_data_product_search_results_object_type,//
+      impl_league_search_results_object_type,//
+      impl_data_transaction_search_results_object_type,//
       //impl_search_results_object_type
    };
 
@@ -292,6 +295,7 @@ namespace graphene { namespace chain {
    class pocs_object;
    class datasource_copyright_object;
    class second_hand_data_object;
+   class data_transaction_complain_object;
 
 
 
@@ -317,6 +321,7 @@ namespace graphene { namespace chain {
    typedef object_id< protocol_ids, pocs_object_type, pocs_object>                                  pocs_id_type;
    typedef object_id< protocol_ids, datasource_copyright_object_type, datasource_copyright_object>      datasource_copyright_id_type;
    typedef object_id< protocol_ids, second_hand_data_object_type, second_hand_data_object>         second_hand_data_id_type;
+   typedef object_id< protocol_ids, data_transaction_complain_object_type, data_transaction_complain_object> data_transaction_complain_id_type;
 
    // implementation types
    class global_property_object;
@@ -374,6 +379,17 @@ namespace graphene { namespace chain {
    typedef safe<int64_t>                                        share_type;
    typedef uint16_t                                             weight_type;
 
+   struct data_transaction_complain_t{
+    account_id_type requester_or_datasource;
+    uint64_t complain_times = 0;
+   };
+
+   typedef pair<account_id_type, uint64_t> PAIR;
+   struct CmpByValue {    
+       bool operator()(const PAIR& lhs, const PAIR& rhs) {    
+           return lhs.second > rhs.second;    
+       }    
+   }; 
    struct public_key_type
    {
        struct binary_key
@@ -489,6 +505,7 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (pocs_object_type)
                  (datasource_copyright_object_type)
                  (second_hand_data_object_type)
+                 (data_transaction_complain_object_type)
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,
@@ -559,12 +576,14 @@ FC_REFLECT_TYPENAME( graphene::chain::league_search_results_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::pocs_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::datasource_copyright_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::second_hand_data_id_type)
+FC_REFLECT_TYPENAME( graphene::chain::data_transaction_complain_id_type)
 
 FC_REFLECT( graphene::chain::void_t, )
 FC_REFLECT( graphene::chain::operation_ext_version_t, (version))
 FC_REFLECT( graphene::chain::data_transaction_commission_rate_t, (league_data_market_commission_rate)(free_data_market_commission_rate))
 FC_REFLECT( graphene::chain::operation_ext_copyright_hash_t, (copyright_hash))
 FC_REFLECT( graphene::chain::pocs_threshold_t, (pocs_threshold))
+FC_REFLECT( graphene::chain::data_transaction_complain_t, (requester_or_datasource)(complain_times))
 
 FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)
