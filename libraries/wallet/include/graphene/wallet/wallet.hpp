@@ -441,13 +441,14 @@ class wallet_api
        signed_transaction data_transaction_complain_datasource(string request_id, account_id_type requester, account_id_type datasource,
          string merchant_copyright_hash, string datasource_copyright_hash, bool broadcast);
 
-       /** get_most_data_transaction_complain_requester_by_time.
+       /** list_data_transaction_complain_requesters.
        *
-       * @param start
-       * @param end
-       * @return optional<data_transaction_complain_t>
+       * @param start_date_time
+       * @param end_date_time
+       * @param limit
+       * @return map<account_id_type, uint64_t>
        */ 
-       optional<data_transaction_complain_t> get_most_data_transaction_complain_requester_by_time(fc::time_point_sec start, fc::time_point_sec end) const;
+       map<account_id_type, uint64_t> list_data_transaction_complain_requesters(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint8_t limit) const;
 
        /** list_data_transaction_complain_datasources.
        *
@@ -980,10 +981,11 @@ class wallet_api
        *
        *  @todo there is no option for annual membership
        *  @param name the name or id of the account to upgrade
+       *  @param asset_symbol the symbol or id of the fee.
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction upgrading the account
        */
-      signed_transaction upgrade_account(string name, bool broadcast);
+      signed_transaction upgrade_account(string name, string asset_symbol, bool broadcast);
 
       /**
        * @brief upgrade_data_transaction_member
@@ -1655,10 +1657,12 @@ class wallet_api
        * @param url a URL to include in the witness record in the blockchain.  Clients may
        *            display this when showing a list of witnesses.  May be blank.
        * @param broadcast true to broadcast the transaction on the network
+       * @param asset_symbol the symbol or id of the fee.
        * @returns the signed transaction registering a witness
        */
       signed_transaction create_witness(string owner_account,
                                         string url,
+                                        string asset_symbol,
                                         bool broadcast = false);
 
       /**
@@ -2179,7 +2183,7 @@ FC_API( graphene::wallet::wallet_api,
         (data_transaction_datasource_upload)
         (data_transaction_datasource_validate_error)
         (data_transaction_complain_datasource)
-        (get_most_data_transaction_complain_requester_by_time)
+        (list_data_transaction_complain_requesters)
         (list_data_transaction_complain_datasources)
         (upgrade_account_merchant)
         (upgrade_account_datasource)
