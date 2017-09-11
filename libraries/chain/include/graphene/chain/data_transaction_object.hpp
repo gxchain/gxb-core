@@ -90,8 +90,8 @@ namespace graphene {
 
         class data_transaction_complain_object : public graphene::db::abstract_object<data_transaction_complain_object>{
         public:
-            static const uint8_t space_id = protocol_ids;    
-            static const uint8_t type_id = data_transaction_complain_object_type; 
+            static const uint8_t space_id = protocol_ids;
+            static const uint8_t type_id = data_transaction_complain_object_type;
             account_id_type                      requester;
             account_id_type                      datasource;
             string                               data_transaction_request_id;
@@ -110,7 +110,7 @@ namespace graphene {
             indexed_by<
                 ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
                 ordered_unique< tag<by_request_id>, member<data_transaction_object, string, &data_transaction_object::request_id> >,
-                ordered_non_unique< tag<by_requester>, 
+                ordered_non_unique< tag<by_requester>,
                     composite_key<
                         data_transaction_object,
                          member<data_transaction_object, account_id_type, &data_transaction_object::requester>
@@ -123,11 +123,14 @@ namespace graphene {
          */
         using data_transaction_index = generic_index<data_transaction_object, data_transaction_multi_index_type>;
 
+
+        struct by_create_date_time;
         using data_transaction_complain_multi_index_type = multi_index_container<
             data_transaction_complain_object,
             indexed_by<
                 ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
-                ordered_unique< tag<by_request_id>, member<data_transaction_complain_object, string, &data_transaction_complain_object::data_transaction_request_id> >              
+                ordered_non_unique< tag< by_create_date_time >, member< data_transaction_complain_object, time_point_sec, &data_transaction_complain_object::create_date_time > >,
+                ordered_unique< tag<by_request_id>, member<data_transaction_complain_object, string, &data_transaction_complain_object::data_transaction_request_id> >
                 >
             >;
 
@@ -141,7 +144,8 @@ FC_REFLECT( graphene::chain::data_transaction_datasource_status_object,
 )
 
 
-FC_REFLECT( graphene::chain::data_transaction_complain_object,
+FC_REFLECT_DERIVED( graphene::chain::data_transaction_complain_object,
+            (graphene::db::object),
             (requester)
             (datasource)
             (data_transaction_request_id)

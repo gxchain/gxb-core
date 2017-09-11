@@ -226,6 +226,17 @@ uint64_t database_api::get_account_count()const
    return my->get_account_count();
 }
 
+optional<data_transaction_complain_t> database_api::get_most_data_transaction_complain_requester_by_time(fc::time_point_sec start, fc::time_point_sec end) const
+{
+    return my->get_most_data_transaction_complain_requester_by_time(start, end);
+}
+
+
+map<account_id_type, uint64_t> database_api::list_data_transaction_complain_datasources(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint8_t limit) const
+{
+    return my->list_data_transaction_complain_datasources(start_date_time, end_date_time, limit);
+}
+
 uint64_t database_api::get_data_transaction_product_costs(fc::time_point_sec start, fc::time_point_sec end) const
 {
    return my->get_data_transaction_product_costs(start, end);

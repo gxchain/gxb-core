@@ -237,6 +237,8 @@ namespace graphene { namespace chain {
       pocs_object_type,//21
       datasource_copyright_object_type,//22
       second_hand_data_object_type,//23
+      data_transaction_complain_object_type,//24
+
       OBJECT_TYPE_COUNT /////< Sentry value which contains the number of different object types
 
    };
@@ -295,7 +297,7 @@ namespace graphene { namespace chain {
    class pocs_object;
    class datasource_copyright_object;
    class second_hand_data_object;
-
+   class data_transaction_complain_object;
 
 
    typedef object_id< protocol_ids, account_object_type,            account_object>               account_id_type;
@@ -320,6 +322,7 @@ namespace graphene { namespace chain {
    typedef object_id< protocol_ids, pocs_object_type, pocs_object>                                  pocs_id_type;
    typedef object_id< protocol_ids, datasource_copyright_object_type, datasource_copyright_object>      datasource_copyright_id_type;
    typedef object_id< protocol_ids, second_hand_data_object_type, second_hand_data_object>         second_hand_data_id_type;
+   typedef object_id< protocol_ids, data_transaction_complain_object_type, data_transaction_complain_object> data_transaction_complain_id_type;
 
    // implementation types
    class global_property_object;
@@ -377,6 +380,11 @@ namespace graphene { namespace chain {
    typedef safe<int64_t>                                        share_type;
    typedef uint16_t                                             weight_type;
 
+   struct data_transaction_complain_t {
+       account_id_type requester_or_datasource;
+       uint64_t complain_times = 0;
+   };
+
    struct public_key_type
    {
        struct binary_key
@@ -408,9 +416,9 @@ namespace graphene { namespace chain {
          uint32_t                   check = 0;
          fc::ecc::extended_key_data data;
       };
-      
+
       fc::ecc::extended_key_data key_data;
-       
+
       extended_public_key_type();
       extended_public_key_type( const fc::ecc::extended_key_data& data );
       extended_public_key_type( const fc::ecc::extended_public_key& extpubkey );
@@ -421,7 +429,7 @@ namespace graphene { namespace chain {
       friend bool operator == ( const extended_public_key_type& p1, const extended_public_key_type& p2);
       friend bool operator != ( const extended_public_key_type& p1, const extended_public_key_type& p2);
    };
-   
+
    struct extended_private_key_type
    {
       struct binary_key
@@ -430,9 +438,9 @@ namespace graphene { namespace chain {
          uint32_t                   check = 0;
          fc::ecc::extended_key_data data;
       };
-      
+
       fc::ecc::extended_key_data key_data;
-       
+
       extended_private_key_type();
       extended_private_key_type( const fc::ecc::extended_key_data& data );
       extended_private_key_type( const fc::ecc::extended_private_key& extprivkey );
@@ -492,6 +500,7 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (pocs_object_type)
                  (datasource_copyright_object_type)
                  (second_hand_data_object_type)
+                 (data_transaction_complain_object_type)
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,
@@ -562,12 +571,14 @@ FC_REFLECT_TYPENAME( graphene::chain::league_search_results_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::pocs_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::datasource_copyright_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::second_hand_data_id_type)
+FC_REFLECT_TYPENAME( graphene::chain::data_transaction_complain_id_type)
 
 FC_REFLECT( graphene::chain::void_t, )
 FC_REFLECT( graphene::chain::operation_ext_version_t, (version))
 FC_REFLECT( graphene::chain::data_transaction_commission_rate_t, (league_data_market_commission_rate)(free_data_market_commission_rate))
 FC_REFLECT( graphene::chain::operation_ext_copyright_hash_t, (copyright_hash))
 FC_REFLECT( graphene::chain::pocs_threshold_t, (pocs_threshold))
+FC_REFLECT( graphene::chain::data_transaction_complain_t, (requester_or_datasource)(complain_times))
 
 FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)

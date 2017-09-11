@@ -46,6 +46,7 @@
 #include <graphene/chain/protocol/league_ops.hpp>
 #include <graphene/chain/protocol/pay_data_transaction_ops.hpp>
 #include <graphene/chain/protocol/datasource_copyright_ops.hpp>
+
 namespace graphene { namespace chain {
 
    /**
@@ -123,7 +124,8 @@ namespace graphene { namespace chain {
             league_data_product_update_operation,//66
             league_create_operation,//67
             league_update_operation,//68
-            datasource_copyright_clear_operation//69
+            datasource_copyright_clear_operation,//69   
+            data_transaction_complain_operation//70
 
          > operation;
 

@@ -405,22 +405,22 @@ std::map<std::string, full_account> database_api_impl::get_full_accounts( const 
                     [&acnt] (const call_order_object& call) {
                        acnt.call_orders.emplace_back(call);
                     });
-          
+
       // get assets issued by user
       auto asset_range = _db.get_index_type<asset_index>().indices().get<by_issuer>().equal_range(account->id);
       std::for_each(asset_range.first, asset_range.second,
                     [&acnt] (const asset_object& asset) {
                        acnt.assets.emplace_back(asset.id);
                     });
-					
+
       // get withdraws permissions
       auto withdraw_range = _db.get_index_type<withdraw_permission_index>().indices().get<by_from>().equal_range(account->id);
       std::for_each(withdraw_range.first, withdraw_range.second,
                     [&acnt] (const withdraw_permission_object& withdraw) {
                        acnt.withdraws.emplace_back(withdraw);
                     });
-	  
-	  
+
+
       results[account_name_or_id] = acnt;
    }
    return results;
@@ -681,7 +681,7 @@ uint64_t database_api_impl::get_data_transaction_pay_fee(fc::time_point_sec star
             result += data_transaction_obj.commission;
         }
     }
-    return result;   
+    return result;
 }
 
 
@@ -697,7 +697,7 @@ uint64_t database_api_impl::get_data_transaction_product_costs_by_requester(stri
         if (rec && rec->name == requester) {
             account_id = rec->get_id();
         }
-        else 
+        else
             return result;
     }
     const auto& data_transaction_by_requester = _db.get_index_type<data_transaction_index>().indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
@@ -710,7 +710,7 @@ uint64_t database_api_impl::get_data_transaction_product_costs_by_requester(stri
     return result;
 }
 
-uint64_t database_api_impl::get_data_transaction_total_count_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const 
+uint64_t database_api_impl::get_data_transaction_total_count_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const
 {
     uint64_t result = 0;
     account_id_type account_id;
@@ -722,7 +722,7 @@ uint64_t database_api_impl::get_data_transaction_total_count_by_requester(string
         if (rec && rec->name == requester) {
             account_id = rec->get_id();
         }
-        else 
+        else
             return result;
     }
     const auto& data_transaction_by_requester = _db.get_index_type<data_transaction_index>().indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
@@ -747,7 +747,7 @@ uint64_t database_api_impl::get_data_transaction_pay_fees_by_requester(string re
         if (rec && rec->name == requester) {
             account_id = rec->get_id();
         }
-        else 
+        else
             return result;
     }
     const auto& data_transaction_by_requester = _db.get_index_type<data_transaction_index>().indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
@@ -814,6 +814,61 @@ uint64_t database_api_impl::get_data_transaction_total_count_by_product_id(strin
         FC_ASSERT(false, "product_id is invalid");
     }
     return result;
+}
+
+optional<data_transaction_complain_t> database_api_impl::get_most_data_transaction_complain_requester_by_time(fc::time_point_sec start, fc::time_point_sec end) const
+{
+    data_transaction_complain_t result;
+    map<account_id_type, uint64_t> map_complain;
+    vector<PAIR> accounts;
+    const auto& data_transaction_complain_by_id = _db.get_index_type<data_transaction_complain_index>().indices().get<by_id>();
+    for(auto& obj : data_transaction_complain_by_id){
+        if (obj.create_date_time >= start && obj.create_date_time <= end){
+            map<account_id_type, uint64_t>::iterator it = map_complain.find(obj.requester);
+            if (it != map_complain.end()){
+                ++it->second;
+            }
+            else{
+                map_complain.insert(make_pair(obj.requester, 1));
+            }
+        }
+    }
+    if (0 != map_complain.size()){
+        vector<PAIR> vec_complain(map_complain.begin(), map_complain.end());
+        sort(vec_complain.begin(), vec_complain.end(), cmp_pair_by_value());
+        result.requester_or_datasource = vec_complain.begin()->first;
+        result.complain_times = vec_complain.begin()->second;
+        return result;
+    }
+    else{
+        return {};
+    };
+}
+
+map<account_id_type, uint64_t> database_api_impl::list_data_transaction_complain_datasources(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint8_t limit) const
+{
+    const auto& idx = _db.get_index_type<data_transaction_complain_index>().indices().get<by_create_date_time>();
+    auto itr_start = idx.lower_bound(start_date_time);
+    auto itr_end = idx.upper_bound(end_date_time);
+
+    map<account_id_type, uint64_t> accounts;
+    for (const auto& obj : boost::make_iterator_range(itr_start, itr_end)) {
+        accounts[obj.datasource] = 0;
+    }
+    for (const auto& obj : boost::make_iterator_range(itr_start, itr_end)) {
+        accounts[obj.datasource]++;
+    }
+
+    // sort
+    vector<PAIR> datasources(accounts.begin(), accounts.end());
+    sort(datasources.begin(), datasources.end(), cmp_pair_by_value());
+
+    std::map<account_id_type, uint64_t> results;
+    for (uint8_t i = 0; i < limit && i < datasources.size(); ++i) {
+        results.insert(datasources.at(i));
+    }
+
+    return results;
 }
 
 /**
@@ -1187,7 +1242,6 @@ uint64_t database_api_impl::get_witness_count()const
 {
    return _db.get_index_type<witness_index>().indices().size();
 }
-
 
 vector<optional<committee_member_object>> database_api_impl::get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const
 {
@@ -1666,7 +1720,7 @@ void database_api_impl::handle_object_changed(bool force_notify, bool full_objec
    if( _subscribe_callback )
    {
       vector<variant> updates;
-      
+
       for(auto id : ids)
       {
          if( force_notify || is_subscribed_to_item(id) || is_impacted_account(impacted_accounts) )
@@ -1949,7 +2003,7 @@ data_transaction_search_results_object database_api_impl::list_data_transactions
         if (rec && rec->name == requester) {
             account_id = rec->get_id();
         }
-        else 
+        else
             return {};
     }
 
@@ -1974,23 +2028,17 @@ map<account_id_type, uint64_t> database_api_impl::list_second_hand_datasources(t
     const auto& idx = _db.get_index_type<second_hand_data_index>().indices().get<by_create_date_time>();
     auto range = idx.equal_range(boost::make_tuple(start_date_time, end_date_time));
 
-    std::map<account_id_type, uint64_t> tmp_results;
+    std::map<account_id_type, uint64_t> datasource_accounts;
     for (const second_hand_data_object& obj : boost::make_iterator_range(range.first, range.second)) {
-        tmp_results[obj.second_hand_datasource_id] = 0;
+        datasource_accounts[obj.second_hand_datasource_id] = 0;
     }
     for (const second_hand_data_object& obj : boost::make_iterator_range(range.first, range.second)) {
-        tmp_results[obj.second_hand_datasource_id]++;
+        datasource_accounts[obj.second_hand_datasource_id]++;
     }
-    
+
     // sort
-    typedef pair<account_id_type, uint64_t> PAIR;
-    struct cmp_by_value {
-        bool operator() (const PAIR& lhs, const PAIR& rhs) {
-            return lhs.second > rhs.second;
-        }
-    };
-    vector<PAIR> datasource_vec(tmp_results.begin(), tmp_results.end());
-    sort(datasource_vec.begin(), datasource_vec.end(), cmp_by_value());
+    vector<PAIR> datasource_vec(datasource_accounts.begin(), datasource_accounts.end());
+    sort(datasource_vec.begin(), datasource_vec.end(), cmp_pair_by_value());
 
     std::map<account_id_type, uint64_t> results;
     for (int i = 0; i < limit && i < datasource_vec.size(); ++i) {
