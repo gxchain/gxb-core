@@ -1003,18 +1003,21 @@
        } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(registrar_account)(referrer_account)(referrer_percent)(broadcast) ) }
 
 
-       signed_transaction upgrade_account(string name, bool broadcast)
+       signed_transaction upgrade_account(string name, string asset_symbol, bool broadcast)
        { try {
           FC_ASSERT( !self.is_locked() );
           account_object account_obj = get_account(name);
           FC_ASSERT( !account_obj.is_lifetime_member() );
+
+          fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
+          FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
 
           signed_transaction tx;
           account_upgrade_operation op;
           op.account_to_upgrade = account_obj.get_id();
           op.upgrade_to_lifetime_member = true;
           tx.operations = {op};
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, asset_obj);
           tx.validate();
 
           return sign_transaction( tx, broadcast );
@@ -2083,8 +2086,11 @@
 
        signed_transaction create_witness(string owner_account,
                                          string url,
+                                         string asset_symbol,
                                          bool broadcast /* = false */)
        { try {
+          fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
+          FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
           account_object witness_account = get_account(owner_account);
           fc::ecc::private_key active_private_key = get_private_key_for_account(witness_account);
           int witness_key_index = find_first_unused_derived_key_index(active_private_key);
@@ -2101,7 +2107,7 @@
 
           signed_transaction tx;
           tx.operations.push_back( witness_create_op );
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, asset_obj);
           tx.validate();
 
           _wallet.pending_witness_registrations[owner_account] = key_to_wif(witness_private_key);
@@ -3584,9 +3590,9 @@
        return my->_remote_db->get_data_transaction_total_count(start, end);
     }
 
-    optional<data_transaction_complain_t> wallet_api::get_most_data_transaction_complain_requester_by_time(fc::time_point_sec start, fc::time_point_sec end) const
+    map<account_id_type, uint64_t> wallet_api::list_data_transaction_complain_requesters(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint8_t limit) const
     {
-        return my->_remote_db->get_most_data_transaction_complain_requester_by_time(start, end);
+        return my->_remote_db->list_data_transaction_complain_requesters(start_date_time, end_date_time, limit);
     }
 
     map<account_id_type, uint64_t> wallet_api::list_data_transaction_complain_datasources(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint8_t limit) const
@@ -4287,9 +4293,10 @@
 
     signed_transaction wallet_api::create_witness(string owner_account,
                                                   string url,
+                                                  string asset_symbol,
                                                   bool broadcast /* = false */)
     {
-       return my->create_witness(owner_account, url, broadcast);
+       return my->create_witness(owner_account, url, asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::create_worker(
@@ -4769,9 +4776,9 @@
        return my->_keys;
     }
 
-    signed_transaction wallet_api::upgrade_account( string name, bool broadcast )
+    signed_transaction wallet_api::upgrade_account( string name, string asset_symbol, bool broadcast )
     {
-       return my->upgrade_account(name,broadcast);
+       return my->upgrade_account(name, asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::upgrade_data_transaction_member(string name, string auth_referrer, bool broadcast)
