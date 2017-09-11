@@ -428,6 +428,36 @@ class wallet_api
         */
        signed_transaction data_transaction_datasource_validate_error(string request_id, string datasource, bool broadcast);
 
+       /** data_transaction_complain_datasource Complaint data fraud.
+       *
+       * @param request_id
+       * @param requester Account id of the requester
+       * @param datasource Account id of the datasource
+       * @param merchant_copyright_hash
+       * @param datasource_copyright_hash
+       * @param broadcast true if you wish to broadcast the transaction
+       * @return signed_transaction
+       */
+       signed_transaction data_transaction_complain_datasource(string request_id, account_id_type requester, account_id_type datasource,
+         string merchant_copyright_hash, string datasource_copyright_hash, bool broadcast);
+
+       /** get_most_data_transaction_complain_requester_by_time.
+       *
+       * @param start
+       * @param end
+       * @return optional<data_transaction_complain_t>
+       */ 
+       optional<data_transaction_complain_t> get_most_data_transaction_complain_requester_by_time(fc::time_point_sec start, fc::time_point_sec end) const;
+
+       /** list_data_transaction_complain_datasources.
+       *
+       * @param start_date_time
+       * @param end_date_time
+       * @param limit
+       * @return map<account_id_type, uint64_t>
+       */
+       map<account_id_type, uint64_t> list_data_transaction_complain_datasources(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint8_t limit) const;
+
        /**
         * @brief data_transaction_datasource_upload
         * @param request_id
@@ -2148,6 +2178,9 @@ FC_API( graphene::wallet::wallet_api,
         (pay_data_transaction)
         (data_transaction_datasource_upload)
         (data_transaction_datasource_validate_error)
+        (data_transaction_complain_datasource)
+        (get_most_data_transaction_complain_requester_by_time)
+        (list_data_transaction_complain_datasources)
         (upgrade_account_merchant)
         (upgrade_account_datasource)
         (upgrade_data_transaction_member)
