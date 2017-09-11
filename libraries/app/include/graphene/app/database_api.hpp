@@ -274,7 +274,7 @@ class database_api
       * @param end
       * @return the number of the data transaction count during this time
       */
-      uint64_t get_data_transaction_total_count(fc::time_point_sec start, fc::time_point_sec end) const; 
+      uint64_t get_data_transaction_total_count(fc::time_point_sec start, fc::time_point_sec end) const;
 
 
       /**
@@ -288,7 +288,7 @@ class database_api
       * @param start
       * @param end
       * @return the number of the data transaction commission during this time
-      */         
+      */
       uint64_t get_data_transaction_commission(fc::time_point_sec start, fc::time_point_sec end) const;
 
       /**
@@ -296,7 +296,7 @@ class database_api
       * @param start
       * @param end
       * @return the number of the data transaction pay fee during this time
-      */        
+      */
       uint64_t get_data_transaction_pay_fee(fc::time_point_sec start, fc::time_point_sec end) const;
 
       /**
@@ -305,7 +305,7 @@ class database_api
       * @param start
       * @param end
       * @return the number of the data transaction product costs of the requester during this time
-      */       
+      */
       uint64_t get_data_transaction_product_costs_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const;
 
       /**
@@ -314,8 +314,8 @@ class database_api
       * @param start
       * @param end
       * @return the number of the data transaction product count of the requester during this time
-      */      
-      uint64_t get_data_transaction_total_count_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const; 
+      */
+      uint64_t get_data_transaction_total_count_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const;
 
       /**
       * @brief get_data_transaction_pay_fees_by_requester
@@ -323,7 +323,7 @@ class database_api
       * @param start
       * @param end
       * @return the number of the data transaction pay fees of the requester during this time
-      */      
+      */
       uint64_t get_data_transaction_pay_fees_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const;
 
       /**
@@ -332,17 +332,34 @@ class database_api
       * @param start
       * @param end
       * @return the number of the data transaction product costs of the product during this time
-      */   
+      */
       uint64_t get_data_transaction_product_costs_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const;
-      
+
       /**
       * @brief get_data_transaction_total_count_by_product_id
       * @param product_id
       * @param start
       * @param end
       * @return the number of the data transaction total count of the product during this time
-      */ 
-      uint64_t get_data_transaction_total_count_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const; 
+      */
+      uint64_t get_data_transaction_total_count_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const;
+
+      /** get_most_data_transaction_complain_requester_by_time.
+      *
+      * @param start
+      * @param end
+      * @return optional<data_transaction_complain_t>
+      */
+      optional<data_transaction_complain_t> get_most_data_transaction_complain_requester_by_time(fc::time_point_sec start, fc::time_point_sec end) const;
+
+      /** list_data_transaction_complain_datasources.
+      *
+      * @param start_date_time
+      * @param end_date_time
+      * @param limit
+      * @return optional<data_transaction_complain_t>
+      */
+      map<account_id_type, uint64_t> list_data_transaction_complain_datasources(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint8_t limit) const;
 
       ////////////
       // Assets //
@@ -738,7 +755,7 @@ class database_api
      */
     vector<optional<league_object>> get_leagues(const vector<league_id_type>& league_ids) const;
 
-    
+
     optional<data_transaction_object> get_data_transaction_by_request_id(string request_id) const;
     data_transaction_search_results_object list_data_transactions_by_requester(string requester, uint32_t limit) const;
 
@@ -802,6 +819,8 @@ FC_API(graphene::app::database_api,
    (get_data_transaction_pay_fees_by_requester)
    (get_data_transaction_product_costs_by_product_id)
    (get_data_transaction_total_count_by_product_id)
+   (get_most_data_transaction_complain_requester_by_time)
+   (list_data_transaction_complain_datasources)
 
    // Balances
    (get_account_balances)
