@@ -344,20 +344,21 @@ class database_api
       */
       uint64_t get_data_transaction_total_count_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const;
 
-      /** get_most_data_transaction_complain_requester_by_time.
+      /** list_data_transaction_complain_requesters.
       *
-      * @param start
-      * @param end
-      * @return optional<data_transaction_complain_t>
+      * @param start_date_time
+      * @param end_date_time
+      * @param limit
+      * @return map<account_id_type, uint64_t>
       */
-      optional<data_transaction_complain_t> get_most_data_transaction_complain_requester_by_time(fc::time_point_sec start, fc::time_point_sec end) const;
-
+      map<account_id_type, uint64_t> list_data_transaction_complain_requesters(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint8_t limit) const;
+      
       /** list_data_transaction_complain_datasources.
       *
       * @param start_date_time
       * @param end_date_time
       * @param limit
-      * @return optional<data_transaction_complain_t>
+      * @return map<account_id_type, uint64_t>
       */
       map<account_id_type, uint64_t> list_data_transaction_complain_datasources(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint8_t limit) const;
 
@@ -819,7 +820,7 @@ FC_API(graphene::app::database_api,
    (get_data_transaction_pay_fees_by_requester)
    (get_data_transaction_product_costs_by_product_id)
    (get_data_transaction_total_count_by_product_id)
-   (get_most_data_transaction_complain_requester_by_time)
+   (list_data_transaction_complain_requesters)
    (list_data_transaction_complain_datasources)
 
    // Balances
