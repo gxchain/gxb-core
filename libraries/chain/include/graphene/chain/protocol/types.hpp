@@ -380,11 +380,6 @@ namespace graphene { namespace chain {
    typedef safe<int64_t>                                        share_type;
    typedef uint16_t                                             weight_type;
 
-   struct data_transaction_complain_t {
-       account_id_type requester_or_datasource;
-       uint64_t complain_times = 0;
-   };
-
    struct public_key_type
    {
        struct binary_key
@@ -578,7 +573,6 @@ FC_REFLECT( graphene::chain::operation_ext_version_t, (version))
 FC_REFLECT( graphene::chain::data_transaction_commission_rate_t, (league_data_market_commission_rate)(free_data_market_commission_rate))
 FC_REFLECT( graphene::chain::operation_ext_copyright_hash_t, (copyright_hash))
 FC_REFLECT( graphene::chain::pocs_threshold_t, (pocs_threshold))
-FC_REFLECT( graphene::chain::data_transaction_complain_t, (requester_or_datasource)(complain_times))
 
 FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)

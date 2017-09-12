@@ -226,9 +226,9 @@ uint64_t database_api::get_account_count()const
    return my->get_account_count();
 }
 
-optional<data_transaction_complain_t> database_api::get_most_data_transaction_complain_requester_by_time(fc::time_point_sec start, fc::time_point_sec end) const
+map<account_id_type, uint64_t> database_api::list_data_transaction_complain_requesters(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint8_t limit) const
 {
-    return my->get_most_data_transaction_complain_requester_by_time(start, end);
+    return my->list_data_transaction_complain_requesters(start_date_time, end_date_time, limit);
 }
 
 
