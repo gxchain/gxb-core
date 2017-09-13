@@ -50,8 +50,11 @@ namespace graphene {
             // issuer of league
             account_id_type                         issuer;
             vector<account_id_type>                 members;
-            // Trigger pocs threshold
-            uint64_t                                pocs_threshold = 0;
+
+            // Trigger pocs thresholds
+            vector<uint64_t>                        pocs_thresholds;
+            // the base fee rate
+            vector<uint64_t>                        fee_bases;
         };
 
         // sort method for league_object
@@ -105,7 +108,7 @@ FC_REFLECT_DERIVED(graphene::chain::league_object,
                    (graphene::db::object),
                    (league_name)(brief_desc)
                    (data_products)(prices)(status)
-                   (category_id)(icon)(issuer)(create_date_time)(recommend_expiration_date_time)(total)(members)(pocs_threshold))
+                   (category_id)(icon)(issuer)(create_date_time)(recommend_expiration_date_time)(total)(members)(pocs_thresholds)(fee_bases))
 
 FC_REFLECT_DERIVED(graphene::chain::league_search_results_object,
                    (graphene::db::object),
