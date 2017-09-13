@@ -1417,7 +1417,7 @@
            return sign_transaction(tx, broadcast);
        }
 
-       signed_transaction create_league_data_product(string product_name,string brief_desc,string category_id,double refer_price,string icon,vector<schema_context_object> schema_contexts,string issuer,bool broadcast){
+       signed_transaction create_league_data_product(string product_name,string brief_desc,string category_id,double refer_price,string icon,vector<schema_context_object> schema_contexts,string issuer, uint64_t pocs_threshold, bool broadcast){
 
            FC_ASSERT( !self.is_locked() );
            account_object issuer_account = get_account( issuer );
@@ -1435,6 +1435,9 @@
            create_op.schema_contexts = schema_contexts;
            create_op.issuer = issuer_account.id;
            create_op.create_date_time = fc::time_point_sec(fc::time_point::now());
+           pocs_threshold_league_data_product_t ext;
+           ext.pocs_threshold = pocs_threshold;
+           create_op.extensions.insert(ext);
 
            signed_transaction tx;
            tx.operations.push_back( create_op );
@@ -1444,7 +1447,7 @@
 
        }
 
-       signed_transaction propose_league_data_product_update(const string &proposing_account,string league_data_product_id,string new_product_name,string new_brief_desc,string new_category_id,double new_refer_price,string new_icon, vector<schema_context_object> new_schema_contexts,uint8_t new_status,bool broadcast)
+       signed_transaction propose_league_data_product_update(const string &proposing_account,string league_data_product_id,string new_product_name,string new_brief_desc,string new_category_id,double new_refer_price,string new_icon, vector<schema_context_object> new_schema_contexts,uint8_t new_status,uint64_t new_pocs_threshold,bool broadcast)
        {
            FC_ASSERT( !self.is_locked() );
 
@@ -1476,6 +1479,9 @@
            update_op.new_icon = new_icon;
            update_op.new_schema_contexts = schema_contexts;
            update_op.new_status = new_status;
+           pocs_threshold_league_data_product_t ext;
+           ext.pocs_threshold = new_pocs_threshold;
+           update_op.extensions.insert(ext);
 
            const chain_parameters& current_params = get_global_properties().parameters;
            proposal_create_operation prop_op;
@@ -1492,7 +1498,7 @@
            return sign_transaction(tx, broadcast);
        }
 
-       signed_transaction create_league(string league_name, string brief_desc, vector<account_id_type> members, vector <league_data_product_id_type> data_products, vector <uint64_t> prices,string category_id, string icon, string issuer, bool recommend, bool broadcast) {
+       signed_transaction create_league(string league_name, string brief_desc, vector<account_id_type> members, vector <league_data_product_id_type> data_products, vector <uint64_t> prices,string category_id, string icon, string issuer, vector<uint64_t> pocs_thresholds, vector<uint64_t> fee_bases, vector<uint8_t> pocs_weights, bool recommend, bool broadcast) {
            FC_ASSERT( !self.is_locked() );
 
            account_object issuer_account = get_account( issuer );
@@ -1521,6 +1527,11 @@
                create_op.recommend_expiration_date_time = time_point_sec::min();
            }
            create_op.members = members;
+           pocs_threshold_league_t ext;
+           ext.pocs_thresholds = pocs_thresholds;
+           ext.fee_bases = fee_bases;
+           ext.pocs_weights = pocs_weights;
+           create_op.extensions.insert(ext);
 
            signed_transaction tx;
            tx.operations.push_back( create_op );
@@ -2935,6 +2946,8 @@
           string new_category_id, 
           string new_icon, 
           uint8_t new_status,
+          vector<uint64_t> pocs_thresholds,
+          vector<uint64_t> fee_bases,
           bool new_recommend, 
           bool broadcast
           )
@@ -2968,6 +2981,10 @@
                update_op.new_recommend_expiration_date_time = time_point_sec::min();
            }
            update_op.new_members = new_members;
+           pocs_threshold_league_t ext;
+           ext.pocs_thresholds.swap(pocs_thresholds);
+           ext.fee_bases.swap(fee_bases);
+           update_op.extensions.insert(ext);
 
            const chain_parameters& current_params = get_global_properties().parameters;
            proposal_create_operation prop_op;
@@ -3806,19 +3823,19 @@
         return my->propose_free_data_product_update(proposing_account,free_data_product_id,new_product_name,new_brief_desc,new_datasource_account,new_category_id,new_price,new_icon,new_schema_contexts,new_parent_id,new_status,new_recommend,broadcast);
     }
 
-    signed_transaction wallet_api::create_league_data_product(string product_name,string brief_desc,string category_id,double refer_price,string icon,vector<schema_context_object> schema_contexts,string issuer,bool broadcast)
+    signed_transaction wallet_api::create_league_data_product(string product_name,string brief_desc,string category_id,double refer_price,string icon,vector<schema_context_object> schema_contexts,string issuer,uint64_t pocs_threshold, bool broadcast)
     {
-        return my->create_league_data_product(product_name,brief_desc,category_id,refer_price,icon,schema_contexts,issuer,broadcast);
+        return my->create_league_data_product(product_name,brief_desc,category_id,refer_price,icon,schema_contexts,issuer,pocs_threshold,broadcast);
     }
 
-    signed_transaction wallet_api::propose_league_data_product_update(const string &proposing_account,string league_data_product_id,string new_product_name,string new_brief_desc,string new_category_id,double new_refer_price,string new_icon,vector<schema_context_object> new_schema_contexts,uint8_t new_status,bool broadcast)
+    signed_transaction wallet_api::propose_league_data_product_update(const string &proposing_account,string league_data_product_id,string new_product_name,string new_brief_desc,string new_category_id,double new_refer_price,string new_icon,vector<schema_context_object> new_schema_contexts,uint8_t new_status,uint64_t new_pocs_threshold,bool broadcast)
     {
-        return my->propose_league_data_product_update(proposing_account,league_data_product_id,new_product_name,new_brief_desc,new_category_id,new_refer_price,new_icon,new_schema_contexts,new_status,broadcast);
+        return my->propose_league_data_product_update(proposing_account,league_data_product_id,new_product_name,new_brief_desc,new_category_id,new_refer_price,new_icon,new_schema_contexts,new_status,new_pocs_threshold,broadcast);
     }
 
-    signed_transaction wallet_api::create_league(string league_name, string brief_desc, vector<account_id_type> members, vector <league_data_product_id_type> data_products, vector <uint64_t> prices, string category_id, string icon, string issuer, bool recommend, bool broadcast) 
+    signed_transaction wallet_api::create_league(string league_name, string brief_desc, vector<account_id_type> members, vector <league_data_product_id_type> data_products, vector <uint64_t> prices, string category_id, string icon, string issuer, vector<uint64_t> pocs_thresholds, vector<uint64_t> fee_bases, vector<uint8_t> pocs_weights, bool recommend, bool broadcast) 
     {
-        return my->create_league(league_name, brief_desc, members, data_products, prices,category_id, icon, issuer, recommend, broadcast);
+        return my->create_league(league_name, brief_desc, members, data_products, prices,category_id, icon, issuer, pocs_thresholds, fee_bases, pocs_weights, recommend, broadcast);
     }
 
     signed_transaction wallet_api::data_transaction_create(string request_id, object_id_type product_id, fc::optional<league_id_type> league_id, string version, string params, string requester, bool broadcast)
@@ -4450,11 +4467,13 @@
           string new_category_id, 
           string new_icon, 
           uint8_t new_status,
+          vector<uint64_t> pocs_thresholds,
+          vector<uint64_t> fee_bases,
           bool new_recommend, 
           bool broadcast
           )
     {
-        return my->propose_league_update(proposing_account ,league_id ,new_league_name ,new_brief_desc ,new_members, new_data_products ,new_prices ,new_category_id ,new_icon ,new_status ,new_recommend ,broadcast);
+        return my->propose_league_update(proposing_account ,league_id ,new_league_name ,new_brief_desc ,new_members, new_data_products ,new_prices ,new_category_id ,new_icon ,new_status ,pocs_thresholds, fee_bases, new_recommend ,broadcast);
     }
 
     signed_transaction wallet_api::propose_parameter_change(
