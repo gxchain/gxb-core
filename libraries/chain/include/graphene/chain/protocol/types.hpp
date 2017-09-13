@@ -98,10 +98,18 @@ namespace graphene { namespace chain {
        fc::optional<string> copyright_hash;
    };
 
-   struct pocs_threshold_t {
-       uint64_t pocs_threshold = 0;
+   struct pocs_threshold_league_t {
+       // Trigger pocs thresholds
+       vector<uint64_t> pocs_thresholds;
+       // the base fee rate
+       vector<uint64_t> fee_bases;
+       // the weight of the pocs
+       vector<uint8_t> pocs_weights;
    };
 
+   struct pocs_threshold_league_data_product_t{
+       uint64_t pocs_threshold = 0;
+   };
 
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
@@ -129,52 +137,46 @@ namespace graphene { namespace chain {
       implementation_ids    = 2
    };
 
-   //市场类型
    enum data_market_type_enum
    {
-      free_data_market   = 1,//自由数据市场
-      league_data_market = 2//联盟数据市场
+      free_data_market   = 1,//free_data_market
+      league_data_market = 2//league_data_market
    };
 
    /**
-     数据产品的状态
-    * @brief The free_data_product_status enum
+    * @brief The data_market_category_status enum
     */
    enum data_market_category_status{
-        data_market_category_undo_status = 0,//待上线/待发布
-        data_market_category_enable_status  = 1,//可用/已上线
+        data_market_category_undo_status = 0,// init
+        data_market_category_enable_status  = 1,//enable, online
    };
    /**
-     数据产品的状态
     * @brief The free_data_product_status enum
     */
    enum data_product_status{
-        data_product_undo_status = 0,//待上线/待发布
-        data_product_enable_status  = 1,//可用/已上线
-        data_product_pause_status = 2//暂停 或者 维护中
+        data_product_undo_status = 0,//init
+        data_product_enable_status  = 1,//enable, online
+        data_product_pause_status = 2// disable
    };
    /**
-     联盟对象的状态
     * @brief The league_status enum
     */
    enum league_status{
-        league_undo_status = 0,//待上线/待发布
-        league_enable_status  = 1,//可用/已上线
-        league_pause_status = 2//暂停 或者 维护中
+        league_undo_status = 0,//init
+        league_enable_status  = 1,//enable, online
+        league_pause_status = 2//disable
    };
 
    /**
-     联盟每部每一个成员的状态
     * @brief The league_data_product_status enum
     */
    enum league_datasource_status{
-        league_datasource_undo_status = 0,//待上线
-        league_datasource_enable_status  = 1,//可用
-        league_datasource_pause_status = 2//暂停 或者 维护中
+        league_datasource_undo_status = 0,//init
+        league_datasource_enable_status  = 1,//enable, online
+        league_datasource_pause_status = 2//disable
    };
 
    /**
-    * 数据交易的状态
     * @brief The data_transaction_status
     */
    enum data_transaction_status {
@@ -340,7 +342,7 @@ namespace graphene { namespace chain {
    class special_authority_object;
    class buyback_object;
    class fba_accumulator_object;
-   class account_merchant_object;
+   class account_merchant_object;//账户下的商户对象
    class free_data_product_search_results_object;
    class league_data_product_search_results_object;
    class league_search_results_object;
@@ -572,7 +574,8 @@ FC_REFLECT( graphene::chain::void_t, )
 FC_REFLECT( graphene::chain::operation_ext_version_t, (version))
 FC_REFLECT( graphene::chain::data_transaction_commission_rate_t, (league_data_market_commission_rate)(free_data_market_commission_rate))
 FC_REFLECT( graphene::chain::operation_ext_copyright_hash_t, (copyright_hash))
-FC_REFLECT( graphene::chain::pocs_threshold_t, (pocs_threshold))
+FC_REFLECT( graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_bases)(pocs_weights))
+FC_REFLECT( graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
 
 FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)
