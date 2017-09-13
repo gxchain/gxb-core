@@ -358,10 +358,11 @@ class wallet_api
        * @param icon
        * @param schema_contexts
        * @param issuer
+       * @param pocs_threshold
        * @param broadcast
        * @return
        */
-      signed_transaction create_league_data_product(string product_name,string brief_desc,string category_id,double refer_price,string icon,vector<schema_context_object> schema_contexts,string issuer,bool broadcast);
+      signed_transaction create_league_data_product(string product_name,string brief_desc,string category_id,double refer_price,string icon,vector<schema_context_object> schema_contexts,string issuer,uint64_t pocs_threshold,bool broadcast);
       /**
        * @brief propose_league_data_product_update
        * @param proposing_account
@@ -373,10 +374,11 @@ class wallet_api
        * @param new_icon
        * @param new_schema_contexts
        * @param new_status
+       * @param new_pocs_threshold
        * @param broadcast
        * @return
        */
-      signed_transaction propose_league_data_product_update(const string &proposing_account,string league_data_product,string new_product_name,string new_brief_desc,string new_category_id,double new_refer_price,string new_icon,vector<schema_context_object> new_schema_contexts,uint8_t new_status,bool broadcast);
+      signed_transaction propose_league_data_product_update(const string &proposing_account,string league_data_product,string new_product_name,string new_brief_desc,string new_category_id,double new_refer_price,string new_icon,vector<schema_context_object> new_schema_contexts,uint8_t new_status,uint64_t new_pocs_threshold,bool broadcast);
 
 
       /**
@@ -389,11 +391,13 @@ class wallet_api
        * @param category_id
        * @param icon
        * @param issuer
+       * @param pocs_thresholds
+       * @param fee_bases
        * @param recommend
        * @param broadcast
        * @return
        */
-       signed_transaction create_league(string league_name, string brief_desc, vector<account_id_type> members, vector <league_data_product_id_type> data_products, vector <uint64_t> prices,string category_id, string icon, string issuer, bool recommend, bool broadcast);
+       signed_transaction create_league(string league_name, string brief_desc, vector<account_id_type> members, vector <league_data_product_id_type> data_products, vector <uint64_t> prices,string category_id, string icon, string issuer, vector<uint64_t> pocs_thresholds, vector<uint64_t> fee_bases, bool recommend, bool broadcast);
 
       /**
        * @brief data_transaction_create
@@ -1884,8 +1888,10 @@ class wallet_api
        * @param new_category_id
        * @param new_icon
        * @param new_status
+       * @param pocs_thresholds
+       * @param fee_bases
        * @param new_recommend
-    * @param broadcast
+       * @param broadcast
        */
        signed_transaction propose_league_update(
           const string& proposing_account,
@@ -1896,8 +1902,10 @@ class wallet_api
           vector <league_data_product_id_type> new_data_products, 
           vector <uint64_t> new_prices,
           string new_category_id, 
-          string new_icon, 
+          string new_icon,
           uint8_t new_status,
+          vector<uint64_t> new_pocs_thresholds,
+          vector<uint64_t> new_fee_bases,
           bool new_recommend, 
           bool broadcast
           );

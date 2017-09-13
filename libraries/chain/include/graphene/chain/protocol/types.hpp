@@ -98,10 +98,16 @@ namespace graphene { namespace chain {
        fc::optional<string> copyright_hash;
    };
 
-   struct pocs_threshold_t {
-       uint64_t pocs_threshold = 0;
+   struct pocs_threshold_league_t {
+       // Trigger pocs thresholds
+       vector<uint64_t> pocs_thresholds;
+       // the base fee rate
+       vector<uint64_t> fee_bases;
    };
 
+   struct pocs_threshold_league_data_product_t{
+       uint64_t pocs_threshold = 0;
+   };
 
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
@@ -192,7 +198,7 @@ namespace graphene { namespace chain {
    };
 
    /**
-    *  operation version
+    *  增加operation version, 为了向前兼容
     */
    enum operation_version {
        operation_version_one = 1,
@@ -340,7 +346,7 @@ namespace graphene { namespace chain {
    class special_authority_object;
    class buyback_object;
    class fba_accumulator_object;
-   class account_merchant_object;
+   class account_merchant_object;//账户下的商户对象
    class free_data_product_search_results_object;
    class league_data_product_search_results_object;
    class league_search_results_object;
@@ -572,7 +578,8 @@ FC_REFLECT( graphene::chain::void_t, )
 FC_REFLECT( graphene::chain::operation_ext_version_t, (version))
 FC_REFLECT( graphene::chain::data_transaction_commission_rate_t, (league_data_market_commission_rate)(free_data_market_commission_rate))
 FC_REFLECT( graphene::chain::operation_ext_copyright_hash_t, (copyright_hash))
-FC_REFLECT( graphene::chain::pocs_threshold_t, (pocs_threshold))
+FC_REFLECT( graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_bases))
+FC_REFLECT( graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
 
 FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)
