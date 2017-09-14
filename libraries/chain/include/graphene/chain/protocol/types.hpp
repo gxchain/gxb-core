@@ -104,7 +104,7 @@ namespace graphene { namespace chain {
        // the base fee rate
        vector<uint64_t> fee_bases;
        // the weight of the pocs
-       vector<uint8_t> pocs_weights;
+       vector<uint64_t> pocs_weights;
    };
 
    struct pocs_threshold_league_data_product_t{
