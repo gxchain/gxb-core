@@ -26,7 +26,7 @@
 #include <graphene/chain/protocol/vote.hpp>
 #include <graphene/chain/league_object.hpp>
 
-namespace graphene { namespace chain { 
+namespace graphene { namespace chain {
 
     struct league_create_operation : public base_operation
     {
@@ -35,8 +35,8 @@ namespace graphene { namespace chain {
         };
 
         league_id_type                       league;
-        string                               league_name; 
-        string                               brief_desc; 
+        string                               league_name;
+        string                               brief_desc;
         vector<league_data_product_id_type>  data_products;
         vector<uint64_t>                     prices;
         data_market_category_id_type         category_id;
@@ -64,8 +64,8 @@ namespace graphene { namespace chain {
         };
 
         league_id_type                                  league;
-        optional <string>                               new_league_name; 
-        optional <string>                               new_brief_desc; 
+        optional <string>                               new_league_name;
+        optional <string>                               new_brief_desc;
         optional <vector<league_data_product_id_type>>  new_data_products;
         optional <vector<uint64_t>>                     new_prices;
         optional <uint8_t>                              new_status;
@@ -96,8 +96,8 @@ FC_REFLECT( graphene::chain::league_update_operation::fee_parameters_type, (fee)
 
 FC_REFLECT( graphene::chain::league_create_operation,
             (league)
-            (league_name) 
-            (brief_desc) 
+            (league_name)
+            (brief_desc)
             (data_products)
             (prices)
             (category_id)
