@@ -398,7 +398,7 @@ class wallet_api
        * @param broadcast
        * @return
        */
-       signed_transaction create_league(string league_name, string brief_desc, vector<account_id_type> members, vector <league_data_product_id_type> data_products, vector <uint64_t> prices,string category_id, string icon, string issuer, vector<uint64_t> pocs_thresholds, vector<uint64_t> fee_bases, vector<uint8_t> pocs_weights, bool recommend, bool broadcast);
+       signed_transaction create_league(string league_name, string brief_desc, vector<account_id_type> members, vector <league_data_product_id_type> data_products, vector <uint64_t> prices,string category_id, string icon, string issuer, vector<uint64_t> pocs_thresholds, vector<uint64_t> fee_bases, vector<uint64_t> pocs_weights, bool recommend, bool broadcast);
 
       /**
        * @brief data_transaction_create
@@ -1889,8 +1889,9 @@ class wallet_api
        * @param new_category_id
        * @param new_icon
        * @param new_status
-       * @param pocs_thresholds
-       * @param fee_bases
+       * @param new_pocs_thresholds
+       * @param new_fee_bases
+       * @param new_pocs_weights
        * @param new_recommend
        * @param broadcast
        */
@@ -1907,6 +1908,7 @@ class wallet_api
           uint8_t new_status,
           vector<uint64_t> new_pocs_thresholds,
           vector<uint64_t> new_fee_bases,
+          vector<uint64_t> new_pocs_weights,
           bool new_recommend, 
           bool broadcast
           );

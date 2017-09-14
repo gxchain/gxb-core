@@ -56,7 +56,7 @@ namespace graphene {
             // the base fee rate
             vector<uint64_t>                        fee_bases;
             // the weight of the pocs
-            vector<uint8_t>                         pocs_weights;
+            vector<uint64_t>                        pocs_weights;
         };
 
         // sort method for league_object
