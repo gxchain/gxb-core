@@ -29,7 +29,7 @@ namespace chain
 {
 
 /**
- *  @brief Data source copyright registration
+ *  @brief datasource_copyright_object
  *  @ingroup object
  *  @ingroup protocol
  */
@@ -49,18 +49,18 @@ class datasource_copyright_object : public graphene ::chain ::abstract_object<da
 struct by_copyright_hash;
 struct by_multi_id;
 using datasource_copyright_multi_index_type = multi_index_container<
-    datasource_copyright_object, 
+    datasource_copyright_object,
     indexed_by<
         ordered_unique<tag<by_id>, member<object, object_id_type, &object::id>>,
         ordered_unique<tag<by_copyright_hash>,
             composite_key<
-                datasource_copyright_object, 
+                datasource_copyright_object,
                 member<datasource_copyright_object, string, &datasource_copyright_object::copyright_hash>
             >
         >,
         ordered_non_unique<tag<by_multi_id>,
             composite_key<
-                datasource_copyright_object, 
+                datasource_copyright_object,
                 member<datasource_copyright_object, account_id_type, &datasource_copyright_object::datasource_account_id>,
                 member<datasource_copyright_object, object_id_type, &datasource_copyright_object::product_id>
             >

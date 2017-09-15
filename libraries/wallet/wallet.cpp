@@ -575,7 +575,7 @@
           return _remote_db->get_global_properties();
        }
 
-       data_transaction_commission_rate_t get_commission_rate() const 
+       data_transaction_commission_rate_t get_commission_rate() const
        {
          return _remote_db->get_commission_rate();
        }
@@ -1566,7 +1566,7 @@
            tx.validate();
            return sign_transaction(tx, broadcast);
        }
-       
+
        signed_transaction pay_data_transaction(string from, string to, asset amount, string request_id, bool broadcast)
        {
            FC_ASSERT( !self.is_locked() );
@@ -2934,22 +2934,22 @@
 
           return m;
        }
-       
+
        signed_transaction propose_league_update(
           const string& proposing_account,
-          string league_id, 
+          string league_id,
           string new_league_name,
-          string new_brief_desc, 
+          string new_brief_desc,
           vector<account_id_type> new_members,
-          vector <league_data_product_id_type> new_data_products, 
+          vector <league_data_product_id_type> new_data_products,
           vector <uint64_t> new_prices,
-          string new_category_id, 
-          string new_icon, 
+          string new_category_id,
+          string new_icon,
           uint8_t new_status,
           vector<uint64_t> new_pocs_thresholds,
           vector<uint64_t> new_fee_bases,
           vector<uint64_t> new_pocs_weights,
-          bool new_recommend, 
+          bool new_recommend,
           bool broadcast
           )
        {
@@ -3121,8 +3121,8 @@
        }
 
        signed_transaction propose_deprecate_datasource(
-        string propose_account, 
-        string datasource_account, 
+        string propose_account,
+        string datasource_account,
         bool broadcast = false)
         {try {
             FC_ASSERT( !self.is_locked() );
@@ -3156,8 +3156,8 @@
         } FC_CAPTURE_AND_RETHROW( (datasource_account) ) }
 
         signed_transaction propose_deprecate_merchant(
-            string propose_account, 
-            string merchant_account, 
+            string propose_account,
+            string merchant_account,
             bool broadcast = false)
         {try {
             FC_ASSERT( !self.is_locked() );
@@ -3185,7 +3185,7 @@
                 opEx.account_to_upgrade = account_merchant_obj.get_id();
                 opEx.upgrade_to_datasource_member = false;
                 opEx.auth_referrer = propose_account_obj.get_id();
-    
+
                 operation_ext_version_t extEx;
                 extEx.version = operation_version_one;
                 opEx.extensions.insert(extEx);
@@ -3201,7 +3201,7 @@
             tx.validate();
 
             return sign_transaction(tx, broadcast);
-        } FC_CAPTURE_AND_RETHROW( (merchant_account) ) }   
+        } FC_CAPTURE_AND_RETHROW( (merchant_account) ) }
 
        signed_transaction approve_proposal(
           const string& fee_paying_account,
@@ -3654,7 +3654,7 @@
        return my->_remote_db->get_data_transaction_product_costs_by_product_id(product_id, start, end) / GRAPHENE_BLOCKCHAIN_PRECISION;
     }
 
-    uint64_t wallet_api::get_data_transaction_total_count_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const 
+    uint64_t wallet_api::get_data_transaction_total_count_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const
     {
        return my->_remote_db->get_data_transaction_total_count_by_product_id(product_id, start, end);
     }
@@ -3724,7 +3724,7 @@
                 std::stringstream ss;
                 auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
                 result.push_back(operation_detail{memo, ss.str(), o});
-            }       
+            }
             if (current.size() < std::min<uint32_t>(100, limit))
                 break;
             limit -= current.size();
@@ -3835,7 +3835,7 @@
         return my->propose_league_data_product_update(proposing_account,league_data_product_id,new_product_name,new_brief_desc,new_category_id,new_refer_price,new_icon,new_schema_contexts,new_status,new_pocs_threshold,broadcast);
     }
 
-    signed_transaction wallet_api::create_league(string league_name, string brief_desc, vector<account_id_type> members, vector <league_data_product_id_type> data_products, vector <uint64_t> prices, string category_id, string icon, string issuer, vector<uint64_t> pocs_thresholds, vector<uint64_t> fee_bases, vector<uint64_t> pocs_weights, bool recommend, bool broadcast) 
+    signed_transaction wallet_api::create_league(string league_name, string brief_desc, vector<account_id_type> members, vector <league_data_product_id_type> data_products, vector <uint64_t> prices, string category_id, string icon, string issuer, vector<uint64_t> pocs_thresholds, vector<uint64_t> fee_bases, vector<uint64_t> pocs_weights, bool recommend, bool broadcast)
     {
         return my->create_league(league_name, brief_desc, members, data_products, prices,category_id, icon, issuer, pocs_thresholds, fee_bases, pocs_weights, recommend, broadcast);
     }
@@ -3906,17 +3906,17 @@
         return my->list_league_data_products(data_market_category_id,offset,limit,order_by,keyword,show_all);
     }
 
-    league_search_results_object wallet_api::list_leagues(string data_market_category_id,uint32_t offset,uint32_t limit,string order_by,string keyword,bool show_all) const 
+    league_search_results_object wallet_api::list_leagues(string data_market_category_id,uint32_t offset,uint32_t limit,string order_by,string keyword,bool show_all) const
     {
         return my->list_leagues(data_market_category_id,offset,limit,order_by,keyword,show_all);
     }
 
-    data_transaction_search_results_object wallet_api::list_data_transactions_by_requester(string requester, uint32_t limit) const 
+    data_transaction_search_results_object wallet_api::list_data_transactions_by_requester(string requester, uint32_t limit) const
     {
         return my->list_data_transactions_by_requester(requester, limit);
     }
 
-    optional<data_transaction_object> wallet_api::get_data_transaction_by_request_id(string request_id) const 
+    optional<data_transaction_object> wallet_api::get_data_transaction_by_request_id(string request_id) const
     {
         return my->get_data_transaction_by_request_id(request_id);
     }
@@ -4460,19 +4460,19 @@
 
     signed_transaction wallet_api::propose_league_update(
           const string& proposing_account,
-          string league_id, 
+          string league_id,
           string new_league_name,
-          string new_brief_desc, 
+          string new_brief_desc,
           vector<account_id_type> new_members,
-          vector <league_data_product_id_type> new_data_products, 
+          vector <league_data_product_id_type> new_data_products,
           vector <uint64_t> new_prices,
-          string new_category_id, 
-          string new_icon, 
+          string new_category_id,
+          string new_icon,
           uint8_t new_status,
           vector<uint64_t> new_pocs_thresholds,
           vector<uint64_t> new_fee_bases,
           vector<uint64_t> new_pocs_weights,
-          bool new_recommend, 
+          bool new_recommend,
           bool broadcast
           )
     {
@@ -4529,7 +4529,7 @@
        return my->get_dynamic_global_properties();
     }
 
-    data_transaction_commission_rate_t wallet_api::get_commission_rate() const 
+    data_transaction_commission_rate_t wallet_api::get_commission_rate() const
     {
         return my->get_commission_rate();
     }
