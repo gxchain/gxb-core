@@ -123,9 +123,7 @@ int main( int argc, char** argv )
       cfg.loggers.back().level = fc::log_level::debug;
       cfg.loggers.back().appenders = {"rpc"};
 
-      if (options.count("enable-rpc-log")) {
-          fc::configure_logging( cfg );
-      }
+      fc::configure_logging(cfg);
 
       fc::ecc::private_key committee_private_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
 
