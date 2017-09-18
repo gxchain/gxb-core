@@ -375,69 +375,67 @@ namespace detail {
          }
          _chain_db->add_checkpoints( loaded_checkpoints );
 
-         if( _options->count("replay-blockchain") )
+         bool replay = false;
+         std::string replay_reason = "reason not provided";
+
+         // never replay if data dir is empty
+         if( fc::exists( _data_dir ) && fc::directory_iterator( _data_dir ) != fc::directory_iterator() )
          {
-            ilog("Replaying blockchain on user request.");
-            _chain_db->reindex(_data_dir/"blockchain", initial_state());
-         } else if( clean ) {
-
-            auto is_new = [&]() -> bool
+            if( _options->count("replay-blockchain") )
             {
-               // directory doesn't exist
-               if( !fc::exists( _data_dir ) )
-                  return true;
-               // if directory exists but is empty, return true; else false.
-               return ( fc::directory_iterator( _data_dir ) == fc::directory_iterator() );
-            };
-
-            auto is_outdated = [&]() -> bool
+               replay = true;
+               replay_reason = "replay-blockchain argument specified";
+            }
+            else if( !clean )
             {
-               if( !fc::exists( _data_dir / "db_version" ) )
-                  return true;
-               std::string version_str;
-               fc::read_file_contents( _data_dir / "db_version", version_str );
-               return (version_str != GRAPHENE_CURRENT_DB_VERSION);
-            };
-
-            bool need_reindex = (!is_new() && is_outdated());
-            std::string reindex_reason = "version upgrade";
-
-            if( !need_reindex )
+               replay = true;
+               replay_reason = "unclean shutdown detected";
+            }
+            else if( !fc::exists( _data_dir / "db_version" ) )
             {
-               try
+               replay = true;
+               replay_reason = "db_version file not found";
+            }
+            else
+            {
+               std::string version_string;
+               fc::read_file_contents( _data_dir / "db_version", version_string );
+
+               if( version_string != GRAPHENE_CURRENT_DB_VERSION )
                {
-                  _chain_db->open(_data_dir / "blockchain", initial_state);
-               }
-               catch( const fc::exception& e )
-               {
-                  ilog( "caught exception ${e} in open()", ("e", e.to_detail_string()) );
-                  need_reindex = true;
-                  reindex_reason = "exception in open()";
+                   replay = true;
+                   replay_reason = "db_version file content mismatch";
                }
             }
+         }
 
-            if( need_reindex )
+         if( !replay )
+         {
+            try
             {
-               ilog("Replaying blockchain due to ${reason}", ("reason", reindex_reason) );
-
-               fc::remove_all( _data_dir / "db_version" );
-               _chain_db->reindex(_data_dir / "blockchain", initial_state());
-
-               // doing this down here helps ensure that DB will be wiped
-               // if any of the above steps were interrupted on a previous run
-               if( !fc::exists( _data_dir / "db_version" ) )
-               {
-                  std::ofstream db_version(
-                     (_data_dir / "db_version").generic_string().c_str(),
-                     std::ios::out | std::ios::binary | std::ios::trunc );
-                  std::string version_string = GRAPHENE_CURRENT_DB_VERSION;
-                  db_version.write( version_string.c_str(), version_string.size() );
-                  db_version.close();
-               }
+               _chain_db->open( _data_dir / "blockchain", initial_state );
             }
-         } else {
-            wlog("Detected unclean shutdown. Replaying blockchain...");
-            _chain_db->reindex(_data_dir / "blockchain", initial_state());
+            catch( const fc::exception& e )
+            {
+               ilog( "Caught exception ${e} in open()", ("e", e.to_detail_string()) );
+
+               replay = true;
+               replay_reason = "exception in open()";
+            }
+         }
+
+         if( replay )
+         {
+            ilog( "Replaying blockchain due to: ${reason}", ("reason", replay_reason) );
+
+            fc::remove_all( _data_dir / "db_version" );
+            _chain_db->reindex( _data_dir / "blockchain", initial_state() );
+
+            const auto mode = std::ios::out | std::ios::binary | std::ios::trunc;
+            std::ofstream db_version( (_data_dir / "db_version").generic_string().c_str(), mode );
+            std::string version_string = GRAPHENE_CURRENT_DB_VERSION;
+            db_version.write( version_string.c_str(), version_string.size() );
+            db_version.close();
          }
 
          if (!_options->count("genesis-json") &&
@@ -525,7 +523,6 @@ namespace detail {
       { try {
 
          auto latency = fc::time_point::now() - blk_msg.block.timestamp;
-         FC_ASSERT( (latency.count()/1000) > -5000, "Rejecting block with timestamp in the future" );
          if (!sync_mode || blk_msg.block.block_num() % 10000 == 0)
          {
             const auto& witness = blk_msg.block.witness(*_chain_db);
@@ -538,6 +535,7 @@ namespace detail {
                  ("w",witness_account.name)
                  ("i",last_irr)("d",blk_msg.block.block_num()-last_irr) );
          }
+         FC_ASSERT( (latency.count()/1000) > -5000, "Rejecting block with timestamp in the future" );
 
          try {
             // TODO: in the case where this block is valid but on a fork that's too old for us to switch to,
