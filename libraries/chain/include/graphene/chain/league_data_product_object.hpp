@@ -44,14 +44,14 @@ namespace graphene {
             // data product status
             // 0 --> init, 1 --> online, 2 --> offline
             uint8_t                                 status;
-            // icon of data product  
+            // icon of data product
             string                                  icon;
             // schema of input/output in data_transaction
             vector<schema_context_object>           schema_contexts;
             time_point_sec                          create_date_time;
-            // total data_transaction count 
-            uint64_t                                total; 
-            // issuer of product  
+            // total data_transaction count
+            uint64_t                                total = 0;
+            // issuer of product
             account_id_type                         issuer;
             // Trigger pocs threshold
             uint64_t                                pocs_threshold = 0;
