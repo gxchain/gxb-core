@@ -56,7 +56,7 @@ namespace graphene {
             // the base fee rate
             vector<uint64_t>                        fee_bases;
             // the weight of the pocs
-            vector<uint64_t>                        pocs_weights;
+            vector<uint64_t>                        product_pocs_weights;
         };
 
         // sort method for league_object
@@ -110,7 +110,7 @@ FC_REFLECT_DERIVED(graphene::chain::league_object,
                    (graphene::db::object),
                    (league_name)(brief_desc)
                    (data_products)(prices)(status)
-                   (category_id)(icon)(issuer)(create_date_time)(recommend_expiration_date_time)(total)(members)(pocs_thresholds)(fee_bases)(pocs_weights))
+                   (category_id)(icon)(issuer)(create_date_time)(recommend_expiration_date_time)(total)(members)(pocs_thresholds)(fee_bases)(product_pocs_weights))
 
 FC_REFLECT_DERIVED(graphene::chain::league_search_results_object,
                    (graphene::db::object),
