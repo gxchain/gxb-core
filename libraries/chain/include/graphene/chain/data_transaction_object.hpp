@@ -37,11 +37,12 @@ namespace graphene {
         struct  data_transaction_datasource_status_object
         {
             account_id_type     datasource;
+            //value is in enum data_transaction_datasource_status
             uint8_t             status = 0;
         };
 
         /**
-         * 查询数据对象
+         * Query the data transaction object
          * @brief
          *
          *
@@ -55,11 +56,11 @@ namespace graphene {
             object_id_type                          product_id;
             string                                  version;
             string                                  params;
-            // 跟踪查询的处理状态
-            uint8_t                                 status;
-            // 查询数据的创建时间
+            // value is in enum data_transaction_status
+            uint8_t                                 status = 0;
+            // data creation time
             time_point_sec                          create_date_time;
-            // 查询的请求者
+            // The requester of the query
             account_id_type                         requester;
             fc::optional<league_id_type>            league_id = fc::optional<league_id_type>();
             string                                  memo;
@@ -72,7 +73,7 @@ namespace graphene {
             uint64_t                                commission = 0;
         };
 
-        // data_transaction_object 的排序函数
+        // data_transaction_object sort function
         struct sort_data_transaction_object_by_create_date_time {
             bool operator() (const data_transaction_object &l, const data_transaction_object &r) {
                 return l.create_date_time > r.create_date_time;
