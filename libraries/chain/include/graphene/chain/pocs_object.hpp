@@ -31,7 +31,7 @@ namespace graphene { namespace chain {
      *  @ingroup protocol
      */
      class pocs_object : public graphene::chain::abstract_object<pocs_object>
-     {  
+     {
        public:
           static const uint8_t space_id = protocol_ids;
           static const uint8_t type_id = pocs_object_type;
@@ -40,7 +40,7 @@ namespace graphene { namespace chain {
           uint64_t          total_sell = 0;
           uint64_t          total_buy = 0;
      };
-     
+
      struct by_id;
      struct by_league_id;
      struct by_account_id;
