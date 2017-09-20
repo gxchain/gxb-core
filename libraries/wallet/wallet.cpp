@@ -1530,7 +1530,7 @@
            pocs_threshold_league_t ext;
            ext.pocs_thresholds = pocs_thresholds;
            ext.fee_bases = fee_bases;
-           ext.pocs_weights = pocs_weights;
+           ext.product_pocs_weights = pocs_weights;
            create_op.extensions.insert(ext);
 
            signed_transaction tx;
@@ -2985,7 +2985,7 @@
            pocs_threshold_league_t ext;
            ext.pocs_thresholds = new_pocs_thresholds;
            ext.fee_bases = new_fee_bases;
-           ext.pocs_weights = new_pocs_weights;
+           ext.product_pocs_weights = new_pocs_weights;
            update_op.extensions.insert(ext);
 
            const chain_parameters& current_params = get_global_properties().parameters;
