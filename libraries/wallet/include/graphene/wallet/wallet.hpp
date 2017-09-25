@@ -1676,11 +1676,13 @@ class wallet_api
        * @param witness The name of the witness's owner account.  Also accepts the ID of the owner account or the ID of the witness.
        * @param url Same as for create_witness.  The empty string makes it remain the same.
        * @param block_signing_key The new block signing public key.  The empty string makes it remain the same.
+       * @param asset_symbol the symbol or id of the fee.
        * @param broadcast true if you wish to broadcast the transaction.
        */
       signed_transaction update_witness(string witness_name,
                                         string url,
                                         string block_signing_key,
+                                        string asset_symbol,
                                         bool broadcast = false);
 
 
