@@ -1530,7 +1530,7 @@
            pocs_threshold_league_t ext;
            ext.pocs_thresholds = pocs_thresholds;
            ext.fee_bases = fee_bases;
-           ext.product_pocs_weights = pocs_weights;
+           ext.pocs_weights = pocs_weights;
            create_op.extensions.insert(ext);
 
            signed_transaction tx;
@@ -2129,8 +2129,11 @@
        signed_transaction update_witness(string witness_name,
                                          string url,
                                          string block_signing_key,
+                                         string asset_symbol,
                                          bool broadcast /* = false */)
        { try {
+          fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
+          FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
           witness_object witness = get_witness(witness_name);
           account_object witness_account = get_account( witness.witness_account );
           fc::ecc::private_key active_private_key = get_private_key_for_account(witness_account);
@@ -2145,7 +2148,7 @@
 
           signed_transaction tx;
           tx.operations.push_back( witness_update_op );
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, asset_obj);
           tx.validate();
 
           return sign_transaction( tx, broadcast );
@@ -2985,7 +2988,7 @@
            pocs_threshold_league_t ext;
            ext.pocs_thresholds = new_pocs_thresholds;
            ext.fee_bases = new_fee_bases;
-           ext.product_pocs_weights = new_pocs_weights;
+           ext.pocs_weights = new_pocs_weights;
            update_op.extensions.insert(ext);
 
            const chain_parameters& current_params = get_global_properties().parameters;
@@ -4344,9 +4347,10 @@
        string witness_name,
        string url,
        string block_signing_key,
+       string asset_symbol,
        bool broadcast /* = false */)
     {
-       return my->update_witness(witness_name, url, block_signing_key, broadcast);
+       return my->update_witness(witness_name, url, block_signing_key, asset_symbol, broadcast);
     }
 
     vector< vesting_balance_object_with_info > wallet_api::get_vesting_balances( string account_name )
