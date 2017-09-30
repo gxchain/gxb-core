@@ -273,6 +273,18 @@ struct operation_detail {
    operation_history_object op;
 };
 
+struct operation_detail_ex {
+   string                    memo;
+   string                    description;
+   operation_history_object op;
+   transaction_id_type transaction_id;
+};
+
+struct account_history_operation_detail {
+   uint32_t                     total_without_operations;
+   vector<operation_detail_ex>  details;
+};
+
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
  * performs minimal caching. This API could be provided locally to be used by a web interface.
@@ -491,7 +503,7 @@ class wallet_api
        * @returns compile time info and client and dependencies versions
        */
       variant_object                    about() const;
-      optional<signed_block_with_info>    get_block( uint32_t num );
+      optional<signed_block_with_info>    get_block( uint32_t num )const;
       /** Returns the number of accounts registered on the blockchain
        * @returns the number of registered accounts
        */
@@ -628,6 +640,18 @@ class wallet_api
        */
       vector<operation_detail>  get_account_history(string name, int limit)const;
 
+      /** Returns the most recent operations on the named account.
+       *
+       * This returns a list of operation history objects, which describe activity on the account.
+       *
+       * @param name the name or id of the account
+       * @param operations the type of operations
+       * @param start the start place of the operation_history_objects
+       * @param limit the number of entries to return (starting from the most recent)
+       * @returns account_history_operation_detail
+       */
+      account_history_operation_detail get_account_history_by_operations(string account_name_or_id, vector<uint32_t> operation_indexs, uint32_t start, int limit)const;
+      
       /** Returns the relative operations on the named account from start number.
        *
        * @param name the name or id of the account
@@ -2056,6 +2080,12 @@ FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphen
 FC_REFLECT( graphene::wallet::operation_detail, 
             (memo)(description)(op) )
 
+FC_REFLECT( graphene::wallet::operation_detail_ex, 
+            (memo)(description)(op)(transaction_id) )
+
+FC_REFLECT( graphene::wallet::account_history_operation_detail,
+            (total_without_operations)(details))
+
 FC_API( graphene::wallet::wallet_api,
         (help)
         (gethelp)
@@ -2129,6 +2159,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_commission_rate)
         (get_account_count)
         (get_account_history)
+        (get_account_history_by_operations)
         (get_relative_account_history)
         (get_data_transaction_product_costs)
         (get_data_transaction_total_count)
