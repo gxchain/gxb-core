@@ -276,7 +276,8 @@ namespace graphene { namespace app {
         history_operation_detail result;
         vector<operation_history_object> operation_history_objs_tmp;
         vector<operation_history_object> operation_history_objs;
-        operation_history_objs_tmp = get_relative_account_history(account, start, limit, limit);
+        start = start > 0 ? start : 1;
+        operation_history_objs_tmp = get_relative_account_history(account, start, limit, limit + start - 1);
         for(auto& operation_history_obj : operation_history_objs_tmp){
             ++total;
             if (find(operation_indexs.begin(), operation_indexs.end(), operation_history_obj.op.which()) != operation_indexs.end()){
