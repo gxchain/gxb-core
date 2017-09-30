@@ -3742,24 +3742,19 @@
         uint32_t total = 0;
         auto account_id = get_account(account_name_or_id).get_id();
 
-        while( limit > 0 ){
-           history_operation_detail current = my->_remote_hist->get_account_history_by_operations(account_id, operation_indexs, start, std::min(100,limit));
-           total += current.total_without_operations;
-           for (auto &operation_history_obj : current.operation_history_objs) {
-              std::stringstream ss;
-              transaction_id_type transaction_id;
-              auto memo = operation_history_obj.op.visit(detail::operation_printer(ss, *my, operation_history_obj.result));
-              optional<signed_block_with_info> block = get_block(operation_history_obj.block_num);
-              if (block.valid()){
-                  if (operation_history_obj.trx_in_block < block->transaction_ids.size()){
-                     transaction_id = block->transaction_ids[operation_history_obj.trx_in_block];
-                  }
-              }
-              detail_exs.push_back(operation_detail_ex{memo, ss.str(), operation_history_obj, transaction_id});
-           }
-           if (current.operation_history_objs.size() < std::min<uint32_t>(100, limit))
-              break;
-           limit -= current.operation_history_objs.size();
+        history_operation_detail current = my->_remote_hist->get_account_history_by_operations(account_id, operation_indexs, start, std::min(100,limit));
+        total = current.total_without_operations;
+        for (auto &operation_history_obj : current.operation_history_objs) {
+            std::stringstream ss;
+            transaction_id_type transaction_id;
+            auto memo = operation_history_obj.op.visit(detail::operation_printer(ss, *my, operation_history_obj.result));
+            optional<signed_block_with_info> block = get_block(operation_history_obj.block_num);
+            if (block.valid()){
+                if (operation_history_obj.trx_in_block < block->transaction_ids.size()){
+                    transaction_id = block->transaction_ids[operation_history_obj.trx_in_block];
+                }
+            }
+            detail_exs.push_back(operation_detail_ex{memo, ss.str(), operation_history_obj, transaction_id});
         }
         result.details = detail_exs;
         result.total_without_operations = total;
