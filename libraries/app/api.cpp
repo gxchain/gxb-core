@@ -276,6 +276,33 @@ namespace graphene { namespace app {
                                                                        operation_history_id_type start,
                                                                        operation_history_id_type stop,
                                                                        unsigned limit) const
+    history_operation_detail history_api::get_account_history_by_operations( account_id_type account,
+                                                                                     vector<uint32_t> operation_indexs,
+                                                                                     uint32_t start,
+                                                                                     unsigned limit)
+    {
+        FC_ASSERT(limit <= 100 && limit > 0);
+        uint32_t total = 0;
+        history_operation_detail result;
+        vector<operation_history_object> operation_history_objs_tmp;
+        vector<operation_history_object> operation_history_objs;
+        operation_history_objs_tmp = get_relative_account_history(account, start, limit, limit);
+        for(auto& operation_history_obj : operation_history_objs_tmp){
+            ++total;
+            if (find(operation_indexs.begin(), operation_indexs.end(), operation_history_obj.op.which()) != operation_indexs.end()){
+                operation_history_objs.push_back(operation_history_obj);
+            }
+        }
+        result.total_without_operations = total;
+        result.operation_history_objs = operation_history_objs;
+        return result;
+    }
+    
+    vector<operation_history_object> history_api::get_account_history_operations( account_id_type account, 
+                                                                                  int operation_id,
+                                                                                  operation_history_id_type start, 
+                                                                                  operation_history_id_type stop,
+                                                                                  unsigned limit) const
     {
        FC_ASSERT( _app.chain_database() );
        const auto& db = *_app.chain_database();
@@ -329,7 +356,7 @@ namespace graphene { namespace app {
 
             auto itr = by_seq_idx.upper_bound( boost::make_tuple( account, start ) );
             auto itr_stop = by_seq_idx.lower_bound( boost::make_tuple( account, stop ) );
-
+            FC_ASSERT(itr != itr_stop,"can't find history");
             do
             {
                 --itr;

@@ -1530,7 +1530,7 @@
            pocs_threshold_league_t ext;
            ext.pocs_thresholds = pocs_thresholds;
            ext.fee_bases = fee_bases;
-           ext.pocs_weights = pocs_weights;
+           ext.product_pocs_weights = pocs_weights;
            create_op.extensions.insert(ext);
 
            signed_transaction tx;
@@ -2736,7 +2736,6 @@
           {
              auto r = result.as<vector<operation_detail>>();
              std::stringstream ss;
-
              for( operation_detail& d : r )
              {
                 operation_history_object& i = d.op;
@@ -2744,6 +2743,28 @@
                 FC_ASSERT(b);
                 ss << b->timestamp.to_iso_string() << " ";
                 i.op.visit(operation_printer(ss, *this, i.result));
+                ss << " \n";
+             }
+
+             return ss.str();
+          };
+
+          m["get_account_history_by_operations"] = [this](variant result, const fc::variants& a)
+          {
+             auto r = result.as<account_history_operation_detail>();
+             std::stringstream ss;
+             ss << "total_without_operations : ";
+             ss << r.total_without_operations;
+             ss << " \n";
+             for( operation_detail_ex& d : r.details )
+             {
+                operation_history_object& i = d.op;
+                auto b = _remote_db->get_block_header(i.block_num);
+                FC_ASSERT(b);
+                ss << b->timestamp.to_iso_string() << " ";
+                i.op.visit(operation_printer(ss, *this, i.result));
+                ss << " transaction_id : ";
+                ss << d.transaction_id.str();
                 ss << " \n";
              }
 
@@ -2988,7 +3009,7 @@
            pocs_threshold_league_t ext;
            ext.pocs_thresholds = new_pocs_thresholds;
            ext.fee_bases = new_fee_bases;
-           ext.pocs_weights = new_pocs_weights;
+           ext.product_pocs_weights = new_pocs_weights;
            update_op.extensions.insert(ext);
 
            const chain_parameters& current_params = get_global_properties().parameters;
@@ -3592,7 +3613,7 @@
        return my->copy_wallet_file(destination_filename);
     }
 
-    optional<signed_block_with_info> wallet_api::get_block(uint32_t num)
+    optional<signed_block_with_info> wallet_api::get_block(uint32_t num)const
     {
        return my->_remote_db->get_block(num);
     }
@@ -3713,9 +3734,41 @@
        return result;
     }
 
+    account_history_operation_detail wallet_api::get_account_history_by_operations(string account_name_or_id, vector<uint32_t> operation_indexs, uint32_t start, int limit)const
+    {
+        FC_ASSERT(limit <= 100 );
+        vector<operation_detail_ex> detail_exs;
+        account_history_operation_detail result;
+        uint32_t total = 0;
+        auto account_id = get_account(account_name_or_id).get_id();
+
+        while( limit > 0 ){
+           history_operation_detail current = my->_remote_hist->get_account_history_by_operations(account_id, operation_indexs, start, std::min(100,limit));
+           total += current.total_without_operations;
+           for (auto &operation_history_obj : current.operation_history_objs) {
+              std::stringstream ss;
+              transaction_id_type transaction_id;
+              auto memo = operation_history_obj.op.visit(detail::operation_printer(ss, *my, operation_history_obj.result));
+              optional<signed_block_with_info> block = get_block(operation_history_obj.block_num);
+              if (block.valid()){
+                  if (operation_history_obj.trx_in_block < block->transaction_ids.size()){
+                     transaction_id = block->transaction_ids[operation_history_obj.trx_in_block];
+                  }
+              }
+              detail_exs.push_back(operation_detail_ex{memo, ss.str(), operation_history_obj, transaction_id});
+           }
+           if (current.operation_history_objs.size() < std::min<uint32_t>(100, limit))
+              break;
+           limit -= current.operation_history_objs.size();
+        }
+        result.details = detail_exs;
+        result.total_without_operations = total;
+        return result;
+    }
+
     vector<operation_detail> wallet_api::get_relative_account_history(string name, uint32_t stop, int limit, uint32_t start)const
     {
-        //FC_ASSERT( start >= 0 || limit <= 100 );
+        FC_ASSERT( start >= 0 || limit <= 100 );
 
         vector<operation_detail> result;
         auto account_id = get_account(name).get_id();
