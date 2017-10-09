@@ -68,6 +68,21 @@ If you send private keys over this connection, `rpc-endpoint` should be bound to
 
 Use `help` to see all available wallet commands. 
 
+#### Get Account History
+The method ```get_account_history_by_operations``` returns account history with txID.  
+Use cli_wallet command:
+```
+unlocked >>> get_account_history_by_operations <ACCOUNT> [<operation id>] <start> <limit>
+
+```
+
+Using an HTTP client such as curl:
+```
+$ curl -d '{"jsonrpc": "2.0", "method": "get_account_history_by_operations", "params": ["1.2.17",[0],1,100], "id": 1}' http://127.0.0.1:8091/rpc
+
+```
+
+
 ## Need Help ?
 ---------------
 Report bugs, issues using [GitHub issues](https://github.com/gxchain/gxb-core/issues/new).
