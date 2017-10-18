@@ -5,6 +5,26 @@ GXB-Core is the GXB blockchain implementation and command-line interface.
 Current binary version of the GXB-Core software for ubuntu 14.04 LTS, see [here](https://github.com/gxchain/gxb-release/releases/download/v1.0.0/gxb_1.0.0.tar.gz).
 Visit [gxb.io](https://www.gxb.io/) to learn about GXB.
 
+## API Document
+
+[Wallet API](https://github.com/gxchain/gxb-core/wiki/wallet_api).
+
+[Witness_node API](https://github.com/bitshares/bitshares-core/wiki/API).
+
+### Get Account History With Wallet API
+The method ```get_account_history_by_operations``` returns account history with txID.
+Use cli_wallet command:
+```
+unlocked >>> get_account_history_by_operations <ACCOUNT> [<operation id>] <start> <limit>
+
+```
+
+Using an HTTP client such as curl:
+```
+$ curl -d '{"jsonrpc": "2.0", "method": "get_account_history_by_operations", "params": ["1.2.17",[0],1,100], "id": 1}' http://127.0.0.1:8091/rpc
+
+```
+
 ## Getting Started
 ---------------
 
@@ -67,26 +87,6 @@ Transferring Currency:
 If you send private keys over this connection, `rpc-endpoint` should be bound to localhost for security.
 
 Use `help` to see all available wallet commands.
-
-### API Document
-
-[Wallet API](https://github.com/gxchain/gxb-core/wiki/wallet_api)
-
-[Witness_node API](https://github.com/gxchain/gxb-core/wiki/witness_node_api_json_rpc)
-
-#### Get Account History With Wallet API
-The method ```get_account_history_by_operations``` returns account history with txID.
-Use cli_wallet command:
-```
-unlocked >>> get_account_history_by_operations <ACCOUNT> [<operation id>] <start> <limit>
-
-```
-
-Using an HTTP client such as curl:
-```
-$ curl -d '{"jsonrpc": "2.0", "method": "get_account_history_by_operations", "params": ["1.2.17",[0],1,100], "id": 1}' http://127.0.0.1:8091/rpc
-
-```
 
 
 ## Need Help ?
