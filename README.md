@@ -16,6 +16,7 @@ APIs are separated into two categories, namely
 
 ### Get Account History With Wallet API
 The method ```get_account_history_by_operations``` returns account history with txID.
+In order to interface with the wallet, you need to run the CLI Wallet.
 Use cli_wallet command:
 ```
 unlocked >>> get_account_history_by_operations <ACCOUNT> [<operation id>] <start> <limit>
