@@ -70,8 +70,9 @@ Use `help` to see all available wallet commands.
 
 ### API Document
 
-[Wallet API](https://github.com/gxchain/gxb-core/wiki/wallet_api).
-[Witness_node API](https://github.com/bitshares/bitshares-core/wiki/API).
+[Wallet API](https://github.com/gxchain/gxb-core/wiki/wallet_api)
+
+[Witness_node API](https://github.com/gxchain/gxb-core/wiki/witness_node_api_json_rpc)
 
 #### Get Account History With Wallet API
 The method ```get_account_history_by_operations``` returns account history with txID.
