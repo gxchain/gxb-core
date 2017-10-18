@@ -6,10 +6,13 @@ Current binary version of the GXB-Core software for ubuntu 14.04 LTS, see [here]
 Visit [gxb.io](https://www.gxb.io/) to learn about GXB.
 
 ## API Document
+APIs are separated into two categories, namely
+ * the Blockchain API which is used to query blockchain data (account, assets, trading history, etc.) and
+ * the Wallet API which has your private keys loaded and is required when interacting with the blockchain with new transactions.
 
 [Wallet API](https://github.com/gxchain/gxb-core/wiki/wallet_api).
 
-[Witness_node API](https://github.com/bitshares/bitshares-core/wiki/API).
+[Blockchain API](https://github.com/bitshares/bitshares-core/wiki/API).
 
 ### Get Account History With Wallet API
 The method ```get_account_history_by_operations``` returns account history with txID.
