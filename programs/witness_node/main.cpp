@@ -24,10 +24,8 @@
 #include <graphene/app/application.hpp>
 
 #include <graphene/witness/witness.hpp>
-#include <graphene/debug_witness/debug_witness.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>
 #include <graphene/market_history/market_history_plugin.hpp>
-#include <graphene/delayed_node/delayed_node_plugin.hpp>
 
 #include <fc/exception/exception.hpp>
 #include <fc/thread/thread.hpp>
@@ -44,7 +42,6 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/container/flat_set.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -58,116 +55,8 @@
 using namespace graphene;
 namespace bpo = boost::program_options;
          
-void write_default_logging_config_to_stream(std::ostream& out);
+void write_default_logging_config_to_stream(std::ostream& out, bool log_file = false);
 fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path& config_ini_filename);
-
-class deduplicator 
-{
-   public:
-      deduplicator() : modifier(nullptr) {}
-
-      deduplicator(const boost::shared_ptr<bpo::option_description> (*mod_fn)(const boost::shared_ptr<bpo::option_description>&))
-              : modifier(mod_fn) {}
-
-      const boost::shared_ptr<bpo::option_description> next(const boost::shared_ptr<bpo::option_description>& o)
-      {
-         const std::string name = o->long_name();
-         if( seen.find( name ) != seen.end() )
-            return nullptr;
-         seen.insert(name);
-         return modifier ? modifier(o) : o;
-      }
-
-   private:
-      boost::container::flat_set<std::string> seen;
-      const boost::shared_ptr<bpo::option_description> (*modifier)(const boost::shared_ptr<bpo::option_description>&);
-};
-
-static void load_config_file( const fc::path& config_ini_path, const bpo::options_description& cfg_options,
-                              bpo::variables_map& options )
-{
-   deduplicator dedup;
-   bpo::options_description unique_options("Graphene Witness Node");
-   for( const boost::shared_ptr<bpo::option_description> opt : cfg_options.options() )
-   {
-      const boost::shared_ptr<bpo::option_description> od = dedup.next(opt);
-      if( !od ) continue;
-      unique_options.add( od );
-   }
-
-   // get the basic options
-   bpo::store(bpo::parse_config_file<char>(config_ini_path.preferred_string().c_str(),
-              unique_options, true), options);
-
-   // try to get logging options from the config file.
-   try
-   {
-      fc::optional<fc::logging_config> logging_config = load_logging_config_from_ini_file(config_ini_path);
-      if (logging_config)
-         fc::configure_logging(*logging_config);
-   }
-   catch (const fc::exception&)
-   {
-      wlog("Error parsing logging config from config file ${config}, using default config", ("config", config_ini_path.preferred_string()));
-   }
-}
-
-const boost::shared_ptr<bpo::option_description> new_option_description( const std::string& name, const bpo::value_semantic* value, const std::string& description )
-{
-    bpo::options_description helper("");
-    helper.add_options()( name.c_str(), value, description.c_str() );
-    return helper.options()[0];
-}
-
-static void create_new_config_file( const fc::path& config_ini_path, const fc::path& data_dir,
-                                    const bpo::options_description& cfg_options )
-{
-   ilog("Writing new config file at ${path}", ("path", config_ini_path));
-   if( !fc::exists(data_dir) )
-      fc::create_directories(data_dir);
-
-   auto modify_option_defaults = [](const boost::shared_ptr<bpo::option_description>& o) -> const boost::shared_ptr<bpo::option_description> {
-       const std::string& name = o->long_name();
-       if( name == "partial-operations" )
-          return new_option_description( name, bpo::value<bool>()->default_value(true), o->description() );
-       if( name == "max-ops-per-account" )
-          return new_option_description( name, bpo::value<int>()->default_value(1000), o->description() );
-       return o;
-   };
-   deduplicator dedup(modify_option_defaults);
-   std::ofstream out_cfg(config_ini_path.preferred_string());
-   for( const boost::shared_ptr<bpo::option_description> opt : cfg_options.options() )
-   {
-      const boost::shared_ptr<bpo::option_description> od = dedup.next(opt);
-      if( !od ) continue;
-
-      if( !od->description().empty() )
-         out_cfg << "# " << od->description() << "\n";
-      boost::any store;
-      if( !od->semantic()->apply_default(store) )
-         out_cfg << "# " << od->long_name() << " = \n";
-      else {
-         auto example = od->format_parameter();
-         if( example.empty() )
-            // This is a boolean switch
-            out_cfg << od->long_name() << " = " << "false\n";
-         else {
-            // The string is formatted "arg (=<interesting part>)"
-            example.erase(0, 6);
-            example.erase(example.length()-1);
-            out_cfg << od->long_name() << " = " << example << "\n";
-         }
-      }
-      out_cfg << "\n";
-   }
-   write_default_logging_config_to_stream(out_cfg);
-   out_cfg.close();
-   // read the default logging config we just wrote out to the file and start using it
-   fc::optional<fc::logging_config> logging_config = load_logging_config_from_ini_file(config_ini_path);
-   if (logging_config)
-      fc::configure_logging(*logging_config);
-}
-
 int main(int argc, char** argv) {
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
@@ -182,10 +71,8 @@ int main(int argc, char** argv) {
       bpo::variables_map options;
 
       auto witness_plug = node->register_plugin<witness_plugin::witness_plugin>();
-      auto debug_witness_plug = node->register_plugin<debug_witness_plugin::debug_witness_plugin>();
       auto history_plug = node->register_plugin<account_history::account_history_plugin>();
       auto market_history_plug = node->register_plugin<market_history::market_history_plugin>();
-      auto delayed_plug = node->register_plugin<delayed_node::delayed_node_plugin>();
 
       try
       {
@@ -216,9 +103,64 @@ int main(int argc, char** argv) {
       }
 
       fc::path config_ini_path = data_dir / "config.ini";
-      if( !fc::exists(config_ini_path) )
-         create_new_config_file( config_ini_path, data_dir, cfg_options );
-      load_config_file( config_ini_path, cfg_options, options );
+      if( fc::exists(config_ini_path) )
+      {
+         // get the basic options
+         bpo::store(bpo::parse_config_file<char>(config_ini_path.preferred_string().c_str(), cfg_options, true), options);
+
+         // try to get logging options from the config file.
+         try
+         {
+            fc::optional<fc::logging_config> logging_config = load_logging_config_from_ini_file(config_ini_path);
+            if (logging_config)
+               fc::configure_logging(*logging_config);
+         }
+         catch (const fc::exception& e)
+         {
+            wlog("parsing logging config exception, ${e}", ("e", e.to_detail_string()));
+            wlog("Error parsing logging config from config file ${config}, using default config", ("config", config_ini_path.preferred_string()));
+         }
+      }
+      else 
+      {
+         ilog("Writing new config file at ${path}", ("path", config_ini_path));
+         if( !fc::exists(data_dir) )
+            fc::create_directories(data_dir);
+
+         std::ofstream out_cfg(config_ini_path.preferred_string());
+         for( const boost::shared_ptr<bpo::option_description> od : cfg_options.options() )
+         {
+            if( !od->description().empty() )
+               out_cfg << "# " << od->description() << "\n";
+            boost::any store;
+            if( !od->semantic()->apply_default(store) )
+               out_cfg << "# " << od->long_name() << " = \n";
+            else {
+               auto example = od->format_parameter();
+               if( example.empty() )
+                  // This is a boolean switch
+                  out_cfg << od->long_name() << " = " << "false\n";
+               else {
+                  // The string is formatted "arg (=<interesting part>)"
+                  example.erase(0, 6);
+                  example.erase(example.length()-1);
+                  out_cfg << od->long_name() << " = " << example << "\n";
+               }
+            }
+            out_cfg << "\n";
+         }
+
+      if (options.count("log-file"))
+         write_default_logging_config_to_stream(out_cfg, true);
+      else 
+         write_default_logging_config_to_stream(out_cfg, false);
+
+         out_cfg.close(); 
+         // read the default logging config we just wrote out to the file and start using it
+         fc::optional<fc::logging_config> logging_config = load_logging_config_from_ini_file(config_ini_path);
+         if (logging_config)
+            fc::configure_logging(*logging_config);
+      }
 
       bpo::notify(options);
       node->initialize(data_dir, options);
@@ -239,7 +181,7 @@ int main(int argc, char** argv) {
          exit_promise->set_value(signal);
       }, SIGTERM);
 
-      ilog("Started BitShares node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
+      ilog("Started witness node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
 
       int signal = exit_promise->wait();
@@ -269,11 +211,14 @@ int main(int argc, char** argv) {
 // are all most users would want to change.  At a later time, options can
 // be added to control rotation intervals, compression, and other seldom-
 // used features
-void write_default_logging_config_to_stream(std::ostream& out)
+void write_default_logging_config_to_stream(std::ostream& out, bool log_file)
 {
    out << "# declare an appender named \"stderr\" that writes messages to the console\n"
           "[log.console_appender.stderr]\n"
           "stream=std_error\n\n"
+          "# declare a file appender\n"
+          "[log.file_appender.FILE]\n"
+          "filename=logs/witness.log\n\n"
           "# declare an appender named \"p2p\" that writes messages to p2p.log\n"
           "[log.file_appender.p2p]\n"
           "filename=logs/p2p/p2p.log\n"
@@ -281,11 +226,16 @@ void write_default_logging_config_to_stream(std::ostream& out)
           "# route any messages logged to the default logger to the \"stderr\" logger we\n"
           "# declared above, if they are info level are higher\n"
           "[logger.default]\n"
-          "level=info\n"
-          "appenders=stderr\n\n"
-          "# route messages sent to the \"p2p\" logger to the p2p appender declared above\n"
+          "level=info\n";
+
+   if (log_file)
+       out << "appenders=FILE\n\n";
+   else 
+       out << "appenders=stderr\n\n";
+
+   out << "# route messages sent to the \"p2p\" logger to the p2p appender declared above\n"
           "[logger.p2p]\n"
-          "level=info\n"
+          "level=error\n"
           "appenders=p2p\n\n";
 }
 
@@ -342,7 +292,7 @@ fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::pat
             file_appender_config.filename = file_name;
             file_appender_config.flush = true;
             file_appender_config.rotate = true;
-            file_appender_config.rotation_interval = fc::hours(1);
+            file_appender_config.rotation_interval = fc::hours(24);
             file_appender_config.rotation_limit = fc::days(1);
             logging_config.appenders.push_back(fc::appender_config(file_appender_name, "file", fc::variant(file_appender_config)));
             found_logging_config = true;
