@@ -30,7 +30,12 @@ namespace graphene { namespace chain {
 
          void_result do_evaluate( const pay_data_transaction_operation& op );
          operation_result do_apply( const pay_data_transaction_operation& op );
+
+         // @override
          void prepare_fee(account_id_type account_id, asset fee, const operation& o);
+
+         void update_league_pocs(league_id_type league_id, object_id_type product_id, const pay_data_transaction_operation& op);
+
       private:
         uint64_t transaction_fee = 0;
    };
