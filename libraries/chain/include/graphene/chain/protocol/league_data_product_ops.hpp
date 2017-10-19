@@ -18,15 +18,10 @@
  */
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
-#include <graphene/chain/protocol/memo.hpp>
-#include <graphene/chain/protocol/buyback.hpp>
-#include <graphene/chain/protocol/ext.hpp>
-#include <graphene/chain/protocol/special_authority.hpp>
 #include <graphene/chain/protocol/types.hpp>
-#include <graphene/chain/protocol/vote.hpp>
 #include <graphene/chain/league_data_product_object.hpp>
 
-namespace graphene { namespace chain { 
+namespace graphene { namespace chain {
 
     struct league_data_product_create_operation : public base_operation
     {
@@ -58,7 +53,7 @@ namespace graphene { namespace chain {
         struct fee_parameters_type {
             uint64_t fee  = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
         };
-       
+
         league_data_product_id_type                  league_data_product;
         optional < string >                          new_product_name;
         optional < string >                          new_brief_desc;

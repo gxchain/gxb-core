@@ -18,12 +18,7 @@
  */
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
-#include <graphene/chain/protocol/memo.hpp>
-#include <graphene/chain/protocol/buyback.hpp>
-#include <graphene/chain/protocol/ext.hpp>
-#include <graphene/chain/protocol/special_authority.hpp>
 #include <graphene/chain/protocol/types.hpp>
-#include <graphene/chain/protocol/vote.hpp>
 #include <graphene/chain/league_object.hpp>
 
 namespace graphene { namespace chain {

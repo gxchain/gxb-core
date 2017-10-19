@@ -18,15 +18,10 @@
  */
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
-#include <graphene/chain/protocol/memo.hpp>
-#include <graphene/chain/protocol/buyback.hpp>
-#include <graphene/chain/protocol/ext.hpp>
-#include <graphene/chain/protocol/special_authority.hpp>
 #include <graphene/chain/protocol/types.hpp>
-#include <graphene/chain/protocol/vote.hpp>
 #include <graphene/chain/data_market_object.hpp>
 
-namespace graphene { namespace chain { 
+namespace graphene { namespace chain {
 
     struct data_market_category_create_operation : public base_operation
     {
