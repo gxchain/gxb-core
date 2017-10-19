@@ -52,8 +52,57 @@ namespace graphene { namespace chain {
       }
    };
 
+    /**
+    * @brief a balance in a @ref balanc_locked_object
+    *
+    * This operation is used to the balance in a given @ref balanc_locked_object. 
+    */
+   struct balance_locked_operation : public base_operation
+   {
+      struct fee_parameters_type { 
+         uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION; 
+      };
+      asset                             fee;
+      account_id_type                   locked_account;
+      time_point_sec                    create_time;
+      string                            locked_time_type;
+      asset_id_type                     asset_type;
+      share_type                        locked_balance;
+      uint32_t                          interest_rate = 0;
+      string                            memo;
+      extensions_type                   extensions;
+      account_id_type fee_payer()const { return locked_account; }
+      void validate() const {
+         FC_ASSERT(fee.amount >= 0);
+      }
+      share_type      calculate_fee(const fee_parameters_type& k)const { return k.fee; }
+   };
+
+   struct balance_unlocked_operation : public base_operation
+   {
+      struct fee_parameters_type { 
+        uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION; 
+      };
+      asset                             fee;
+      account_id_type                   unlocked_account;
+      account_balance_locked_id_type    account_balance_locked;
+      extensions_type                   extensions;
+      account_id_type fee_payer()const { return unlocked_account; }
+      void validate() const {
+         FC_ASSERT(fee.amount >= 0);
+      }
+      share_type      calculate_fee(const fee_parameters_type& k)const { return k.fee; }
+   };
 } } // graphene::chain
 
 FC_REFLECT( graphene::chain::balance_claim_operation::fee_parameters_type,  )
 FC_REFLECT( graphene::chain::balance_claim_operation,
             (fee)(deposit_to_account)(balance_to_claim)(balance_owner_key)(total_claimed) )
+
+FC_REFLECT( graphene::chain::balance_locked_operation::fee_parameters_type,  )
+FC_REFLECT( graphene::chain::balance_locked_operation,
+            (fee)(locked_account)(create_time)(locked_time_type)(asset_type)(locked_balance)(interest_rate)(memo)(extensions) )
+
+FC_REFLECT( graphene::chain::balance_unlocked_operation::fee_parameters_type,  )
+FC_REFLECT( graphene::chain::balance_unlocked_operation,
+            (fee)(unlocked_account)(account_balance_locked)(extensions) )
