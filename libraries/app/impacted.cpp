@@ -273,10 +273,6 @@ struct get_impacted_account_visitor
 
    void operator() (const data_transaction_complain_operation& op) {}
 
-   void operator() (const balance_locked_operation& op) {}
-
-   void operator() (const balance_unlocked_operation& op) {}
-
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

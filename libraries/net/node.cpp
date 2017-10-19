@@ -974,11 +974,7 @@ namespace graphene { namespace net { namespace detail {
         {
           throw;
         }
-        catch (const fc::exception& e)
-        {
-          elog("${e}", ("e", e));
-        }
-        //FC_CAPTURE_AND_LOG( () )
+        FC_CAPTURE_AND_LOG( (0) )
       }// while(!canceled)
     }
 
@@ -2360,7 +2356,6 @@ namespace graphene { namespace net { namespace detail {
     {
       VERIFY_CORRECT_THREAD();
       item_hash_t reference_point = peer->last_block_delegate_has_seen;
-      //uint32_t reference_point_block_num = _delegate->get_block_number(peer->last_block_delegate_has_seen);
 
       // when we call _delegate->get_blockchain_synopsis(), we may yield and there's a
       // chance this peer's state will change before we get control back.  Save off
@@ -3348,8 +3343,7 @@ namespace graphene { namespace net { namespace detail {
           bool new_transaction_discovered = false;
           for (const item_hash_t& transaction_message_hash : contained_transaction_message_ids)
           {
-            //size_t items_erased = 
-            _items_to_fetch.get<item_id_index>().erase(item_id(trx_message_type, transaction_message_hash));
+            /*size_t items_erased =*/ _items_to_fetch.get<item_id_index>().erase(item_id(trx_message_type, transaction_message_hash));
             // there are two ways we could behave here: we could either act as if we received
             // the transaction outside the block and offer it to our peers, or we could just
             // forget about it (we would still advertise this block to our peers so they should
@@ -4194,7 +4188,7 @@ namespace graphene { namespace net { namespace detail {
 
           // limit the rate at which we accept connections to mitigate DOS attacks
           fc::usleep( fc::milliseconds(10) );
-        } FC_CAPTURE_AND_LOG( () )
+        } FC_CAPTURE_AND_LOG( (0) )
       }
     } // accept_loop()
 
@@ -4370,7 +4364,6 @@ namespace graphene { namespace net { namespace detail {
       {
         try
         {
-          ilog("load config file: ${file_name}", ("file_name", configuration_file_name));
           _node_configuration = fc::json::from_file( configuration_file_name ).as<detail::node_configuration>();
           ilog( "Loaded configuration from file ${filename}", ("filename", configuration_file_name ) );
 
@@ -4492,7 +4485,8 @@ namespace graphene { namespace net { namespace detail {
                 error_message_stream << "\nStill waiting for port " << listen_endpoint.port() << " to become available\n";
               }
               std::string error_message = error_message_stream.str();
-              ulog(error_message);
+              wlog(error_message);
+              std::cout << "\033[31m" << error_message;  
               _delegate->error_encountered( error_message, fc::oexception() );
               fc::usleep( fc::seconds(5 ) );
             }
