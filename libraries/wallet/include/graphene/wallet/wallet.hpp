@@ -1994,29 +1994,6 @@ class wallet_api
        */
       optional<pocs_object> get_pocs_object(league_id_type league_id, string account, object_id_type product_id);
 
-      /** lock account balance.
-       *
-       * @param account_name_or_id the name or id of the account.
-       * @param create_time the create time of lock balance.
-       * @param locked_time_type lock days.
-       * @param amount the number of lock balance.
-       * @param asset_symbol the symbol or id of the fee.
-       * @param interest_rate the interest rate of lock balance.
-       * @param memo the describe of this operation
-       * @param broadcast true if you wish to broadcast the transaction.
-       * @return the signed version of the transaction.
-       */
-      signed_transaction lock_balance(string account_name_or_id, fc::time_point_sec create_time, string locked_time_type, string amount, string asset_symbol, uint32_t interest_rate, string memo, bool broadcast = false);
-
-      /** unlock account balance.
-       *
-       * @param account_name_or_id the name or id of the account.
-       * @param locked_id the id of account_balance_locked_object.
-       * @param broadcast true if you wish to broadcast the transaction.
-       * @return the signed version of the transaction.
-       */
-      signed_transaction unlock_balance(string account_name_or_id, account_balance_locked_id_type locked_id, bool broadcast = false);
-
       void dbg_make_uia(string creator, string symbol);
       void dbg_make_mia(string creator, string symbol);
       void dbg_push_blocks( std::string src_filename, uint32_t count );
@@ -2268,6 +2245,4 @@ FC_API( graphene::wallet::wallet_api,
         (list_total_second_hand_transaction_counts_by_datasource)
         (get_data_transaction_by_request_id)
         (get_pocs_object)
-        (lock_balance)
-        (unlock_balance)
 )

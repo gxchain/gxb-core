@@ -3260,54 +3260,6 @@
           return sign_transaction(tx, broadcast);
        }
 
-       signed_transaction lock_balance(
-           string account_name_or_id,
-           fc::time_point_sec create_time,
-           string locked_time_type,
-           string amount,
-           string asset_symbol,
-           uint16_t interest_rate,
-           string memo,
-           bool broadcast = false)
-       {
-           auto account_id = get_account(account_name_or_id).get_id();
-           fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
-           FC_ASSERT(asset_obj.valid(), "Could not find asset matching ${asset}", ("asset", asset_symbol));
-           balance_locked_operation balance_locked_op;
-           balance_locked_op.locked_account = account_id;
-           balance_locked_op.create_time = create_time;
-           balance_locked_op.locked_time_type = locked_time_type;
-           balance_locked_op.locked_balance = asset_obj->amount_from_string(amount).amount;
-           balance_locked_op.asset_type = asset_obj->amount_from_string(amount).asset_id;
-           balance_locked_op.interest_rate = interest_rate * GRAPHENE_1_PERCENT;
-           balance_locked_op.memo = memo;
-
-           signed_transaction tx;
-           tx.operations.push_back(balance_locked_op);
-           set_operation_fees(tx, get_global_properties().parameters.current_fees);
-           tx.validate();
-           return sign_transaction(tx, broadcast);
-       }
-       
-       signed_transaction unlock_balance(
-           string account_name_or_id, 
-           account_balance_locked_id_type locked_id, 
-           bool broadcast = false)
-       {
-           auto account_id = get_account(account_name_or_id).get_id();
-           auto account_balance_locked_obj = get_object(locked_id);
-           FC_ASSERT(account_balance_locked_obj.owner == account_id, "account_name_or_id don't meet the id");
-           balance_unlocked_operation balance_unlocked_op;
-           balance_unlocked_op.unlocked_account = account_balance_locked_obj.owner;
-           balance_unlocked_op.account_balance_locked = locked_id;
-
-           signed_transaction tx;
-           tx.operations.push_back(balance_unlocked_op);
-           set_operation_fees(tx, get_global_properties().parameters.current_fees);
-           tx.validate();
-           return sign_transaction(tx, broadcast);
-       }
-
        void dbg_make_uia(string creator, string symbol)
        {
           asset_options opts;
@@ -4617,16 +4569,6 @@
        )
     {
        return my->approve_proposal( fee_paying_account, proposal_id, delta, broadcast );
-    }
-
-    signed_transaction wallet_api::lock_balance(string account_name_or_id, fc::time_point_sec create_time, string locked_time_type, string amount, string asset_symbol, uint32_t interest_rate, string memo, bool broadcast)
-    {
-       return my->lock_balance(account_name_or_id, create_time, locked_time_type, amount, asset_symbol, interest_rate, memo, broadcast);
-    }
-
-    signed_transaction wallet_api::unlock_balance(string account_name_or_id, account_balance_locked_id_type locked_id, bool broadcast)
-    {
-       return my->unlock_balance(account_name_or_id, locked_id, broadcast);
     }
 
     global_property_object wallet_api::get_global_properties() const
