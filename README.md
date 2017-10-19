@@ -1,7 +1,33 @@
-# GXB-Core (source code will be pushed later)
+# GXB-Core
 ---------------
 
-GXB-Core is the GXB blockchain implementation and command-line interface.  Binary version of the GXB-Core software, see [here](https://github.com/gxchain/gxb-release/releases). Visit [gxb.io](https://www.gxb.io/) to learn about GXB.
+GXB-Core is the GXB blockchain implementation and command-line interface.
+Current binary version of the GXB-Core software for ubuntu 14.04 LTS, see [here](https://github.com/gxchain/gxb-release/releases/download/v1.0.0/gxb_1.0.0.tar.gz).
+Visit [gxb.io](https://www.gxb.io/) to learn about GXB.
+
+## API Document
+APIs are separated into two categories, namely
+ * the Blockchain API which is used to query blockchain data (account, assets, trading history, etc.) and
+ * the Wallet API which has your private keys loaded and is required when interacting with the blockchain with new transactions.
+
+[Wallet API](https://github.com/gxchain/gxb-core/wiki/wallet_api).
+
+[Blockchain API](https://github.com/gxchain/gxb-core/wiki/witness_node_api_json_rpc).
+
+### Get Account History With Wallet API
+The method ```get_account_history_by_operations``` returns account history with txID.
+In order to interface with the wallet, you need to run the CLI Wallet.
+Use cli_wallet command:
+```
+unlocked >>> get_account_history_by_operations <ACCOUNT> [<operation id>] <start> <limit>
+
+```
+
+Using an HTTP client such as curl:
+```
+$ curl -d '{"jsonrpc": "2.0", "method": "get_account_history_by_operations", "params": ["1.2.17",[0],1,100], "id": 1}' http://127.0.0.1:8091/rpc
+
+```
 
 ## Getting Started
 ---------------
@@ -30,7 +56,7 @@ To build after all dependencies are installed:
     cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .
     make
 
-Alternate Boost versions can be specified using the `DBOOST_ROOT` CMake argument. 
+Alternate Boost versions can be specified using the `DBOOST_ROOT` CMake argument.
 
 ### Running
 After building, the witness node can be launched with:
@@ -38,7 +64,7 @@ After building, the witness node can be launched with:
     ./programs/witness_node/witness_node --rpc-endpoint="127.0.0.1:8090"
 ```
 The node will automatically create a data directory including a config file. It may take several minutes to fully synchronize
-the blockchain. 
+the blockchain.
 
 After starting the witness node, in a separate terminal you can run cli_wallet:
 ```
@@ -56,15 +82,16 @@ To import your wif_key(active key):
 Import balances:
 ```
     unlocked >>> import_balance <ACCOUNT NAME> [<WIF_KEY>] true
-```   
+```
 Transferring Currency:
 ```
-    unlocked >>> transfer <FROM ACCOUNT> <TO ACCOUNT> 100 GXC "" true 
+    unlocked >>> transfer <FROM ACCOUNT> <TO ACCOUNT> 100 GXC "" true
 ```
 
 If you send private keys over this connection, `rpc-endpoint` should be bound to localhost for security.
 
-Use `help` to see all available wallet commands. 
+Use `help` to see all available wallet commands.
+
 
 ## Need Help ?
 ---------------
