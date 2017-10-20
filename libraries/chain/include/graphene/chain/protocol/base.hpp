@@ -110,7 +110,8 @@ namespace graphene { namespace chain {
        operation_ext_copyright_hash_t,
        data_transaction_commission_rate_t,
        pocs_threshold_league_t,
-       pocs_threshold_league_data_product_t
+       pocs_threshold_league_data_product_t,
+       lock_balance_params_t
        > future_extensions;
 
    /**

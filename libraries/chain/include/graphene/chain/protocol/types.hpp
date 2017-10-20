@@ -48,6 +48,7 @@
 
 #define SERVICE_CHARGE 1 / 10  //service charge rate
 #define LEFT_SERVICE_CHARGE 9 / 10  //left charge rate
+#define SECONDS_PER_DAY 86400 //seconds of a day
 
 namespace graphene { namespace chain {
    using namespace graphene::db;
@@ -109,6 +110,15 @@ namespace graphene { namespace chain {
 
    struct pocs_threshold_league_data_product_t{
        uint64_t pocs_threshold = 0;
+   };
+
+   struct interest_rate_t {
+       uint32_t interest_rate_days = 0;
+       uint32_t interest_rate = 0;
+   };
+
+   struct lock_balance_params_t {
+       vector< pair<string, interest_rate_t> > params;
    };
 
    typedef fc::ecc::private_key        private_key_type;
@@ -269,6 +279,7 @@ namespace graphene { namespace chain {
       impl_league_data_product_search_results_object_type,//19
       impl_league_search_results_object_type,//20
       impl_data_transaction_search_results_object_type,//21
+      impl_account_balance_locked_object_type //22
       //impl_search_results_object_type
    };
 
@@ -346,6 +357,7 @@ namespace graphene { namespace chain {
    class free_data_product_search_results_object;
    class league_data_product_search_results_object;
    class league_search_results_object;
+   class account_balance_locked_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -356,7 +368,7 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_transaction_object_type,      transaction_object>                        transaction_obj_id_type;
    typedef object_id< implementation_ids, impl_block_summary_object_type,    block_summary_object>                      block_summary_id_type;
 
-   typedef object_id< implementation_ids,impl_account_transaction_history_object_type,account_transaction_history_object>       account_transaction_history_id_type;
+   typedef object_id< implementation_ids, impl_account_transaction_history_object_type,account_transaction_history_object>       account_transaction_history_id_type;
    typedef object_id< implementation_ids, impl_chain_property_object_type,   chain_property_object>                     chain_property_id_type;
    typedef object_id< implementation_ids, impl_witness_schedule_object_type, witness_schedule_object>                   witness_schedule_id_type;
    typedef object_id< implementation_ids, impl_budget_record_object_type, budget_record_object >                        budget_record_id_type;
@@ -369,6 +381,7 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_league_data_product_search_results_object_type, league_data_product_search_results_object >   league_data_product_search_results_id_type;
    typedef object_id< implementation_ids, impl_league_search_results_object_type, league_search_results_object >        league_search_results_id_type;
    typedef object_id< implementation_ids, impl_data_transaction_search_results_object_type, data_transaction_search_results_object >        data_transaction_search_results_id_type;
+   typedef object_id< implementation_ids, impl_account_balance_locked_object_type, account_balance_locked_object>       account_balance_locked_id_type;
 
 
    //typedef object_id< implementation_ids, impl_search_results_object_type,search_results_object<DerivedClass>>          search_results_id_type;
@@ -523,7 +536,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_league_data_product_search_results_object_type)
                  (impl_league_search_results_object_type)
                  (impl_data_transaction_search_results_object_type)
-
+                 (impl_account_balance_locked_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -576,6 +589,8 @@ FC_REFLECT( graphene::chain::data_transaction_commission_rate_t, (league_data_ma
 FC_REFLECT( graphene::chain::operation_ext_copyright_hash_t, (copyright_hash))
 FC_REFLECT( graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_bases)(product_pocs_weights))
 FC_REFLECT( graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
+FC_REFLECT( graphene::chain::interest_rate_t, (interest_rate_days)(interest_rate) )
+FC_REFLECT( graphene::chain::lock_balance_params_t, (params) )
 
 FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)
