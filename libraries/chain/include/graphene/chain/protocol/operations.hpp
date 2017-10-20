@@ -125,7 +125,9 @@ namespace graphene { namespace chain {
             league_create_operation,//67
             league_update_operation,//68
             datasource_copyright_clear_operation,//69   
-            data_transaction_complain_operation//70
+            data_transaction_complain_operation,//70
+            balance_locked_operation,//71
+            balance_unlocked_operation//72
 
          > operation;
 
