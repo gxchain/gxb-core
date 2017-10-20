@@ -2,7 +2,7 @@
 ---------------
 
 GXB-Core is the GXB blockchain implementation and command-line interface.
-Current binary version of the GXB-Core software for ubuntu 14.04 LTS, see [here]https://github.com/gxchain/gxb-core/releases).
+Current binary version of the GXB-Core software for ubuntu 14.04 LTS, see [here](https://github.com/gxchain/gxb-core/releases).
 Visit [gxb.io](https://www.gxb.io/) to learn about GXB.
 
 ## API Document
