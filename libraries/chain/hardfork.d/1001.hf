@@ -1,0 +1,4 @@
+//#1001 is for commission rate
+#ifndef HARDFORK_1001_TIME
+#define HARDFORK_1001_TIME (fc::time_point_sec( 1506787200 ))
+#endif
