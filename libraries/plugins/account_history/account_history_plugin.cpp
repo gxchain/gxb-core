@@ -84,15 +84,6 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
    const vector<optional< operation_history_object > >& hist = db.get_applied_operations();
    for( const optional< operation_history_object >& o_op : hist )
    {
-       const operation_history_object& op = *o_op;
-       if (op.op.which() == operation::tag<data_transaction_create_operation>::value
-               || op.op.which() == operation::tag<data_transaction_update_operation>::value
-               || op.op.which() == operation::tag<pay_data_transaction_operation>::value
-               || op.op.which() == operation::tag<data_transaction_datasource_upload_operation>::value
-               || op.op.which() == operation::tag<data_transaction_complain_operation>::value
-               || op.op.which() == operation::tag<data_transaction_datasource_validate_error_operation>::value) {
-           continue;
-       }
       optional<operation_history_object> oho;
 
       auto create_oho = [&]() {
@@ -114,6 +105,7 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
          // add to the operation history index
          oho = create_oho();
 
+      const operation_history_object& op = *o_op;
 
       // get the set of accounts this operation applies to
       flat_set<account_id_type> impacted;
