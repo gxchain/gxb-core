@@ -112,6 +112,32 @@ namespace graphene { namespace chain {
          void  adjust_balance(const asset& delta);
    };
 
+    /**
+    * @brief Tracks the locked balance of a single account/asset pair
+    * @ingroup object
+    *
+    * This object is indexed on owner and asset_type so that black swan
+    * events in asset_type can be processed quickly.
+    */
+    class account_balance_locked_object : public abstract_object<account_balance_locked_object>
+    {
+       public:
+          static const uint8_t space_id = implementation_ids;
+          static const uint8_t type_id  = impl_account_balance_locked_object_type;
+ 
+          account_id_type   owner;
+          asset_id_type     asset_type;
+          time_point_sec    create_time;
+          uint32_t          locked_balance_time;//Lock duration／unit:days
+          string            locked_time_type;
+          share_type        locked_balance;
+          uint16_t          interest_rate = 0;
+          string            memo;
+ 
+          asset get_locked_balance()const { return asset(locked_balance, asset_type); }
+          void  adjust_locked_balance(const asset& delta);
+    };
+
    /**
     *
     * @account_merchant_object
@@ -400,6 +426,29 @@ namespace graphene { namespace chain {
     */
    typedef generic_index<account_balance_object, account_balance_object_multi_index_type> account_balance_index;
 
+    /**
+    * @ingroup object_index
+    */
+   typedef multi_index_container<
+      account_balance_locked_object,
+      indexed_by<
+         ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+         ordered_unique< tag<by_account_asset>,
+            composite_key<
+               account_balance_locked_object,
+               member<account_balance_locked_object, account_id_type, &account_balance_locked_object::owner>,
+               member<account_balance_locked_object, asset_id_type, &account_balance_locked_object::asset_type>,
+               member<account_balance_locked_object, time_point_sec, &account_balance_locked_object::create_time>
+            >
+         >
+       >
+    >account_balance_locked_object_multi_index_type;
+
+    /**
+    * @ingroup object_index
+    */
+   typedef generic_index<account_balance_locked_object, account_balance_locked_object_multi_index_type> account_balance_locked_index;
+
    struct by_name{};
 
    /**
@@ -437,6 +486,9 @@ FC_REFLECT_DERIVED( graphene::chain::account_merchant_object,
 FC_REFLECT_DERIVED( graphene::chain::account_balance_object,
                     (graphene::db::object),
                     (owner)(asset_type)(balance) )
+FC_REFLECT_DERIVED( graphene::chain::account_balance_locked_object,
+                    (graphene::db::object),
+                    (owner)(asset_type)(create_time)(locked_balance_time)(locked_time_type)(locked_balance)(interest_rate)(memo) )
 
 FC_REFLECT_DERIVED( graphene::chain::account_statistics_object,
                     (graphene::chain::object),
