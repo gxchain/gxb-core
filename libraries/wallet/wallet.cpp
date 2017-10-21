@@ -575,9 +575,9 @@
           return _remote_db->get_global_properties();
        }
 
-       data_transaction_commission_rate_t get_commission_rate() const
+       data_transaction_commission_percent_t get_commission_percent() const
        {
-         return _remote_db->get_commission_rate();
+         return _remote_db->get_commission_percent();
        }
 
        dynamic_global_property_object get_dynamic_global_properties() const
@@ -4639,9 +4639,9 @@
        return my->get_dynamic_global_properties();
     }
 
-    data_transaction_commission_rate_t wallet_api::get_commission_rate() const
+    data_transaction_commission_percent_t wallet_api::get_commission_percent() const
     {
-        return my->get_commission_rate();
+        return my->get_commission_percent();
     }
 
     string wallet_api::help()const
