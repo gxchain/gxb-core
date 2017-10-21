@@ -677,7 +677,7 @@ class wallet_api
        */
       global_property_object            get_global_properties() const;
 
-      data_transaction_commission_rate_t get_commission_rate() const;
+      data_transaction_commission_percent_t get_commission_percent() const;
 
       /** Returns the block chain's rapidly-changing properties.
        * The returned object contains information that changes every block interval
@@ -2179,7 +2179,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_account)
         (get_account_id)
         (get_block)
-        (get_commission_rate)
+        (get_commission_percent)
         (get_account_count)
         (get_account_history)
         (get_account_history_by_operations)

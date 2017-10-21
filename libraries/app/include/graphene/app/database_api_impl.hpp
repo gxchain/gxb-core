@@ -98,7 +98,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Globals
       chain_property_object get_chain_properties()const;
       global_property_object get_global_properties()const;
-      data_transaction_commission_rate_t get_commission_rate() const;
+      data_transaction_commission_percent_t get_commission_percent() const;
       fc::variant_object get_config()const;
       chain_id_type get_chain_id()const;
       dynamic_global_property_object get_dynamic_global_properties()const;
