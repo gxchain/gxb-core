@@ -42,16 +42,16 @@ const global_property_object& database::get_global_properties()const
    return get( global_property_id_type() );
 }
 
-const data_transaction_commission_rate_t database::get_commission_rate() const
+const data_transaction_commission_percent_t database::get_commission_percent() const
 {
     const chain_parameters& params = get_global_properties().parameters;
     for (auto& ext : params.extensions) {
-        if (ext.which() == future_extensions::tag<data_transaction_commission_rate_t>::value) {
-            return ext.get<data_transaction_commission_rate_t>();
+        if (ext.which() == future_extensions::tag<data_transaction_commission_percent_t>::value) {
+            return ext.get<data_transaction_commission_percent_t>();
         }
     }
     // return default value
-    return data_transaction_commission_rate_t();
+    return data_transaction_commission_percent_t();
 }
 
 const chain_property_object& database::get_chain_properties()const

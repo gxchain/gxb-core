@@ -34,7 +34,10 @@ namespace graphene { namespace chain {
          // @override
          void prepare_fee(account_id_type account_id, asset fee, const operation& o);
 
+      private:
+         // user defined
          void update_league_pocs(league_id_type league_id, object_id_type product_id, const pay_data_transaction_operation& op);
+         share_type cut_fee(share_type a, uint16_t p);
 
       private:
         uint64_t transaction_fee = 0;

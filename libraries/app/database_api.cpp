@@ -148,9 +148,9 @@ global_property_object database_api::get_global_properties()const
    return my->get_global_properties();
 }
 
-data_transaction_commission_rate_t database_api::get_commission_rate() const
+data_transaction_commission_percent_t database_api::get_commission_percent() const
 {
-  return my->get_commission_rate();
+  return my->get_commission_percent();
 }
 
 fc::variant_object database_api::get_config()const

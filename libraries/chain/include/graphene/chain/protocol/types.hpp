@@ -46,8 +46,6 @@
 #include <graphene/db/object_id.hpp>
 #include <graphene/chain/protocol/config.hpp>
 
-#define SERVICE_CHARGE 1 / 10  //service charge rate
-#define LEFT_SERVICE_CHARGE 9 / 10  //left charge rate
 #define SECONDS_PER_DAY 86400 //seconds of a day
 
 namespace graphene { namespace chain {
@@ -89,10 +87,10 @@ namespace graphene { namespace chain {
        uint8_t version = 0;
    };
 
-   struct data_transaction_commission_rate_t {
+   struct data_transaction_commission_percent_t {
     // 10 percent is 1000
-       uint16_t league_data_market_commission_rate = (10 * GRAPHENE_1_PERCENT);
-       uint16_t free_data_market_commission_rate = (10 * GRAPHENE_1_PERCENT);
+       uint16_t league_data_market_commission_percent = (10 * GRAPHENE_1_PERCENT);
+       uint16_t free_data_market_commission_percent = (10 * GRAPHENE_1_PERCENT);
    };
 
    struct operation_ext_copyright_hash_t {
@@ -585,7 +583,7 @@ FC_REFLECT_TYPENAME( graphene::chain::data_transaction_complain_id_type)
 
 FC_REFLECT( graphene::chain::void_t, )
 FC_REFLECT( graphene::chain::operation_ext_version_t, (version))
-FC_REFLECT( graphene::chain::data_transaction_commission_rate_t, (league_data_market_commission_rate)(free_data_market_commission_rate))
+FC_REFLECT( graphene::chain::data_transaction_commission_percent_t, (league_data_market_commission_percent)(free_data_market_commission_percent))
 FC_REFLECT( graphene::chain::operation_ext_copyright_hash_t, (copyright_hash))
 FC_REFLECT( graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_bases)(product_pocs_weights))
 FC_REFLECT( graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
