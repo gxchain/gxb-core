@@ -191,12 +191,12 @@ global_property_object database_api_impl::get_global_properties()const
    return _db.get(global_property_id_type());
 }
 
-data_transaction_commission_rate_t database_api_impl::get_commission_rate() const
+data_transaction_commission_percent_t database_api_impl::get_commission_percent() const
 {
     const chain_parameters& params = get_global_properties().parameters;
     for (auto& ext : params.extensions) {
-        if (ext.which() == future_extensions::tag<data_transaction_commission_rate_t>::value) {
-            return ext.get<data_transaction_commission_rate_t>();
+        if (ext.which() == future_extensions::tag<data_transaction_commission_percent_t>::value) {
+            return ext.get<data_transaction_commission_percent_t>();
         }
     }
     FC_THROW("no ommission_rate");

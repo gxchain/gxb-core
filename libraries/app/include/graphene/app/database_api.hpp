@@ -149,9 +149,9 @@ class database_api
 
 
       /**
-       *  @brief Retrieve data_transaction commission_rate
+       *  @brief Retrieve data_transaction commission_percent
        */
-      data_transaction_commission_rate_t get_commission_rate() const;
+      data_transaction_commission_percent_t get_commission_percent() const;
 
       /**
        * @brief Retrieve compile-time constants
@@ -791,7 +791,7 @@ FC_API(graphene::app::database_api,
    // Globals
    (get_chain_properties)
    (get_global_properties)
-   (get_commission_rate)
+   (get_commission_percent)
    (get_config)
    (get_chain_id)
    (get_dynamic_global_properties)
