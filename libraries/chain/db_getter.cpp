@@ -54,6 +54,18 @@ const data_transaction_commission_percent_t database::get_commission_percent() c
     return data_transaction_commission_percent_t();
 }
 
+const commission_allocation_t database::get_commission_allocation() const
+{
+    const chain_parameters& params = get_global_properties().parameters;
+    for (auto& ext : params.extensions) {
+        if (ext.which() == future_extensions::tag<commission_allocation_t>::value) {
+            return ext.get<commission_allocation_t>();
+        }
+    }
+    // return default value
+    return commission_allocation_t();
+}
+
 const chain_property_object& database::get_chain_properties()const
 {
    return get( chain_property_id_type() );

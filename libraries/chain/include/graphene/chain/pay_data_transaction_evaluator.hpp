@@ -38,6 +38,7 @@ namespace graphene { namespace chain {
          // user defined
          void update_league_pocs(league_id_type league_id, object_id_type product_id, const pay_data_transaction_operation& op);
          share_type cut_fee(share_type a, uint16_t p);
+         optional<account_object> get_account_by_name(string account_name);
 
       private:
         uint64_t transaction_fee = 0;
