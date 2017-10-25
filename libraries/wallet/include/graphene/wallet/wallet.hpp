@@ -1685,8 +1685,8 @@ class wallet_api
        * @param owner_account the name or id of the account which is creating the witness
        * @param url a URL to include in the witness record in the blockchain.  Clients may
        *            display this when showing a list of witnesses.  May be blank.
-       * @param broadcast true to broadcast the transaction on the network
        * @param asset_symbol the symbol or id of the fee.
+       * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction registering a witness
        */
       signed_transaction create_witness(string owner_account,
@@ -1957,6 +1957,7 @@ class wallet_api
        /**  For data sources that violate the rules, remove the data source permissions
        * @param propose_account
        * @param datasource_account
+       * @param broadcast true if you wish to broadcast the transaction
        * @return the signed version of the transaction
        */
       signed_transaction propose_deprecate_datasource(string propose_account, string datasource_account, bool broadcast = false);

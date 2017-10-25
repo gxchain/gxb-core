@@ -170,4 +170,6 @@
 #define GRAPHENE_NULL_WITNESS (graphene::chain::witness_id_type(0))
 ///@}
 
+#define GRAPHENE_DATA_TRANSACTION_COMMISSION_ACCOUNT "commission-account"
+
 #define GRAPHENE_FBA_STEALTH_DESIGNATED_ASSET (asset_id_type(743))
