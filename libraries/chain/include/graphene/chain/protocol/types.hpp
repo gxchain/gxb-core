@@ -88,9 +88,14 @@ namespace graphene { namespace chain {
    };
 
    struct data_transaction_commission_percent_t {
-    // 10 percent is 1000
+       // 10 percent is 1000
        uint16_t league_data_market_commission_percent = (10 * GRAPHENE_1_PERCENT);
        uint16_t free_data_market_commission_percent = (10 * GRAPHENE_1_PERCENT);
+   };
+
+   struct commission_allocation_t {
+       string commission_account = GRAPHENE_DATA_TRANSACTION_COMMISSION_ACCOUNT;
+       uint16_t reserve_percent = (1 * GRAPHENE_1_PERCENT); // reserve percent of commission, go to reserve pool
    };
 
    struct operation_ext_copyright_hash_t {
@@ -113,6 +118,7 @@ namespace graphene { namespace chain {
    struct interest_rate_t {
        uint32_t interest_rate_days = 0;
        uint32_t interest_rate = 0;
+       bool is_valid = false;//
    };
 
    struct lock_balance_params_t {
@@ -584,10 +590,11 @@ FC_REFLECT_TYPENAME( graphene::chain::data_transaction_complain_id_type)
 FC_REFLECT( graphene::chain::void_t, )
 FC_REFLECT( graphene::chain::operation_ext_version_t, (version))
 FC_REFLECT( graphene::chain::data_transaction_commission_percent_t, (league_data_market_commission_percent)(free_data_market_commission_percent))
+FC_REFLECT( graphene::chain::commission_allocation_t, (commission_account)(reserve_percent))
 FC_REFLECT( graphene::chain::operation_ext_copyright_hash_t, (copyright_hash))
 FC_REFLECT( graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_bases)(product_pocs_weights))
 FC_REFLECT( graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
-FC_REFLECT( graphene::chain::interest_rate_t, (interest_rate_days)(interest_rate) )
+FC_REFLECT( graphene::chain::interest_rate_t, (interest_rate_days)(interest_rate)(is_valid) )
 FC_REFLECT( graphene::chain::lock_balance_params_t, (params) )
 
 FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,

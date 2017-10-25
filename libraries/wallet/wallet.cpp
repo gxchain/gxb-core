@@ -3698,7 +3698,7 @@
 
     uint64_t wallet_api::get_data_transaction_commission(fc::time_point_sec start, fc::time_point_sec end) const
     {
-       return my->_remote_db->get_data_transaction_commission(start, end);
+       return my->_remote_db->get_data_transaction_commission(start, end) / GRAPHENE_BLOCKCHAIN_PRECISION;
     }
 
     uint64_t wallet_api::get_data_transaction_pay_fee(fc::time_point_sec start, fc::time_point_sec end) const
@@ -3708,12 +3708,12 @@
 
     uint64_t wallet_api::get_data_transaction_product_costs_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const
     {
-       return my->_remote_db->get_data_transaction_product_costs_by_requester(requester, start, end);
+       return my->_remote_db->get_data_transaction_product_costs_by_requester(requester, start, end) / GRAPHENE_BLOCKCHAIN_PRECISION;
     }
 
     uint64_t wallet_api::get_data_transaction_total_count_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const
     {
-        return my->_remote_db->get_data_transaction_total_count_by_requester(requester, start, end);
+        return my->_remote_db->get_data_transaction_total_count_by_requester(requester, start, end) / GRAPHENE_BLOCKCHAIN_PRECISION;
     }
 
     uint64_t wallet_api::get_data_transaction_pay_fees_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const
@@ -3728,7 +3728,7 @@
 
     uint64_t wallet_api::get_data_transaction_total_count_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const
     {
-       return my->_remote_db->get_data_transaction_total_count_by_product_id(product_id, start, end);
+       return my->_remote_db->get_data_transaction_total_count_by_product_id(product_id, start, end) / GRAPHENE_BLOCKCHAIN_PRECISION;
     }
 
     vector<account_object> wallet_api::list_my_accounts()
