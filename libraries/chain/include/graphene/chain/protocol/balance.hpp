@@ -57,7 +57,7 @@ namespace graphene { namespace chain {
     *
     * This operation is used to the balance in a given @ref balanc_locked_object. 
     */
-   struct balance_locked_operation : public base_operation
+   struct balance_lock_operation : public base_operation
    {
       struct fee_parameters_type { 
          uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION; 
@@ -78,10 +78,10 @@ namespace graphene { namespace chain {
       share_type      calculate_fee(const fee_parameters_type& k)const { return k.fee; }
    };
 
-   struct balance_unlocked_operation : public base_operation
+   struct balance_unlock_operation : public base_operation
    {
       struct fee_parameters_type { 
-        uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION; 
+        uint64_t fee = 0; 
       };
       asset                             fee;
       account_id_type                   unlocked_account;
@@ -99,10 +99,10 @@ FC_REFLECT( graphene::chain::balance_claim_operation::fee_parameters_type,  )
 FC_REFLECT( graphene::chain::balance_claim_operation,
             (fee)(deposit_to_account)(balance_to_claim)(balance_owner_key)(total_claimed) )
 
-FC_REFLECT( graphene::chain::balance_locked_operation::fee_parameters_type,  )
-FC_REFLECT( graphene::chain::balance_locked_operation,
+FC_REFLECT( graphene::chain::balance_lock_operation::fee_parameters_type,  )
+FC_REFLECT( graphene::chain::balance_lock_operation,
             (fee)(locked_account)(create_time)(locked_time_type)(asset_type)(locked_balance)(interest_rate)(memo)(extensions) )
 
-FC_REFLECT( graphene::chain::balance_unlocked_operation::fee_parameters_type,  )
-FC_REFLECT( graphene::chain::balance_unlocked_operation,
+FC_REFLECT( graphene::chain::balance_unlock_operation::fee_parameters_type,  )
+FC_REFLECT( graphene::chain::balance_unlock_operation,
             (fee)(unlocked_account)(account_balance_locked)(extensions) )

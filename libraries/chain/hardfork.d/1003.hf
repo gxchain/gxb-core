@@ -1,0 +1,5 @@
+// hardfork 1003 is for commission allocation
+// x% --> reserve pool
+#ifndef HARDFORK_1003_TIME
+#define HARDFORK_1003_TIME (fc::time_point_sec( 1509292800 ))
+#endif

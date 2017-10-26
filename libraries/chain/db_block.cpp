@@ -152,7 +152,7 @@ bool database::_push_block(const signed_block& new_block)
             // push all blocks on the new fork
             for( auto ritr = branches.first.rbegin(); ritr != branches.first.rend(); ++ritr )
             {
-                dlog( "pushing blocks from fork ${n} ${id}", ("n",(*ritr)->data.block_num())("id",(*ritr)->data.id()) );
+                ilog( "pushing blocks from fork ${n} ${id}", ("n",(*ritr)->data.block_num())("id",(*ritr)->data.id()) );
                 optional<fc::exception> except;
                 try {
                    undo_database::session session = _undo_db.start_undo_session();
@@ -226,12 +226,7 @@ processed_transaction database::push_transaction( const signed_transaction& trx,
    } );
    return result;
 } FC_CAPTURE_AND_RETHROW( (trx) ) }
-/**
- *
- * @brief database::_push_transaction
- * @param trx
- * @return
- */
+
 processed_transaction database::_push_transaction( const signed_transaction& trx )
 {
    // If this is the first transaction pushed after applying a block, start a new undo session.
@@ -275,11 +270,11 @@ processed_transaction database::push_proposal(const proposal_object& proposal)
    size_t old_applied_ops_size = _applied_ops.size();
 
    try {
-      auto tmp_session = _undo_db.start_undo_session(true);
+      auto session = _undo_db.start_undo_session(true);
       for( auto& op : proposal.proposed_transaction.operations )
          eval_state.operation_results.emplace_back(apply_operation(eval_state, op));
       remove(proposal);
-      tmp_session.merge();
+      session.merge();
    } catch ( const fc::exception& e ) {
       if( head_block_time() <= HARDFORK_483_TIME )
       {
@@ -433,7 +428,6 @@ void database::pop_block()
    GRAPHENE_ASSERT( head_block.valid(), pop_empty_chain, "there are no blocks to pop" );
 
    _fork_db.pop_block();
-   _block_id_to_block.remove( head_id );
    pop_undo();
 
    _popped_tx.insert( _popped_tx.begin(), head_block->transactions.begin(), head_block->transactions.end() );
@@ -519,7 +513,7 @@ void database::_apply_block( const signed_block& next_block )
        * for transactions when validating broadcast transactions or
        * when building a block.
        */
-      apply_transaction( trx, skip | skip_transaction_signatures );
+      apply_transaction( trx, skip );
       ++_current_trx_in_block;
    }
 
@@ -556,6 +550,7 @@ void database::_apply_block( const signed_block& next_block )
 } FC_CAPTURE_AND_RETHROW( (next_block.block_num()) )  }
 
 
+
 processed_transaction database::apply_transaction(const signed_transaction& trx, uint32_t skip)
 {
    processed_transaction result;
@@ -569,6 +564,7 @@ processed_transaction database::apply_transaction(const signed_transaction& trx,
 processed_transaction database::_apply_transaction(const signed_transaction& trx)
 { try {
    uint32_t skip = get_node_properties().skip_flags;
+
    if( true || !(skip&skip_validate) )   /* issue #505 explains why this skip_flag is disabled */
       trx.validate();
 
@@ -576,16 +572,18 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    const chain_id_type& chain_id = get_chain_id();
    auto trx_id = trx.id();
    FC_ASSERT((skip & skip_transaction_dupe_check) ||
-              trx_idx.indices().get<by_trx_id>().find(trx_id) == trx_idx.indices().get<by_trx_id>().end(), "duplicated trx, trx_id %{trx_id}", ("trx_id", trx_id));
+              trx_idx.indices().get<by_trx_id>().find(trx_id) == trx_idx.indices().get<by_trx_id>().end(), "duplicated trx, trx_id ${trx_id}", ("trx_id", trx_id));
    transaction_evaluation_state eval_state(this);
    const chain_parameters& chain_parameters = get_global_properties().parameters;
    eval_state._trx = &trx;
+
    if( !(skip & (skip_transaction_signatures | skip_authority_check) ) )
    {
       auto get_active = [&]( account_id_type id ) { return &id(*this).active; };
       auto get_owner  = [&]( account_id_type id ) { return &id(*this).owner;  };
       trx.verify_authority( chain_id, get_active, get_owner, get_global_properties().parameters.max_authority_depth );
    }
+
    //Skip all manner of expiration and TaPoS checking if we're on block 1; It's impossible that the transaction is
    //expired, and TaPoS makes no sense as no blocks exist.
    if( BOOST_LIKELY(head_block_num() > 0) )
@@ -604,6 +602,7 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
                  ("trx.expiration",trx.expiration)("now",now)("max_til_exp",chain_parameters.maximum_time_until_expiration));
       FC_ASSERT( now <= trx.expiration, "", ("now",now)("trx.exp",trx.expiration) );
    }
+
    //Insert transaction into unique transactions database.
    if( !(skip & skip_transaction_dupe_check) )
    {
@@ -614,6 +613,7 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    }
 
    eval_state.operation_results.reserve(trx.operations.size());
+
    //Finally process the operations
    processed_transaction ptrx(trx);
    _current_op_in_trx = 0;
@@ -623,10 +623,12 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
       ++_current_op_in_trx;
    }
    ptrx.operation_results = std::move(eval_state.operation_results);
+
    //Make sure the temp account has no non-zero balances
    const auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
    auto range = index.equal_range( boost::make_tuple( GRAPHENE_TEMP_ACCOUNT ) );
    std::for_each(range.first, range.second, [](const account_balance_object& b) { FC_ASSERT(b.balance == 0); });
+
    return ptrx;
 } FC_CAPTURE_AND_RETHROW( (trx) ) }
 
@@ -642,10 +644,8 @@ operation_result database::apply_operation(transaction_evaluation_state& eval_st
    if( !eval )
       assert( "No registered evaluator for this operation" && false );
    auto op_id = push_applied_operation( op );
-
    auto result = eval->evaluate( eval_state, op, true );
    set_applied_operation_result( op_id, result );
-
    return result;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 

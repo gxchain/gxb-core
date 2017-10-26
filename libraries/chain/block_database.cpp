@@ -34,7 +34,7 @@ struct index_entry
    uint32_t      block_size = 0;
    block_id_type block_id;
 };
- }}
+}}
 FC_REFLECT( graphene::chain::index_entry, (block_pos)(block_size)(block_id) );
 
 namespace graphene { namespace chain {
@@ -45,14 +45,15 @@ void block_database::open( const fc::path& dbdir )
    _block_num_to_pos.exceptions(std::ios_base::failbit | std::ios_base::badbit);
    _blocks.exceptions(std::ios_base::failbit | std::ios_base::badbit);
 
-   if( !fc::exists( dbdir/"index" ) )
+   _index_filename = dbdir / "index";
+   if( !fc::exists( _index_filename ) )
    {
-     _block_num_to_pos.open( (dbdir/"index").generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);
+     _block_num_to_pos.open( _index_filename.generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);
      _blocks.open( (dbdir/"blocks").generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);
    }
    else
    {
-     _block_num_to_pos.open( (dbdir/"index").generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out );
+     _block_num_to_pos.open( _index_filename.generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out );
      _blocks.open( (dbdir/"blocks").generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out );
    }
 } FC_CAPTURE_AND_RETHROW( (dbdir) ) }
@@ -82,8 +83,7 @@ void block_database::store( const block_id_type& _id, const signed_block& b )
       id = b.id();
       elog( "id argument of block_database::store() was not initialized for block ${id}", ("id", id) );
    }
-   auto num = block_header::num_from_id(id);
-   _block_num_to_pos.seekp( sizeof( index_entry ) * num );
+   _block_num_to_pos.seekp( sizeof( index_entry ) * int64_t(block_header::num_from_id(id)) );
    index_entry e;
    _blocks.seekp( 0, _blocks.end );
    // dlog("store block, num: ${num}, block:  ${b}", ("num", num)("b", b));
@@ -99,7 +99,7 @@ void block_database::store( const block_id_type& _id, const signed_block& b )
 void block_database::remove( const block_id_type& id )
 { try {
    index_entry e;
-   auto index_pos = sizeof(e)*block_header::num_from_id(id);
+   int64_t index_pos = sizeof(e) * int64_t(block_header::num_from_id(id));
    _block_num_to_pos.seekg( 0, _block_num_to_pos.end );
    if ( _block_num_to_pos.tellg() <= index_pos )
       FC_THROW_EXCEPTION(fc::key_not_found_exception, "Block ${id} not contained in block database", ("id", id));
@@ -110,7 +110,7 @@ void block_database::remove( const block_id_type& id )
    if( e.block_id == id )
    {
       e.block_size = 0;
-      _block_num_to_pos.seekp( sizeof(e)*block_header::num_from_id(id) );
+      _block_num_to_pos.seekp( sizeof(e) * int64_t(block_header::num_from_id(id)) );
       _block_num_to_pos.write( (char*)&e, sizeof(e) );
    }
 } FC_CAPTURE_AND_RETHROW( (id) ) }
@@ -121,9 +121,9 @@ bool block_database::contains( const block_id_type& id )const
       return false;
 
    index_entry e;
-   auto index_pos = sizeof(e)*block_header::num_from_id(id);
+   int64_t index_pos = sizeof(e) * int64_t(block_header::num_from_id(id));
    _block_num_to_pos.seekg( 0, _block_num_to_pos.end );
-   if ( _block_num_to_pos.tellg() <= index_pos )
+   if ( _block_num_to_pos.tellg() < int64_t(index_pos + sizeof(e)) )
       return false;
    _block_num_to_pos.seekg( index_pos );
    _block_num_to_pos.read( (char*)&e, sizeof(e) );
@@ -135,9 +135,9 @@ block_id_type block_database::fetch_block_id( uint32_t block_num )const
 {
    assert( block_num != 0 );
    index_entry e;
-   auto index_pos = sizeof(e)*block_num;
+   int64_t index_pos = sizeof(e) * int64_t(block_num);
    _block_num_to_pos.seekg( 0, _block_num_to_pos.end );
-   if ( _block_num_to_pos.tellg() <= int64_t(index_pos) )
+   if ( _block_num_to_pos.tellg() <= index_pos )
       FC_THROW_EXCEPTION(fc::key_not_found_exception, "Block number ${block_num} not contained in block database", ("block_num", block_num));
 
    _block_num_to_pos.seekg( index_pos );
@@ -152,7 +152,7 @@ optional<signed_block> block_database::fetch_optional( const block_id_type& id )
    try
    {
       index_entry e;
-      auto index_pos = sizeof(e)*block_header::num_from_id(id);
+      int64_t index_pos = sizeof(e) * int64_t(block_header::num_from_id(id));
       _block_num_to_pos.seekg( 0, _block_num_to_pos.end );
       if ( _block_num_to_pos.tellg() <= index_pos )
          return {};
@@ -161,7 +161,6 @@ optional<signed_block> block_database::fetch_optional( const block_id_type& id )
       _block_num_to_pos.read( (char*)&e, sizeof(e) );
 
       if( e.block_id != id ) return optional<signed_block>();
-      dlog("block size ${bs}", ("bs", e.block_size));
 
       vector<char> data( e.block_size );
       _blocks.seekg( e.block_pos );
@@ -185,7 +184,7 @@ optional<signed_block> block_database::fetch_by_number( uint32_t block_num )cons
    try
    {
       index_entry e;
-      auto index_pos = sizeof(e)*block_num;
+      int64_t index_pos = sizeof(e) * int64_t(block_num);
       _block_num_to_pos.seekg( 0, _block_num_to_pos.end );
       if ( _block_num_to_pos.tellg() <= index_pos )
          return {};
@@ -206,99 +205,78 @@ optional<signed_block> block_database::fetch_by_number( uint32_t block_num )cons
       FC_ASSERT( result.id() == e.block_id );
       return result;
    }
-   catch (const fc::exception& e)
+   catch (const fc::exception&)
    {
-       elog("caught fc::exception in fetch_by_num ${e}", ("e", e.to_detail_string()));
    }
-   catch (const std::exception& e)
+   catch (const std::exception&)
    {
-       elog("caught std::exception in fetch_by_num ${e}", ("e", e.what()));
    }
    return optional<signed_block>();
 }
 
-// 读取区块上最后一个有效的block
-optional<signed_block> block_database::last()const
-{
+optional<index_entry> block_database::last_index_entry()const {
    try
    {
       index_entry e;
+
       _block_num_to_pos.seekg( 0, _block_num_to_pos.end );
+      std::streampos pos = _block_num_to_pos.tellg();
+      if( pos < long(sizeof(index_entry)) )
+         return optional<index_entry>();
 
-      if( _block_num_to_pos.tellp() < sizeof(index_entry) )
-         return optional<signed_block>();
+      pos -= pos % sizeof(index_entry);
 
-      // 读取最后一个block_size不为0的index_entry
-      _block_num_to_pos.seekg( -sizeof(index_entry), _block_num_to_pos.end );
-      _block_num_to_pos.read( (char*)&e, sizeof(e) );
-      uint64_t pos = _block_num_to_pos.tellg();
-      while( e.block_size == 0 && pos > 0 )
+      _blocks.seekg( 0, _block_num_to_pos.end );
+      const std::streampos blocks_size = _blocks.tellg();
+      while( pos > 0 )
       {
          pos -= sizeof(index_entry);
          _block_num_to_pos.seekg( pos );
          _block_num_to_pos.read( (char*)&e, sizeof(e) );
+         if( _block_num_to_pos.gcount() == sizeof(e) && e.block_size > 0
+                && int64_t(e.block_pos + e.block_size) <= blocks_size )
+            try
+            {
+               vector<char> data( e.block_size );
+               _blocks.seekg( e.block_pos );
+               _blocks.read( data.data(), e.block_size );
+               if( _blocks.gcount() == long(e.block_size) )
+               {
+                  const signed_block block = fc::raw::unpack<signed_block>(data);
+                  if( block.id() == e.block_id )
+                     return e;
+               }
+            }
+            catch (const fc::exception&)
+            {
+            }
+            catch (const std::exception&)
+            {
+            }
+         fc::resize_file( _index_filename, pos );
       }
-
-      if( e.block_size == 0 ) {
-         wlog("index_entry block size 0");
-         return optional<signed_block>();
-      }
-      dlog("last index_entry: ${e}", ("e", e));
-
-      // 根据index_entry，读取对应的block
-      vector<char> data( e.block_size );
-      _blocks.seekg( e.block_pos );
-      _blocks.read( data.data(), e.block_size );
-      auto result = fc::raw::unpack<signed_block>(data);
-      dlog("last signed_block: ${block}", ("block", result));
-      return result;
    }
-   catch (const fc::exception& e)
+   catch (const fc::exception&)
    {
-       elog("caught fc::exception in last() ${e}", ("e", e.to_detail_string()));
    }
-   catch (const std::exception& e)
+   catch (const std::exception&)
    {
-       elog("caught std::exception in last() ${e}", ("e", e.what()));
    }
+   return optional<index_entry>();
+}
+
+optional<signed_block> block_database::last()const
+{
+   optional<index_entry> entry = last_index_entry();
+   if( entry.valid() ) return fetch_by_number( block_header::num_from_id(entry->block_id) );
    return optional<signed_block>();
 }
 
 optional<block_id_type> block_database::last_id()const
 {
-   try
-   {
-      index_entry e;
-      _block_num_to_pos.seekg( 0, _block_num_to_pos.end );
-
-      if( _block_num_to_pos.tellp() < sizeof(index_entry) )
-         return optional<block_id_type>();
-
-      _block_num_to_pos.seekg( -sizeof(index_entry), _block_num_to_pos.end );
-      _block_num_to_pos.read( (char*)&e, sizeof(e) );
-      uint64_t pos = _block_num_to_pos.tellg();
-      while( e.block_size == 0 && pos > 0 )
-      {
-         pos -= sizeof(index_entry);
-         _block_num_to_pos.seekg( pos );
-         _block_num_to_pos.read( (char*)&e, sizeof(e) );
-      }
-
-      if( e.block_size == 0 )
-         return optional<block_id_type>();
-
-      return e.block_id;
-   }
-   catch (const fc::exception& e)
-   {
-       elog("caught fc::exception in get last_id ${e}", ("e", e.to_detail_string()));
-   }
-   catch (const std::exception& e)
-   {
-       elog("caught std::exception in get last_id ${e}", ("e", e.what()));
-   }
+   optional<index_entry> entry = last_index_entry();
+   if( entry.valid() ) return entry->block_id;
    return optional<block_id_type>();
 }
-
 
 } }
