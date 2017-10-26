@@ -1,5 +1,6 @@
-// hardfork 1002, 2017-10-15:00:00:00
+// hardfork 1002
+// start at 2017-11-01 00:00:00
 // voting with GXS
 #ifndef HARDFORK_1002_TIME
-#define HARDFORK_1002_TIME (fc::time_point_sec(1507996800))
+#define HARDFORK_1002_TIME (fc::time_point_sec(1509465600))
 #endif

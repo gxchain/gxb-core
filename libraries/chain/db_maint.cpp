@@ -751,16 +751,17 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
             uint64_t voting_stake = stats.total_core_in_orders.value
                   + (stake_account.cashback_vb.valid() ? (*stake_account.cashback_vb)(d).balance.amount.value: 0)
                   + d.get_balance(stake_account.get_id(), asset_id_type()).amount.value;
-            dlog("account ${a}, core voting_stake ${v}", ("a", stake_account.get_id())("v", voting_stake));
+            // dlog("account ${a}, core voting_stake ${v}", ("a", stake_account.get_id())("v", voting_stake));
 
             // voting_stake, add GXS
             if (d.head_block_time() > HARDFORK_1002_TIME) {
-                auto gxs_asset_id = asset_id_type(1);
-                if (auto asset_obj = d.find(gxs_asset_id)) {
-                    double exchange_rate = asset_obj->options.core_exchange_rate.to_real();
-                    voting_stake += d.get_balance(stake_account.get_id(), gxs_asset_id).amount.value * exchange_rate;
+                const auto& asset_by_symbol = d.get_index_type<asset_index>().indices().get<by_symbol>();
+                auto gxs = asset_by_symbol.find(GRAPHENE_SYMBOL_GXS);
+                if (gxs != asset_by_symbol.end()) {
+                    double exchange_rate = gxs->options.core_exchange_rate.to_real();
+                    voting_stake += d.get_balance(stake_account.get_id(), gxs->get_id()).amount.value * exchange_rate;
                 }
-                dlog("total voting_stake ${v}", ("v", voting_stake));
+                // dlog("total voting_stake ${v}", ("v", voting_stake));
             }
 
             for( vote_id_type id : opinion_account.options.votes )

@@ -122,8 +122,8 @@ namespace graphene { namespace chain {
     class account_balance_locked_object : public abstract_object<account_balance_locked_object>
     {
        public:
-          static const uint8_t space_id = implementation_ids;
-          static const uint8_t type_id  = impl_account_balance_locked_object_type;
+          static const uint8_t space_id = protocol_ids;
+          static const uint8_t type_id  = account_balance_locked_object_type;
  
           account_id_type   owner;
           asset_id_type     asset_type;
