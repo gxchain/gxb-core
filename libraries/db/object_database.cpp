@@ -64,36 +64,46 @@ index& object_database::get_mutable_index(uint8_t space_id, uint8_t type_id)
    FC_ASSERT( _index.size() > space_id, "", ("space_id",space_id)("type_id",type_id)("index.size",_index.size()) );
    FC_ASSERT( _index[space_id].size() > type_id , "", ("space_id",space_id)("type_id",type_id)("index[space_id].size",_index[space_id].size()) );
    const auto& idx = _index[space_id][type_id];
-
    FC_ASSERT( idx, "", ("space",space_id)("type",type_id) );
    return *idx;
 }
 
 void object_database::flush()
 {
-   ilog("object_database flush object_database...");
+//   ilog("Save object_database in ${d}", ("d", _data_dir));
+   fc::create_directories( _data_dir / "object_database.tmp" / "lock" );
    for( uint32_t space = 0; space < _index.size(); ++space )
    {
-      fc::create_directories( _data_dir / "object_database" / fc::to_string(space) );
+      fc::create_directories( _data_dir / "object_database.tmp" / fc::to_string(space) );
       const auto types = _index[space].size();
       for( uint32_t type = 0; type  <  types; ++type )
          if( _index[space][type] )
-            _index[space][type]->save( _data_dir / "object_database" / fc::to_string(space)/fc::to_string(type) );
+            _index[space][type]->save( _data_dir / "object_database.tmp" / fc::to_string(space)/fc::to_string(type) );
    }
+   fc::remove_all( _data_dir / "object_database.tmp" / "lock" );
+   if( fc::exists( _data_dir / "object_database" ) )
+      fc::rename( _data_dir / "object_database", _data_dir / "object_database.old" );
+   fc::rename( _data_dir / "object_database.tmp", _data_dir / "object_database" );
+   fc::remove_all( _data_dir / "object_database.old" );
 }
 
 void object_database::wipe(const fc::path& data_dir)
 {
    close();
-   ilog("Wiping object database, ${data_dir}/object_database", ("data_dir", data_dir));
+   ilog("Wiping object database...");
    fc::remove_all(data_dir / "object_database");
    ilog("Done wiping object databse.");
 }
 
 void object_database::open(const fc::path& data_dir)
 { try {
-   ilog("Opening object database from ${d} ...", ("d", data_dir));
    _data_dir = data_dir;
+   if( fc::exists( _data_dir / "object_database" / "lock" ) )
+   {
+       wlog("Ignoring locked object_database");
+       return;
+   }
+   ilog("Opening object database from ${d} ...", ("d", data_dir));
    for( uint32_t space = 0; space < _index.size(); ++space )
       for( uint32_t type = 0; type  < _index[space].size(); ++type )
          if( _index[space][type] )

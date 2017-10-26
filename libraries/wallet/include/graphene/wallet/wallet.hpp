@@ -1903,6 +1903,23 @@ class wallet_api
          const variant_object& changed_values,
          bool broadcast = false);
 
+      /** Creates a transaction to propose a extensions parameter change.
+       *
+       * Multiple parameters can be specified if an atomic change is
+       * desired.
+       *
+       * @param proposing_account The account paying the fee to propose the tx
+       * @param expiration_time Timestamp specifying when the proposal will either take effect or expire
+       * @param changed_extensions The values to change
+       * @param broadcast true if you wish to broadcast the transaction
+       * @return the signed version of the transaction
+       */
+      signed_transaction propose_gpo_extensions_change(
+         const string& proposing_account, 
+         fc::time_point_sec expiration_time, 
+         const variant_object& changed_extensions, 
+         bool broadcast = false);
+
       /**
        *  Creates a transaction to propose a league update
        * @param proposing_account
@@ -1994,29 +2011,6 @@ class wallet_api
        * @return pocs_object
        */
       optional<pocs_object> get_pocs_object(league_id_type league_id, string account, object_id_type product_id);
-
-      /** lock account balance.
-       *
-       * @param account_name_or_id the name or id of the account.
-       * @param create_time the create time of lock balance.
-       * @param locked_time_type lock days.
-       * @param amount the number of lock balance.
-       * @param asset_symbol the symbol or id of the fee.
-       * @param interest_rate the interest rate of lock balance.
-       * @param memo the describe of this operation
-       * @param broadcast true if you wish to broadcast the transaction.
-       * @return the signed version of the transaction.
-       */
-      signed_transaction lock_balance(string account_name_or_id, fc::time_point_sec create_time, string locked_time_type, string amount, string asset_symbol, uint32_t interest_rate, string memo, bool broadcast = false);
-
-      /** unlock account balance.
-       *
-       * @param account_name_or_id the name or id of the account.
-       * @param locked_id the id of account_balance_locked_object.
-       * @param broadcast true if you wish to broadcast the transaction.
-       * @return the signed version of the transaction.
-       */
-      signed_transaction unlock_balance(string account_name_or_id, account_balance_locked_id_type locked_id, bool broadcast = false);
 
       void dbg_make_uia(string creator, string symbol);
       void dbg_make_mia(string creator, string symbol);
@@ -2211,6 +2205,7 @@ FC_API( graphene::wallet::wallet_api,
         (sign_transaction)
         (get_prototype_operation)
         (propose_parameter_change)
+        (propose_gpo_extensions_change)
         (propose_league_update)
         (propose_fee_change)
         (approve_proposal)
@@ -2269,6 +2264,4 @@ FC_API( graphene::wallet::wallet_api,
         (list_total_second_hand_transaction_counts_by_datasource)
         (get_data_transaction_by_request_id)
         (get_pocs_object)
-        (lock_balance)
-        (unlock_balance)
 )
