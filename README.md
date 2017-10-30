@@ -25,7 +25,7 @@ unlocked >>> get_account_history_by_operations <ACCOUNT> [<operation id>] <start
 
 Using an HTTP client such as curl:
 ```
-$ curl -d '{"jsonrpc": "2.0", "method": "get_account_history_by_operations", "params": ["1.2.17",[0],1,100], "id": 1}' http://127.0.0.1:8091/rpc
+$ curl -d '{"jsonrpc": "2.0", "method": "get_account_history_by_operations", "params": ["1.2.17",[],1,100], "id": 1}' http://127.0.0.1:8091/rpc
 
 ```
 
