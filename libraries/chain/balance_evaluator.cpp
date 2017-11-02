@@ -22,7 +22,6 @@
  * THE SOFTWARE.
  */
 #include <graphene/chain/balance_evaluator.hpp>
-#include <cmath>
 
 namespace graphene { namespace chain {
 
@@ -89,79 +88,5 @@ void_result balance_claim_evaluator::do_apply(const balance_claim_operation& op)
 
    d.adjust_balance(op.deposit_to_account, op.total_claimed);
    return {};
-}
-
-void_result balance_locked_evaluator::do_evaluate(const balance_lock_operation& op)
-{
-    database& _db = db();
-    auto& index = _db.get_index_type<account_balance_index>().indices().get<by_account_asset>();
-    auto itr = index.find(boost::make_tuple(op.locked_account, op.asset_type));
-    FC_ASSERT(itr != index.end(),"account id or asset id error");
-    const chain_parameters& chain_params = _db.get_global_properties().parameters;
-    vector< pair<string, interest_rate_t> > params;
-    for (auto& ext : chain_params.extensions) {
-        if (ext.which() == future_extensions::tag<lock_balance_params_t>::value) {
-            params = ext.get<lock_balance_params_t>().params;
-            break;
-        }
-    }
-    FC_ASSERT(params.size() != 0, "no lock balance params");
-    auto iter_param = find_if(params.begin(), params.end(), [&](pair<string, interest_rate_t> p) {
-        return p.first == op.locked_time_type;
-    } );
-    FC_ASSERT(iter_param != params.end(), "locked_time_type invalid");
-    FC_ASSERT(iter_param->second.is_valid, "this plan is invalid");
-    FC_ASSERT(iter_param->second.interest_rate == op.interest_rate, "input interest_rate invalid");
-    locked_balance_time = iter_param->second.interest_rate_days;
-    FC_ASSERT(op.locked_balance <= itr->get_balance().amount, "balance of the asset is not enough");
-    FC_ASSERT(std::fabs(op.create_time.sec_since_epoch() - _db.head_block_time().sec_since_epoch()) <= LOCKED_BALANCE_EXPIRED_TIME);
-    return {};
-}
-
-object_id_type balance_locked_evaluator::do_apply(const balance_lock_operation& op)
-{
-    database& _db = db();
-    const auto& new_object = _db.create<account_balance_locked_object>([&](account_balance_locked_object& b){
-        b.owner = op.locked_account;
-        b.asset_type = op.asset_type;
-        b.create_time = op.create_time;
-        b.locked_balance_time = locked_balance_time;
-        b.locked_time_type = op.locked_time_type;
-        b.locked_balance = op.locked_balance;
-        b.interest_rate = op.interest_rate;
-        b.memo = op.memo;
-    });
-    asset locked_asset;
-    locked_asset.amount = op.locked_balance;
-    locked_asset.asset_id = op.asset_type;
-    _db.adjust_balance(op.locked_account, -locked_asset);
-    return new_object.id;
-}
-
-void_result balance_unlocked_evaluator::do_evaluate(const balance_unlock_operation& op)
-{
-    database& _db = db();
-    account_balance_locked_obj = &op.account_balance_locked(_db);
-    FC_ASSERT(nullptr != account_balance_locked_obj, "invalid account_balance_locked_id");
-    FC_ASSERT(account_balance_locked_obj->owner == op.unlocked_account, "unlock_balance account does not match the account of the balance_unlock_operation");
-    //Whether locked time has expired
-    uint32_t caculate_locked_time = (_db.head_block_time().sec_since_epoch() - account_balance_locked_obj->create_time.sec_since_epoch()) / SECONDS_PER_DAY;
-    //T+1 mode
-    FC_ASSERT(account_balance_locked_obj->locked_balance_time <= caculate_locked_time - 1, "Not expired");
-    return {};
-}
-
-void_result balance_unlocked_evaluator::do_apply(const balance_unlock_operation& op)
-{
-    database& _db = db();
-    if (nullptr != account_balance_locked_obj){
-        asset locked_asset;
-        locked_asset.amount = account_balance_locked_obj->locked_balance;
-        locked_asset.asset_id = account_balance_locked_obj->asset_type;
-        _db.adjust_balance(op.unlocked_account, locked_asset);
-        //remove no use account_balance_locked_object
-        _db.remove(*account_balance_locked_obj);
-    }
-    return {};
 }
 } } // namespace graphene::chain

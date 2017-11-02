@@ -76,6 +76,7 @@
 #include <graphene/chain/league_data_product_evaluator.hpp>
 #include <graphene/chain/league_evaluator.hpp>
 #include <graphene/chain/datasource_copyright_evaluator.hpp>
+#include <graphene/chain/loyalty_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -162,8 +163,8 @@ const uint8_t pocs_object::type_id;
 const uint8_t data_transaction_complain_object::space_id;
 const uint8_t data_transaction_complain_object::type_id;
 
-const uint8_t account_balance_locked_object::space_id;
-const uint8_t account_balance_locked_object::type_id;
+const uint8_t lock_balance_object::space_id;
+const uint8_t lock_balance_object::type_id;
 
 void database::initialize_evaluators()
 {
@@ -208,8 +209,8 @@ void database::initialize_evaluators()
    register_evaluator<withdraw_permission_delete_evaluator>();
    register_evaluator<worker_create_evaluator>();
    register_evaluator<balance_claim_evaluator>();
-   register_evaluator<balance_locked_evaluator>();
-   register_evaluator<balance_unlocked_evaluator>();
+   register_evaluator<balance_lock_evaluator>();
+   register_evaluator<balance_unlock_evaluator>();
    register_evaluator<transfer_to_blind_evaluator>();
    register_evaluator<transfer_from_blind_evaluator>();
    register_evaluator<blind_transfer_evaluator>();

@@ -49,12 +49,6 @@ void account_balance_object::adjust_balance(const asset& delta)
    balance += delta.amount;
 }
 
-void account_balance_locked_object::adjust_locked_balance(const asset& delta)
-{
-   assert(delta.asset_id == asset_type);
-   locked_balance += delta.amount;
-}
-
 void account_statistics_object::process_fees(const account_object& a, database& d) const
 {
    if( pending_fees > 0 || pending_vested_fees > 0 )

@@ -31,8 +31,6 @@
 
 namespace graphene { namespace chain {
 
-#define LOCKED_BALANCE_EXPIRED_TIME 30
-
 class balance_claim_evaluator : public evaluator<balance_claim_evaluator>
 {
 public:
@@ -48,30 +46,5 @@ public:
     */
    void_result do_apply(const balance_claim_operation& op);
 };
-
-class balance_locked_evaluator : public evaluator<balance_locked_evaluator>
-{
-public:
-    typedef balance_lock_operation operation_type;
-
-    uint32_t locked_balance_time = 0;
-
-    void_result do_evaluate(const balance_lock_operation& op);
-
-    object_id_type do_apply(const balance_lock_operation& op);
-};
-
-class balance_unlocked_evaluator : public evaluator<balance_unlocked_evaluator>
-{
-public:
-    typedef balance_unlock_operation operation_type;
-
-    const account_balance_locked_object* account_balance_locked_obj = nullptr;
-
-    void_result do_evaluate(const balance_unlock_operation& op);
-    
-    void_result do_apply(const balance_unlock_operation& op);
-};
-
 
 } } // graphene::chain
