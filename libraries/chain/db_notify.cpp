@@ -374,7 +374,7 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
            case data_transaction_complain_object_type:{
                break;
            }
-           case account_balance_locked_object_type:{
+           case lock_balance_object_type:{
                break;
            }
 

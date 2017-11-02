@@ -46,6 +46,7 @@
 #include <graphene/chain/protocol/league_ops.hpp>
 #include <graphene/chain/protocol/pay_data_transaction_ops.hpp>
 #include <graphene/chain/protocol/datasource_copyright_ops.hpp>
+#include <graphene/chain/protocol/loyalty_ops.hpp>
 
 namespace graphene { namespace chain {
 
