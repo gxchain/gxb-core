@@ -242,6 +242,7 @@ optional<index_entry> block_database::last_index_entry()const {
                _blocks.read( data.data(), e.block_size );
                if( _blocks.gcount() == long(e.block_size) )
                {
+                  idump((data)(data.size()));
                   const signed_block block = fc::raw::unpack<signed_block>(data);
                   if( block.id() == e.block_id )
                      return e;
@@ -252,6 +253,17 @@ optional<index_entry> block_database::last_index_entry()const {
             }
             catch (const std::exception&)
             {
+            }
+            catch (const fc::assert_exception&)
+            {
+            }
+            catch (const fc::unhandled_exception&)
+            {
+            }
+            catch (...)
+            {
+                edump(("get index_entry exception"));
+                // other exception, such as fc::assert_exception
             }
          fc::resize_file( _index_filename, pos );
       }
