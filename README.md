@@ -14,6 +14,13 @@ APIs are separated into two categories, namely
 
 [Blockchain API](https://github.com/gxchain/gxb-core/wiki/witness_node_api_json_rpc).
 
+
+### Document For Exchange
+[Exchange document(zh)](http://gxb-package.oss-cn-hangzhou.aliyuncs.com/gxb-core/doc/%E4%BA%A4%E6%98%93%E6%89%80%E6%8E%A5%E5%85%A5%E6%96%87%E6%A1%A3.pdf)
+
+[Exchange document(en)](https://github.com/gxchain/gxb-core/wiki/Instruction-for-exchanges)
+
+
 ### Get Account History With Wallet API
 The method ```get_account_history_by_operations``` returns account history with txID.
 In order to interface with the wallet, you need to run the CLI Wallet.
