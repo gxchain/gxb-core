@@ -16,9 +16,9 @@ APIs are separated into two categories, namely
 
 
 ### Document For Exchange
-[Exchange document(zh)](http://gxb-package.oss-cn-hangzhou.aliyuncs.com/gxb-core/doc/%E4%BA%A4%E6%98%93%E6%89%80%E6%8E%A5%E5%85%A5%E6%96%87%E6%A1%A3.pdf)
+[Document For Exchange(中文)](http://gxb-package.oss-cn-hangzhou.aliyuncs.com/gxb-core/doc/%E4%BA%A4%E6%98%93%E6%89%80%E6%8E%A5%E5%85%A5%E6%96%87%E6%A1%A3.pdf)
 
-[Exchange document(en)](https://github.com/gxchain/gxb-core/wiki/Instruction-for-exchanges)
+[Document For Exchange(en)](https://github.com/gxchain/gxb-core/wiki/Instruction-for-exchanges)
 
 
 ### Get Account History With Wallet API
