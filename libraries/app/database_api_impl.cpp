@@ -388,9 +388,9 @@ std::map<std::string, full_account> database_api_impl::get_full_accounts( const 
                     });
     
       auto balance_locked_range = _db.get_index_type<account_balance_locked_index>().indices().get<by_account_asset>().equal_range(boost::make_tuple(account->id));
-      //vector<account_balance_locked_object> locked_balances;
+      //vector<lock_balance_object> locked_balances;
       std::for_each(balance_locked_range.first, balance_locked_range.second,
-                    [&acnt](const account_balance_locked_object& locked_balance) {
+                    [&acnt](const lock_balance_object& locked_balance) {
                        acnt.lock_balances.emplace_back(locked_balance);
                     });
 
