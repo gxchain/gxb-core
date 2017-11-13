@@ -41,7 +41,7 @@ namespace graphene { namespace app {
       vector<variant>                  votes;
       optional<vesting_balance_object> cashback_balance;
       vector<account_balance_object>   balances;
-      vector<account_balance_locked_object> lock_balances;
+      vector<lock_balance_object>      lock_balances;
       vector<vesting_balance_object>   vesting_balances;
       vector<limit_order_object>       limit_orders;
       vector<call_order_object>        call_orders;
