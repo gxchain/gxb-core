@@ -72,7 +72,12 @@ void database::reindex( fc::path data_dir )
       _undo_db.disable();
    for( uint32_t i = head_block_num() + 1; i <= last_block_num; ++i )
    {
-      if( i % 10000 == 0 ) std::cerr << "   " << double(i*100)/last_block_num << "%   "<<i << " of " <<last_block_num<<"   \n";
+      if (i % 1000 == 0)
+      {
+          // sleep 100ms for every 1000 block
+          fc::usleep(fc::milliseconds(100));
+          std::cerr << "   " << double(i * 100) / last_block_num << "%   " << i << " of " << last_block_num << "   \n";
+      }
       if( i == flush_point )
       {
          ilog( "Writing database to disk at block ${i}", ("i",i) );
