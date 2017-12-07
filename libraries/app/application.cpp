@@ -978,6 +978,7 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
       wanted.push_back("witness");
       wanted.push_back("account_history");
       wanted.push_back("market_history");
+      wanted.push_back("data_transaction");
    }
    for (auto& it : wanted)
    {
