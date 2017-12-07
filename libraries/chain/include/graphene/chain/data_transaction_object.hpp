@@ -105,12 +105,14 @@ namespace graphene {
          * @ingroup object_index
          */
         struct by_request_id {};
+        struct by_create_date_time {};
         struct by_requester {};
         using data_transaction_multi_index_type = multi_index_container<
             data_transaction_object,
             indexed_by<
                 ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
                 ordered_unique< tag<by_request_id>, member<data_transaction_object, string, &data_transaction_object::request_id> >,
+                ordered_non_unique< tag<by_create_date_time>, member<data_transaction_object, time_point_sec, &data_transaction_object::create_date_time> >,
                 ordered_non_unique< tag<by_requester>,
                     composite_key<
                         data_transaction_object,
@@ -125,7 +127,6 @@ namespace graphene {
         using data_transaction_index = generic_index<data_transaction_object, data_transaction_multi_index_type>;
 
 
-        struct by_create_date_time;
         using data_transaction_complain_multi_index_type = multi_index_container<
             data_transaction_complain_object,
             indexed_by<
