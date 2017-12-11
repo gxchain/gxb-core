@@ -2021,6 +2021,15 @@ class wallet_api
 
       void flood_network(string prefix, uint32_t number_of_transactions);
 
+      /** transfer_test, Efficient transfer api
+       *
+       * @param from_account
+       * @param to_account
+       * @param times
+       * @return
+       */
+      void transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times);
+
       void network_add_nodes( const vector<string>& nodes );
       vector< variant > network_get_connected_peers();
 
@@ -2216,6 +2225,7 @@ FC_API( graphene::wallet::wallet_api,
         (dbg_stream_json_objects)
         (dbg_update_object)
         (flood_network)
+        (transfer_test)
         (network_add_nodes)
         (network_get_connected_peers)
         (set_key_label)

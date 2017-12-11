@@ -3463,6 +3463,50 @@
 
        }
 
+       void transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times)
+       {
+            FC_ASSERT( !self.is_locked() );
+            fc::optional<asset_object> asset_obj = get_asset("GXC");
+            FC_ASSERT(asset_obj, "Could not find asset GXC");
+            asset amount;
+            amount.asset_id = asset_obj->id;
+            amount.amount = 100000;
+            fc::optional<account_object> from_account_obj = get_account(from_account);
+            FC_ASSERT(from_account_obj, "Could not find account_object ${from_account}", ("from_account", from_account));
+            for(int i = 0; i < times; ++i) {
+                transfer_operation xfer_op;
+                xfer_op.from = from_account;
+                xfer_op.to = to_account;
+                xfer_op.amount = amount;
+                signed_transaction tx;
+                tx.operations.push_back(xfer_op);
+                set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, asset_obj);
+                tx.validate();
+                vector<public_key_type> paying_keys = from_account_obj->active.get_keys();
+                auto dyn_props = get_dynamic_global_properties();
+                tx.set_expiration( dyn_props.time + fc::seconds(300 + i) );
+                for( public_key_type& key : paying_keys )
+                {
+                    auto it = _keys.find(key);
+                    if( it != _keys.end() )
+                    {
+                        fc::optional< fc::ecc::private_key > privkey = wif_to_key( it->second );
+                        FC_ASSERT( privkey.valid(), "Malformed private key in _keys" );
+                        tx.sign( *privkey, _chain_id );
+                    }
+                }
+                try
+                {
+                    _remote_net_broadcast->broadcast_transaction( tx );
+                }
+                catch (const fc::exception& e)
+                {
+                    elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", tx.id().str())("e", e.to_detail_string()) );
+                    throw;
+                }
+            }
+       }
+
        operation get_prototype_operation( string operation_name )
        {
           auto it = _prototype_ops.find( operation_name );
@@ -4553,6 +4597,11 @@
     {
        FC_ASSERT(!is_locked());
        my->flood_network(prefix, number_of_transactions);
+    }
+
+    void wallet_api::transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times)
+    {
+        my->transfer_test(from_account, to_account, times);
     }
 
     signed_transaction wallet_api::propose_league_update(
