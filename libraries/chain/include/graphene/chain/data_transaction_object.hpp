@@ -111,16 +111,20 @@ namespace graphene {
             data_transaction_object,
             indexed_by<
                 ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
-                ordered_unique< tag<by_request_id>, member<data_transaction_object, string, &data_transaction_object::request_id> >,
                 ordered_non_unique< tag<by_create_date_time>, member<data_transaction_object, time_point_sec, &data_transaction_object::create_date_time> >,
                 ordered_non_unique< tag<by_requester>,
+                        member<data_transaction_object, account_id_type, &data_transaction_object::requester>
+                >,
+                ordered_unique< tag<by_request_id>,
                     composite_key<
                         data_transaction_object,
-                         member<data_transaction_object, account_id_type, &data_transaction_object::requester>
-                     >
+                        member<data_transaction_object, string, &data_transaction_object::request_id>,
+                        member<data_transaction_object, time_point_sec, &data_transaction_object::create_date_time>
+                    >,
+                    composite_key_compare<std::less<string>, std::less<time_point_sec>>
                 >
-              >
-            >;
+             >
+        >;
         /**
          * @ingroup object_index
          */
