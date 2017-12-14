@@ -47,6 +47,8 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/container/flat_set.hpp>
 
+#include <graphene/utilities/git_revision.hpp>
+
 #include <iostream>
 #include <fstream>
 
@@ -101,6 +103,14 @@ int main(int argc, char** argv) {
          return 0;
       }
 
+      if( options.count("version") )
+      {
+         std::cout << "Version: " << graphene::utilities::git_revision_description << "\n";
+         std::cout << "SHA: " << graphene::utilities::git_revision_sha << "\n";
+         std::cout << "Timestamp: " << fc::get_approximate_relative_time_string(fc::time_point_sec(graphene::utilities::git_revision_unix_timestamp)) << "\n";
+         return 0;
+      }
+      
       fc::path data_dir;
       if( options.count("data-dir") )
       {
