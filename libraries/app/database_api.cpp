@@ -48,8 +48,10 @@ class database_api_impl;
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-database_api::database_api( graphene::chain::database& db )
-   : my( new database_api_impl( db ) ) {}
+database_api::database_api(graphene::chain::database &db)
+    : my(std::make_shared<database_api_impl>(db))
+{
+}
 
 database_api::~database_api() {}
 
