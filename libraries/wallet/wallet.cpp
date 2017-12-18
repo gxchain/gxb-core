@@ -3468,11 +3468,13 @@
             FC_ASSERT( !self.is_locked() );
             fc::optional<asset_object> asset_obj = get_asset("GXC");
             FC_ASSERT(asset_obj, "Could not find asset GXC");
+
             asset amount;
             amount.asset_id = asset_obj->id;
             amount.amount = 100000;
             fc::optional<account_object> from_account_obj = get_account(from_account);
             FC_ASSERT(from_account_obj, "Could not find account_object ${from_account}", ("from_account", from_account));
+
             for(int i = 0; i < times; ++i) {
                 transfer_operation xfer_op;
                 xfer_op.from = from_account;
@@ -3482,6 +3484,7 @@
                 tx.operations.push_back(xfer_op);
                 set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, asset_obj);
                 tx.validate();
+                
                 vector<public_key_type> paying_keys = from_account_obj->active.get_keys();
                 auto dyn_props = get_dynamic_global_properties();
                 tx.set_expiration( dyn_props.time + fc::seconds(300 + i) );
