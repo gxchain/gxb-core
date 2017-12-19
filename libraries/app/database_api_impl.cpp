@@ -707,7 +707,7 @@ uint64_t database_api_impl::get_data_transaction_product_costs_by_requester(stri
         else
             return result;
     }
-    const auto& data_transaction_by_requester = _db.get_index_type<data_transaction_index>().indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
+    const auto& data_transaction_by_requester = _db.get_index_type<data_transaction_index>().indices().get<by_requester>().equal_range(account_id);
     for(const auto& data_transaction_obj:boost::make_iterator_range( data_transaction_by_requester.first, data_transaction_by_requester.second ))
     {
         if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
@@ -732,7 +732,7 @@ uint64_t database_api_impl::get_data_transaction_total_count_by_requester(string
         else
             return result;
     }
-    const auto& data_transaction_by_requester = _db.get_index_type<data_transaction_index>().indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
+    const auto& data_transaction_by_requester = _db.get_index_type<data_transaction_index>().indices().get<by_requester>().equal_range(account_id);
     for(const auto& data_transaction_obj:boost::make_iterator_range( data_transaction_by_requester.first, data_transaction_by_requester.second ))
     {
         if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
@@ -757,7 +757,7 @@ uint64_t database_api_impl::get_data_transaction_pay_fees_by_requester(string re
         else
             return result;
     }
-    const auto& data_transaction_by_requester = _db.get_index_type<data_transaction_index>().indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
+    const auto& data_transaction_by_requester = _db.get_index_type<data_transaction_index>().indices().get<by_requester>().equal_range(account_id);
     for(const auto& data_transaction_obj:boost::make_iterator_range( data_transaction_by_requester.first, data_transaction_by_requester.second ))
     {
         if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
@@ -2024,7 +2024,7 @@ data_transaction_search_results_object database_api_impl::list_data_transactions
     }
 
     const data_transaction_index & product_index = _db.get_index_type<data_transaction_index>();
-    auto range = product_index.indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
+    auto range = product_index.indices().get<by_requester>().equal_range(account_id);
 
     for (const data_transaction_object& data_transaction : boost::make_iterator_range(range.first, range.second)) {
         results_tmp.push_back(data_transaction);
@@ -2069,10 +2069,16 @@ uint32_t database_api_impl::list_total_second_hand_transaction_counts_by_datasou
  }
 
 optional<data_transaction_object> database_api_impl::get_data_transaction_by_request_id(string request_id) const {
-    const data_transaction_index & product_index = _db.get_index_type<data_transaction_index>();
-    auto maybe_found = product_index.indices().get<by_request_id>().find(request_id);
-    if (maybe_found != product_index.indices().get<by_request_id>().end()) {
-        return *maybe_found;
+    vector<data_transaction_object> result;
+
+    const auto& dt_idx = _db.get_index_type<data_transaction_index>();
+    auto range = dt_idx.indices().get<by_request_id>().equal_range(request_id);
+    for (const auto& obj : boost::make_iterator_range(range.first, range.second)) {
+        result.push_back(obj);
+    }
+
+    if (!result.empty()) {
+        return result.back();
     }
     return {};
 }
