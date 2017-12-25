@@ -281,7 +281,8 @@ struct operation_detail_ex {
 };
 
 struct account_history_operation_detail {
-   uint32_t                     total_without_operations;
+   uint32_t                     total_count = 0;
+   uint32_t                     result_count = 0;
    vector<operation_detail_ex>  details;
 };
 
@@ -640,17 +641,16 @@ class wallet_api
        */
       vector<operation_detail>  get_account_history(string name, int limit)const;
 
-      /** Returns the most recent operations on the named account.
+      /**
+       * Get operations relevant to the specified account filtering by operation type, with transaction id
        *
-       * This returns a list of operation history objects, which describe activity on the account.
-       *
-       * @param name the name or id of the account
-       * @param operations the type of operations
-       * @param start the start place of the operation_history_objects
-       * @param limit the number of entries to return (starting from the most recent)
+       * @param name the name or id of the account, whose history shoulde be queried
+       * @param operation_types The IDs of the operation we want to get operations in the account( 0 = transfer , 1 = limit order create, ...)
+       * @param start the sequence number where to start looping back throw the history
+       * @param limit the max number of entries to return (from start number)
        * @returns account_history_operation_detail
        */
-      account_history_operation_detail get_account_history_by_operations(string account_name_or_id, vector<uint32_t> operation_indexs, uint32_t start, int limit)const;
+      account_history_operation_detail get_account_history_by_operations(string name, vector<uint16_t> operation_types, uint32_t start, int limit)const;
       
       /** Returns the relative operations on the named account from start number.
        *
@@ -2111,7 +2111,7 @@ FC_REFLECT( graphene::wallet::operation_detail_ex,
             (memo)(description)(op)(transaction_id) )
 
 FC_REFLECT( graphene::wallet::account_history_operation_detail,
-            (total_without_operations)(details))
+            (total_count)(result_count)(details))
 
 FC_API( graphene::wallet::wallet_api,
         (help)
