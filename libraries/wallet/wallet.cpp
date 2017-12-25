@@ -2753,8 +2753,11 @@
           {
              auto r = result.as<account_history_operation_detail>();
              std::stringstream ss;
-             ss << "total_without_operations : ";
-             ss << r.total_without_operations;
+             ss << "total_count : ";
+             ss << r.total_count;
+             ss << " \n";
+             ss << "result_count : ";
+             ss << r.result_count;
              ss << " \n";
              for( operation_detail_ex& d : r.details )
              {
@@ -3826,30 +3829,43 @@
        return result;
     }
 
-    account_history_operation_detail wallet_api::get_account_history_by_operations(string account_name_or_id, vector<uint32_t> operation_indexs, uint32_t start, int limit)const
+    account_history_operation_detail wallet_api::get_account_history_by_operations(string account_name_or_id, vector<uint16_t> operation_types, uint32_t start, int limit)const
     {
-        FC_ASSERT(limit <= 100 );
-        vector<operation_detail_ex> detail_exs;
         account_history_operation_detail result;
-        uint32_t total = 0;
         auto account_id = get_account(account_name_or_id).get_id();
 
-        history_operation_detail current = my->_remote_hist->get_account_history_by_operations(account_id, operation_indexs, start, std::min(100,limit));
-        total = current.total_without_operations;
-        for (auto &operation_history_obj : current.operation_history_objs) {
-            std::stringstream ss;
-            transaction_id_type transaction_id;
-            auto memo = operation_history_obj.op.visit(detail::operation_printer(ss, *my, operation_history_obj.result));
-            optional<signed_block_with_info> block = get_block(operation_history_obj.block_num);
-            if (block.valid()){
-                if (operation_history_obj.trx_in_block < block->transaction_ids.size()){
-                    transaction_id = block->transaction_ids[operation_history_obj.trx_in_block];
-                }
-            }
-            detail_exs.push_back(operation_detail_ex{memo, ss.str(), operation_history_obj, transaction_id});
+        const auto& account = my->get_account(account_id);
+        const auto& stats = my->get_object(account.statistics);
+
+        // sequence of account_transaction_history_object start with 1
+        start = start == 0 ? 1 : start;
+
+        if (start <= stats.removed_ops) {
+            start = stats.removed_ops;
+            result.total_count =stats.removed_ops;
         }
-        result.details = detail_exs;
-        result.total_without_operations = total;
+
+        while (limit > 0 && start <= stats.total_ops) {
+            uint32_t min_limit = std::min<uint32_t> (100, limit);
+            auto current = my->_remote_hist->get_account_history_by_operations(account_id, operation_types, start, min_limit);
+            for (auto& obj : current.operation_history_objs) {
+                std::stringstream ss;
+                auto memo = obj.op.visit(detail::operation_printer(ss, *my, obj.result));
+
+                transaction_id_type transaction_id;
+                auto block = get_block(obj.block_num);
+                if (block.valid() && obj.trx_in_block < block->transaction_ids.size()) {
+                    transaction_id = block->transaction_ids[obj.trx_in_block];
+                }
+                result.details.push_back(operation_detail_ex{memo, ss.str(), obj, transaction_id});
+            }
+            result.result_count += current.operation_history_objs.size();
+            result.total_count += current.total_count;
+
+            start += current.total_count > 0 ? current.total_count : min_limit;
+            limit -= current.operation_history_objs.size();
+        }
+
         return result;
     }
 
