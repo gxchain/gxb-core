@@ -4740,7 +4740,7 @@ namespace graphene { namespace net { namespace detail {
     {
       VERIFY_CORRECT_THREAD();
       ilog( "----------------- PEER STATUS UPDATE --------------------" );
-      ilog( " number of peers: ${active} active, ${handshaking} handshaking, ${closing} closing.  attempting to maintain ${desired} - ${maximum} peers",
+      ilog( " number of peers: ${active} active, ${handshaking}, ${closing} closing.  attempting to maintain ${desired} - ${maximum} peers",
            ( "active", _active_connections.size() )("handshaking", _handshaking_connections.size() )("closing",_closing_connections.size() )
            ( "desired", _desired_number_of_connections )("maximum", _maximum_number_of_connections ) );
       for( const peer_connection_ptr& peer : _active_connections )

@@ -281,8 +281,7 @@ struct operation_detail_ex {
 };
 
 struct account_history_operation_detail {
-   uint32_t                     total_count = 0;
-   uint32_t                     result_count = 0;
+   uint32_t                     total_without_operations;
    vector<operation_detail_ex>  details;
 };
 
@@ -641,16 +640,17 @@ class wallet_api
        */
       vector<operation_detail>  get_account_history(string name, int limit)const;
 
-      /**
-       * Get operations relevant to the specified account filtering by operation type, with transaction id
+      /** Returns the most recent operations on the named account.
        *
-       * @param name the name or id of the account, whose history shoulde be queried
-       * @param operation_types The IDs of the operation we want to get operations in the account( 0 = transfer , 1 = limit order create, ...)
-       * @param start the sequence number where to start looping back throw the history
-       * @param limit the max number of entries to return (from start number)
+       * This returns a list of operation history objects, which describe activity on the account.
+       *
+       * @param name the name or id of the account
+       * @param operations the type of operations
+       * @param start the start place of the operation_history_objects
+       * @param limit the number of entries to return (starting from the most recent)
        * @returns account_history_operation_detail
        */
-      account_history_operation_detail get_account_history_by_operations(string name, vector<uint16_t> operation_types, uint32_t start, int limit)const;
+      account_history_operation_detail get_account_history_by_operations(string account_name_or_id, vector<uint32_t> operation_indexs, uint32_t start, int limit)const;
       
       /** Returns the relative operations on the named account from start number.
        *
@@ -2019,7 +2019,29 @@ class wallet_api
       void dbg_stream_json_objects( const std::string& filename );
       void dbg_update_object( fc::variant_object update );
 
-      void flood_network(string prefix, uint32_t number_of_transactions);
+      /** flood_network
+       *
+       * @param account_prefix
+       * @param number_of_transactions
+       * @return
+       */
+      void flood_network(string account_prefix, uint32_t number_of_transactions);
+      /** flood_create_account
+       *
+       * @param account_prefix
+       * @param number_of_accounts
+       * @return
+       */
+      void flood_create_account(string account_prefix, uint32_t number_of_accounts);
+      /** flood_transfer
+       *
+       * @param from_account
+       * @param account_prefix
+       * @param number_of_accounts
+       * @param number_of_loop
+       * @return
+       */
+      void flood_transfer(string from_account, string account_prefix, uint32_t number_of_accounts, uint32_t number_of_loop);
 
       /** transfer_test, Efficient transfer api
        *
@@ -2029,6 +2051,11 @@ class wallet_api
        * @return
        */
       void transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times);
+
+      /** get tps
+       * @return
+       */
+      void get_tps();
 
       void network_add_nodes( const vector<string>& nodes );
       vector< variant > network_get_connected_peers();
@@ -2111,7 +2138,7 @@ FC_REFLECT( graphene::wallet::operation_detail_ex,
             (memo)(description)(op)(transaction_id) )
 
 FC_REFLECT( graphene::wallet::account_history_operation_detail,
-            (total_count)(result_count)(details))
+            (total_without_operations)(details))
 
 FC_API( graphene::wallet::wallet_api,
         (help)
@@ -2224,8 +2251,11 @@ FC_API( graphene::wallet::wallet_api,
         (dbg_generate_blocks)
         (dbg_stream_json_objects)
         (dbg_update_object)
-        (flood_network)
+        (flood_transfer)
         (transfer_test)
+        (flood_network)
+        (flood_create_account)
+        (get_tps)
         (network_add_nodes)
         (network_get_connected_peers)
         (set_key_label)
