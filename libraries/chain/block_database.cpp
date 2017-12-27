@@ -253,12 +253,6 @@ optional<index_entry> block_database::last_index_entry()const {
             catch (const std::exception&)
             {
             }
-            catch (const fc::assert_exception&)
-            {
-            }
-            catch (const fc::unhandled_exception&)
-            {
-            }
             catch (...)
             {
                 idump(("get index_entry exception"));
