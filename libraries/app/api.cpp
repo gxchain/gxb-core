@@ -273,20 +273,25 @@ namespace graphene { namespace app {
     }
 
     history_operation_detail history_api::get_account_history_by_operations( account_id_type account,
-                                                                                     vector<uint16_t> operation_types,
+                                                                                     vector<uint32_t> operation_indexs,
                                                                                      uint32_t start,
                                                                                      unsigned limit)
     {
-        FC_ASSERT(limit <= 100);
+        FC_ASSERT(limit <= 100 && limit > 0);
+        uint32_t total = 0;
         history_operation_detail result;
-        vector<operation_history_object> objs = get_relative_account_history(account, start, limit, limit + start - 1);
-        std::for_each(objs.begin(), objs.end(), [&](const operation_history_object &o) {
-                    if (operation_types.empty() || find(operation_types.begin(), operation_types.end(), o.op.which()) != operation_types.end()) {
-                        result.operation_history_objs.push_back(o);
-                     }
-                 });
-
-        result.total_count = objs.size();
+        vector<operation_history_object> operation_history_objs_tmp;
+        vector<operation_history_object> operation_history_objs;
+        start = start > 0 ? start : 1;
+        operation_history_objs_tmp = get_relative_account_history(account, start, limit, limit + start - 1);
+        for(auto& operation_history_obj : operation_history_objs_tmp){
+            ++total;
+            if (operation_indexs.empty() || find(operation_indexs.begin(), operation_indexs.end(), operation_history_obj.op.which()) != operation_indexs.end()){
+                operation_history_objs.push_back(operation_history_obj);
+            }
+        }
+        result.total_without_operations = total;
+        result.operation_history_objs = operation_history_objs;
         return result;
     }
     

@@ -1778,6 +1778,35 @@
            return _remote_db->get_data_transaction_by_request_id(request_id);
        }
 
+       void get_tps()
+       {
+           const uint16_t delta_block = 5;
+           while (true) {
+               uint32_t head_block_num = get_dynamic_global_properties().head_block_number;
+               // get total_trx
+               uint32_t total_trx = 0;
+               time_point_sec start_time, end_time;
+               for (int i = 0; i < delta_block; ++i) {
+                   auto block = _remote_db->get_block(head_block_num - i);
+                   total_trx += block->transactions.size();
+                   if (0 == i) {
+                       end_time = block->timestamp;
+                   }
+                   if (delta_block - 1 == i){
+                       start_time = block->timestamp;
+                   }
+               }
+
+               // tps = total_trx / delta_time
+               auto tps = total_trx / (end_time - start_time).to_seconds();
+               ilog("tps: ${tps},  time: ${t}", ("t", end_time)("tps", tps));
+
+               // sleep interval
+               uint8_t block_interval = get_global_properties().parameters.block_interval;
+               fc::usleep(fc::seconds(block_interval));
+           }
+       }
+
        signed_transaction create_asset(string issuer,
                                        string symbol,
                                        uint8_t precision,
@@ -2540,7 +2569,7 @@
           uint32_t expiration_time_offset = 0;
           for (;;)
           {
-             tx.set_expiration( dyn_props.time + fc::seconds(30 + expiration_time_offset) );
+             tx.set_expiration( dyn_props.time + fc::seconds(300 + expiration_time_offset) );
              tx.signatures.clear();
 
              for( public_key_type& key : approving_key_set )
@@ -2753,11 +2782,8 @@
           {
              auto r = result.as<account_history_operation_detail>();
              std::stringstream ss;
-             ss << "total_count : ";
-             ss << r.total_count;
-             ss << " \n";
-             ss << "result_count : ";
-             ss << r.result_count;
+             ss << "total_without_operations : ";
+             ss << r.total_without_operations;
              ss << " \n";
              for( operation_detail_ex& d : r.details )
              {
@@ -3417,53 +3443,39 @@
           return result;
        }
 
-       void flood_network(string prefix, uint32_t number_of_transactions)
+       void flood_create_account(string prefix, uint32_t number_of_accounts)
+       { try {
+               const account_object &master = *_wallet.my_accounts.get<by_name>().lower_bound("import");
+
+               fc::time_point start = fc::time_point::now();
+               for (int i = 0; i < number_of_accounts; ++i) {
+                   std::ostringstream brain_key;
+                   brain_key << "brain key for account " << prefix << i;
+                   signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name, master.name, /* broadcast = */ true, /* save wallet = */ false);
+               }
+               fc::time_point end = fc::time_point::now();
+               ilog("Created ${n} accounts in ${time} milliseconds",
+                    ("n", number_of_accounts)("time", (end - start).count() / 1000));
+           } catch (...) {
+               throw;
+           }
+       }
+
+       void flood_transfer(string from_account, string account_prefix, uint32_t number_of_accounts, uint32_t number_of_loop)
        {
-          try
-          {
-             const account_object& master = *_wallet.my_accounts.get<by_name>().lower_bound("import");
-             int number_of_accounts = number_of_transactions / 3;
-             number_of_transactions -= number_of_accounts;
-             //auto key = derive_private_key("floodshill", 0);
-             try {
-                dbg_make_uia(master.name, "SHILL");
-             } catch(...) {/* Ignore; the asset probably already exists.*/}
-
-             fc::time_point start = fc::time_point::now();
-             for( int i = 0; i < number_of_accounts; ++i )
-             {
-                std::ostringstream brain_key;
-                brain_key << "brain key for account " << prefix << i;
-                signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name, master.name, /* broadcast = */ true, /* save wallet = */ false);
-             }
-             fc::time_point end = fc::time_point::now();
-             ilog("Created ${n} accounts in ${time} milliseconds",
-                  ("n", number_of_accounts)("time", (end - start).count() / 1000));
-
-             start = fc::time_point::now();
-             for( int i = 0; i < number_of_accounts; ++i )
-             {
-                signed_transaction trx = transfer(master.name, prefix + fc::to_string(i), "10", "CORE", "", true);
-                trx = transfer(master.name, prefix + fc::to_string(i), "1", "CORE", "", true);
-             }
-             end = fc::time_point::now();
-             ilog("Transferred to ${n} accounts in ${time} milliseconds",
-                  ("n", number_of_accounts*2)("time", (end - start).count() / 1000));
-
-             start = fc::time_point::now();
-             for( int i = 0; i < number_of_accounts; ++i )
-             {
-                signed_transaction trx = issue_asset(prefix + fc::to_string(i), "1000", "SHILL", "", true);
-             }
-             end = fc::time_point::now();
-             ilog("Issued to ${n} accounts in ${time} milliseconds",
-                  ("n", number_of_accounts)("time", (end - start).count() / 1000));
-          }
-          catch (...)
-          {
-             throw;
-          }
-
+           fc::time_point start = fc::time_point::now();
+           for (int i = 0; i < number_of_loop; ++i) {
+               for (int j = 0; j < number_of_accounts; ++j) {
+                   try {
+                       signed_transaction trx = transfer(from_account, account_prefix + fc::to_string(j), "1", GRAPHENE_SYMBOL, "", true);
+                       trx = transfer(from_account, account_prefix + fc::to_string(i), "1", GRAPHENE_SYMBOL, "", true);
+                   } catch (...) {
+                   }
+               }
+           }
+           fc::time_point end = fc::time_point::now();
+           ilog("Transferred to ${n} accounts in ${time} milliseconds, loop ${l}",
+                   ("n", number_of_accounts * 2)("time", (end - start).count() / 1000)("l", number_of_loop));
        }
 
        void transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times)
@@ -3511,6 +3523,37 @@
                     throw;
                 }
             }
+       }
+
+       void flood_network(string prefix, uint32_t number_of_transactions)
+       { try {
+               const u_int16_t loop_num = 1000;
+
+               const account_object &master = *_wallet.my_accounts.get<by_name>().lower_bound("import");
+               int number_of_accounts = number_of_transactions / loop_num;
+
+               fc::time_point start = fc::time_point::now();
+               for (int i = 0; i < number_of_accounts; ++i) {
+                   std::ostringstream brain_key;
+                   brain_key << "brain key for account " << prefix << i;
+                   signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name, master.name, /* broadcast = */ true, /* save wallet = */ false);
+               }
+               fc::time_point end = fc::time_point::now();
+               ilog("Created ${n} accounts in ${time} milliseconds",
+                    ("n", number_of_accounts)("time", (end - start).count() / 1000));
+               start = fc::time_point::now();
+               for (int i = 0; i < loop_num; ++i) {
+                   for (int j = 0; j < number_of_accounts; ++j) {
+                       signed_transaction trx = transfer(master.name, prefix + fc::to_string(j), "2", GRAPHENE_SYMBOL, "", true);
+                       trx = transfer(master.name, prefix + fc::to_string(i), "1", GRAPHENE_SYMBOL, "", true);
+                   }
+               }
+               end = fc::time_point::now();
+               ilog("Transferred to ${n} accounts in ${time} milliseconds, loop ${l}",
+                    ("n", number_of_accounts * 2)("time", (end - start).count() / 1000)("l", loop_num));
+           } catch (...) {
+               throw;
+           }
        }
 
        operation get_prototype_operation( string operation_name )
@@ -3829,43 +3872,30 @@
        return result;
     }
 
-    account_history_operation_detail wallet_api::get_account_history_by_operations(string account_name_or_id, vector<uint16_t> operation_types, uint32_t start, int limit)const
+    account_history_operation_detail wallet_api::get_account_history_by_operations(string account_name_or_id, vector<uint32_t> operation_indexs, uint32_t start, int limit)const
     {
+        FC_ASSERT(limit <= 100 );
+        vector<operation_detail_ex> detail_exs;
         account_history_operation_detail result;
+        uint32_t total = 0;
         auto account_id = get_account(account_name_or_id).get_id();
 
-        const auto& account = my->get_account(account_id);
-        const auto& stats = my->get_object(account.statistics);
-
-        // sequence of account_transaction_history_object start with 1
-        start = start == 0 ? 1 : start;
-
-        if (start <= stats.removed_ops) {
-            start = stats.removed_ops;
-            result.total_count =stats.removed_ops;
-        }
-
-        while (limit > 0 && start <= stats.total_ops) {
-            uint32_t min_limit = std::min<uint32_t> (100, limit);
-            auto current = my->_remote_hist->get_account_history_by_operations(account_id, operation_types, start, min_limit);
-            for (auto& obj : current.operation_history_objs) {
-                std::stringstream ss;
-                auto memo = obj.op.visit(detail::operation_printer(ss, *my, obj.result));
-
-                transaction_id_type transaction_id;
-                auto block = get_block(obj.block_num);
-                if (block.valid() && obj.trx_in_block < block->transaction_ids.size()) {
-                    transaction_id = block->transaction_ids[obj.trx_in_block];
+        history_operation_detail current = my->_remote_hist->get_account_history_by_operations(account_id, operation_indexs, start, std::min(100,limit));
+        total = current.total_without_operations;
+        for (auto &operation_history_obj : current.operation_history_objs) {
+            std::stringstream ss;
+            transaction_id_type transaction_id;
+            auto memo = operation_history_obj.op.visit(detail::operation_printer(ss, *my, operation_history_obj.result));
+            optional<signed_block_with_info> block = get_block(operation_history_obj.block_num);
+            if (block.valid()){
+                if (operation_history_obj.trx_in_block < block->transaction_ids.size()){
+                    transaction_id = block->transaction_ids[operation_history_obj.trx_in_block];
                 }
-                result.details.push_back(operation_detail_ex{memo, ss.str(), obj, transaction_id});
             }
-            result.result_count += current.operation_history_objs.size();
-            result.total_count += current.total_count;
-
-            start += current.total_count > 0 ? current.total_count : min_limit;
-            limit -= current.operation_history_objs.size();
+            detail_exs.push_back(operation_detail_ex{memo, ss.str(), operation_history_obj, transaction_id});
         }
-
+        result.details = detail_exs;
+        result.total_without_operations = total;
         return result;
     }
 
@@ -4087,6 +4117,11 @@
     uint32_t wallet_api::list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, const string& datasource_account) const
     {
         return my->list_total_second_hand_transaction_counts_by_datasource(start_date_time, end_date_time, datasource_account);
+    }
+
+    void wallet_api::get_tps()
+    {
+        return my->get_tps();
     }
 
     string wallet_api::get_wallet_filename() const
@@ -4612,15 +4647,27 @@
        return my->network_get_connected_peers();
     }
 
-    void wallet_api::flood_network(string prefix, uint32_t number_of_transactions)
+    void wallet_api::flood_create_account(string account_prefix, uint32_t number_of_accounts)
     {
        FC_ASSERT(!is_locked());
-       my->flood_network(prefix, number_of_transactions);
+       my->flood_create_account(account_prefix, number_of_accounts);
+    }
+
+    void wallet_api::flood_transfer(string from_account, string account_prefix, uint32_t number_of_accounts, uint32_t number_of_loop)
+    {
+       FC_ASSERT(!is_locked());
+       my->flood_transfer(from_account, account_prefix, number_of_accounts, number_of_loop);
     }
 
     void wallet_api::transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times)
     {
         my->transfer_test(from_account, to_account, times);
+    }
+
+    void wallet_api::flood_network(string account_prefix, uint32_t number_of_transactions)
+    {
+       FC_ASSERT(!is_locked());
+       my->flood_network(account_prefix, number_of_transactions);
     }
 
     signed_transaction wallet_api::propose_league_update(

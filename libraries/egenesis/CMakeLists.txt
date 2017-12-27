@@ -1,4 +1,4 @@
-link_directories("${PROJECT_SOURCE_DIR}/libraries/chain/lib")
+link_directories("${PROJECT_BINARY_DIR}/libraries/chain")
 add_library( graphene_egenesis_none
    egenesis_none.cpp
    include/graphene/egenesis/egenesis.hpp
