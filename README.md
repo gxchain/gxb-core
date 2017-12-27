@@ -60,7 +60,8 @@ To build after all dependencies are installed:
     cd gxb-core
     git checkout <LATEST_RELEASE_TAG>
     git submodule update --init --recursive
-    cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .
+    mkdir build && cd build
+    cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
     make
 
 Alternate Boost versions can be specified using the `DBOOST_ROOT` CMake argument.
