@@ -86,7 +86,7 @@ namespace graphene { namespace app {
    };
 
    struct history_operation_detail {
-      uint32_t total_count = 0;
+      uint32_t total_without_operations = 0;
       vector<operation_history_object> operation_history_objs;
    };
    
@@ -114,17 +114,17 @@ namespace graphene { namespace app {
                                                               operation_history_id_type start = operation_history_id_type())const;
 
          /**
-          * @brief Get operations relevant to the specified account filtering by operation type
+          * @brief Get operations relevant to the specificed account
           * @param account The account whose history should be queried
-          * @param operation_types The IDs of the operation we want to get operations in the account( 0 = transfer , 1 = limit order create, ...)
-          * @param start the sequence number where to start looping back throw the history
-          * @param limit the max number of entries to return (from start number)
-          * @return history_operation_detail
+          * @param operation_indexs type of the operations
+          * @param start the counts of historys from the earliest operation
+          * @param limit Maximum number of operations to retrieve (must not exceed 100)
+          * @return history_operation_detail.
           */
-          history_operation_detail get_account_history_by_operations(account_id_type account,
-                                                                     vector<uint16_t> operation_types,
-                                                                     uint32_t start,
-                                                                     unsigned limit);
+          history_operation_detail get_account_history_by_operations( account_id_type account,
+                                                                              vector<uint32_t> operation_indexs,
+                                                                              uint32_t start,
+                                                                              unsigned limit);
 
          /**
           * @brief Get only asked operations relevant to the specified account
@@ -343,7 +343,7 @@ FC_REFLECT( graphene::app::verify_range_result,
 FC_REFLECT( graphene::app::verify_range_proof_rewind_result,
         (success)(min_val)(max_val)(value_out)(blind_out)(message_out) )
 FC_REFLECT( graphene::app::history_operation_detail,
-            (total_count)(operation_history_objs) )
+            (total_without_operations)(operation_history_objs) )
 //FC_REFLECT_TYPENAME( fc::ecc::compact_signature );
 //FC_REFLECT_TYPENAME( fc::ecc::commitment_type );
 

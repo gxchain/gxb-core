@@ -28,7 +28,6 @@
 #include <graphene/account_history/account_history_plugin.hpp>
 #include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/delayed_node/delayed_node_plugin.hpp>
-#include <graphene/data_transaction/data_transaction_plugin.hpp>
 
 #include <fc/exception/exception.hpp>
 #include <fc/thread/thread.hpp>
@@ -72,7 +71,6 @@ int main(int argc, char** argv) {
       app_options.add_options()
             ("help,h", "Print this help message and exit.")
             ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("witness_node_data_dir"), "Directory containing databases, configuration file, etc.")
-            ("version,v", "Display version information")
             ;
 
       bpo::variables_map options;
@@ -82,7 +80,6 @@ int main(int argc, char** argv) {
       auto history_plug = node->register_plugin<account_history::account_history_plugin>();
       auto market_history_plug = node->register_plugin<market_history::market_history_plugin>();
       auto delayed_plug = node->register_plugin<delayed_node::delayed_node_plugin>();
-      auto data_transaction_plug = node->register_plugin<data_transaction::data_transaction_plugin>();
 
       try
       {
@@ -111,7 +108,7 @@ int main(int argc, char** argv) {
          std::cout << "Timestamp: " << fc::get_approximate_relative_time_string(fc::time_point_sec(graphene::utilities::git_revision_unix_timestamp)) << "\n";
          return 0;
       }
-      
+
       fc::path data_dir;
       if( options.count("data-dir") )
       {

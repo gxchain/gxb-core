@@ -1,4 +1,4 @@
-link_directories("${PROJECT_SOURCE_DIR}/libraries/chain/lib")
+link_directories("${PROJECT_BINARY_DIR}/libraries/chain")
 add_executable( cli_wallet main.cpp )
 if( UNIX AND NOT APPLE )
   set(rt_library rt )
@@ -12,9 +12,6 @@ endif()
 
 target_link_libraries( cli_wallet
                        PRIVATE graphene_app graphene_net graphene_chain graphene_egenesis_brief graphene_utilities graphene_wallet fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
-
-target_include_directories( cli_wallet
-                            PUBLIC "${PROJECT_SOURCE_DIR}/libraries/chain/include" )
 
 if(MSVC)
   set_source_files_properties( main.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

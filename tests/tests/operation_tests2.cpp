@@ -1213,66 +1213,6 @@ BOOST_AUTO_TEST_CASE(transfer_with_memo) {
    } FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE(lock_balances)
-{
-   try {
-      generate_block();
-      auto asset_obj = create_user_issued_asset("GXS");
-      auto nathan_private_key = generate_private_key("nathan");
-      account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).id;
-      issue_uia(nathan_id, asset(10000000, asset_obj.id));
-      generate_block();
-      extensions_type extensions;
-      lock_balance_params_t lock_balance_params;
-      vector< pair<string, interest_rate_t> > params;
-      interest_rate_t interest_rate_3;
-      interest_rate_t interest_rate_9;
-      interest_rate_t interest_rate_24;
-      interest_rate_3.interest_rate_days = 90;
-      interest_rate_3.interest_rate = 400;
-      interest_rate_3.is_valid = true;
-      interest_rate_9.interest_rate_days = 270;
-      interest_rate_9.interest_rate = 600;
-      interest_rate_9.is_valid = true;     
-      interest_rate_24.interest_rate_days = 720;
-      interest_rate_24.interest_rate = 800;
-      interest_rate_24.is_valid = true;
-      params.push_back(make_pair("3", interest_rate_3));
-      params.push_back(make_pair("9", interest_rate_9));
-      params.push_back(make_pair("24", interest_rate_24));
-      lock_balance_params.params = params;
-      extensions.insert(lock_balance_params);
-      change_chain_params(extensions);
-      balance_lock_operation balance_lock_op;
-      balance_lock_op.account = nathan_id;
-      balance_lock_op.create_date_time = db.head_block_time();
-      balance_lock_op.program_id = "3";
-      balance_lock_op.amount.amount = 100000;
-      balance_lock_op.amount.asset_id = asset_obj.id;
-      balance_lock_op.interest_rate = 400;
-      balance_lock_op.memo = "";
-      trx.operations.push_back(balance_lock_op);
-      trx.validate();
-      processed_transaction ptx = db.push_transaction(trx, ~0);
-      lock_balance_object lock_balance_obj = db.get<lock_balance_object>(ptx.operation_results[0].get<object_id_type>());
-      trx.operations.clear();
-      // db.modify(db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& _dpo) {
-      //    _dpo.time = db.head_block_time() + fc::seconds(90 * 86400);
-      // } );
-      fc::time_point_sec start_time = db.head_block_time() + fc::days(90);
-      generate_blocks(start_time);
-      set_expiration( db, trx );
-      balance_unlock_operation balance_unlock_op;
-      balance_unlock_op.account = nathan_id;
-      balance_unlock_op.lock_id = lock_balance_obj.id;
-      trx.operations.push_back(balance_unlock_op);
-      trx.validate();
-      db.push_transaction(trx, ~0);
-      trx.operations.clear();
-    } FC_LOG_AND_RETHROW()
-}
-
-
 BOOST_AUTO_TEST_CASE(zero_second_vbo)
 {
    try
