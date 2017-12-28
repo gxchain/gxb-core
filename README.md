@@ -44,13 +44,16 @@ A decent C++11 compiler (GNU GCC 5.4.1+ on ubuntu, or Apple LLVM version 8.1.0 (
 The repository contains the install scripts for gcc5 and boost 1.57.0, see [here](https://github.com/gxchain/gxb-core/tree/master/script).
 ```
 # dependencies for OS X, macOS Sierra 10.12.6 recommended
-brew install openssl cmake git openssl autoconf automake doxygen autoreconfls libtool
+brew install wget cmake git openssl autoconf automake doxygen libtool
 
 # dependencies for ubuntu 14.04 LTS
-sudo apt-get install cmake make python-dev libbz2-dev libdb++-dev libdb-dev libssl-dev openssl libreadline-dev autoconf libtool git ntp
+sudo apt-get install wget cmake make python-dev libbz2-dev libdb++-dev libdb-dev libssl-dev openssl libreadline-dev autoconf libtool git ntp
 
 ```
 **NOTE**: GXB-Core requires an OpenSSL version in the 1.0.x series. If your system OpenSSL version is newer, then you will need to manually provide an older version of OpenSSL and specify it to CMake using -DOPENSSL_INCLUDE_DIR, -DOPENSSL_SSL_LIBRARY, and -DOPENSSL_CRYPTO_LIBRARY.
+```
+cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib -DCMAKE_BUILD_TYPE=Release ..
+```
 
 #### Building
 
@@ -58,10 +61,9 @@ To build after all dependencies are installed:
 
     git clone https://github.com/gxchain/gxb-core.git
     cd gxb-core
-    git checkout <LATEST_RELEASE_TAG>
     git submodule update --init --recursive
     mkdir build && cd build
-    cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+    cmake -DCMAKE_BUILD_TYPE=Release ..
     make
 
 Alternate Boost versions can be specified using the `DBOOST_ROOT` CMake argument.
