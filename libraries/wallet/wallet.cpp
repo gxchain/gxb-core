@@ -1267,7 +1267,6 @@
 
            FC_ASSERT( !self.is_locked() );
            const account_object issuer_account = get_account( issuer );
-           FC_ASSERT(0!= (&issuer_account));
            FC_ASSERT(category_name!="", "category_name cannot be empty!");
            FC_ASSERT(data_market_type==1 || data_market_type==2, "data_market_type must 1 or 2");
 
