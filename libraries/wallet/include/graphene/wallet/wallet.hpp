@@ -481,7 +481,7 @@ class wallet_api
         * @param request_id
         * @param requester
         * @param datasource
-        * @param datasource_copyright_hash
+        * @param copyright_hash
         * @param broadcast
         * @return
         */
@@ -913,7 +913,7 @@ class wallet_api
       * @see suggest_brain_key()
       *
       * @param brain_key    Brain key
-      * @param numberOfDesiredKeys  Number of desired keys
+      * @param number_of_desired_keys  Number of desired keys
       * @return A list of keys that are deterministically derived from the brainkey
       */
      vector<brain_key_info> derive_owner_keys_from_brain_key(string brain_key, int number_of_desired_keys = 1) const;
@@ -1249,8 +1249,9 @@ class wallet_api
        *  that it exists in the blockchain.  If it exists then it will report the amount received and
        *  who sent it.
        *
-       *  @param opt_from - if not empty and the sender is a unknown public key, then the unknown public key will be given the label opt_from
        *  @param confirmation_receipt - a base58 encoded stealth confirmation 
+       *  @param opt_from - if not empty and the sender is a unknown public key, then the unknown public key will be given the label opt_from
+       *  @opt_memo - memo
        */
       blind_receipt receive_blind_transfer( string confirmation_receipt, string opt_from, string opt_memo );
 
@@ -1697,7 +1698,7 @@ class wallet_api
       /**
        * Update a witness object owned by the given account.
        *
-       * @param witness The name of the witness's owner account.  Also accepts the ID of the owner account or the ID of the witness.
+       * @param witness_name The name of the witness's owner account.  Also accepts the ID of the owner account or the ID of the witness.
        * @param url Same as for create_witness.  The empty string makes it remain the same.
        * @param block_signing_key The new block signing public key.  The empty string makes it remain the same.
        * @param asset_symbol the symbol or id of the fee.
