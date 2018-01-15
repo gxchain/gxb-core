@@ -2682,6 +2682,24 @@
              return sign_transaction(trx, broadcast);
        } FC_CAPTURE_AND_RETHROW((order_id)) }
 
+       signed_transaction override_transfer(string issuer, string from, string to, string amount, string asset_symbol, bool broadcast)
+       { try {
+           FC_ASSERT(!self.is_locked());
+           const auto& asset_obj = get_asset(asset_symbol);
+
+           override_transfer_operation op;
+           op.issuer = get_account_id(issuer);
+           op.from = get_account_id(from);
+           op.to = get_account_id(to);
+           op.amount = asset_obj.amount_from_string(amount);
+
+           signed_transaction tx;
+           tx.operations.push_back(op);
+           set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, asset_obj);
+           tx.validate();
+           return sign_transaction(tx, broadcast);
+       } FC_CAPTURE_AND_RETHROW((issuer)(from)(to)(amount)(asset_symbol)(broadcast)) }
+
        signed_transaction transfer(string from, string to, string amount,
                                    string asset_symbol, string memo, bool broadcast = false)
        { try {
@@ -4390,6 +4408,11 @@
                                                string memo, bool broadcast)
     {
        return my->issue_asset(to_account, amount, symbol, memo, broadcast);
+    }
+
+    signed_transaction wallet_api::override_transfer(string issuer, string from, string to, string amount, string asset_symbol, bool broadcast)
+    {
+        return my->override_transfer(issuer, from, to, amount, asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::transfer(string from, string to, string amount,
