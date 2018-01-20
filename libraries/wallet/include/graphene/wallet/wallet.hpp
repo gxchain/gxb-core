@@ -285,6 +285,12 @@ struct account_history_operation_detail {
    vector<operation_detail_ex>  details;
 };
 
+struct irreversible_account_history_detail {
+    uint32_t                     next_start_sequence = 0;
+    uint32_t                     result_count = 0;
+    vector<operation_detail_ex>  details;
+};
+
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
  * performs minimal caching. This API could be provided locally to be used by a web interface.
@@ -640,12 +646,23 @@ class wallet_api
        */
       vector<operation_detail>  get_account_history(string name, int limit)const;
 
+      /**
+       * Get irreversible operations relevant to the specified account filtering by operation type, with transaction id
+       *
+       * @param name the name or id of the account, whose history shoulde be queried
+       * @param operation_types The IDs of the operation we want to get operations in the account( 0 = transfer , 1 = limit order create, ...)
+       * @param start the sequence number where to start looping back throw the history
+       * @param limit the max number of entries to return (from start number)
+       * @returns irreversible_account_history_detail
+       */
+      irreversible_account_history_detail get_irreversible_account_history(string name, vector<uint32_t> operation_types, uint32_t start, int limit) const;
+
       /** Returns the most recent operations on the named account.
        *
        * This returns a list of operation history objects, which describe activity on the account.
        *
-       * @param name the name or id of the account
-       * @param operations the type of operations
+       * @param account_name_or_id the name or id of the account
+       * @param operations_indexs the type of operations
        * @param start the start place of the operation_history_objects
        * @param limit the number of entries to return (starting from the most recent)
        * @returns account_history_operation_detail
@@ -2144,6 +2161,9 @@ FC_REFLECT( graphene::wallet::operation_detail_ex,
 FC_REFLECT( graphene::wallet::account_history_operation_detail,
             (total_without_operations)(details))
 
+FC_REFLECT( graphene::wallet::irreversible_account_history_detail,
+            (next_start_sequence)(result_count)(details))
+
 FC_API( graphene::wallet::wallet_api,
         (help)
         (gethelp)
@@ -2219,6 +2239,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_account_count)
         (get_account_history)
         (get_account_history_by_operations)
+        (get_irreversible_account_history)
         (get_relative_account_history)
         (get_data_transaction_product_costs)
         (get_data_transaction_total_count)

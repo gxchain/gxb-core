@@ -2817,6 +2817,24 @@
              return ss.str();
           };
 
+          m["get_irreversible_account_history"] = [this](variant result, const fc::variants& a)
+          {
+             auto r = result.as<irreversible_account_history_detail>();
+             std::stringstream ss;
+             ss << "next_start_sequence : " << r.next_start_sequence << "\n";
+             ss << "result_count : " << r.result_count << "\n";
+             for (operation_detail_ex &d : r.details)
+             {
+                 operation_history_object &i = d.op;
+                 auto b = _remote_db->get_block_header(i.block_num);
+                 FC_ASSERT(b);
+                 ss << b->timestamp.to_iso_string() << " ";
+                 i.op.visit(operation_printer(ss, *this, i.result));
+                 ss << " transaction_id : " << d.transaction_id.str() << "\n";
+             }
+
+             return ss.str();
+          };
           m["get_relative_account_history"] = [this](variant result, const fc::variants& a)
           {
               auto r = result.as<vector<operation_detail>>();
@@ -3913,6 +3931,64 @@
         }
         result.details = detail_exs;
         result.total_without_operations = total;
+        return result;
+    }
+
+    irreversible_account_history_detail wallet_api::get_irreversible_account_history(string name, vector<uint32_t> operation_types, uint32_t start, int limit) const
+    {
+        irreversible_account_history_detail result;
+        auto account_id = get_account(name).get_id();
+
+        const auto& account = my->get_account(account_id);
+        const auto& stats = my->get_object(account.statistics);
+
+        // sequence of account_transaction_history_object start from 1
+        start = start == 0 ? 1 : start;
+
+        if (start <= stats.removed_ops) {
+            start = stats.removed_ops;
+        }
+        result.next_start_sequence = start;
+
+        // get irreversible block_num
+        uint32_t irreversible_block_num = get_dynamic_global_properties().last_irreversible_block_num;
+
+        // get operation history
+        uint32_t counter = start;
+        while (limit > 0 && counter <= stats.total_ops) {
+            uint32_t min_limit = std::min<uint32_t> (100, limit);
+            auto current = my->_remote_hist->get_account_history_by_operations(account_id, operation_types, start, min_limit);
+            uint16_t skip_count = 0;
+            for (auto& obj : current.operation_history_objs) {
+                // only keep irreversible operation history
+                if (obj.block_num > irreversible_block_num) {
+                    ++skip_count;
+                    continue;
+                }
+
+                std::stringstream ss;
+                auto memo = obj.op.visit(detail::operation_printer(ss, *my, obj.result));
+
+                transaction_id_type transaction_id;
+                auto block = get_block(obj.block_num);
+                if (block.valid() && obj.trx_in_block < block->transaction_ids.size()) {
+                    transaction_id = block->transaction_ids[obj.trx_in_block];
+                }
+                result.details.push_back(operation_detail_ex{memo, ss.str(), obj, transaction_id});
+            }
+
+            start += (current.total_without_operations > 0 ? current.total_without_operations : min_limit) - skip_count;
+            limit -= current.operation_history_objs.size() - skip_count;
+            counter += min_limit;
+
+            result.result_count += current.operation_history_objs.size() - skip_count;
+            result.next_start_sequence = start;
+
+            // current block_num > irreversible_block_num, break
+            if (skip_count > 0) {
+                break;
+            }
+        }
         return result;
     }
 
