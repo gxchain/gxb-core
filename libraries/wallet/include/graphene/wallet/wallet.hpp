@@ -1021,6 +1021,42 @@ class wallet_api
                                           uint32_t referrer_percent,
                                           bool broadcast = false);
 
+      /** Registers a third party's account on the blockckain.
+       *
+       * This function is used to register an account for which you do not own the private keys.
+       * When acting as a registrar, an end user will generate their own private keys and send
+       * you the public keys.  The registrar will use this function to register the account
+       * on behalf of the end user.
+       *
+       * @see create_account_with_brain_key()
+       *
+       * @param name the name of the account, must be unique on the blockchain.  Shorter names
+       *             are more expensive to register; the rules are still in flux, but in general
+       *             names of more than 8 characters with at least one digit will be cheap.
+       * @param owner the owner key for the new account
+       * @param active the active key for the new account
+       * @param memo the memo key for the new account
+       * @param registrar_account the account which will pay the fee to register the user
+       * @param referrer_account the account who is acting as a referrer, and may receive a
+       *                         portion of the user's transaction fees.  This can be the
+       *                         same as the registrar_account if there is no referrer.
+       * @param referrer_percent the percentage (0 - 100) of the new user's transaction fees
+       *                         not claimed by the blockchain that will be distributed to the
+       *                         referrer; the rest will be sent to the registrar.  Will be
+       *                         multiplied by GRAPHENE_1_PERCENT when constructing the transaction.
+       * @param asset_symbol the symbol or id of the fee.
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction registering the account
+       */
+      signed_transaction register_account2(string name,
+                                          public_key_type owner,
+                                          public_key_type active,
+                                          public_key_type memo,
+                                          string  registrar_account,
+                                          string  referrer_account,
+                                          uint32_t referrer_percent,
+                                          string asset_symbol,
+                                          bool broadcast = false);
       /**
        *  Upgrades an account to prime status.
        *  This makes the account holder a 'lifetime member'.
@@ -2193,6 +2229,7 @@ FC_API( graphene::wallet::wallet_api,
         (suggest_brain_key)
         (derive_owner_keys_from_brain_key)
         (register_account)
+        (register_account2)
         (upgrade_account)
         (create_account_with_brain_key)
         (sell_asset)
