@@ -1003,6 +1003,80 @@
        } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(registrar_account)(referrer_account)(referrer_percent)(broadcast) ) }
 
 
+       signed_transaction register_account2(string name,
+                                           public_key_type owner,
+                                           public_key_type active,
+                                           public_key_type memo,
+                                           string  registrar_account,
+                                           string  referrer_account,
+                                           uint32_t referrer_percent,
+                                           string asset_symbol,
+                                           bool broadcast = false)
+       { try {
+          FC_ASSERT( !self.is_locked() );
+          FC_ASSERT( is_valid_name(name) );
+          account_create_operation account_create_op;
+
+          // #449 referrer_percent is on 0-100 scale, if user has larger
+          // number it means their script is using GRAPHENE_100_PERCENT scale
+          // instead of 0-100 scale.
+          FC_ASSERT( referrer_percent <= 100 );
+          // TODO:  process when pay_from_account is ID
+
+          account_object registrar_account_object =
+                this->get_account( registrar_account );
+          FC_ASSERT( registrar_account_object.is_lifetime_member() );
+
+          fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
+          FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
+
+          account_id_type registrar_account_id = registrar_account_object.id;
+
+          account_object referrer_account_object =
+                this->get_account( referrer_account );
+          account_create_op.referrer = referrer_account_object.id;
+          account_create_op.referrer_percent = uint16_t( referrer_percent * GRAPHENE_1_PERCENT );
+
+          account_create_op.registrar = registrar_account_id;
+          account_create_op.name = name;
+          account_create_op.owner = authority(1, owner, 1);
+          account_create_op.active = authority(1, active, 1);
+          account_create_op.options.memo_key = memo;
+
+          signed_transaction tx;
+
+          tx.operations.push_back( account_create_op );
+
+          auto current_fees = _remote_db->get_global_properties().parameters.current_fees;
+          set_operation_fees( tx, current_fees, asset_obj );
+
+          vector<public_key_type> paying_keys = registrar_account_object.active.get_keys();
+
+          auto dyn_props = get_dynamic_global_properties();
+          tx.set_reference_block( dyn_props.head_block_id );
+          tx.set_expiration( dyn_props.time + fc::seconds(30) );
+          tx.validate();
+
+          for( public_key_type& key : paying_keys )
+          {
+             auto it = _keys.find(key);
+             if( it != _keys.end() )
+             {
+                fc::optional< fc::ecc::private_key > privkey = wif_to_key( it->second );
+                if( !privkey.valid() )
+                {
+                   FC_ASSERT( false, "Malformed private key in _keys" );
+                }
+                tx.sign( *privkey, _chain_id );
+             }
+          }
+
+          if( broadcast )
+             _remote_net_broadcast->broadcast_transaction( tx );
+          return tx;
+       } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(registrar_account)(referrer_account)(referrer_percent)(broadcast) ) }
+
+
        signed_transaction upgrade_account(string name, string asset_symbol, bool broadcast)
        { try {
           FC_ASSERT( !self.is_locked() );
@@ -1267,6 +1341,7 @@
 
            FC_ASSERT( !self.is_locked() );
            const account_object issuer_account = get_account( issuer );
+           FC_ASSERT(0!= (&issuer_account));
            FC_ASSERT(category_name!="", "category_name cannot be empty!");
            FC_ASSERT(data_market_type==1 || data_market_type==2, "data_market_type must 1 or 2");
 
@@ -4461,6 +4536,19 @@
        return detail::derive_private_key( prefix_string, sequence_number );
     }
 
+    signed_transaction wallet_api::register_account2(string name,
+                                                    public_key_type owner_pubkey,
+                                                    public_key_type active_pubkey,
+                                                    public_key_type memo,
+                                                    string  registrar_account,
+                                                    string  referrer_account,
+                                                    uint32_t referrer_percent,
+                                                    string asset_symbol,
+                                                    bool broadcast)
+    {
+       return my->register_account2( name, owner_pubkey, active_pubkey, memo, registrar_account, referrer_account, referrer_percent, asset_symbol, broadcast );
+    }
+
     signed_transaction wallet_api::register_account(string name,
                                                     public_key_type owner_pubkey,
                                                     public_key_type active_pubkey,
@@ -4900,6 +4988,13 @@
           ss << "The BRAIN_KEY will be used as the owner key, and the active key will be derived from the BRAIN_KEY.  Use\n";
           ss << "register_account if you already know the keys you know the public keys that you would like to register.\n";
 
+       }
+       else if( method == "register_account2" )
+       {
+          ss << "usage: register_account2 ACCOUNT_NAME OWNER_PUBLIC_KEY ACTIVE_PUBLIC_KEY MEMO_KEY REGISTRAR REFERRER REFERRER_PERCENT ASSET_SYMBOL BROADCAST\n\n";
+          ss << "example: register_account2 \"newaccount\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"1.3.11\" \"1.3.11\" 10 asset_symbol true\n";
+          ss << "\n";
+          ss << "Use this method to register an account for which you do not know the private keys.";
        }
        else if( method == "register_account" )
        {
