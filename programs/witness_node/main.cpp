@@ -28,6 +28,7 @@
 #include <graphene/account_history/account_history_plugin.hpp>
 #include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/delayed_node/delayed_node_plugin.hpp>
+#include <graphene/data_transaction/data_transaction_plugin.hpp>
 
 #include <fc/exception/exception.hpp>
 #include <fc/thread/thread.hpp>
@@ -80,6 +81,7 @@ int main(int argc, char** argv) {
       auto history_plug = node->register_plugin<account_history::account_history_plugin>();
       auto market_history_plug = node->register_plugin<market_history::market_history_plugin>();
       auto delayed_plug = node->register_plugin<delayed_node::delayed_node_plugin>();
+      auto data_transaction_plug = node->register_plugin<data_transaction::data_transaction_plugin>();
 
       try
       {

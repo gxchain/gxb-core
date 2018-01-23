@@ -6,7 +6,8 @@ add_library( graphene_witness
 
 target_link_libraries( graphene_witness graphene_chain graphene_app )
 target_include_directories( graphene_witness
-                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" 
+                            PUBLIC "${PROJECT_SOURCE_DIR}/libraries/chain/include" )
 
 install( TARGETS
    graphene_witness
