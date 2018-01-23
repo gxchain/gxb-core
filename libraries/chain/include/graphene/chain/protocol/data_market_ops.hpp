@@ -29,7 +29,7 @@ namespace graphene { namespace chain {
            uint64_t fee  = 10 * GRAPHENE_BLOCKCHAIN_PRECISION;
         };
 
-        string                  category_name;
+        fc::string              category_name;
         uint8_t                 data_market_type;
         uint32_t                order_num;
         asset                   fee;
@@ -50,7 +50,7 @@ namespace graphene { namespace chain {
            uint64_t fee  = 0;
         };
 
-        optional< string >              new_category_name;
+        optional< fc::string >          new_category_name;
         optional< uint32_t >            new_order_num;
         data_market_category_id_type    data_market_category;
         extensions_type                 extensions;

@@ -92,7 +92,7 @@ namespace graphene { namespace chain {
       /// registrar.
       uint16_t        referrer_percent = 0;
 
-      string          name;
+      fc::string      name;
       authority       owner;
       authority       active;
 

@@ -47,7 +47,7 @@ namespace graphene { namespace chain {
       /// Account to pay_data_transaction asset to
       account_id_type               to;
       asset                         amount;
-      string                        request_id;
+      fc::string                    request_id;
       extensions_type               extensions;
 
       account_id_type fee_payer() const { return from; }
