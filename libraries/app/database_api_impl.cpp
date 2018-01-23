@@ -68,30 +68,31 @@ optional<T> maybe_id( const string& name_or_id )
 //////////////////////////////////////////////////////////////////////
 database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
 {
-   dlog("creating database api ${x}", ("x",int64_t(this)) );
-   _new_connection = _db.new_objects.connect([this](const vector<object_id_type>& ids, const flat_set<account_id_type>& impacted_accounts) {
-                                on_objects_new(ids, impacted_accounts);
-                                });
-   _change_connection = _db.changed_objects.connect([this](const vector<object_id_type>& ids, const flat_set<account_id_type>& impacted_accounts) {
-                                on_objects_changed(ids, impacted_accounts);
-                                });
-   _removed_connection = _db.removed_objects.connect([this](const vector<object_id_type>& ids, const vector<const object*>& objs, const flat_set<account_id_type>& impacted_accounts) {
-                                on_objects_removed(ids, objs, impacted_accounts);
-                                });
-   _applied_block_connection = _db.applied_block.connect([this](const signed_block&){ on_applied_block(); });
+    ilog("creating database api ${x}", ("x", int64_t(this)));
+    _new_connection = _db.new_objects.connect([this](const vector<object_id_type> &ids, const flat_set<account_id_type> &impacted_accounts) {
+        on_objects_new(ids, impacted_accounts);
+    });
+    _change_connection = _db.changed_objects.connect([this](const vector<object_id_type> &ids, const flat_set<account_id_type> &impacted_accounts) {
+        on_objects_changed(ids, impacted_accounts);
+    });
+    _removed_connection = _db.removed_objects.connect([this](const vector<object_id_type> &ids, const vector<const object *> &objs, const flat_set<account_id_type> &impacted_accounts) {
+        on_objects_removed(ids, objs, impacted_accounts);
+    });
+    _applied_block_connection = _db.applied_block.connect([this](const signed_block &) { on_applied_block(); });
 
-   _pending_trx_connection = _db.on_pending_transaction.connect([this](const signed_transaction& trx ){
-                         if( _pending_trx_callback ) _pending_trx_callback( fc::variant(trx) );
-                      });
+    _pending_trx_connection = _db.on_pending_transaction.connect([this](const signed_transaction &trx) {
+        if (_pending_trx_callback) _pending_trx_callback(fc::variant(trx));
+    });
 
-   // for data_transaction
-   _data_transaction_change_connection = _db.data_transaction_changed_objects.connect([this](const string request_id) {
-                                on_data_transaction_objects_changed(request_id);
-                                });
+    // for data_transaction
+    _data_transaction_change_connection = _db.data_transaction_changed_objects.connect([this](const string request_id) {
+        on_data_transaction_objects_changed(request_id);
+    });
 }
 
 database_api_impl::~database_api_impl()
 {
+    ilog("freeing database api ${x}", ("x", int64_t(this)));
 }
 
 fc::variants database_api_impl::get_objects(const vector<object_id_type>& ids)const
