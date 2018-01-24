@@ -2643,7 +2643,7 @@
           uint32_t expiration_time_offset = 0;
           for (;;)
           {
-             tx.set_expiration( dyn_props.time + fc::seconds(300 + expiration_time_offset) );
+             tx.set_expiration( dyn_props.time + fc::seconds(30 + expiration_time_offset) );
              tx.signatures.clear();
 
              for( public_key_type& key : approving_key_set )
