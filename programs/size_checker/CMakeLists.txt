@@ -1,4 +1,4 @@
-link_directories("${PROJECT_BINARY_DIR}/libraries/chain")
+link_directories("${PROJECT_SOURCE_DIR}/libraries/chain/lib")
 link_libraries(graphene_chain)
 add_executable( size_checker main.cpp )
 if( UNIX AND NOT APPLE )

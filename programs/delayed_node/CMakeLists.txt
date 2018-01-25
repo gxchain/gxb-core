@@ -1,4 +1,4 @@
-link_directories("${PROJECT_BINARY_DIR}/libraries/chain")
+link_directories("${PROJECT_SOURCE_DIR}/libraries/chain/lib")
 add_executable( delayed_node main.cpp )
 if( UNIX AND NOT APPLE )
   set(rt_library rt )
