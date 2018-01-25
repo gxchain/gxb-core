@@ -796,7 +796,7 @@ class wallet_api
       /**
        * @ingroup broadcast signed transaction
        */
-      signed_transaction broadcast_transaction(signed_transaction tx);
+      pair<transaction_id_type,signed_transaction> broadcast_transaction(signed_transaction tx);
 
       /**
        * @ingroup Transaction Builder API
