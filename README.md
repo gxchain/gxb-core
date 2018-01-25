@@ -47,7 +47,7 @@ The repository contains the install scripts for boost 1.57.0, see [here](https:/
 brew install wget cmake git openssl autoconf automake doxygen libtool
 
 # dependencies for ubuntu 14.04 LTS
-sudo apt-get install wget cmake make python-dev libbz2-dev libdb++-dev libdb-dev libssl-dev openssl libreadline-dev autoconf libtool git ntp
+sudo apt-get install wget cmake make python-dev libbz2-dev libdb++-dev libdb-dev libssl-dev openssl libreadline-dev autoconf libtool git ntp doxygen
 
 ```
 **NOTE**: GXB-Core requires an OpenSSL version in the 1.0.x series. If your system OpenSSL version is newer, then you will need to manually provide an older version of OpenSSL and specify it to CMake using -DOPENSSL_INCLUDE_DIR, -DOPENSSL_SSL_LIBRARY, and -DOPENSSL_CRYPTO_LIBRARY.
