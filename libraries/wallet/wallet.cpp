@@ -889,7 +889,7 @@
           return _builder_transactions[transaction_handle] = sign_transaction(_builder_transactions[transaction_handle], broadcast);
        }
 
-       signed_transaction broadcast_transaction(signed_transaction tx)
+       pair<transaction_id_type,signed_transaction> broadcast_transaction(signed_transaction tx)
        {
            try {
                _remote_net_broadcast->broadcast_transaction(tx);
@@ -898,7 +898,7 @@
                elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", tx.id().str())("e", e.to_detail_string()));
                throw;
            }
-           return tx;
+           return std::make_pair(tx.id(),tx);
        }
 
        signed_transaction propose_builder_transaction(
@@ -4340,7 +4340,7 @@
        return my->sign_builder_transaction(transaction_handle, broadcast);
     }
 
-    signed_transaction wallet_api::broadcast_transaction(signed_transaction tx)
+    pair<transaction_id_type,signed_transaction> wallet_api::broadcast_transaction(signed_transaction tx)
     {
        return my->broadcast_transaction(tx);
     }
