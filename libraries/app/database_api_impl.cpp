@@ -68,7 +68,7 @@ optional<T> maybe_id( const string& name_or_id )
 //////////////////////////////////////////////////////////////////////
 database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
 {
-   ilog("creating database api ${x}", ("x",int64_t(this)));
+   dlog("creating database api ${x}", ("x",int64_t(this)));
    _new_connection = _db.new_objects.connect([this](const vector<object_id_type>& ids, const flat_set<account_id_type>& impacted_accounts) {
                                 on_objects_new(ids, impacted_accounts);
                                 });
@@ -92,7 +92,7 @@ database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
 
 database_api_impl::~database_api_impl()
 {
-    ilog("freeing database api ${x}", ("x", int64_t(this)));
+    dlog("freeing database api ${x}", ("x", int64_t(this)));
 }
 
 fc::variants database_api_impl::get_objects(const vector<object_id_type>& ids)const
