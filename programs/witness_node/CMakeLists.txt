@@ -1,4 +1,7 @@
-link_directories("${PROJECT_BINARY_DIR}/libraries/chain")
+add_library(graphene_chain STATIC IMPORTED)
+set_property(TARGET graphene_chain PROPERTY IMPORTED_LOCATION
+    ${PROJECT_BINARY_DIR}/libraries/chain/libgraphene_chain.a)
+
 add_executable( witness_node main.cpp )
 if( UNIX AND NOT APPLE )
   set(rt_library rt )
