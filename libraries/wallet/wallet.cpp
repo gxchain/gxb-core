@@ -3606,7 +3606,7 @@
                 
                 vector<public_key_type> paying_keys = from_account_obj->active.get_keys();
                 auto dyn_props = get_dynamic_global_properties();
-                tx.set_expiration( dyn_props.time + fc::seconds(300 + i) );
+                tx.set_expiration( dyn_props.time + fc::seconds(30 + i) );
                 for( public_key_type& key : paying_keys )
                 {
                     auto it = _keys.find(key);
