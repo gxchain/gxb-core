@@ -1229,9 +1229,6 @@ class wallet_api
                                                        string referrer_account,
                                                        bool broadcast = false);
 
-      // override transfer
-      signed_transaction override_transfer(string issuer, string from, string to, string amount, string asset_symbol, bool broadcast);
-
       /** Transfer an amount from one account to another.
        * @param from the name or id of the account sending the funds
        * @param to the name or id of the account receiving the funds
@@ -2244,7 +2241,6 @@ FC_API( graphene::wallet::wallet_api,
         (buy)
         (borrow_asset)
         (cancel_order)
-        (override_transfer)
         (transfer)
         (transfer2)
         (get_transaction_id)
