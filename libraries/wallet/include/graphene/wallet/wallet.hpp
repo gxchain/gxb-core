@@ -801,13 +801,6 @@ class wallet_api
       /**
        * @ingroup Transaction Builder API
        */
-      signed_transaction propose_builder_transaction(
-          transaction_handle_type handle,
-          time_point_sec expiration = time_point::now() + fc::minutes(1),
-          uint32_t review_period_seconds = 0,
-          bool broadcast = true
-         );
-
       signed_transaction propose_builder_transaction2(
          transaction_handle_type handle,
          string account_name_or_id,
@@ -2215,7 +2208,6 @@ FC_API( graphene::wallet::wallet_api,
         (preview_builder_transaction)
         (sign_builder_transaction)
         (broadcast_transaction)
-        (propose_builder_transaction)
         (propose_builder_transaction2)
         (remove_builder_transaction)
         (is_new)
