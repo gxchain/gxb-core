@@ -626,8 +626,17 @@ class wallet_api
        * @param id the name or id of the account whose balances you want
        * @returns a list of the given account's balances
        */
-      vector<asset>                     list_account_balances(const string& id);
-      
+      vector<asset>                     list_account_balances(const string& id);ø
+
+      /** List the lock balances of an account.
+       * Each account can have multiple lock balances, one for each type of asset owned by that 
+       * account.  The returned list will only contain assets for which the account has a
+       * nonzero balance
+       * @param account_id_or_name the name or id of the account whose lock balances you want
+       * @returns a list of the given account's lock balances(this time, lock balance type is only "GXS")
+       */
+      vector<asset>                     list_account_lock_balances(const string& account_id_or_name);
+
       /** Lists all assets registered on the blockchain.
        * 
        * To list all assets, pass the empty string \c "" for the lowerbound to start
@@ -2220,6 +2229,7 @@ FC_API( graphene::wallet::wallet_api,
         (list_my_accounts)
         (list_accounts)
         (list_account_balances)
+        (list_account_lock_balances)
         (list_assets)
         (import_key)
         (import_accounts)

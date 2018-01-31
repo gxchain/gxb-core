@@ -2839,6 +2839,22 @@
              return ss.str();
           };
 
+          m["list_account_lock_balances"] = [this](variant result, const fc::variants& a)
+          {
+             auto r = result.as<vector<asset>>();
+             vector<asset_object> asset_recs;
+             std::transform(r.begin(), r.end(), std::back_inserter(asset_recs), [this](const asset& a) {
+                return get_asset(a.asset_id);
+             });
+
+             std::stringstream ss;
+             for( unsigned i = 0; i < asset_recs.size(); ++i )
+                ss << asset_recs[i].amount_to_pretty_string(r[i]) << "\n";
+
+             return ss.str();
+          };
+
+
           m["get_blind_balances"] = [this](variant result, const fc::variants& a)
           {
              auto r = result.as<vector<asset>>();
@@ -3843,6 +3859,15 @@
           return my->_remote_db->get_account_balances(*real_id, flat_set<asset_id_type>());
        return my->_remote_db->get_account_balances(get_account(id).id, flat_set<asset_id_type>());
     }
+
+    vector<asset> wallet_api::list_account_lock_balances(const string& account_id_or_name)
+    {
+       if( auto real_id = detail::maybe_id<account_id_type>(account_id_or_name) ) {
+          return my->_remote_db->get_account_lock_balances(*real_id, flat_set<asset_id_type>());
+       }
+       return my->_remote_db->get_account_lock_balances(get_account(account_id_or_name).id, flat_set<asset_id_type>());
+    }
+
 
     vector<asset_object> wallet_api::list_assets(const string& lowerbound, uint32_t limit)const
     {
