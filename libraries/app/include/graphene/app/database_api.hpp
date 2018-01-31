@@ -245,6 +245,14 @@ class database_api
        */
       vector<asset> get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
 
+      /**
+       * @brief Get an account's lock balances in various assets
+       * @param id ID of the account to get lock balances for
+       * @param assets IDs of the assets to get lock balances of; if empty, get all assets account has a lock balance in
+       * @return lock balances of the account
+       */
+      vector<asset> get_account_lock_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
+
       /// Semantically equivalent to @ref get_account_balances, but takes a name instead of an ID.
       vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
 
@@ -825,6 +833,7 @@ FC_API(graphene::app::database_api,
 
    // Balances
    (get_account_balances)
+   (get_account_lock_balances)
    (get_named_account_balances)
    (get_balance_objects)
    (get_vested_balances)

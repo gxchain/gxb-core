@@ -298,6 +298,10 @@ vector<asset> database_api::get_account_balances(account_id_type id, const flat_
    return my->get_account_balances( id, assets );
 }
 
+vector<asset> database_api::get_account_lock_balances(account_id_type id, const flat_set<asset_id_type>& assets)const
+{
+   return my->get_account_lock_balances( id, assets );
+}
 
 vector<asset> database_api::get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const
 {

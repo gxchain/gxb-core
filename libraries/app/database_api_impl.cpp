@@ -517,6 +517,50 @@ vector<asset> database_api_impl::get_account_balances(account_id_type acnt, cons
    return result;
 }
 
+vector<asset> database_api_impl::get_account_lock_balances(account_id_type acnt, const flat_set<asset_id_type>& assets)const
+{
+    vector<asset> result;
+    const account_balance_locked_index& lock_balance_index = _db.get_index_type<account_balance_locked_index>();
+    auto range = lock_balance_index.indices().get<by_account_asset>().equal_range(boost::make_tuple(acnt));
+    if (assets.empty())
+    {
+       // if the caller passes in an empty list of assets, return lock balances for all assets the account 
+       auto vec_assets = list_assets("GXC", 100);
+       result.reserve(vec_assets.size());
+       for (const asset_object& asset_obj : vec_assets)
+       {
+          asset asset_tmp;
+          asset_tmp.asset_id = asset_obj.id;
+          for (const lock_balance_object& lock_balance : boost::make_iterator_range(range.first, range.second))
+          {
+             if (asset_obj.id == lock_balance.amount.asset_id)
+             {
+                asset_tmp.amount += lock_balance.amount.amount;
+             }
+          }
+          result.push_back(asset_tmp);
+       }
+    }
+    else
+    {
+       result.reserve(assets.size());
+       for (const asset_id_type& asset_id : assets)
+       {
+          asset asset_tmp;
+          asset_tmp.asset_id = asset_id;
+          for (const lock_balance_object& lock_balance : boost::make_iterator_range(range.first, range.second))
+          {
+             if (asset_id == lock_balance.amount.asset_id)
+             {
+                asset_tmp.amount += lock_balance.amount.amount;
+             }
+          }
+          result.push_back(asset_tmp);
+       }
+    }
+    return result;
+}
+
 vector<asset> database_api_impl::get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets) const
 {
    const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
