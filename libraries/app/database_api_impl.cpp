@@ -521,19 +521,19 @@ vector<asset> database_api_impl::get_account_lock_balances(account_id_type acnt,
 {
     vector<asset> result;
     const account_balance_locked_index& lock_balance_index = _db.get_index_type<account_balance_locked_index>();
-    auto range = lock_balance_index.indices().get<by_account_asset>().equal_range(boost::make_tuple(acnt));
+    auto lock_blance_range = lock_balance_index.indices().get<by_account_asset>().equal_range(boost::make_tuple(acnt));
     if (assets.empty())
     {
        // if the caller passes in an empty list of assets, return lock balances for all assets the account 
-       auto vec_assets = list_assets("GXC", 100);
-       result.reserve(vec_assets.size());
-       for (const asset_object& asset_obj : vec_assets)
+       const account_balance_index& balance_index = _db.get_index_type<account_balance_index>();
+       auto balance_range = balance_index.indices().get<by_account_asset>().equal_range(boost::make_tuple(acnt));
+       for (const account_balance_object& balance : boost::make_iterator_range(balance_range.first, balance_range.second))
        {
           asset asset_tmp;
-          asset_tmp.asset_id = asset_obj.id;
-          for (const lock_balance_object& lock_balance : boost::make_iterator_range(range.first, range.second))
+          asset_tmp.asset_id = balance.asset_type;
+          for (const lock_balance_object& lock_balance : boost::make_iterator_range(lock_blance_range.first, lock_blance_range.second))
           {
-             if (asset_obj.id == lock_balance.amount.asset_id)
+             if (balance.asset_type == lock_balance.amount.asset_id)
              {
                 asset_tmp.amount += lock_balance.amount.amount;
              }
@@ -548,7 +548,7 @@ vector<asset> database_api_impl::get_account_lock_balances(account_id_type acnt,
        {
           asset asset_tmp;
           asset_tmp.asset_id = asset_id;
-          for (const lock_balance_object& lock_balance : boost::make_iterator_range(range.first, range.second))
+          for (const lock_balance_object& lock_balance : boost::make_iterator_range(lock_blance_range.first, lock_blance_range.second))
           {
              if (asset_id == lock_balance.amount.asset_id)
              {
