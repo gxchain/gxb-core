@@ -604,6 +604,7 @@ class wallet_api
        * @returns a list of account objects
        */
       vector<account_object>            list_my_accounts();
+
       /** Lists all accounts registered in the blockchain.
        * This returns a list of all account names and their account ids, sorted by account name.
        *
@@ -617,6 +618,7 @@ class wallet_api
        * @returns a list of accounts mapping account names to account ids
        */
       map<string,account_id_type>       list_accounts(const string& lowerbound, uint32_t limit);
+
       /** List the balances of an account.
        * Each account can have multiple balances, one for each type of asset owned by that 
        * account.  The returned list will only contain assets for which the account has a
@@ -625,6 +627,7 @@ class wallet_api
        * @returns a list of the given account's balances
        */
       vector<asset>                     list_account_balances(const string& id);
+      
       /** Lists all assets registered on the blockchain.
        * 
        * To list all assets, pass the empty string \c "" for the lowerbound to start
