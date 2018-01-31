@@ -626,7 +626,7 @@ class wallet_api
        * @param id the name or id of the account whose balances you want
        * @returns a list of the given account's balances
        */
-      vector<asset>                     list_account_balances(const string& id);ø
+      vector<asset>                     list_account_balances(const string& id);
 
       /** List the lock balances of an account.
        * Each account can have multiple lock balances, one for each type of asset owned by that 
