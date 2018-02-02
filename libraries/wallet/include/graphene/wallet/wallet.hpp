@@ -2117,6 +2117,13 @@ class wallet_api
        */
       void transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times);
 
+      /** verify_transaction_signature 
+       * @param trx
+       * @param public_key
+       * @return bool
+       */
+      bool verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key);
+
       /** get tps
        * @return
        */
@@ -2331,6 +2338,7 @@ FC_API( graphene::wallet::wallet_api,
         (dbg_update_object)
         (flood_transfer)
         (transfer_test)
+        (verify_transaction_signature)
         (flood_network)
         (flood_create_account)
         (get_tps)
