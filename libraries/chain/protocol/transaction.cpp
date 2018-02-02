@@ -83,6 +83,20 @@ signature_type graphene::chain::signed_transaction::sign(const private_key_type&
    return key.sign_compact(enc.result());
 }
 
+bool graphene::chain::signed_transaction::validate_signee(const fc::ecc::public_key& expected_signee, const chain_id_type& chain_id) const
+{
+    auto tx = *this;
+    tx.signatures.clear();
+    auto digest = tx.sig_digest(chain_id);
+
+    for (const auto& sig : signatures) {
+        if (fc::ecc::public_key(sig, digest, true) == expected_signee) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void transaction::set_expiration( fc::time_point_sec expiration_time )
 {
     expiration = expiration_time;
