@@ -3547,6 +3547,11 @@
             }
        }
 
+       fc::sha256 get_hash(const string& value)
+       {
+           return fc::sha256::hash(value);
+       }
+
        void flood_network(string prefix, uint32_t number_of_transactions)
        { try {
                const u_int16_t loop_num = 1000;
@@ -4766,6 +4771,11 @@
     {
        FC_ASSERT(!is_locked());
        my->flood_network(account_prefix, number_of_transactions);
+    }
+
+    fc::sha256 wallet_api::get_hash(const string& value)
+    {
+       return my->get_hash(value);
     }
 
     signed_transaction wallet_api::propose_league_update(
