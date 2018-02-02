@@ -2122,6 +2122,13 @@ class wallet_api
        */
       void get_tps();
 
+      /** get_hash
+       *
+       * @param value
+       * @return fc::sha256
+       */
+      fc::sha256 get_hash(const string& value);
+
       void network_add_nodes( const vector<string>& nodes );
       vector< variant > network_get_connected_peers();
 
@@ -2327,6 +2334,7 @@ FC_API( graphene::wallet::wallet_api,
         (flood_network)
         (flood_create_account)
         (get_tps)
+        (get_hash)
         (network_add_nodes)
         (network_get_connected_peers)
         (set_key_label)
