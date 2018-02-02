@@ -200,7 +200,7 @@ data_transaction_commission_percent_t database_api_impl::get_commission_percent(
             return ext.get<data_transaction_commission_percent_t>();
         }
     }
-    FC_THROW("no ommission_rate");
+    return data_transaction_commission_percent_t();
 }
 
 chain_property_object database_api_impl::get_chain_properties()const
