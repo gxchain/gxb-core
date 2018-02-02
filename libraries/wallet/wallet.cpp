@@ -3500,6 +3500,11 @@
                    ("n", number_of_accounts * 2)("time", (end - start).count() / 1000)("l", number_of_loop));
        }
 
+      bool verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key)
+      {
+          return trx.validate_signee(pub_key, _chain_id);
+      }
+
        void transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times)
        {
             FC_ASSERT( !self.is_locked() );
@@ -4767,15 +4772,15 @@
         my->transfer_test(from_account, to_account, times);
     }
 
+    bool wallet_api::verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key)
+    {
+        return my->verify_transaction_signature(trx, pub_key);
+    }
+
     void wallet_api::flood_network(string account_prefix, uint32_t number_of_transactions)
     {
        FC_ASSERT(!is_locked());
        my->flood_network(account_prefix, number_of_transactions);
-    }
-
-    fc::sha256 wallet_api::get_hash(const string& value)
-    {
-       return my->get_hash(value);
     }
 
     signed_transaction wallet_api::propose_league_update(
