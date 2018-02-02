@@ -520,7 +520,7 @@ vector<asset> database_api_impl::get_account_balances(account_id_type acnt, cons
 vector<asset> database_api_impl::get_account_lock_balances(account_id_type acnt, const flat_set<asset_id_type>& assets)const
 {
     vector<asset> result;
-    flat_set<asset_id_type> assets_tmp;
+    flat_set<asset_id_type> asset_ids;
     const account_balance_locked_index& lock_balance_index = _db.get_index_type<account_balance_locked_index>();
     auto lock_blance_range = lock_balance_index.indices().get<by_account_asset>().equal_range(boost::make_tuple(acnt));
 
@@ -529,31 +529,31 @@ vector<asset> database_api_impl::get_account_lock_balances(account_id_type acnt,
        // if the caller passes in an empty list of assets, return lock balances for all assets the account 
        const account_balance_index& balance_index = _db.get_index_type<account_balance_index>();
        auto balance_range = balance_index.indices().get<by_account_asset>().equal_range(boost::make_tuple(acnt));
+
        for (const account_balance_object& balance : boost::make_iterator_range(balance_range.first, balance_range.second))
        {
-          assets_tmp.insert(balance.asset_type);
+          asset_ids.insert(balance.asset_type);
        }
     }
     else
     {
-       result.reserve(assets.size());
-       assets_tmp = assets;
+       asset_ids = assets;
     }
 
-    for (const asset_id_type& asset_id : assets_tmp)
+    result.reserve(assets.size());
+    for (const asset_id_type& asset_id : asset_ids)
     {
-       asset asset_tmp;
-
+       share_type amount = 0;
        for (const lock_balance_object& lock_balance : boost::make_iterator_range(lock_blance_range.first, lock_blance_range.second))
        {
           if (asset_id == lock_balance.amount.asset_id)
           {
-             asset_tmp.amount += lock_balance.amount.amount;
+             amount += lock_balance.amount.amount;
           }
        }
-       result.push_back(asset_tmp);
+       result.push_back({amount, asset_id});
     }
-    
+
     return result;
 }
 
