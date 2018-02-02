@@ -128,6 +128,7 @@ namespace graphene { namespace chain {
 
       /** returns signature but does not append */
       signature_type sign( const private_key_type& key, const chain_id_type& chain_id )const;
+      bool validate_signee(const fc::ecc::public_key& expected_signee, const chain_id_type& chain_id) const;
 
       /**
        *  The purpose of this method is to identify some subset of
