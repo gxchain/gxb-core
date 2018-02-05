@@ -24,7 +24,7 @@ RUN rm -rf "$GXB_DATA" \
 VOLUME /gxb
 
 # Copy default configuration
-ADD start.sh /start.sh
+ADD docker/start.sh /start.sh
 ADD genesis.json /genesis.json
 RUN chmod a+x /start.sh
 
