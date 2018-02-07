@@ -122,6 +122,13 @@ class database_api
       optional<signed_block_with_info> get_block(uint32_t block_num)const;
 
       /**
+       * @brief Retrieve a full, signed block
+       * @param block_id of the block to be returned
+       * @return the referenced block, or null if no matching block was found
+       */
+      optional<signed_block_with_info> get_block_by_id(block_id_type block_id)const;
+
+      /**
        * @brief used to fetch an individual transaction.
        */
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
@@ -793,6 +800,7 @@ FC_API(graphene::app::database_api,
    // Blocks and transactions
    (get_block_header)
    (get_block)
+   (get_block_by_id)
    (get_transaction)
    (get_recent_transaction_by_id)
 
