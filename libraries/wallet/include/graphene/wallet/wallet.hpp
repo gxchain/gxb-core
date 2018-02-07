@@ -510,6 +510,8 @@ class wallet_api
        */
       variant_object                    about() const;
       optional<signed_block_with_info>    get_block( uint32_t num )const;
+      optional<signed_block_with_info>    get_block_by_id( block_id_type block_id )const;
+
       /** Returns the number of accounts registered on the blockchain
        * @returns the number of registered accounts
        */
@@ -2294,6 +2296,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_account)
         (get_account_id)
         (get_block)
+        (get_block_by_id)
         (get_commission_percent)
         (get_account_count)
         (get_account_history)

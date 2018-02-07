@@ -178,6 +178,11 @@ optional<signed_block_with_info> database_api_impl::get_block(uint32_t block_num
    return _db.fetch_block_by_number(block_num);
 }
 
+optional<signed_block_with_info> database_api_impl::get_block_by_id(block_id_type block_id)const
+{
+   return _db.fetch_block_by_id(block_id);
+}
+
 processed_transaction database_api_impl::get_transaction(uint32_t block_num, uint32_t trx_num)const
 {
    auto opt_block = _db.fetch_block_by_number(block_num);
