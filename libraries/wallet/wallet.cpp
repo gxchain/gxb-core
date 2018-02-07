@@ -4762,6 +4762,11 @@
         my->transfer_test(from_account, to_account, times);
     }
 
+    fc::sha256 wallet_api::get_hash(const string& value)
+    {
+        return my->get_hash(value);
+    }
+
     bool wallet_api::verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key)
     {
         return my->verify_transaction_signature(trx, pub_key);
