@@ -764,6 +764,12 @@ class database_api
     map<account_id_type, uint64_t> list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const;
     uint32_t list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, account_id_type datasource_account) const;
 
+    /**
+     * @brief get witness participation rate
+     * @return uint32_t
+     */   
+    uint32_t get_witness_participation_rate() const;
+    
    private:
       std::shared_ptr< database_api_impl > my;
 
@@ -894,5 +900,6 @@ FC_API(graphene::app::database_api,
    (list_data_transactions_by_requester)
    (list_second_hand_datasources)
    (list_total_second_hand_transaction_counts_by_datasource)
+   (get_witness_participation_rate)
 
 )

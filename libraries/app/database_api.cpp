@@ -671,4 +671,9 @@ vector<optional<league_object>> database_api::get_leagues(const vector<league_id
    return my->get_leagues(league_ids);
 }
 
+uint32_t database_api::get_witness_participation_rate() const
+{
+    return my->get_witness_participation_rate();
+}
+
 } } // graphene::app

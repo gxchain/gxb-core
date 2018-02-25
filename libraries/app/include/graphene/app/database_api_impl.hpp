@@ -245,6 +245,12 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
      */
     vector<optional<league_object> > get_leagues(const vector<league_id_type>& league_ids) const;
 
+    /**
+     * @brief get witness participation rate
+     * @return uint32_t
+     */   
+    uint32_t get_witness_participation_rate() const;
+
    //private:
       template<typename T>
       void subscribe_to_item( const T& i )const
