@@ -32,8 +32,8 @@ namespace graphene {
             static const uint8_t space_id = protocol_ids;
             static const uint8_t type_id = league_object_type;
 
-            string                                  league_name;
-            string                                  brief_desc;
+            fc::string                              league_name;
+            fc::string                              brief_desc;
             // data products in league
             vector<league_data_product_id_type>     data_products;
             // prices of data products in league,  price  = x * GRAPHENE_BLOCKCHAIN_PRECISION;
@@ -42,7 +42,7 @@ namespace graphene {
             // data markeat categodry id
             data_market_category_id_type            category_id;
             // league icon, base64 decoded string
-            string                                  icon;
+            fc::string                              icon;
             time_point_sec                          create_date_time;
             time_point_sec                          recommend_expiration_date_time;
             // total data_transaction count

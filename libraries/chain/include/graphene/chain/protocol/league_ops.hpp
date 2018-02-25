@@ -30,12 +30,12 @@ namespace graphene { namespace chain {
         };
 
         league_id_type                       league;
-        string                               league_name;
-        string                               brief_desc;
+        fc::string                           league_name;
+        fc::string                           brief_desc;
         vector<league_data_product_id_type>  data_products;
         vector<uint64_t>                     prices;
         data_market_category_id_type         category_id;
-        string                               icon;
+        fc::string                           icon;
         uint64_t                             total;
         asset                                fee;
         account_id_type                      issuer;
@@ -59,13 +59,13 @@ namespace graphene { namespace chain {
         };
 
         league_id_type                                  league;
-        optional <string>                               new_league_name;
-        optional <string>                               new_brief_desc;
+        optional <fc::string>                           new_league_name;
+        optional <fc::string>                           new_brief_desc;
         optional <vector<league_data_product_id_type>>  new_data_products;
         optional <vector<uint64_t>>                     new_prices;
         optional <uint8_t>                              new_status;
         optional <data_market_category_id_type>         new_category_id;
-        optional <string>                               new_icon;
+        optional <fc::string>                           new_icon;
         optional <account_id_type>                      new_issuer;
         uint64_t                                        new_total;
         asset                                           fee;

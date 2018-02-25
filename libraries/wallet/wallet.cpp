@@ -586,8 +586,6 @@
        }
        account_object get_account(account_id_type id) const
        {
-          if( _wallet.my_accounts.get<by_id>().count(id) )
-             return *_wallet.my_accounts.get<by_id>().find(id);
           auto rec = _remote_db->get_accounts({id}).front();
           FC_ASSERT(rec);
           return *rec;
@@ -602,19 +600,6 @@
              // It's an ID
              return get_account(*id);
           } else {
-             // It's a name
-             if( _wallet.my_accounts.get<by_name>().count(account_name_or_id) )
-             {
-                auto local_account = *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
-                auto blockchain_account = _remote_db->lookup_account_names({account_name_or_id}).front();
-                FC_ASSERT( blockchain_account );
-                if (local_account.id != blockchain_account->id)
-                   elog("my account id ${id} different from blockchain id ${id2}", ("id", local_account.id)("id2", blockchain_account->id));
-                if (local_account.name != blockchain_account->name)
-                   elog("my account name ${id} different from blockchain name ${id2}", ("id", local_account.name)("id2", blockchain_account->name));
-
-                return *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
-             }
              auto rec = _remote_db->lookup_account_names({account_name_or_id}).front();
              FC_ASSERT( rec && rec->name == account_name_or_id );
              return *rec;
@@ -888,23 +873,17 @@
 
           return _builder_transactions[transaction_handle] = sign_transaction(_builder_transactions[transaction_handle], broadcast);
        }
-       signed_transaction propose_builder_transaction(
-          transaction_handle_type handle,
-          time_point_sec expiration = time_point::now() + fc::minutes(1),
-          uint32_t review_period_seconds = 0, bool broadcast = true)
-       {
-          FC_ASSERT(_builder_transactions.count(handle));
-          proposal_create_operation op;
-          op.expiration_time = expiration;
-          signed_transaction& trx = _builder_transactions[handle];
-          std::transform(trx.operations.begin(), trx.operations.end(), std::back_inserter(op.proposed_ops),
-                         [](const operation& op) -> op_wrapper { return op; });
-          if( review_period_seconds )
-             op.review_period_seconds = review_period_seconds;
-          trx.operations = {op};
-          _remote_db->get_global_properties().parameters.current_fees->set_fee( trx.operations.front() );
 
-          return trx = sign_transaction(trx, broadcast);
+       pair<transaction_id_type,signed_transaction> broadcast_transaction(signed_transaction tx)
+       {
+           try {
+               _remote_net_broadcast->broadcast_transaction(tx);
+           }
+           catch (const fc::exception& e) {
+               elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", tx.id().str())("e", e.to_detail_string()));
+               throw;
+           }
+           return std::make_pair(tx.id(),tx);
        }
 
        signed_transaction propose_builder_transaction2(
@@ -932,7 +911,6 @@
        {
           _builder_transactions.erase(handle);
        }
-
 
        signed_transaction register_account(string name,
                                            public_key_type owner,
@@ -975,6 +953,80 @@
 
           auto current_fees = _remote_db->get_global_properties().parameters.current_fees;
           set_operation_fees( tx, current_fees );
+
+          vector<public_key_type> paying_keys = registrar_account_object.active.get_keys();
+
+          auto dyn_props = get_dynamic_global_properties();
+          tx.set_reference_block( dyn_props.head_block_id );
+          tx.set_expiration( dyn_props.time + fc::seconds(30) );
+          tx.validate();
+
+          for( public_key_type& key : paying_keys )
+          {
+             auto it = _keys.find(key);
+             if( it != _keys.end() )
+             {
+                fc::optional< fc::ecc::private_key > privkey = wif_to_key( it->second );
+                if( !privkey.valid() )
+                {
+                   FC_ASSERT( false, "Malformed private key in _keys" );
+                }
+                tx.sign( *privkey, _chain_id );
+             }
+          }
+
+          if( broadcast )
+             _remote_net_broadcast->broadcast_transaction( tx );
+          return tx;
+       } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(registrar_account)(referrer_account)(referrer_percent)(broadcast) ) }
+
+
+       signed_transaction register_account2(string name,
+                                           public_key_type owner,
+                                           public_key_type active,
+                                           public_key_type memo,
+                                           string  registrar_account,
+                                           string  referrer_account,
+                                           uint32_t referrer_percent,
+                                           string asset_symbol,
+                                           bool broadcast = false)
+       { try {
+          FC_ASSERT( !self.is_locked() );
+          FC_ASSERT( is_valid_name(name) );
+          account_create_operation account_create_op;
+
+          // #449 referrer_percent is on 0-100 scale, if user has larger
+          // number it means their script is using GRAPHENE_100_PERCENT scale
+          // instead of 0-100 scale.
+          FC_ASSERT( referrer_percent <= 100 );
+          // TODO:  process when pay_from_account is ID
+
+          account_object registrar_account_object =
+                this->get_account( registrar_account );
+          FC_ASSERT( registrar_account_object.is_lifetime_member() );
+
+          fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
+          FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
+
+          account_id_type registrar_account_id = registrar_account_object.id;
+
+          account_object referrer_account_object =
+                this->get_account( referrer_account );
+          account_create_op.referrer = referrer_account_object.id;
+          account_create_op.referrer_percent = uint16_t( referrer_percent * GRAPHENE_1_PERCENT );
+
+          account_create_op.registrar = registrar_account_id;
+          account_create_op.name = name;
+          account_create_op.owner = authority(1, owner, 1);
+          account_create_op.active = authority(1, active, 1);
+          account_create_op.options.memo_key = memo;
+
+          signed_transaction tx;
+
+          tx.operations.push_back( account_create_op );
+
+          auto current_fees = _remote_db->get_global_properties().parameters.current_fees;
+          set_operation_fees( tx, current_fees, asset_obj );
 
           vector<public_key_type> paying_keys = registrar_account_object.active.get_keys();
 
@@ -1778,6 +1830,35 @@
            return _remote_db->get_data_transaction_by_request_id(request_id);
        }
 
+       void get_tps()
+       {
+           const uint16_t delta_block = 5;
+           while (true) {
+               uint32_t head_block_num = get_dynamic_global_properties().head_block_number;
+               // get total_trx
+               uint32_t total_trx = 0;
+               time_point_sec start_time, end_time;
+               for (int i = 0; i < delta_block; ++i) {
+                   auto block = _remote_db->get_block(head_block_num - i);
+                   total_trx += block->transactions.size();
+                   if (0 == i) {
+                       end_time = block->timestamp;
+                   }
+                   if (delta_block - 1 == i){
+                       start_time = block->timestamp;
+                   }
+               }
+
+               // tps = total_trx / delta_time
+               auto tps = total_trx / (end_time - start_time).to_seconds();
+               ilog("tps: ${tps},  time: ${t}", ("t", end_time)("tps", tps));
+
+               // sleep interval
+               uint8_t block_interval = get_global_properties().parameters.block_interval;
+               fc::usleep(fc::seconds(block_interval));
+           }
+       }
+
        signed_transaction create_asset(string issuer,
                                        string symbol,
                                        uint8_t precision,
@@ -2456,137 +2537,58 @@
 
        signed_transaction sign_transaction(signed_transaction tx, bool broadcast = false)
        {
-          flat_set<account_id_type> req_active_approvals;
-          flat_set<account_id_type> req_owner_approvals;
-          vector<authority>         other_auths;
+           set<public_key_type> pks = _remote_db->get_potential_signatures(tx);
+           flat_set<public_key_type> owned_keys;
+           owned_keys.reserve(pks.size());
+           std::copy_if(pks.begin(), pks.end(), std::inserter(owned_keys, owned_keys.end()),
+                        [this](const public_key_type &pk) { return _keys.find(pk) != _keys.end(); });
+           set<public_key_type> approving_key_set = _remote_db->get_required_signatures(tx, owned_keys);
 
-          tx.get_required_authorities( req_active_approvals, req_owner_approvals, other_auths );
+           auto dyn_props = get_dynamic_global_properties();
+           tx.set_reference_block(dyn_props.head_block_id);
 
-          for( const auto& auth : other_auths )
-             for( const auto& a : auth.account_auths )
-                req_active_approvals.insert(a.first);
+           // first, some bookkeeping, expire old items from _recently_generated_transactions
+           // since transactions include the head block id, we just need the index for keeping transactions unique
+           // when there are multiple transactions in the same block.  choose a time period that should be at
+           // least one block long, even in the worst case.  2 minutes ought to be plenty.
+           fc::time_point_sec oldest_transaction_ids_to_track(dyn_props.time - fc::minutes(2));
+           auto oldest_transaction_record_iter = _recently_generated_transactions.get<timestamp_index>().lower_bound(oldest_transaction_ids_to_track);
+           auto begin_iter = _recently_generated_transactions.get<timestamp_index>().begin();
+           _recently_generated_transactions.get<timestamp_index>().erase(begin_iter, oldest_transaction_record_iter);
 
-          // std::merge lets us de-duplicate account_id's that occur in both
-          //   sets, and dump them into a vector (as required by remote_db api)
-          //   at the same time
-          vector<account_id_type> v_approving_account_ids;
-          std::merge(req_active_approvals.begin(), req_active_approvals.end(),
-                     req_owner_approvals.begin() , req_owner_approvals.end(),
-                     std::back_inserter(v_approving_account_ids));
+           uint32_t expiration_time_offset = 0;
+           for (;;) {
+               tx.set_expiration(dyn_props.time + fc::seconds(30 + expiration_time_offset));
+               tx.signatures.clear();
 
-          /// TODO: fetch the accounts specified via other_auths as well.
+               for (const public_key_type &key : approving_key_set)
+                   tx.sign(get_private_key(key), _chain_id);
 
-          vector< optional<account_object> > approving_account_objects =
-                _remote_db->get_accounts( v_approving_account_ids );
+               graphene::chain::transaction_id_type this_transaction_id = tx.id();
+               auto iter = _recently_generated_transactions.find(this_transaction_id);
+               if (iter == _recently_generated_transactions.end()) {
+                   // we haven't generated this transaction before, the usual case
+                   recently_generated_transaction_record this_transaction_record;
+                   this_transaction_record.generation_time = dyn_props.time;
+                   this_transaction_record.transaction_id = this_transaction_id;
+                   _recently_generated_transactions.insert(this_transaction_record);
+                   break;
+               }
 
-          /// TODO: recursively check one layer deeper in the authority tree for keys
+               // else we've generated a dupe, increment expiration time and re-sign it
+               ++expiration_time_offset;
+           }
 
-          FC_ASSERT( approving_account_objects.size() == v_approving_account_ids.size() );
+           if (broadcast) {
+               try {
+                   _remote_net_broadcast->broadcast_transaction(tx);
+               } catch (const fc::exception &e) {
+                   elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", tx.id().str())("e", e.to_detail_string()));
+                   throw;
+               }
+           }
 
-          flat_map<account_id_type, account_object*> approving_account_lut;
-          size_t i = 0;
-          for( optional<account_object>& approving_acct : approving_account_objects )
-          {
-             if( !approving_acct.valid() )
-             {
-                wlog( "operation_get_required_auths said approval of non-existing account ${id} was needed",
-                      ("id", v_approving_account_ids[i]) );
-                i++;
-                continue;
-             }
-             approving_account_lut[ approving_acct->id ] = &(*approving_acct);
-             i++;
-          }
-
-          flat_set<public_key_type> approving_key_set;
-          for( account_id_type& acct_id : req_active_approvals )
-          {
-             const auto it = approving_account_lut.find( acct_id );
-             if( it == approving_account_lut.end() )
-                continue;
-             const account_object* acct = it->second;
-             vector<public_key_type> v_approving_keys = acct->active.get_keys();
-             for( const public_key_type& approving_key : v_approving_keys )
-                approving_key_set.insert( approving_key );
-          }
-          for( account_id_type& acct_id : req_owner_approvals )
-          {
-             const auto it = approving_account_lut.find( acct_id );
-             if( it == approving_account_lut.end() )
-                continue;
-             const account_object* acct = it->second;
-             vector<public_key_type> v_approving_keys = acct->owner.get_keys();
-             for( const public_key_type& approving_key : v_approving_keys )
-                approving_key_set.insert( approving_key );
-          }
-          for( const authority& a : other_auths )
-          {
-             for( const auto& k : a.key_auths )
-                approving_key_set.insert( k.first );
-          }
-
-          auto dyn_props = get_dynamic_global_properties();
-          tx.set_reference_block( dyn_props.head_block_id );
-
-          // first, some bookkeeping, expire old items from _recently_generated_transactions
-          // since transactions include the head block id, we just need the index for keeping transactions unique
-          // when there are multiple transactions in the same block.  choose a time period that should be at
-          // least one block long, even in the worst case.  2 minutes ought to be plenty.
-          fc::time_point_sec oldest_transaction_ids_to_track(dyn_props.time - fc::minutes(2));
-          auto oldest_transaction_record_iter = _recently_generated_transactions.get<timestamp_index>().lower_bound(oldest_transaction_ids_to_track);
-          auto begin_iter = _recently_generated_transactions.get<timestamp_index>().begin();
-          _recently_generated_transactions.get<timestamp_index>().erase(begin_iter, oldest_transaction_record_iter);
-
-          uint32_t expiration_time_offset = 0;
-          for (;;)
-          {
-             tx.set_expiration( dyn_props.time + fc::seconds(30 + expiration_time_offset) );
-             tx.signatures.clear();
-
-             for( public_key_type& key : approving_key_set )
-             {
-                auto it = _keys.find(key);
-                if( it != _keys.end() )
-                {
-                   fc::optional<fc::ecc::private_key> privkey = wif_to_key( it->second );
-                   FC_ASSERT( privkey.valid(), "Malformed private key in _keys" );
-                   tx.sign( *privkey, _chain_id );
-                }
-                /// TODO: if transaction has enough signatures to be "valid" don't add any more,
-                /// there are cases where the wallet may have more keys than strictly necessary and
-                /// the transaction will be rejected if the transaction validates without requiring
-                /// all signatures provided
-             }
-
-             graphene::chain::transaction_id_type this_transaction_id = tx.id();
-             auto iter = _recently_generated_transactions.find(this_transaction_id);
-             if (iter == _recently_generated_transactions.end())
-             {
-                // we haven't generated this transaction before, the usual case
-                recently_generated_transaction_record this_transaction_record;
-                this_transaction_record.generation_time = dyn_props.time;
-                this_transaction_record.transaction_id = this_transaction_id;
-                _recently_generated_transactions.insert(this_transaction_record);
-                break;
-             }
-
-             // else we've generated a dupe, increment expiration time and re-sign it
-             ++expiration_time_offset;
-          }
-
-          if( broadcast )
-          {
-             try
-             {
-                _remote_net_broadcast->broadcast_transaction( tx );
-             }
-             catch (const fc::exception& e)
-             {
-                elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", tx.id().str())("e", e.to_detail_string()) );
-                throw;
-             }
-          }
-          return tx;
+           return tx;
        }
 
        signed_transaction sell_asset(string seller_account,
@@ -2771,6 +2773,24 @@
              return ss.str();
           };
 
+          m["get_irreversible_account_history"] = [this](variant result, const fc::variants& a)
+          {
+             auto r = result.as<irreversible_account_history_detail>();
+             std::stringstream ss;
+             ss << "next_start_sequence : " << r.next_start_sequence << "\n";
+             ss << "result_count : " << r.result_count << "\n";
+             for (operation_detail_ex &d : r.details)
+             {
+                 operation_history_object &i = d.op;
+                 auto b = _remote_db->get_block_header(i.block_num);
+                 FC_ASSERT(b);
+                 ss << b->timestamp.to_iso_string() << " ";
+                 i.op.visit(operation_printer(ss, *this, i.result));
+                 ss << " transaction_id : " << d.transaction_id.str() << "\n";
+             }
+
+             return ss.str();
+          };
           m["get_relative_account_history"] = [this](variant result, const fc::variants& a)
           {
               auto r = result.as<vector<operation_detail>>();
@@ -2803,6 +2823,22 @@
 
              return ss.str();
           };
+
+          m["list_account_lock_balances"] = [this](variant result, const fc::variants& a)
+          {
+             auto r = result.as<vector<asset>>();
+             vector<asset_object> asset_recs;
+             std::transform(r.begin(), r.end(), std::back_inserter(asset_recs), [this](const asset& a) {
+                return get_asset(a.asset_id);
+             });
+
+             std::stringstream ss;
+             for( unsigned i = 0; i < asset_recs.size(); ++i )
+                ss << asset_recs[i].amount_to_pretty_string(r[i]) << "\n";
+
+             return ss.str();
+          };
+
 
           m["get_blind_balances"] = [this](variant result, const fc::variants& a)
           {
@@ -3414,53 +3450,127 @@
           return result;
        }
 
-       void flood_network(string prefix, uint32_t number_of_transactions)
+       void flood_create_account(string prefix, uint32_t number_of_accounts)
+       { try {
+               const account_object &master = *_wallet.my_accounts.get<by_name>().lower_bound("import");
+
+               fc::time_point start = fc::time_point::now();
+               for (int i = 0; i < number_of_accounts; ++i) {
+                   std::ostringstream brain_key;
+                   brain_key << "brain key for account " << prefix << i;
+                   signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name, master.name, /* broadcast = */ true, /* save wallet = */ false);
+               }
+               fc::time_point end = fc::time_point::now();
+               ilog("Created ${n} accounts in ${time} milliseconds",
+                    ("n", number_of_accounts)("time", (end - start).count() / 1000));
+           } catch (...) {
+               throw;
+           }
+       }
+
+       void flood_transfer(string from_account, string account_prefix, uint32_t number_of_accounts, uint32_t number_of_loop)
        {
-          try
-          {
-             const account_object& master = *_wallet.my_accounts.get<by_name>().lower_bound("import");
-             int number_of_accounts = number_of_transactions / 3;
-             number_of_transactions -= number_of_accounts;
-             //auto key = derive_private_key("floodshill", 0);
-             try {
-                dbg_make_uia(master.name, "SHILL");
-             } catch(...) {/* Ignore; the asset probably already exists.*/}
+           fc::time_point start = fc::time_point::now();
+           for (int i = 0; i < number_of_loop; ++i) {
+               for (int j = 0; j < number_of_accounts; ++j) {
+                   try {
+                       signed_transaction trx = transfer(from_account, account_prefix + fc::to_string(j), "1", GRAPHENE_SYMBOL, "", true);
+                       trx = transfer(from_account, account_prefix + fc::to_string(i), "1", GRAPHENE_SYMBOL, "", true);
+                   } catch (...) {
+                   }
+               }
+           }
+           fc::time_point end = fc::time_point::now();
+           ilog("Transferred to ${n} accounts in ${time} milliseconds, loop ${l}",
+                   ("n", number_of_accounts * 2)("time", (end - start).count() / 1000)("l", number_of_loop));
+       }
 
-             fc::time_point start = fc::time_point::now();
-             for( int i = 0; i < number_of_accounts; ++i )
-             {
-                std::ostringstream brain_key;
-                brain_key << "brain key for account " << prefix << i;
-                signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name, master.name, /* broadcast = */ true, /* save wallet = */ false);
-             }
-             fc::time_point end = fc::time_point::now();
-             ilog("Created ${n} accounts in ${time} milliseconds",
-                  ("n", number_of_accounts)("time", (end - start).count() / 1000));
+      bool verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key)
+      {
+          return trx.validate_signee(pub_key, _chain_id);
+      }
 
-             start = fc::time_point::now();
-             for( int i = 0; i < number_of_accounts; ++i )
-             {
-                signed_transaction trx = transfer(master.name, prefix + fc::to_string(i), "10", "CORE", "", true);
-                trx = transfer(master.name, prefix + fc::to_string(i), "1", "CORE", "", true);
-             }
-             end = fc::time_point::now();
-             ilog("Transferred to ${n} accounts in ${time} milliseconds",
-                  ("n", number_of_accounts*2)("time", (end - start).count() / 1000));
+       void transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times)
+       {
+            FC_ASSERT( !self.is_locked() );
+            fc::optional<asset_object> asset_obj = get_asset("GXC");
+            FC_ASSERT(asset_obj, "Could not find asset GXC");
 
-             start = fc::time_point::now();
-             for( int i = 0; i < number_of_accounts; ++i )
-             {
-                signed_transaction trx = issue_asset(prefix + fc::to_string(i), "1000", "SHILL", "", true);
-             }
-             end = fc::time_point::now();
-             ilog("Issued to ${n} accounts in ${time} milliseconds",
-                  ("n", number_of_accounts)("time", (end - start).count() / 1000));
-          }
-          catch (...)
-          {
-             throw;
-          }
+            asset amount;
+            amount.asset_id = asset_obj->id;
+            amount.amount = 100000;
+            fc::optional<account_object> from_account_obj = get_account(from_account);
+            FC_ASSERT(from_account_obj, "Could not find account_object ${from_account}", ("from_account", from_account));
 
+            for(int i = 0; i < times; ++i) {
+                transfer_operation xfer_op;
+                xfer_op.from = from_account;
+                xfer_op.to = to_account;
+                xfer_op.amount = amount;
+                signed_transaction tx;
+                tx.operations.push_back(xfer_op);
+                set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, asset_obj);
+                tx.validate();
+                
+                vector<public_key_type> paying_keys = from_account_obj->active.get_keys();
+                auto dyn_props = get_dynamic_global_properties();
+                tx.set_expiration( dyn_props.time + fc::seconds(30 + i) );
+                for( public_key_type& key : paying_keys )
+                {
+                    auto it = _keys.find(key);
+                    if( it != _keys.end() )
+                    {
+                        fc::optional< fc::ecc::private_key > privkey = wif_to_key( it->second );
+                        FC_ASSERT( privkey.valid(), "Malformed private key in _keys" );
+                        tx.sign( *privkey, _chain_id );
+                    }
+                }
+                try
+                {
+                    _remote_net_broadcast->broadcast_transaction( tx );
+                }
+                catch (const fc::exception& e)
+                {
+                    elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", tx.id().str())("e", e.to_detail_string()) );
+                    throw;
+                }
+            }
+       }
+
+       fc::sha256 get_hash(const string& value)
+       {
+           return fc::sha256::hash(value);
+       }
+
+       void flood_network(string prefix, uint32_t number_of_transactions)
+       { try {
+               const u_int16_t loop_num = 1000;
+
+               const account_object &master = *_wallet.my_accounts.get<by_name>().lower_bound("import");
+               int number_of_accounts = number_of_transactions / loop_num;
+
+               fc::time_point start = fc::time_point::now();
+               for (int i = 0; i < number_of_accounts; ++i) {
+                   std::ostringstream brain_key;
+                   brain_key << "brain key for account " << prefix << i;
+                   signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name, master.name, /* broadcast = */ true, /* save wallet = */ false);
+               }
+               fc::time_point end = fc::time_point::now();
+               ilog("Created ${n} accounts in ${time} milliseconds",
+                    ("n", number_of_accounts)("time", (end - start).count() / 1000));
+               start = fc::time_point::now();
+               for (int i = 0; i < loop_num; ++i) {
+                   for (int j = 0; j < number_of_accounts; ++j) {
+                       signed_transaction trx = transfer(master.name, prefix + fc::to_string(j), "2", GRAPHENE_SYMBOL, "", true);
+                       trx = transfer(master.name, prefix + fc::to_string(i), "1", GRAPHENE_SYMBOL, "", true);
+                   }
+               }
+               end = fc::time_point::now();
+               ilog("Transferred to ${n} accounts in ${time} milliseconds, loop ${l}",
+                    ("n", number_of_accounts * 2)("time", (end - start).count() / 1000)("l", loop_num));
+           } catch (...) {
+               throw;
+           }
        }
 
        operation get_prototype_operation( string operation_name )
@@ -3663,6 +3773,11 @@
        return my->_remote_db->get_block(num);
     }
 
+    optional<signed_block_with_info> wallet_api::get_block_by_id(block_id_type block_id)const
+    {
+       return my->_remote_db->get_block_by_id(block_id);
+    }
+
     uint64_t wallet_api::get_account_count() const
     {
        return my->_remote_db->get_account_count();
@@ -3745,6 +3860,15 @@
        return my->_remote_db->get_account_balances(get_account(id).id, flat_set<asset_id_type>());
     }
 
+    vector<asset> wallet_api::list_account_lock_balances(const string& account_id_or_name)
+    {
+       if( auto real_id = detail::maybe_id<account_id_type>(account_id_or_name) ) {
+          return my->_remote_db->get_account_lock_balances(*real_id, flat_set<asset_id_type>());
+       }
+       return my->_remote_db->get_account_lock_balances(get_account(account_id_or_name).id, flat_set<asset_id_type>());
+    }
+
+
     vector<asset_object> wallet_api::list_assets(const string& lowerbound, uint32_t limit)const
     {
        return my->_remote_db->list_assets( lowerbound, limit );
@@ -3803,6 +3927,64 @@
         }
         result.details = detail_exs;
         result.total_without_operations = total;
+        return result;
+    }
+
+    irreversible_account_history_detail wallet_api::get_irreversible_account_history(string name, vector<uint32_t> operation_types, uint32_t start, int limit) const
+    {
+        irreversible_account_history_detail result;
+        auto account_id = get_account(name).get_id();
+
+        const auto& account = my->get_account(account_id);
+        const auto& stats = my->get_object(account.statistics);
+
+        // sequence of account_transaction_history_object start from 1
+        start = start == 0 ? 1 : start;
+
+        if (start <= stats.removed_ops) {
+            start = stats.removed_ops;
+        }
+        result.next_start_sequence = start;
+
+        // get irreversible block_num
+        uint32_t irreversible_block_num = get_dynamic_global_properties().last_irreversible_block_num;
+
+        // get operation history
+        uint32_t counter = start;
+        while (limit > 0 && counter <= stats.total_ops) {
+            uint32_t min_limit = std::min<uint32_t> (100, limit);
+            auto current = my->_remote_hist->get_account_history_by_operations(account_id, operation_types, start, min_limit);
+            uint16_t skip_count = 0;
+            for (auto& obj : current.operation_history_objs) {
+                // only keep irreversible operation history
+                if (obj.block_num > irreversible_block_num) {
+                    ++skip_count;
+                    continue;
+                }
+
+                std::stringstream ss;
+                auto memo = obj.op.visit(detail::operation_printer(ss, *my, obj.result));
+
+                transaction_id_type transaction_id;
+                auto block = get_block(obj.block_num);
+                if (block.valid() && obj.trx_in_block < block->transaction_ids.size()) {
+                    transaction_id = block->transaction_ids[obj.trx_in_block];
+                }
+                result.details.push_back(operation_detail_ex{memo, ss.str(), obj, transaction_id});
+            }
+
+            start += (current.total_without_operations > 0 ? current.total_without_operations : min_limit) - skip_count;
+            limit -= current.operation_history_objs.size() - skip_count;
+            counter += min_limit;
+
+            result.result_count += current.operation_history_objs.size() - skip_count;
+            result.next_start_sequence = start;
+
+            // current block_num > irreversible_block_num, break
+            if (skip_count > 0) {
+                break;
+            }
+        }
         return result;
     }
 
@@ -4026,6 +4208,11 @@
         return my->list_total_second_hand_transaction_counts_by_datasource(start_date_time, end_date_time, datasource_account);
     }
 
+    void wallet_api::get_tps()
+    {
+        return my->get_tps();
+    }
+
     string wallet_api::get_wallet_filename() const
     {
        return my->get_wallet_filename();
@@ -4061,13 +4248,9 @@
        return my->sign_builder_transaction(transaction_handle, broadcast);
     }
 
-    signed_transaction wallet_api::propose_builder_transaction(
-       transaction_handle_type handle,
-       time_point_sec expiration,
-       uint32_t review_period_seconds,
-       bool broadcast)
+    pair<transaction_id_type,signed_transaction> wallet_api::broadcast_transaction(signed_transaction tx)
     {
-       return my->propose_builder_transaction(handle, expiration, review_period_seconds, broadcast);
+       return my->broadcast_transaction(tx);
     }
 
     signed_transaction wallet_api::propose_builder_transaction2(
@@ -4268,6 +4451,19 @@
     fc::ecc::private_key wallet_api::derive_private_key(const std::string& prefix_string, int sequence_number) const
     {
        return detail::derive_private_key( prefix_string, sequence_number );
+    }
+
+    signed_transaction wallet_api::register_account2(string name,
+                                                    public_key_type owner_pubkey,
+                                                    public_key_type active_pubkey,
+                                                    public_key_type memo,
+                                                    string  registrar_account,
+                                                    string  referrer_account,
+                                                    uint32_t referrer_percent,
+                                                    string asset_symbol,
+                                                    bool broadcast)
+    {
+       return my->register_account2( name, owner_pubkey, active_pubkey, memo, registrar_account, referrer_account, referrer_percent, asset_symbol, broadcast );
     }
 
     signed_transaction wallet_api::register_account(string name,
@@ -4549,10 +4745,37 @@
        return my->network_get_connected_peers();
     }
 
-    void wallet_api::flood_network(string prefix, uint32_t number_of_transactions)
+    void wallet_api::flood_create_account(string account_prefix, uint32_t number_of_accounts)
     {
        FC_ASSERT(!is_locked());
-       my->flood_network(prefix, number_of_transactions);
+       my->flood_create_account(account_prefix, number_of_accounts);
+    }
+
+    void wallet_api::flood_transfer(string from_account, string account_prefix, uint32_t number_of_accounts, uint32_t number_of_loop)
+    {
+       FC_ASSERT(!is_locked());
+       my->flood_transfer(from_account, account_prefix, number_of_accounts, number_of_loop);
+    }
+
+    void wallet_api::transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times)
+    {
+        my->transfer_test(from_account, to_account, times);
+    }
+
+    fc::sha256 wallet_api::get_hash(const string& value)
+    {
+        return my->get_hash(value);
+    }
+
+    bool wallet_api::verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key)
+    {
+        return my->verify_transaction_signature(trx, pub_key);
+    }
+
+    void wallet_api::flood_network(string account_prefix, uint32_t number_of_transactions)
+    {
+       FC_ASSERT(!is_locked());
+       my->flood_network(account_prefix, number_of_transactions);
     }
 
     signed_transaction wallet_api::propose_league_update(
@@ -4687,6 +4910,13 @@
           ss << "The BRAIN_KEY will be used as the owner key, and the active key will be derived from the BRAIN_KEY.  Use\n";
           ss << "register_account if you already know the keys you know the public keys that you would like to register.\n";
 
+       }
+       else if( method == "register_account2" )
+       {
+          ss << "usage: register_account2 ACCOUNT_NAME OWNER_PUBLIC_KEY ACTIVE_PUBLIC_KEY MEMO_KEY REGISTRAR REFERRER REFERRER_PERCENT ASSET_SYMBOL BROADCAST\n\n";
+          ss << "example: register_account2 \"newaccount\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"1.3.11\" \"1.3.11\" 10 asset_symbol true\n";
+          ss << "\n";
+          ss << "Use this method to register an account for which you do not know the private keys.";
        }
        else if( method == "register_account" )
        {
@@ -5131,6 +5361,9 @@
        ilog( "about to validate" );
        conf.trx.validate();
 
+       ilog( "about to broadcast" );
+       conf.trx = sign_transaction( conf.trx, broadcast );
+
        if( broadcast && conf.outputs.size() == 2 ) {
 
            // Save the change
@@ -5147,9 +5380,6 @@
            receive_blind_transfer( conf_output.confirmation_receipt, from_blind_account_key_or_label, "@"+to_account.name );
            //} catch ( ... ){}
        }
-
-       ilog( "about to broadcast" );
-       conf.trx = sign_transaction( conf.trx, broadcast );
 
        return conf;
     } FC_CAPTURE_AND_RETHROW( (from_blind_account_key_or_label)(to_account_id_or_name)(amount_in)(symbol) ) }

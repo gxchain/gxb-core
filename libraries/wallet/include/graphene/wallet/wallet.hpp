@@ -285,6 +285,12 @@ struct account_history_operation_detail {
    vector<operation_detail_ex>  details;
 };
 
+struct irreversible_account_history_detail {
+    uint32_t                     next_start_sequence = 0;
+    uint32_t                     result_count = 0;
+    vector<operation_detail_ex>  details;
+};
+
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
  * performs minimal caching. This API could be provided locally to be used by a web interface.
@@ -481,7 +487,7 @@ class wallet_api
         * @param request_id
         * @param requester
         * @param datasource
-        * @param datasource_copyright_hash
+        * @param copyright_hash
         * @param broadcast
         * @return
         */
@@ -504,6 +510,8 @@ class wallet_api
        */
       variant_object                    about() const;
       optional<signed_block_with_info>    get_block( uint32_t num )const;
+      optional<signed_block_with_info>    get_block_by_id( block_id_type block_id )const;
+
       /** Returns the number of accounts registered on the blockchain
        * @returns the number of registered accounts
        */
@@ -598,6 +606,7 @@ class wallet_api
        * @returns a list of account objects
        */
       vector<account_object>            list_my_accounts();
+
       /** Lists all accounts registered in the blockchain.
        * This returns a list of all account names and their account ids, sorted by account name.
        *
@@ -611,6 +620,7 @@ class wallet_api
        * @returns a list of accounts mapping account names to account ids
        */
       map<string,account_id_type>       list_accounts(const string& lowerbound, uint32_t limit);
+
       /** List the balances of an account.
        * Each account can have multiple balances, one for each type of asset owned by that 
        * account.  The returned list will only contain assets for which the account has a
@@ -619,6 +629,16 @@ class wallet_api
        * @returns a list of the given account's balances
        */
       vector<asset>                     list_account_balances(const string& id);
+
+      /** List the lock balances of an account.
+       * Each account can have multiple lock balances, one for each type of asset owned by that 
+       * account.  The returned list will only contain assets for which the account has a
+       * nonzero balance
+       * @param account_id_or_name the name or id of the account whose lock balances you want
+       * @returns a list of the given account's lock balances(this time, lock balance type is only "GXS")
+       */
+      vector<asset>                     list_account_lock_balances(const string& account_id_or_name);
+
       /** Lists all assets registered on the blockchain.
        * 
        * To list all assets, pass the empty string \c "" for the lowerbound to start
@@ -640,12 +660,23 @@ class wallet_api
        */
       vector<operation_detail>  get_account_history(string name, int limit)const;
 
+      /**
+       * Get irreversible operations relevant to the specified account filtering by operation type, with transaction id
+       *
+       * @param name the name or id of the account, whose history shoulde be queried
+       * @param operation_types The IDs of the operation we want to get operations in the account( 0 = transfer , 1 = limit order create, ...)
+       * @param start the sequence number where to start looping back throw the history
+       * @param limit the max number of entries to return (from start number)
+       * @returns irreversible_account_history_detail
+       */
+      irreversible_account_history_detail get_irreversible_account_history(string name, vector<uint32_t> operation_types, uint32_t start, int limit) const;
+
       /** Returns the most recent operations on the named account.
        *
        * This returns a list of operation history objects, which describe activity on the account.
        *
-       * @param name the name or id of the account
-       * @param operations the type of operations
+       * @param account_name_or_id the name or id of the account
+       * @param operations_indexs the type of operations
        * @param start the start place of the operation_history_objects
        * @param limit the number of entries to return (starting from the most recent)
        * @returns account_history_operation_detail
@@ -775,16 +806,16 @@ class wallet_api
        * @ingroup Transaction Builder API
        */
       signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true);
+
+      /** Broadcast signed transaction
+       * @param tx signed transaction
+       * @returns the transaction ID along with the signed transaction.
+       */
+      pair<transaction_id_type,signed_transaction> broadcast_transaction(signed_transaction tx);
+
       /**
        * @ingroup Transaction Builder API
        */
-      signed_transaction propose_builder_transaction(
-          transaction_handle_type handle,
-          time_point_sec expiration = time_point::now() + fc::minutes(1),
-          uint32_t review_period_seconds = 0,
-          bool broadcast = true
-         );
-
       signed_transaction propose_builder_transaction2(
          transaction_handle_type handle,
          string account_name_or_id,
@@ -913,7 +944,7 @@ class wallet_api
       * @see suggest_brain_key()
       *
       * @param brain_key    Brain key
-      * @param numberOfDesiredKeys  Number of desired keys
+      * @param number_of_desired_keys  Number of desired keys
       * @return A list of keys that are deterministically derived from the brainkey
       */
      vector<brain_key_info> derive_owner_keys_from_brain_key(string brain_key, int number_of_desired_keys = 1) const;
@@ -1004,6 +1035,42 @@ class wallet_api
                                           uint32_t referrer_percent,
                                           bool broadcast = false);
 
+      /** Registers a third party's account on the blockckain.
+       *
+       * This function is used to register an account for which you do not own the private keys.
+       * When acting as a registrar, an end user will generate their own private keys and send
+       * you the public keys.  The registrar will use this function to register the account
+       * on behalf of the end user.
+       *
+       * @see create_account_with_brain_key()
+       *
+       * @param name the name of the account, must be unique on the blockchain.  Shorter names
+       *             are more expensive to register; the rules are still in flux, but in general
+       *             names of more than 8 characters with at least one digit will be cheap.
+       * @param owner the owner key for the new account
+       * @param active the active key for the new account
+       * @param memo the memo key for the new account
+       * @param registrar_account the account which will pay the fee to register the user
+       * @param referrer_account the account who is acting as a referrer, and may receive a
+       *                         portion of the user's transaction fees.  This can be the
+       *                         same as the registrar_account if there is no referrer.
+       * @param referrer_percent the percentage (0 - 100) of the new user's transaction fees
+       *                         not claimed by the blockchain that will be distributed to the
+       *                         referrer; the rest will be sent to the registrar.  Will be
+       *                         multiplied by GRAPHENE_1_PERCENT when constructing the transaction.
+       * @param asset_symbol the symbol or id of the fee.
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction registering the account
+       */
+      signed_transaction register_account2(string name,
+                                          public_key_type owner,
+                                          public_key_type active,
+                                          public_key_type memo,
+                                          string  registrar_account,
+                                          string  referrer_account,
+                                          uint32_t referrer_percent,
+                                          string asset_symbol,
+                                          bool broadcast = false);
       /**
        *  Upgrades an account to prime status.
        *  This makes the account holder a 'lifetime member'.
@@ -1249,8 +1316,9 @@ class wallet_api
        *  that it exists in the blockchain.  If it exists then it will report the amount received and
        *  who sent it.
        *
-       *  @param opt_from - if not empty and the sender is a unknown public key, then the unknown public key will be given the label opt_from
        *  @param confirmation_receipt - a base58 encoded stealth confirmation 
+       *  @param opt_from - if not empty and the sender is a unknown public key, then the unknown public key will be given the label opt_from
+       *  @opt_memo - memo
        */
       blind_receipt receive_blind_transfer( string confirmation_receipt, string opt_from, string opt_memo );
 
@@ -1697,7 +1765,7 @@ class wallet_api
       /**
        * Update a witness object owned by the given account.
        *
-       * @param witness The name of the witness's owner account.  Also accepts the ID of the owner account or the ID of the witness.
+       * @param witness_name The name of the witness's owner account.  Also accepts the ID of the owner account or the ID of the witness.
        * @param url Same as for create_witness.  The empty string makes it remain the same.
        * @param block_signing_key The new block signing public key.  The empty string makes it remain the same.
        * @param asset_symbol the symbol or id of the fee.
@@ -2019,7 +2087,57 @@ class wallet_api
       void dbg_stream_json_objects( const std::string& filename );
       void dbg_update_object( fc::variant_object update );
 
-      void flood_network(string prefix, uint32_t number_of_transactions);
+      /** flood_network
+       *
+       * @param account_prefix
+       * @param number_of_transactions
+       * @return
+       */
+      void flood_network(string account_prefix, uint32_t number_of_transactions);
+      /** flood_create_account
+       *
+       * @param account_prefix
+       * @param number_of_accounts
+       * @return
+       */
+      void flood_create_account(string account_prefix, uint32_t number_of_accounts);
+      /** flood_transfer
+       *
+       * @param from_account
+       * @param account_prefix
+       * @param number_of_accounts
+       * @param number_of_loop
+       * @return
+       */
+      void flood_transfer(string from_account, string account_prefix, uint32_t number_of_accounts, uint32_t number_of_loop);
+
+      /** transfer_test, Efficient transfer api
+       *
+       * @param from_account
+       * @param to_account
+       * @param times
+       * @return
+       */
+      void transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times);
+
+      /** verify_transaction_signature 
+       * @param trx
+       * @param public_key
+       * @return bool
+       */
+      bool verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key);
+
+      /** get tps
+       * @return
+       */
+      void get_tps();
+
+      /** get_hash
+       *
+       * @param value
+       * @return fc::sha256
+       */
+      fc::sha256 get_hash(const string& value);
 
       void network_add_nodes( const vector<string>& nodes );
       vector< variant > network_get_connected_peers();
@@ -2104,6 +2222,9 @@ FC_REFLECT( graphene::wallet::operation_detail_ex,
 FC_REFLECT( graphene::wallet::account_history_operation_detail,
             (total_without_operations)(details))
 
+FC_REFLECT( graphene::wallet::irreversible_account_history_detail,
+            (next_start_sequence)(result_count)(details))
+
 FC_API( graphene::wallet::wallet_api,
         (help)
         (gethelp)
@@ -2115,7 +2236,7 @@ FC_API( graphene::wallet::wallet_api,
         (set_fees_on_builder_transaction)
         (preview_builder_transaction)
         (sign_builder_transaction)
-        (propose_builder_transaction)
+        (broadcast_transaction)
         (propose_builder_transaction2)
         (remove_builder_transaction)
         (is_new)
@@ -2125,6 +2246,7 @@ FC_API( graphene::wallet::wallet_api,
         (list_my_accounts)
         (list_accounts)
         (list_account_balances)
+        (list_account_lock_balances)
         (list_assets)
         (import_key)
         (import_accounts)
@@ -2133,6 +2255,7 @@ FC_API( graphene::wallet::wallet_api,
         (suggest_brain_key)
         (derive_owner_keys_from_brain_key)
         (register_account)
+        (register_account2)
         (upgrade_account)
         (create_account_with_brain_key)
         (sell_asset)
@@ -2174,10 +2297,12 @@ FC_API( graphene::wallet::wallet_api,
         (get_account)
         (get_account_id)
         (get_block)
+        (get_block_by_id)
         (get_commission_percent)
         (get_account_count)
         (get_account_history)
         (get_account_history_by_operations)
+        (get_irreversible_account_history)
         (get_relative_account_history)
         (get_data_transaction_product_costs)
         (get_data_transaction_total_count)
@@ -2215,7 +2340,13 @@ FC_API( graphene::wallet::wallet_api,
         (dbg_generate_blocks)
         (dbg_stream_json_objects)
         (dbg_update_object)
+        (flood_transfer)
+        (transfer_test)
+        (verify_transaction_signature)
         (flood_network)
+        (flood_create_account)
+        (get_tps)
+        (get_hash)
         (network_add_nodes)
         (network_get_connected_peers)
         (set_key_label)

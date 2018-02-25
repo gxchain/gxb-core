@@ -120,7 +120,7 @@ namespace graphene { namespace chain {
    };
 
    struct lock_balance_params_t {
-       vector< pair<string, interest_rate_t> > params;
+       vector< pair<fc::string, interest_rate_t> > params;
    };
 
    typedef fc::ecc::private_key        private_key_type;

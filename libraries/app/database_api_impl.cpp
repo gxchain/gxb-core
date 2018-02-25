@@ -68,7 +68,7 @@ optional<T> maybe_id( const string& name_or_id )
 //////////////////////////////////////////////////////////////////////
 database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
 {
-   dlog("creating database api ${x}", ("x",int64_t(this)) );
+   dlog("creating database api ${x}", ("x",int64_t(this)));
    _new_connection = _db.new_objects.connect([this](const vector<object_id_type>& ids, const flat_set<account_id_type>& impacted_accounts) {
                                 on_objects_new(ids, impacted_accounts);
                                 });
@@ -92,6 +92,7 @@ database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
 
 database_api_impl::~database_api_impl()
 {
+    dlog("freeing database api ${x}", ("x", int64_t(this)));
 }
 
 fc::variants database_api_impl::get_objects(const vector<object_id_type>& ids)const
@@ -177,6 +178,11 @@ optional<signed_block_with_info> database_api_impl::get_block(uint32_t block_num
    return _db.fetch_block_by_number(block_num);
 }
 
+optional<signed_block_with_info> database_api_impl::get_block_by_id(block_id_type block_id)const
+{
+   return _db.fetch_block_by_id(block_id);
+}
+
 processed_transaction database_api_impl::get_transaction(uint32_t block_num, uint32_t trx_num)const
 {
    auto opt_block = _db.fetch_block_by_number(block_num);
@@ -199,7 +205,7 @@ data_transaction_commission_percent_t database_api_impl::get_commission_percent(
             return ext.get<data_transaction_commission_percent_t>();
         }
     }
-    FC_THROW("no ommission_rate");
+    return data_transaction_commission_percent_t();
 }
 
 chain_property_object database_api_impl::get_chain_properties()const
@@ -388,10 +394,10 @@ std::map<std::string, full_account> database_api_impl::get_full_accounts( const 
                     });
     
       auto balance_locked_range = _db.get_index_type<account_balance_locked_index>().indices().get<by_account_asset>().equal_range(boost::make_tuple(account->id));
-      //vector<lock_balance_object> locked_balances;
+      //vector<account_balance_locked_object> locked_balances;
       std::for_each(balance_locked_range.first, balance_locked_range.second,
-                    [&acnt](const lock_balance_object& locked_balance) {
-                       acnt.lock_balances.emplace_back(locked_balance);
+                    [&acnt](const lock_balance_object& lock_balance) {
+                       acnt.locked_balances.emplace_back(lock_balance);
                     });
 
       // Add the account's vesting balances
@@ -516,6 +522,46 @@ vector<asset> database_api_impl::get_account_balances(account_id_type acnt, cons
    return result;
 }
 
+vector<asset> database_api_impl::get_account_lock_balances(account_id_type acnt, const flat_set<asset_id_type>& assets)const
+{
+    vector<asset> result;
+    flat_set<asset_id_type> asset_ids;
+    const account_balance_locked_index& lock_balance_index = _db.get_index_type<account_balance_locked_index>();
+    auto lock_blance_range = lock_balance_index.indices().get<by_account_asset>().equal_range(boost::make_tuple(acnt));
+
+    if (assets.empty())
+    {
+       // if the caller passes in an empty list of assets, return lock balances for all assets the account 
+       const account_balance_index& balance_index = _db.get_index_type<account_balance_index>();
+       auto balance_range = balance_index.indices().get<by_account_asset>().equal_range(boost::make_tuple(acnt));
+
+       for (const account_balance_object& balance : boost::make_iterator_range(balance_range.first, balance_range.second))
+       {
+          asset_ids.insert(balance.asset_type);
+       }
+    }
+    else
+    {
+       asset_ids = assets;
+    }
+
+    result.reserve(assets.size());
+    for (const asset_id_type& asset_id : asset_ids)
+    {
+       share_type amount = 0;
+       for (const lock_balance_object& lock_balance : boost::make_iterator_range(lock_blance_range.first, lock_blance_range.second))
+       {
+          if (asset_id == lock_balance.amount.asset_id)
+          {
+             amount += lock_balance.amount.amount;
+          }
+       }
+       result.push_back({amount, asset_id});
+    }
+
+    return result;
+}
+
 vector<asset> database_api_impl::get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets) const
 {
    const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
@@ -629,198 +675,53 @@ vector<optional<asset_object>> database_api_impl::lookup_asset_symbols(const vec
 
 uint64_t database_api_impl::get_data_transaction_product_costs(fc::time_point_sec start, fc::time_point_sec end) const
 {
-    uint64_t result = 0;
-    const auto& data_transaction_by_id = _db.get_index_type<data_transaction_index>().indices().get<by_id>();
-    for(const auto& data_transaction_obj:data_transaction_by_id)
-    {
-        if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
-            result += data_transaction_obj.product_pay;
-        }
-    }
-    return result;
+    return 0;
 }
 
 uint64_t database_api_impl::get_data_transaction_total_count(fc::time_point_sec start, fc::time_point_sec end) const
 {
-    uint64_t result = 0;
-    const auto& data_transaction_by_id = _db.get_index_type<data_transaction_index>().indices().get<by_id>();
-    for(const auto& data_transaction_obj:data_transaction_by_id)
-    {
-        if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
-            ++result;
-        }
-    }
-    return result;
+    return 0;
 }
 
 uint64_t database_api_impl::get_merchants_total_count() const
 {
-    uint64_t result = 0;
-    const auto& account_by_id = _db.get_index_type<account_index>().indices().get<by_id>();
-    for (const auto& account_obj : account_by_id) {
-        if (account_obj.is_merchant_member()) {
-            ++result;
-        }
-    }
-    return result;
+    return 0;
 }
 
 uint64_t database_api_impl::get_data_transaction_commission(fc::time_point_sec start, fc::time_point_sec end) const
 {
-    uint64_t result = 0;
-    const auto& data_transaction_by_id = _db.get_index_type<data_transaction_index>().indices().get<by_id>();
-    for(const auto& data_transaction_obj:data_transaction_by_id)
-    {
-        if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
-            result += data_transaction_obj.commission;
-        }
-    }
-    return result;
+    return 0;
 }
 
 uint64_t database_api_impl::get_data_transaction_pay_fee(fc::time_point_sec start, fc::time_point_sec end) const
 {
-    uint64_t result = 0;
-    const auto& data_transaction_by_id = _db.get_index_type<data_transaction_index>().indices().get<by_id>();
-    for(const auto& data_transaction_obj:data_transaction_by_id)
-    {
-        if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
-            result += data_transaction_obj.commission;
-        }
-    }
-    return result;
+    return 0;
 }
 
 
 uint64_t database_api_impl::get_data_transaction_product_costs_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const
 {
-    uint64_t result = 0;
-    account_id_type account_id;
-    if (std::isdigit(requester.front())) {
-        account_id = fc::variant(requester).as<account_id_type>();
-    }
-    else {
-        auto rec = lookup_account_names({requester}).front();
-        if (rec && rec->name == requester) {
-            account_id = rec->get_id();
-        }
-        else
-            return result;
-    }
-    const auto& data_transaction_by_requester = _db.get_index_type<data_transaction_index>().indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
-    for(const auto& data_transaction_obj:boost::make_iterator_range( data_transaction_by_requester.first, data_transaction_by_requester.second ))
-    {
-        if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
-            result += data_transaction_obj.product_pay;
-        }
-    }
-    return result;
+    return 0;
 }
 
 uint64_t database_api_impl::get_data_transaction_total_count_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const
 {
-    uint64_t result = 0;
-    account_id_type account_id;
-    if (std::isdigit(requester.front())) {
-        account_id = fc::variant(requester).as<account_id_type>();
-    }
-    else {
-        auto rec = lookup_account_names({requester}).front();
-        if (rec && rec->name == requester) {
-            account_id = rec->get_id();
-        }
-        else
-            return result;
-    }
-    const auto& data_transaction_by_requester = _db.get_index_type<data_transaction_index>().indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
-    for(const auto& data_transaction_obj:boost::make_iterator_range( data_transaction_by_requester.first, data_transaction_by_requester.second ))
-    {
-        if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
-            ++result;
-        }
-    }
-    return result;
+    return 0;
 }
 
 uint64_t database_api_impl::get_data_transaction_pay_fees_by_requester(string requester, fc::time_point_sec start, fc::time_point_sec end) const
 {
-    uint64_t result = 0;
-    account_id_type account_id;
-    if (std::isdigit(requester.front())) {
-        account_id = fc::variant(requester).as<account_id_type>();
-    }
-    else {
-        auto rec = lookup_account_names({requester}).front();
-        if (rec && rec->name == requester) {
-            account_id = rec->get_id();
-        }
-        else
-            return result;
-    }
-    const auto& data_transaction_by_requester = _db.get_index_type<data_transaction_index>().indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
-    for(const auto& data_transaction_obj:boost::make_iterator_range( data_transaction_by_requester.first, data_transaction_by_requester.second ))
-    {
-        if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end){
-            result += data_transaction_obj.transaction_fee;
-        }
-    }
-    return result;
+    return 0;
 }
 
 uint64_t database_api_impl::get_data_transaction_product_costs_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const
 {
-    uint64_t result = 0;
-    const auto& data_transaction_by_id = _db.get_index_type<data_transaction_index>().indices().get<by_id>();
-    fc::optional<free_data_product_id_type> free_data_product_id = maybe_id<free_data_product_id_type>(product_id);
-    fc::optional<league_data_product_id_type> league_data_product_id = maybe_id<league_data_product_id_type>(product_id);
-    if (free_data_product_id) {
-        for(const auto& data_transaction_obj:data_transaction_by_id)
-        {
-            if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end && data_transaction_obj.product_id == free_data_product_id){
-                result += data_transaction_obj.product_pay;
-            }
-        }
-    }
-    else if (league_data_product_id){
-        for(const auto& data_transaction_obj:data_transaction_by_id)
-        {
-            if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end && data_transaction_obj.product_id == league_data_product_id){
-                result += data_transaction_obj.product_pay;
-             }
-        }
-    }
-    else{
-        FC_ASSERT(false, "product_id is invalid");
-    }
-    return result;
+    return 0;
 }
 
 uint64_t database_api_impl::get_data_transaction_total_count_by_product_id(string product_id, fc::time_point_sec start, fc::time_point_sec end) const
 {
-    uint64_t result = 0;
-    const auto& data_transaction_by_id = _db.get_index_type<data_transaction_index>().indices().get<by_id>();
-    fc::optional<free_data_product_id_type> free_data_product_id = maybe_id<free_data_product_id_type>(product_id);
-    fc::optional<league_data_product_id_type> league_data_product_id = maybe_id<league_data_product_id_type>(product_id);
-    if (free_data_product_id) {
-        for(const auto& data_transaction_obj:data_transaction_by_id)
-        {
-            if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end && data_transaction_obj.product_id == free_data_product_id){
-                ++result;
-            }
-        }
-    }
-    else if (league_data_product_id){
-        for(const auto& data_transaction_obj:data_transaction_by_id)
-        {
-            if (data_transaction_obj.create_date_time >= start && data_transaction_obj.create_date_time <= end && data_transaction_obj.product_id == league_data_product_id){
-                ++result;
-             }
-        }
-    }
-    else{
-        FC_ASSERT(false, "product_id is invalid");
-    }
-    return result;
+    return 0;
 }
 
 map<account_id_type, uint64_t> database_api_impl::list_data_transaction_complain_requesters(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint8_t limit) const
@@ -1376,9 +1277,6 @@ set<public_key_type> database_api_impl::get_potential_signatures( const signed_t
          const auto& auth = id(_db).active;
          for( const auto& k : auth.get_keys() )
             result.insert(k);
-         // Also insert owner keys since owner can authorize a trx that requires active only
-         for( const auto& k : id(_db).owner.get_keys() )
-            result.insert(k);
          return &auth;
       },
       [&]( account_id_type id )
@@ -1390,15 +1288,6 @@ set<public_key_type> database_api_impl::get_potential_signatures( const signed_t
       },
       _db.get_global_properties().parameters.max_authority_depth
    );
-
-   // Insert keys in required "other" authories
-   flat_set<account_id_type> required_active;
-   flat_set<account_id_type> required_owner;
-   vector<authority> other;
-   trx.get_required_authorities( required_active, required_owner, other );
-   for( const auto& auth : other )
-      for( const auto& key : auth.get_keys() )
-         result.insert( key );
 
    dlog("result ${result}",("result", result));
    return result;
@@ -1674,7 +1563,7 @@ vector<T> paging(vector<T> vector_temp,uint32_t offset,uint32_t limit){
         uint32_t num = 0;
         typename vector<T>::iterator v;
         v = vector_temp.begin();
-        advance(v,offset);
+        std::advance(v,offset);
         for(;v!=vector_temp.end();v++){
             if(num==limit){
                 break;
@@ -2007,36 +1896,6 @@ league_data_product_search_results_object   database_api_impl::list_league_data_
 data_transaction_search_results_object database_api_impl::list_data_transactions_by_requester(string requester, uint32_t limit) const {
     // FC_ASSERT(limit <= 100);
     data_transaction_search_results_object search_result;
-    vector<data_transaction_object> results_tmp;
-
-    // get accounte_id
-    account_id_type account_id;
-    if (std::isdigit(requester.front())) {
-        account_id = fc::variant(requester).as<account_id_type>();
-    }
-    else {
-        auto rec = lookup_account_names({requester}).front();
-        if (rec && rec->name == requester) {
-            account_id = rec->get_id();
-        }
-        else
-            return {};
-    }
-
-    const data_transaction_index & product_index = _db.get_index_type<data_transaction_index>();
-    auto range = product_index.indices().get<by_requester>().equal_range(boost::make_tuple(account_id));
-
-    for (const data_transaction_object& data_transaction : boost::make_iterator_range(range.first, range.second)) {
-        results_tmp.push_back(data_transaction);
-    }
-    // sort by create_date_time
-    std::sort(results_tmp.begin(), results_tmp.end(), sort_data_transaction_object_by_create_date_time());
-
-    vector<data_transaction_object> paging_results;
-    paging_results = paging(results_tmp, 0, limit);
-
-    search_result.data = paging_results;
-    search_result.total = results_tmp.size();
     return search_result;
 }
 
@@ -2069,10 +1928,16 @@ uint32_t database_api_impl::list_total_second_hand_transaction_counts_by_datasou
  }
 
 optional<data_transaction_object> database_api_impl::get_data_transaction_by_request_id(string request_id) const {
-    const data_transaction_index & product_index = _db.get_index_type<data_transaction_index>();
-    auto maybe_found = product_index.indices().get<by_request_id>().find(request_id);
-    if (maybe_found != product_index.indices().get<by_request_id>().end()) {
-        return *maybe_found;
+    vector<data_transaction_object> result;
+
+    const auto& dt_idx = _db.get_index_type<data_transaction_index>();
+    auto range = dt_idx.indices().get<by_request_id>().equal_range(request_id);
+    for (const auto& obj : boost::make_iterator_range(range.first, range.second)) {
+        result.push_back(obj);
+    }
+
+    if (!result.empty()) {
+        return result.back();
     }
     return {};
 }

@@ -93,6 +93,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Blocks and transactions
       optional<block_header> get_block_header(uint32_t block_num)const;
       optional<signed_block_with_info> get_block(uint32_t block_num)const;
+      optional<signed_block_with_info> get_block_by_id(block_id_type block_id)const;
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
 
       // Globals
@@ -118,6 +119,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Balances
       vector<asset> get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
+      vector<asset> get_account_lock_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
       vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
       vector<balance_object> get_balance_objects( const vector<address>& addrs )const;
       vector<asset> get_vested_balances( const vector<balance_id_type>& objs )const;
