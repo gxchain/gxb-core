@@ -118,6 +118,11 @@ optional<signed_block_with_info> database_api::get_block(uint32_t block_num)cons
    return my->get_block( block_num );
 }
 
+optional<signed_block_with_info> database_api::get_block_by_id(block_id_type block_id)const
+{
+   return my->get_block_by_id( block_id );
+}
+
 processed_transaction database_api::get_transaction( uint32_t block_num, uint32_t trx_in_block )const
 {
    return my->get_transaction( block_num, trx_in_block );
@@ -298,6 +303,10 @@ vector<asset> database_api::get_account_balances(account_id_type id, const flat_
    return my->get_account_balances( id, assets );
 }
 
+vector<asset> database_api::get_account_lock_balances(account_id_type id, const flat_set<asset_id_type>& assets)const
+{
+   return my->get_account_lock_balances( id, assets );
+}
 
 vector<asset> database_api::get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const
 {

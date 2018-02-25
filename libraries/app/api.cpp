@@ -286,7 +286,7 @@ namespace graphene { namespace app {
         operation_history_objs_tmp = get_relative_account_history(account, start, limit, limit + start - 1);
         for(auto& operation_history_obj : operation_history_objs_tmp){
             ++total;
-            if (find(operation_indexs.begin(), operation_indexs.end(), operation_history_obj.op.which()) != operation_indexs.end()){
+            if (operation_indexs.empty() || find(operation_indexs.begin(), operation_indexs.end(), operation_history_obj.op.which()) != operation_indexs.end()){
                 operation_history_objs.push_back(operation_history_obj);
             }
         }

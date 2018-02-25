@@ -122,6 +122,13 @@ class database_api
       optional<signed_block_with_info> get_block(uint32_t block_num)const;
 
       /**
+       * @brief Retrieve a full, signed block
+       * @param block_id of the block to be returned
+       * @return the referenced block, or null if no matching block was found
+       */
+      optional<signed_block_with_info> get_block_by_id(block_id_type block_id)const;
+
+      /**
        * @brief used to fetch an individual transaction.
        */
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
@@ -244,6 +251,14 @@ class database_api
        * @return Balances of the account
        */
       vector<asset> get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
+
+      /**
+       * @brief Get an account's lock balances in various assets
+       * @param id ID of the account to get lock balances for
+       * @param assets IDs of the assets to get lock balances of; if empty, get all assets account has a lock balance in
+       * @return lock balances of the account
+       */
+      vector<asset> get_account_lock_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
 
       /// Semantically equivalent to @ref get_account_balances, but takes a name instead of an ID.
       vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
@@ -791,6 +806,7 @@ FC_API(graphene::app::database_api,
    // Blocks and transactions
    (get_block_header)
    (get_block)
+   (get_block_by_id)
    (get_transaction)
    (get_recent_transaction_by_id)
 
@@ -831,6 +847,7 @@ FC_API(graphene::app::database_api,
 
    // Balances
    (get_account_balances)
+   (get_account_lock_balances)
    (get_named_account_balances)
    (get_balance_objects)
    (get_vested_balances)

@@ -29,11 +29,11 @@ namespace graphene { namespace chain {
            uint64_t fee  = 10 * GRAPHENE_BLOCKCHAIN_PRECISION;
         };
 
-        string                              product_name;
-        string                              brief_desc;
+        fc::string                          product_name;
+        fc::string                          brief_desc;
         data_market_category_id_type        category_id;
         uint64_t                            refer_price;
-        string                              icon;
+        fc::string                          icon;
         vector<schema_context_object>       schema_contexts;
         account_id_type                     issuer;
         time_point_sec                      create_date_time;;
@@ -55,12 +55,12 @@ namespace graphene { namespace chain {
         };
 
         league_data_product_id_type                  league_data_product;
-        optional < string >                          new_product_name;
-        optional < string >                          new_brief_desc;
+        optional < fc::string >                      new_product_name;
+        optional < fc::string >                      new_brief_desc;
         optional < data_market_category_id_type >    new_category_id;
         optional < uint64_t >                        new_refer_price;
         optional < uint8_t >                         new_status;
-        optional < string >                          new_icon;
+        optional < fc::string >                      new_icon;
         optional < vector<schema_context_object> >   new_schema_contexts;
         asset                                        fee;
         extensions_type                              extensions;

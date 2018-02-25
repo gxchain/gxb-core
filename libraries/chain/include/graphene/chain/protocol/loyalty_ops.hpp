@@ -35,11 +35,11 @@ namespace graphene { namespace chain {
       asset                             fee;
       account_id_type                   account;
       time_point_sec                    create_date_time;
-      string                            program_id;
+      fc::string                        program_id;
       asset                             amount;
       uint32_t                          lock_days = 0;
       uint32_t                          interest_rate = 0;
-      string                            memo;
+      fc::string                        memo;
       extensions_type                   extensions;
 
       account_id_type fee_payer()const { return account; }

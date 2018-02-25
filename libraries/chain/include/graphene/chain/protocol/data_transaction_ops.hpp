@@ -32,10 +32,10 @@ namespace graphene { namespace chain {
         struct fee_parameters_type {
            uint64_t fee  = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
         };
-        string                                      request_id;
+        fc::string                                  request_id;
         object_id_type                              product_id;
-        string                                      version;
-        string                                      params;
+        fc::string                                  version;
+        fc::string                                  params;
         asset                                       fee;
         account_id_type                             requester;
         time_point_sec                              create_date_time;
@@ -45,7 +45,7 @@ namespace graphene { namespace chain {
         account_id_type fee_payer() const { return requester; }
         void validate() const { }
 
-        string get_request_id() const {
+        fc::string get_request_id() const {
             return request_id;
         }
 
@@ -59,11 +59,11 @@ namespace graphene { namespace chain {
         struct fee_parameters_type {
            uint64_t fee  = 0;
         };
-        string                                          request_id;
+        fc::string                                      request_id;
         uint8_t                                         new_status = 0;
         account_id_type                                 new_requester;
         asset                                           fee;
-        fc::optional<string>                            new_memo = fc::optional<string>();
+        fc::optional<fc::string>                        new_memo = fc::optional<fc::string>();
         extensions_type                                 extensions;
 
 
@@ -79,7 +79,7 @@ namespace graphene { namespace chain {
         struct fee_parameters_type {
            uint64_t fee  = 0;
         };
-        string                                          request_id;
+        fc::string                                      request_id;
         account_id_type                                 requester;
         account_id_type                                 datasource;
         asset                                           fee;
@@ -97,7 +97,7 @@ namespace graphene { namespace chain {
         struct fee_parameters_type {
            uint64_t fee  = 0;
         };
-        string                                          request_id;
+        fc::string                                      request_id;
         account_id_type                                 datasource;
         asset                                           fee;
         extensions_type                                 extensions;
@@ -114,12 +114,12 @@ namespace graphene { namespace chain {
         struct fee_parameters_type {
            uint64_t fee = 0;
         };
-        string                                          request_id;
+        fc::string                                      request_id;
         account_id_type                                 requester;
         account_id_type                                 datasource;
         asset                                           fee;
-        string                                          merchant_copyright_hash;
-        string                                          datasource_copyright_hash;
+        fc::string                                      merchant_copyright_hash;
+        fc::string                                      datasource_copyright_hash;
         time_point_sec                                  create_date_time;
         extensions_type                                 extensions;
 

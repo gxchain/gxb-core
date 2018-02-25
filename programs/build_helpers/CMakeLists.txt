@@ -1,4 +1,4 @@
-link_directories("${PROJECT_SOURCE_DIR}/libraries/chain/lib")
+link_directories("${PROJECT_BINARY_DIR}/libraries/chain")
 add_executable( cat-parts cat-parts.cpp )
 if( UNIX AND NOT APPLE )
   set(rt_library rt )

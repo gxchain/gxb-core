@@ -33,9 +33,9 @@ namespace graphene {
             static const uint8_t space_id = protocol_ids;
             static const uint8_t type_id = league_data_product_object_type;
 
-            string                                  product_name;
+            fc::string                              product_name;
             // product brief description
-            string                                  brief_desc;
+            fc::string                              brief_desc;
             // data market category id
             data_market_category_id_type            category_id;
             // default reference price of data product, real price is in league object
@@ -45,7 +45,7 @@ namespace graphene {
             // 0 --> init, 1 --> online, 2 --> offline
             uint8_t                                 status;
             // icon of data product
-            string                                  icon;
+            fc::string                              icon;
             // schema of input/output in data_transaction
             vector<schema_context_object>           schema_contexts;
             time_point_sec                          create_date_time;
