@@ -1,4 +1,7 @@
-link_directories("${PROJECT_SOURCE_DIR}/libraries/chain/lib")
+add_library(graphene_chain STATIC IMPORTED)
+set_property(TARGET graphene_chain PROPERTY IMPORTED_LOCATION
+    ${PROJECT_BINARY_DIR}/libraries/chain/libgraphene_chain.a)
+
 add_executable( witness_node main.cpp )
 if( UNIX AND NOT APPLE )
   set(rt_library rt )
@@ -12,7 +15,10 @@ endif()
 
 # We have to link against graphene_debug_witness because deficiency in our API infrastructure doesn't allow plugins to be fully abstracted #246
 target_link_libraries( witness_node
-                       PRIVATE graphene_app graphene_delayed_node graphene_account_history graphene_market_history graphene_witness graphene_chain graphene_debug_witness graphene_egenesis_full fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
+                       PRIVATE graphene_app graphene_delayed_node
+                       graphene_account_history graphene_market_history
+                       graphene_witness graphene_chain graphene_debug_witness
+                       graphene_data_transaction graphene_egenesis_full fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
 
 install( TARGETS
    witness_node

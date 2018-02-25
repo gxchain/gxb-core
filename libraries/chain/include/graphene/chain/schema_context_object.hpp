@@ -29,8 +29,8 @@ namespace graphene {
          */
         struct  schema_context_object
         {
-            string      version;
-            string      schema_context;;
+            fc::string      version;
+            fc::string      schema_context;;
 
             schema_context_object& operator= (const schema_context_object &obj) {
                 this->version = obj.version;
@@ -39,12 +39,12 @@ namespace graphene {
             }
 
             friend bool operator< (const schema_context_object& l, const schema_context_object& r) {
-                return l.version.compare(r.version) < 0;
+                return l.version < r.version;
             }
 
             // for sort
             friend bool  operator ==  (const schema_context_object& l, const schema_context_object& r) {
-                return (l.version.compare(r.version) == 0); 
+                return l.version == r.version;
             }
         };
 

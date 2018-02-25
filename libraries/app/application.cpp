@@ -161,11 +161,13 @@ namespace detail {
          else
          {
             vector<string> seeds = {
-
-                "node1.gxb.io:6789",                 //node1 (east)
-                "node5.gxb.io:6789",                 //node5 (south)
-                "47.92.117.128:6789",                 //node8 (north)
-                "47.52.114.135:6789"                     //node11 (hk)
+                "node1.gxb.io:6789",  // node1 (east)
+                "node5.gxb.io:6789",  // node5 (south)
+                "47.92.117.128:6789", // node8 (north)
+                "47.254.18.74:6789",  // node15 (us)
+                "47.74.22.124:6789",  // node16 (jp)
+                "47.88.158.101:6789", // node17 (singapore)
+                "47.52.114.135:6789"  // node11 (hk)
 
             };
             for( const string& endpoint_string : seeds )
@@ -933,6 +935,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("force-validate", "Force validation of all transactions")
          ("log-file", "Output result to log file, not console, only works when config.ini not exists")
          ("genesis-timestamp", bpo::value<uint32_t>(), "Replace timestamp from genesis.json with current time plus this many seconds (experts only!)")
+         ("version,v", "Display version information")
          ;
    command_line_options.add(_cli_options);
    configuration_file_options.add(_cfg_options);
@@ -978,6 +981,7 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
       wanted.push_back("witness");
       wanted.push_back("account_history");
       wanted.push_back("market_history");
+      wanted.push_back("data_transaction");
    }
    for (auto& it : wanted)
    {

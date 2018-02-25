@@ -1,6 +1,5 @@
 file(GLOB HEADERS "include/graphene/witness/*.hpp")
 
-link_directories("${PROJECT_SOURCE_DIR}/libraries/chain/lib")
 add_library( graphene_witness 
              witness.cpp
            )
