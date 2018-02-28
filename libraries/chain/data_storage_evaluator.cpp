@@ -24,10 +24,11 @@
 
 namespace graphene { namespace chain {
     void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op) {
+        ilog("account signature ${s}", ("s", op.signature));
         return void_result();
     }
 
-    void_result data_storage_evaluator::do_apply(const data_storage_operation &o) {
+    void_result data_storage_evaluator::do_apply(const data_storage_operation &op) {
         return void_result();
     }
 

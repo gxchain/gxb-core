@@ -34,6 +34,7 @@ struct data_storage_operation : public base_operation {
     fc::string                      data_hash;
     asset                           fee;
     data_storage_params             params;
+    signature_type                  signature;
     extensions_type                 extensions;
 
     account_id_type fee_payer() const { return proxy_account; }
@@ -56,5 +57,6 @@ FC_REFLECT( graphene::chain::data_storage_operation,
             (data_hash)
             (fee)
             (params)
+            (signature)
             (extensions)
 )
