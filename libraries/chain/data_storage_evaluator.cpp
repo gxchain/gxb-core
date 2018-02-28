@@ -24,10 +24,12 @@
 
 namespace graphene { namespace chain {
     void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op) {
+        ilog("data_storage_evaluator do_evaluate");
         return void_result();
     }
 
     void_result data_storage_evaluator::do_apply(const data_storage_operation &o) {
+        ilog("data_storage_evaluator do_apply");
         return void_result();
     }
 

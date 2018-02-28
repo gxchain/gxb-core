@@ -48,7 +48,7 @@ struct data_storage_operation : public base_operation {
 
 } } // graphene::chain
 
-FC_REFLECT( graphene::chain::data_storage_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::data_storage_operation::fee_parameters_type, (fee)(price_per_kbyte))
 
 FC_REFLECT( graphene::chain::data_storage_operation,
             (proxy_account)
