@@ -21,7 +21,10 @@
 #include <graphene/chain/protocol/ext.hpp>
 #include <graphene/chain/protocol/data_storage_params.hpp>
 
-namespace graphene { namespace chain {
+namespace graphene
+{
+namespace chain
+{
 
 struct data_storage_operation : public base_operation {
     struct fee_parameters_type {
@@ -49,14 +52,13 @@ struct data_storage_operation : public base_operation {
 
 } } // graphene::chain
 
-FC_REFLECT( graphene::chain::data_storage_operation::fee_parameters_type, (fee)(price_per_kbyte))
+FC_REFLECT(graphene::chain::data_storage_operation::fee_parameters_type, (fee)(price_per_kbyte))
 
-FC_REFLECT( graphene::chain::data_storage_operation,
-            (proxy_account)
-            (account)
-            (data_hash)
-            (fee)
-            (params)
-            (signature)
-            (extensions)
-)
+FC_REFLECT(graphene::chain::data_storage_operation,
+           (proxy_account)
+           (account)
+           (data_hash)
+           (fee)
+           (params)
+           (signature)
+           (extensions))
