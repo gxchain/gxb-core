@@ -263,6 +263,10 @@ struct get_impacted_account_visitor
    void operator() (const balance_lock_operation& op) {}
 
    void operator() (const balance_unlock_operation& op) {}
+
+   void operator() (const data_storage_operation &op) {
+       _impacted.insert(op.account);
+   }
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
