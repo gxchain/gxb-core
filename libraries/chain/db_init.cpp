@@ -77,6 +77,7 @@
 #include <graphene/chain/league_evaluator.hpp>
 #include <graphene/chain/datasource_copyright_evaluator.hpp>
 #include <graphene/chain/loyalty_evaluator.hpp>
+#include <graphene/chain/data_storage_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -241,6 +242,7 @@ void database::initialize_evaluators()
    register_evaluator<data_transaction_datasource_validate_error_evaluator>();
    register_evaluator<data_transaction_complain_evaluator>();
    register_evaluator<datasource_copyright_clear_evaluator>();
+   register_evaluator<data_storage_evaluator>();
 
 }
 
