@@ -53,7 +53,7 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
             is_authorized_asset(d, to_account, asset_type),
             transfer_to_account_not_whitelisted,
             "'to' account ${to} is not whitelisted for asset ${asset}",
-            ("to", op.proxy_count)("asset", fee.asset_id));
+            ("to", op.proxy_account)("asset", fee.asset_id));
 
         if (asset_type.is_transfer_restricted()) {
             GRAPHENE_ASSERT(
@@ -70,9 +70,8 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
 
         return void_result();
     }
-    FC_RETHROW_EXCEPTIONS(error, "Unable to transfer ${a} from ${f} to ${t}", ("a", d.to_pretty_string(op.amount))("f", op.from(d).name)("t", op.to(d).name));
+    FC_RETHROW_EXCEPTIONS(error, "Unable to pay ${a} from ${f} to ${t}", ("a", d.to_pretty_string(fee.amount))("f", op.account)("t", op.proxy_account));
 
-    return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
 void_result data_storage_evaluator::do_apply(const data_storage_operation &op)
