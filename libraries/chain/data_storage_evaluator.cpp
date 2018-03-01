@@ -30,8 +30,8 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
 { try {
     const database& d = db();
 
-    FC_ASSERT(op.data_hash.size() < max_op_string_length, "data_hash ${r} too long, must <= 100", ("r", op.data_hash));
-    FC_ASSERT(op.params.data_md5.size() < max_op_string_length, "data_md5 ${r} too long, must <= 100", ("r", op.params.data_md5));
+    FC_ASSERT(op.data_hash.size() < max_op_string_length, "data_hash ${r} too long, must < 100", ("r", op.data_hash));
+    FC_ASSERT(op.params.data_md5.size() < max_op_string_length, "data_md5 ${r} too long, must < 100", ("r", op.params.data_md5));
 
     // check expiration
     const chain_parameters& chain_parameters = d.get_global_properties().parameters;
