@@ -38,10 +38,40 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
 
     // check data_storage_object
 
-    // checko account balance
+    // check account balance, check blacklist / whitelist
     const account_object &from_account = op.account(d);
     const account_object &to_account = op.proxy_account(d);
-    const asset_object &asset_type = op.params.fee.asset_id(d);
+    const auto& fee = op.params.fee;
+    const asset_object &asset_type = fee.asset_id(d);
+    try {
+        GRAPHENE_ASSERT(
+            is_authorized_asset(d, from_account, asset_type),
+            transfer_from_account_not_whitelisted,
+            "'from' account ${from} is not whitelisted for asset ${asset}",
+            ("from", op.account)("asset", fee.asset_id));
+        GRAPHENE_ASSERT(
+            is_authorized_asset(d, to_account, asset_type),
+            transfer_to_account_not_whitelisted,
+            "'to' account ${to} is not whitelisted for asset ${asset}",
+            ("to", op.proxy_count)("asset", fee.asset_id));
+
+        if (asset_type.is_transfer_restricted()) {
+            GRAPHENE_ASSERT(
+                from_account.id == asset_type.issuer || to_account.id == asset_type.issuer,
+                transfer_restricted_transfer_asset,
+                "Asset ${asset} has transfer_restricted flag enabled",
+                ("asset", fee.asset_id));
+        }
+
+        bool insufficient_balance = d.get_balance(from_account, asset_type).amount >= fee.amount;
+        FC_ASSERT(insufficient_balance,
+                  "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
+                  ("a", from_account.name)("t", to_account.name)("total_transfer", d.to_pretty_string(fee.amount))("balance", d.to_pretty_string(d.get_balance(from_account, asset_type))));
+
+        return void_result();
+    }
+    FC_RETHROW_EXCEPTIONS(error, "Unable to transfer ${a} from ${f} to ${t}", ("a", d.to_pretty_string(op.amount))("f", op.from(d).name)("t", op.to(d).name));
+
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
