@@ -21,15 +21,11 @@
 #include <graphene/chain/protocol/ext.hpp>
 #include <graphene/chain/protocol/data_storage_params.hpp>
 
-namespace graphene
-{
-namespace chain
-{
+namespace graphene { namespace chain {
 
 struct data_storage_operation : public base_operation {
     struct fee_parameters_type {
         uint64_t fee = 0;
-        uint32_t price_per_kbyte = 10 * GRAPHENE_BLOCKCHAIN_PRECISION;
     };
 
     account_id_type                 proxy_account;
@@ -41,24 +37,28 @@ struct data_storage_operation : public base_operation {
     extensions_type                 extensions;
 
     account_id_type fee_payer() const { return proxy_account; }
-    void validate() const {}
+
+    void validate() const
+    {
+        FC_ASSERT(data_hash.size() > 0);
+    }
 
     share_type calculate_fee(const fee_parameters_type &k) const
     {
-        return k.fee + calculate_data_fee(fc::raw::pack_size(*this), k.price_per_kbyte);
+        return k.fee;
     }
 };
 
 
 } } // graphene::chain
 
-FC_REFLECT(graphene::chain::data_storage_operation::fee_parameters_type, (fee)(price_per_kbyte))
+FC_REFLECT(graphene::chain::data_storage_operation::fee_parameters_type, (fee))
 
 FC_REFLECT(graphene::chain::data_storage_operation,
-           (proxy_account)
-           (account)
-           (data_hash)
-           (fee)
-           (params)
-           (signature)
-           (extensions))
+            (proxy_account)
+            (account)
+            (data_hash)
+            (fee)
+            (params)
+            (signature)
+            (extensions))
