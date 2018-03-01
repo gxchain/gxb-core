@@ -23,13 +23,36 @@
 #include <graphene/chain/is_authorized_asset.hpp>
 
 namespace graphene { namespace chain {
-    void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op) {
-        ilog("account signature ${s}", ("s", op.signature));
-        return void_result();
-    }
+void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op)
+{ try {
+    const database& d = db();
 
-    void_result data_storage_evaluator::do_apply(const data_storage_operation &op) {
-        return void_result();
-    }
+    // check expiration
+    const chain_parameters& chain_parameters = d.get_global_properties().parameters;
+    const auto& expiration = op.params.expiration;
+    FC_ASSERT(expiration <= d.head_block_time() + chain_parameters.maximum_time_until_expiration
+            && expiration >= d.head_block_time());
+
+    // check signature
+    dlog("account signature ${s}", ("s", op.signature));
+
+    // check data_storage_object
+
+    // checko account balance
+    const account_object &from_account = op.account(d);
+    const account_object &to_account = op.proxy_account(d);
+    const asset_object &asset_type = op.params.fee.asset_id(d);
+    return void_result();
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result data_storage_evaluator::do_apply(const data_storage_operation &op)
+{ try {
+    // create data_storage_object
+
+    // pay to proxy_account
+    db().adjust_balance(op.account, -op.params.fee);
+    db().adjust_balance(op.proxy_account, op.params.fee);
+    return void_result();
+} FC_CAPTURE_AND_RETHROW((op)) }
 
 } } // graphene::chain
