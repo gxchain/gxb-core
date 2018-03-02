@@ -39,7 +39,7 @@ namespace graphene {
             static const uint8_t type_id = data_storage_baas_object_type;
 
             // user's signature who use baas service
-            signature_type              signature
+            signature_type              signature;
             // expiration time
             fc::time_point_sec          expiration;
         };
@@ -54,7 +54,7 @@ namespace graphene {
             indexed_by<
                 ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
                 ordered_unique< tag<by_signature>, member<data_storage_baas_object, signature_type, &data_storage_baas_object::signature> >,
-                ordered_non_unique< tag<by_expiration>, member<transaction_object, time_point_sec, &data_storage_baas_object::expiration > >
+                ordered_non_unique< tag<by_expiration>, member<data_storage_baas_object, time_point_sec, &data_storage_baas_object::expiration > >
              >
         >;
         /**
