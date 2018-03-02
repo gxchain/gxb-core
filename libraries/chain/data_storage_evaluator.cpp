@@ -56,9 +56,12 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
     dlog("account signature ${s}", ("s", op.signature));
     const auto& keys = from_account.active.get_keys();
     FC_ASSERT(keys.size() == 1, "do not support multisig acount, account ${a}", ("a", op.account));
-    FC_ASSERT(verify_data_storage_signature(keys.at(0), op.signature, op.params), "verify user signature error");
+    // FC_ASSERT(verify_data_storage_signature(keys.at(0), op.signature, op.params), "verify user signature error");
 
     // check data_storage_object
+    const auto& data_storage_idx = d.get_index_type<data_storage_index>().indices().get<by_signature>();
+    auto maybe_found = data_storage_idx.find(op.signature);
+    FC_ASSERT(maybe_found == data_storage_idx.end(), "user request signature already used once! signature ${s}", ("s", op.signature));
 
     // check account balance, check blacklist / whitelist
     const account_object &to_account = op.proxy_account(d);
@@ -98,6 +101,10 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
 void_result data_storage_evaluator::do_apply(const data_storage_operation &op)
 { try {
     // create data_storage_object
+    const auto& new_object = db().create<data_storage_baas_object>([&](data_storage_baas_object& obj) {
+            obj.signature     = op.signature;
+            obj.expiration    = op.params.expiration;
+            });
 
     // pay to proxy_account
     db().adjust_balance(op.account, -op.params.fee);
