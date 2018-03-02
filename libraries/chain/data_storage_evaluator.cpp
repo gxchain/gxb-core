@@ -26,6 +26,17 @@ namespace graphene { namespace chain {
 
 const uint8_t max_op_string_length = 100;
 
+bool verify_data_storage_signature(const fc::ecc::public_key& expected_signee, const signature_type& signature, const data_storage_params& params)
+{
+    digest_type::encoder enc;
+    fc::raw::pack(enc, params);
+
+    if (fc::ecc::public_key(signature, enc.result(), true) == expected_signee) {
+        return true;
+    }
+    return false;
+}
+
 void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op)
 { try {
     const database& d = db();
@@ -37,15 +48,18 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
     const chain_parameters& chain_parameters = d.get_global_properties().parameters;
     const auto& expiration = op.params.expiration;
     FC_ASSERT(expiration <= d.head_block_time() + chain_parameters.maximum_time_until_expiration
-            && expiration >= d.head_block_time());
+            && expiration >= d.head_block_time(), "user expiration invalid, ${e}", ("e", expiration));
 
+    const account_object &from_account = op.account(d);
     // check signature
     dlog("account signature ${s}", ("s", op.signature));
+    const auto& keys = from_account.active.get_keys();
+    FC_ASSSERT(keys.size() == 1, "do not support multisig acount, account ${a}", ("a", op.account));
+    FC_ASSERT(verify_data_storage_signature(keys.at(0), op.signature, op.params), "verify user signature error");
 
     // check data_storage_object
 
     // check account balance, check blacklist / whitelist
-    const account_object &from_account = op.account(d);
     const account_object &to_account = op.proxy_account(d);
     const auto& fee = op.params.fee;
     const asset_object &asset_type = fee.asset_id(d);
