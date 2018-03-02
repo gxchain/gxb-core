@@ -264,7 +264,8 @@ struct get_impacted_account_visitor
 
    void operator() (const balance_unlock_operation& op) {}
 
-   void operator() (const data_storage_operation &op) {
+   void operator() (const data_storage_operation& op) {
+       _impacted.insert(op.proxy_account);
        _impacted.insert(op.account);
    }
 };
@@ -380,8 +381,9 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
            }
            case lock_balance_object_type:{
                break;
-           }
-
+        } case data_storage_baas_object_type: {
+            break;
+        }
 
       }
    }

@@ -253,6 +253,7 @@ namespace graphene { namespace chain {
       second_hand_data_object_type,//23
       data_transaction_complain_object_type,//24
       lock_balance_object_type,//25
+      data_storage_baas_object_type,//26
 
       OBJECT_TYPE_COUNT /////< Sentry value which contains the number of different object types
 
@@ -314,6 +315,7 @@ namespace graphene { namespace chain {
    class second_hand_data_object;
    class data_transaction_complain_object;
    class lock_balance_object;
+   class data_storage_baas_object;
 
    typedef object_id< protocol_ids, account_object_type,            account_object>               account_id_type;
    typedef object_id< protocol_ids, asset_object_type,              asset_object>                 asset_id_type;
@@ -339,6 +341,7 @@ namespace graphene { namespace chain {
    typedef object_id< protocol_ids, second_hand_data_object_type, second_hand_data_object>         second_hand_data_id_type;
    typedef object_id< protocol_ids, data_transaction_complain_object_type, data_transaction_complain_object> data_transaction_complain_id_type;
    typedef object_id< protocol_ids, lock_balance_object_type, lock_balance_object>       lock_balance_id_type;
+   typedef object_id< protocol_ids, data_storage_baas_object_type, data_storage_baas_object>      data_storage_baas_id_type;
 
    // implementation types
    class global_property_object;
@@ -513,6 +516,7 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (second_hand_data_object_type)
                  (data_transaction_complain_object_type)
                  (lock_balance_object_type)
+                 (data_storage_baas_object_type)
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,
