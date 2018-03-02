@@ -21,6 +21,7 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/is_authorized_asset.hpp>
+#include <graphene/chain/data_storage_baas_object.hpp>
 
 namespace graphene { namespace chain {
 
@@ -54,7 +55,7 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
     // check signature
     dlog("account signature ${s}", ("s", op.signature));
     const auto& keys = from_account.active.get_keys();
-    FC_ASSSERT(keys.size() == 1, "do not support multisig acount, account ${a}", ("a", op.account));
+    FC_ASSERT(keys.size() == 1, "do not support multisig acount, account ${a}", ("a", op.account));
     FC_ASSERT(verify_data_storage_signature(keys.at(0), op.signature, op.params), "verify user signature error");
 
     // check data_storage_object
