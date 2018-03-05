@@ -381,9 +381,7 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
            }
            case lock_balance_object_type:{
                break;
-        } case data_storage_baas_object_type: {
-            break;
-        }
+       }
 
       }
    }
@@ -447,6 +445,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
              case impl_league_search_results_object_type:
               break;
              case impl_data_transaction_search_results_object_type:
+              break;
+             case impl_data_storage_baas_object_type:
               break;
       }
 

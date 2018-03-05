@@ -35,7 +35,7 @@ namespace graphene {
          */
         class data_storage_baas_object : public graphene::db::abstract_object<data_storage_baas_object> {
         public:
-            static const uint8_t space_id = protocol_ids;
+            static const uint8_t space_id = implementation_ids;
             static const uint8_t type_id = data_storage_baas_object_type;
 
             // user's signature who use baas service
