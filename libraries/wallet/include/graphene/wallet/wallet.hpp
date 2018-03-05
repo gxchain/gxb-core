@@ -676,7 +676,7 @@ class wallet_api
        * This returns a list of operation history objects, which describe activity on the account.
        *
        * @param account_name_or_id the name or id of the account
-       * @param operations_indexs the type of operations
+       * @param operation_indexs the type of operations
        * @param start the start place of the operation_history_objects
        * @param limit the number of entries to return (starting from the most recent)
        * @returns account_history_operation_detail
@@ -2122,7 +2122,7 @@ class wallet_api
 
       /** verify_transaction_signature 
        * @param trx
-       * @param public_key
+       * @param pub_key
        * @return bool
        */
       bool verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key);
