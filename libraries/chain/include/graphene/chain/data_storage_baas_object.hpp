@@ -36,7 +36,7 @@ namespace graphene {
         class data_storage_baas_object : public graphene::db::abstract_object<data_storage_baas_object> {
         public:
             static const uint8_t space_id = implementation_ids;
-            static const uint8_t type_id = data_storage_baas_object_type;
+            static const uint8_t type_id = impl_data_storage_baas_object_type;
 
             // user's signature who use baas service
             signature_type              signature;
@@ -47,8 +47,8 @@ namespace graphene {
         /**
          * @ingroup object_index
          */
-        struct by_signature {};
-        struct by_expiration {};
+        struct by_signature;
+        struct by_expiration;
         using data_storage_baas_multi_index_type = multi_index_container<
             data_storage_baas_object,
             indexed_by<
