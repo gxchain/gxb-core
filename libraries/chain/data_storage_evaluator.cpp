@@ -25,7 +25,7 @@
 
 namespace graphene { namespace chain {
 
-const uint8_t max_op_string_length = 100;
+const uint8_t MAX_OP_STRING_LENGTH = 100;
 
 bool verify_data_storage_signature(const fc::ecc::public_key& expected_signee, const signature_type& signature, const data_storage_params& params)
 {
@@ -42,8 +42,8 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
 { try {
     const database& d = db();
 
-    FC_ASSERT(op.data_hash.size() < max_op_string_length, "data_hash ${r} too long, must < 100", ("r", op.data_hash));
-    FC_ASSERT(op.params.data_md5.size() < max_op_string_length, "data_md5 ${r} too long, must < 100", ("r", op.params.data_md5));
+    FC_ASSERT(op.data_hash.size() < MAX_OP_STRING_LENGTH, "data_hash ${r} too long, must < 100", ("r", op.data_hash));
+    FC_ASSERT(op.params.data_md5.size() < MAX_OP_STRING_LENGTH, "data_md5 ${r} too long, must < 100", ("r", op.params.data_md5));
 
     // check expiration
     const chain_parameters& chain_parameters = d.get_global_properties().parameters;
@@ -105,6 +105,7 @@ void_result data_storage_evaluator::do_apply(const data_storage_operation &op)
             obj.signature     = op.signature;
             obj.expiration    = op.params.expiration;
             });
+    dlog("data_storage_baas_object ${o}", ("o", new_object));
 
     // pay to proxy_account
     db().adjust_balance(op.account, -op.params.fee);
