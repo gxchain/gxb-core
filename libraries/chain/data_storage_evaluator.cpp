@@ -56,7 +56,7 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
     dlog("account signature ${s}", ("s", op.signature));
     const auto& keys = from_account.active.get_keys();
     FC_ASSERT(keys.size() == 1, "do not support multisig acount, account ${a}", ("a", op.account));
-    // FC_ASSERT(verify_data_storage_signature(keys.at(0), op.signature, op.params), "verify user signature error");
+    FC_ASSERT(verify_data_storage_signature(keys.at(0), op.signature, op.params), "verify user signature error");
 
     // check data_storage_object
     const auto& data_storage_idx = d.get_index_type<data_storage_index>().indices().get<by_signature>();
