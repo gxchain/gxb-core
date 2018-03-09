@@ -93,7 +93,23 @@ database_fixture::database_fixture()
    genesis_state.initial_parameters.current_fees->zero_all_fees();
    open_database();
 
-   // app.initialize();
+   // add account tracking for ahplugin for special test case with track-account enabled
+   if( !options.count("track-account") && boost::unit_test::framework::current_test_case().p_name.value == "track_account") {
+      std::vector<std::string> track_account;
+      std::string track = "\"1.2.17\"";
+      track_account.push_back(track);
+      options.insert(std::make_pair("track-account", boost::program_options::variable_value(track_account, false)));
+   }
+   // account tracking 2 accounts
+   if( !options.count("track-account") && boost::unit_test::framework::current_test_case().p_name.value == "track_account2") {
+      std::vector<std::string> track_account;
+      std::string track = "\"1.2.0\"";
+      track_account.push_back(track);
+      track = "\"1.2.16\"";
+      track_account.push_back(track);
+      options.insert(std::make_pair("track-account", boost::program_options::variable_value(track_account, false)));
+   }
+
    ahplugin->plugin_set_app(&app);
    ahplugin->plugin_initialize(options);
 
@@ -677,6 +693,13 @@ uint64_t database_fixture::fund(
 void database_fixture::sign(signed_transaction& trx, const fc::ecc::private_key& key)
 {
    trx.sign( key, db.get_chain_id() );
+}
+
+signature_type database_fixture::sign_data_storage_param(const private_key_type& key, const data_storage_params& param)
+{
+    digest_type::encoder enc;
+    fc::raw::pack(enc, param);
+    return key.sign_compact(enc.result());
 }
 
 digest_type database_fixture::digest( const transaction& tx )
