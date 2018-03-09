@@ -30,7 +30,7 @@ namespace graphene { namespace chain {
 
     struct data_storage_operation : public base_operation {
         struct fee_parameters_type {
-            uint64_t fee = 0;
+            uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION / 100;
         };
 
         account_id_type                 proxy_account;
