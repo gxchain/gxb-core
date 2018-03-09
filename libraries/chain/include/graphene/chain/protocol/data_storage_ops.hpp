@@ -45,7 +45,10 @@ namespace graphene { namespace chain {
 
         void validate() const
         {
+            FC_ASSERT(fee.amount >= 0);
+            FC_ASSERT(params.fee.amount >= 0);
             FC_ASSERT(data_hash.size() > 0);
+            FC_ASSERT(proxy_account != account);
         }
 
         share_type calculate_fee(const fee_parameters_type &k) const
