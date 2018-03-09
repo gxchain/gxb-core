@@ -85,6 +85,41 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_create )
    trx.clear();
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE(data_storage_baas_test)
+{ try {
+   auto nathan_private_key = generate_private_key("nathan");
+   auto dan_private_key = generate_private_key("dan");
+   account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).id;
+   account_id_type dan_id = create_account("dan", dan_private_key.get_public_key()).id;
+
+   transfer(account_id_type(), nathan_id, asset(1000));
+   transfer(account_id_type(), dan_id, asset(1000));
+   generate_block();
+
+   BOOST_TEST_MESSAGE("construct data_sotrage_baas trx");
+
+   data_storage_params param;
+   param.data_md5 = fc::json::to_string(nathan_private_key.get_public_key());
+   param.expiration = db.head_block_time() + fc::hours(1);
+   param.fee = asset(1000);
+
+   data_storage_operation op;
+   op.proxy_account = dan_id;
+   op.account = nathan_id;
+   op.data_hash = fc::json::to_string(nathan_private_key.get_public_key());
+   op.params = param;
+   op.fee = asset(2000);
+   op.signature = sign_data_storage_param(nathan_private_key, param);
+
+   trx.clear();
+   trx.operations.push_back(op);
+   set_expiration(db, trx);
+   sign(trx, dan_private_key);
+   idump((trx));
+   db.push_transaction(trx);
+   trx.clear();
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( withdraw_permission_test )
 { try {
    INVOKE(withdraw_permission_create);
