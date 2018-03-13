@@ -42,8 +42,8 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
 { try {
     const database& d = db();
 
-    FC_ASSERT(op.data_hash.size() < MAX_OP_STRING_LENGTH, "data_hash ${r} too long, must < 100", ("r", op.data_hash));
-    FC_ASSERT(op.params.data_md5.size() < MAX_OP_STRING_LENGTH, "data_md5 ${r} too long, must < 100", ("r", op.params.data_md5));
+    FC_ASSERT(op.proxy_memo.size() < MAX_OP_STRING_LENGTH, "proxy_memo ${r} too long, must < 100", ("r", op.proxy_memo));
+    FC_ASSERT(op.params.memo.size() < MAX_OP_STRING_LENGTH, "memo ${r} too long, must < 100", ("r", op.params.memo));
 
     // check expiration
     const chain_parameters& chain_parameters = d.get_global_properties().parameters;
