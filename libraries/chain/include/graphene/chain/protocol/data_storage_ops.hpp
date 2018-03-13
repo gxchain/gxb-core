@@ -44,13 +44,16 @@ namespace graphene { namespace chain {
         extensions_type                 extensions;
 
         account_id_type fee_payer() const { return request_params.proxy_account; }
+        account_id_type get_from_account() const { return request_params.from; }
+        account_id_type get_to_account() const { return request_params.to; }
+        account_id_type get_proxy_account() const { return request_params.proxy_account; }
 
         void validate() const
         {
             FC_ASSERT(fee.amount >= 0);
-            FC_ASSERT(params.amount.amount >= 0);
+            FC_ASSERT(request_params.amount.amount >= 0);
             FC_ASSERT(proxy_memo.size() > 0);
-            FC_ASSERT(request_params.from != request_params.to);
+            FC_ASSERT(get_from_account() != get_to_account());
         }
 
         share_type calculate_fee(const fee_parameters_type &k) const
@@ -65,7 +68,7 @@ namespace graphene { namespace chain {
 FC_REFLECT(graphene::chain::data_storage_params,
             (from)
             (to)
-            (proxyt_account)
+            (proxy_account)
             (amount)
             (percentage)
             (memo)
