@@ -23,8 +23,12 @@
 namespace graphene { namespace chain {
     struct  data_storage_params
     {
-        asset                   fee;
-        fc::string              data_md5;
+        account_id_type         from;
+        account_id_type         to;
+        account_id_type         proxy_account;
+        uint16_t                percentage = 0;
+        asset                   amount;
+        fc::string              memo;
         fc::time_point_sec      expiration;
     };
 
@@ -33,22 +37,20 @@ namespace graphene { namespace chain {
             uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION / 100;
         };
 
-        account_id_type                 proxy_account;
-        account_id_type                 account;
-        fc::string                      data_hash;
+        fc::string                      proxy_memo;
         asset                           fee;
-        data_storage_params             params;
+        data_storage_params             request_params;
         signature_type                  signature;
         extensions_type                 extensions;
 
-        account_id_type fee_payer() const { return proxy_account; }
+        account_id_type fee_payer() const { return request_params.proxy_account; }
 
         void validate() const
         {
             FC_ASSERT(fee.amount >= 0);
-            FC_ASSERT(params.fee.amount >= 0);
-            FC_ASSERT(data_hash.size() > 0);
-            FC_ASSERT(proxy_account != account);
+            FC_ASSERT(params.amount.amount >= 0);
+            FC_ASSERT(proxy_memo.size() > 0);
+            FC_ASSERT(request_params.from != request_params.to);
         }
 
         share_type calculate_fee(const fee_parameters_type &k) const
@@ -61,17 +63,19 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT(graphene::chain::data_storage_params,
-            (fee)
-            (data_md5)
+            (from)
+            (to)
+            (proxyt_account)
+            (amount)
+            (percentage)
+            (memo)
             (expiration))
 
 FC_REFLECT(graphene::chain::data_storage_operation::fee_parameters_type, (fee))
 
 FC_REFLECT(graphene::chain::data_storage_operation,
-            (proxy_account)
-            (account)
-            (data_hash)
+            (proxy_memo)
             (fee)
-            (params)
+            (request_params)
             (signature)
             (extensions))
