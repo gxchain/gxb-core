@@ -99,16 +99,18 @@ BOOST_AUTO_TEST_CASE(data_storage_baas_test)
    BOOST_TEST_MESSAGE("construct data_sotrage_baas trx");
 
    data_storage_params param;
-   param.data_md5 = fc::json::to_string(nathan_private_key.get_public_key());
+   param.from = nathan_id;
+   param.to = dan_id;
+   param.proxy_account = dan_id;
+   param.percentage = 10000;
+   param.amount = asset(1000);
+   param.memo = fc::json::to_string(nathan_private_key.get_public_key());
    param.expiration = db.head_block_time() + fc::hours(1);
-   param.fee = asset(1000);
 
    data_storage_operation op;
-   op.proxy_account = dan_id;
-   op.account = nathan_id;
-   op.data_hash = fc::json::to_string(nathan_private_key.get_public_key());
-   op.params = param;
+   op.proxy_memo = fc::json::to_string(nathan_private_key.get_public_key());
    op.fee = asset(2000);
+   op.params = param;
    op.signature = sign_data_storage_param(nathan_private_key, param);
 
    trx.clear();

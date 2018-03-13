@@ -43,19 +43,19 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
     const database& d = db();
 
     FC_ASSERT(op.proxy_memo.size() < MAX_OP_STRING_LENGTH, "proxy_memo ${r} too long, must < 100", ("r", op.proxy_memo));
-    FC_ASSERT(op.params.memo.size() < MAX_OP_STRING_LENGTH, "memo ${r} too long, must < 100", ("r", op.params.memo));
+    FC_ASSERT(op.request_params.memo.size() < MAX_OP_STRING_LENGTH, "memo ${r} too long, must < 100", ("r", op.request_params.memo));
 
     // check expiration
     const chain_parameters& chain_parameters = d.get_global_properties().parameters;
-    const auto& expiration = op.params.expiration;
+    const auto& expiration = op.request_params.expiration;
     FC_ASSERT(expiration <= d.head_block_time() + chain_parameters.maximum_time_until_expiration
             && expiration >= d.head_block_time(), "user expiration invalid, ${e}", ("e", expiration));
 
-    const account_object &from_account = op.account(d);
+    const account_object &from_account = op.request_params.from(d);
     // check signature
     const auto& keys = from_account.active.get_keys();
-    FC_ASSERT(keys.size() == 1, "do not support multisig acount, account ${a}", ("a", op.account));
-    FC_ASSERT(verify_data_storage_signature(keys.at(0), op.signature, op.params), "verify user signature error");
+    FC_ASSERT(keys.size() == 1, "do not support multisig acount, account ${a}", ("a", op.request_params.from));
+    FC_ASSERT(verify_data_storage_signature(keys.at(0), op.signature, op.request_params), "verify user signature error");
 
     // check data_storage_object
     const auto& data_storage_idx = d.get_index_type<data_storage_index>().indices().get<by_signature>();
@@ -63,20 +63,20 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
     FC_ASSERT(maybe_found == data_storage_idx.end(), "user request signature already used once! signature ${s}", ("s", op.signature));
 
     // check account balance, check blacklist / whitelist
-    const account_object &to_account = op.proxy_account(d);
-    const auto& fee = op.params.fee;
+    const account_object &to_account = op.request_params.to(d);
+    const auto& fee = op.request_params.amount;
     const asset_object &asset_type = fee.asset_id(d);
     try {
         GRAPHENE_ASSERT(
             is_authorized_asset(d, from_account, asset_type),
             transfer_from_account_not_whitelisted,
             "'from' account ${from} is not whitelisted for asset ${asset}",
-            ("from", op.account)("asset", fee.asset_id));
+            ("from", from_account.name)("asset", fee.asset_id));
         GRAPHENE_ASSERT(
             is_authorized_asset(d, to_account, asset_type),
             transfer_to_account_not_whitelisted,
             "'to' account ${to} is not whitelisted for asset ${asset}",
-            ("to", op.proxy_account)("asset", fee.asset_id));
+            ("to", to_account.name)("asset", fee.asset_id));
 
         if (asset_type.is_transfer_restricted()) {
             GRAPHENE_ASSERT(
@@ -93,7 +93,7 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
 
         return void_result();
     }
-    FC_RETHROW_EXCEPTIONS(error, "Unable to pay ${a} from ${f} to ${t}", ("a", d.to_pretty_string(fee.amount))("f", op.account)("t", op.proxy_account));
+    FC_RETHROW_EXCEPTIONS(error, "Unable to pay ${a} from ${f} to ${t}", ("a", d.to_pretty_string(fee.amount))("f", from_account.name)("t", to_account.name));
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
@@ -102,13 +102,13 @@ void_result data_storage_evaluator::do_apply(const data_storage_operation &op)
     // create data_storage_object
     const auto& new_object = db().create<data_storage_baas_object>([&](data_storage_baas_object& obj) {
             obj.signature     = op.signature;
-            obj.expiration    = op.params.expiration;
+            obj.expiration    = op.request_params.expiration;
             });
     dlog("data_storage_baas_object ${o}", ("o", new_object));
 
     // pay to proxy_account
-    db().adjust_balance(op.account, -op.params.fee);
-    db().adjust_balance(op.proxy_account, op.params.fee);
+    db().adjust_balance(op.get_from_account(), -op.request_params.amount);
+    db().adjust_balance(op.get_to_account(), op.request_params.amount);
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
