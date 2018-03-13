@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(data_storage_baas_test)
    account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).id;
    account_id_type dan_id = create_account("dan", dan_private_key.get_public_key()).id;
 
-   transfer(account_id_type(), nathan_id, asset(1000));
-   transfer(account_id_type(), dan_id, asset(1000));
+   transfer(account_id_type(), nathan_id, asset(10000));
+   transfer(account_id_type(), dan_id, asset(10000));
    generate_block();
 
    BOOST_TEST_MESSAGE("construct data_sotrage_baas trx");
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(data_storage_baas_test)
    data_storage_operation op;
    op.proxy_memo = fc::json::to_string(nathan_private_key.get_public_key());
    op.fee = asset(2000);
-   op.params = param;
+   op.request_params = param;
    op.signature = sign_data_storage_param(nathan_private_key, param);
 
    trx.clear();
@@ -120,6 +120,11 @@ BOOST_AUTO_TEST_CASE(data_storage_baas_test)
    idump((trx));
    db.push_transaction(trx);
    trx.clear();
+
+   BOOST_TEST_MESSAGE("check account balances");
+   const auto &core = asset_id_type()(db);
+   BOOST_REQUIRE_EQUAL(get_balance(nathan_id(db), core), 9000);
+   BOOST_REQUIRE_EQUAL(get_balance(dan_id(db), core), 9000);
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( withdraw_permission_test )
@@ -446,7 +451,7 @@ BOOST_AUTO_TEST_CASE( feed_limit_test )
    BOOST_TEST_MESSAGE("Checking current_feed is null");
    BOOST_CHECK(bitasset.current_feed.settlement_price.is_null());
 
-   BOOST_TEST_MESSAGE("Setting minimum feeds to 3");
+  BOOST_TEST_MESSAGE("Setting minimum feeds to 3");
    op.new_options.minimum_feeds = 3;
    trx.clear();
    trx.operations = {op};
