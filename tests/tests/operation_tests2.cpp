@@ -87,44 +87,45 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_create )
 
 BOOST_AUTO_TEST_CASE(data_storage_baas_test)
 { try {
-   auto nathan_private_key = generate_private_key("nathan");
-   auto dan_private_key = generate_private_key("dan");
-   account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).id;
-   account_id_type dan_id = create_account("dan", dan_private_key.get_public_key()).id;
+   // alice --> dan, and bob is proxy_account
+   ACTOR(alice);
+   ACTOR(bob);
+   ACTOR(dan);
 
-   transfer(account_id_type(), nathan_id, asset(10000));
-   transfer(account_id_type(), dan_id, asset(10000));
+   transfer(account_id_type(), alice_id, asset(10000));
+   transfer(account_id_type(), bob_id, asset(10000));
    generate_block();
 
    BOOST_TEST_MESSAGE("construct data_sotrage_baas trx");
 
    data_storage_params param;
-   param.from = nathan_id;
+   param.from = alice_id;
    param.to = dan_id;
-   param.proxy_account = dan_id;
-   param.percentage = 10000;
-   param.amount = asset(1000);
-   param.memo = fc::json::to_string(nathan_private_key.get_public_key());
+   param.proxy_account = bob_id;
+   param.percentage = 10000; // 10%
+   param.amount = asset(5000);
+   param.memo = fc::json::to_string(alice_private_key.get_public_key());
    param.expiration = db.head_block_time() + fc::hours(1);
 
    data_storage_operation op;
-   op.proxy_memo = fc::json::to_string(nathan_private_key.get_public_key());
+   op.proxy_memo = fc::json::to_string(bob_private_key.get_public_key());
    op.fee = asset(2000);
    op.request_params = param;
-   op.signature = sign_data_storage_param(nathan_private_key, param);
+   op.signature = sign_data_storage_param(alice_private_key, param);
 
    trx.clear();
    trx.operations.push_back(op);
    set_expiration(db, trx);
-   sign(trx, dan_private_key);
+   sign(trx, bob_private_key);
    idump((trx));
    db.push_transaction(trx);
    trx.clear();
 
    BOOST_TEST_MESSAGE("check account balances");
    const auto &core = asset_id_type()(db);
-   BOOST_REQUIRE_EQUAL(get_balance(nathan_id(db), core), 9000);
-   BOOST_REQUIRE_EQUAL(get_balance(dan_id(db), core), 9000);
+   BOOST_REQUIRE_EQUAL(get_balance(alice_id(db), core), 5000); // 10000 - 5000
+   BOOST_REQUIRE_EQUAL(get_balance(dan_id(db), core), 4500); // 5000 - (5000 * 10%)
+   BOOST_REQUIRE_EQUAL(get_balance(bob_id(db), core), 8500); // 10000 - 2000 + (5000 * 10%)
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( withdraw_permission_test )
