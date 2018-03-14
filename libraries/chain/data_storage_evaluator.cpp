@@ -27,13 +27,17 @@ namespace graphene { namespace chain {
 
 const uint8_t MAX_OP_STRING_LENGTH = 100;
 
-bool verify_data_storage_signature(const fc::ecc::public_key& expected_signee, const signature_type& signature, const data_storage_params& params)
+bool verify_data_storage_signature(const fc::ecc::public_key& expected_signee, const data_storage_params& params)
 {
+    auto p = params;
+    p.signatures.clear();
     digest_type::encoder enc;
-    fc::raw::pack(enc, params);
+    fc::raw::pack(enc, p);
 
-    if (fc::ecc::public_key(signature, enc.result(), true) == expected_signee) {
-        return true;
+    for (const auto& sig : params.signatures) {
+        if (fc::ecc::public_key(sig, enc.result(), true) == expected_signee) {
+            return true;
+        }
     }
     return false;
 }
@@ -72,12 +76,11 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
             && expiration >= d.head_block_time(), "user expiration invalid, ${e}", ("e", expiration));
 
     const account_object &from_account = op.request_params.from(d);
-    // TODO
     // check signatures
-    // const auto& keys = from_account.active.get_keys();
-    // FC_ASSERT(keys.size() == 1, "do not support multisig acount, account ${a}", ("a", op.request_params.from));
     FC_ASSERT(op.request_params.signatures.size() > 0, "no signatures");
-    // FC_ASSERT(verify_data_storage_signature(keys.at(0), op.signature, op.request_params), "verify user signature error");
+    const auto& keys = from_account.active.get_keys();
+    FC_ASSERT(keys.size() == 1, "do not support multisig acount, account ${a}", ("a", op.request_params.from));
+    FC_ASSERT(verify_data_storage_signature(keys.at(0), op.request_params), "verify user signature error");
 
     // check data_storage_object
     const auto& data_storage_idx = d.get_index_type<data_storage_index>().indices().get<by_signature>();
