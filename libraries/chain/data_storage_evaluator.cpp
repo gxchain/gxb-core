@@ -38,12 +38,32 @@ bool verify_data_storage_signature(const fc::ecc::public_key& expected_signee, c
     return false;
 }
 
+share_type data_storage_evaluator::cut_fee(share_type a, uint16_t p)
+{
+   if( a == 0 || p == 0 )
+      return 0;
+   if( p == GRAPHENE_100_PERCENT )
+      return a;
+
+   fc::uint128 r(a.value);
+   r *= p;
+   r /= GRAPHENE_100_PERCENT;
+   return r.to_uint64();
+}
+
 void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op)
 { try {
     const database& d = db();
 
+    // check memo size
     FC_ASSERT(op.proxy_memo.size() < MAX_OP_STRING_LENGTH, "proxy_memo ${r} too long, must < 100", ("r", op.proxy_memo));
     FC_ASSERT(op.request_params.memo.size() < MAX_OP_STRING_LENGTH, "memo ${r} too long, must < 100", ("r", op.request_params.memo));
+
+    // fee asset must be GXS
+    const auto& asset_by_symbol = d.get_index_type<asset_index>().indices().get<by_symbol>();
+    auto gxs = asset_by_symbol.find(GRAPHENE_SYMBOL_GXS);
+    FC_ASSERT(gxs != asset_by_symbol.end());
+    FC_ASSERT(gxs->get_id() == op.fee.asset_id, "fee asset must be GXS");
 
     // check expiration
     const chain_parameters& chain_parameters = d.get_global_properties().parameters;
@@ -52,7 +72,8 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
             && expiration >= d.head_block_time(), "user expiration invalid, ${e}", ("e", expiration));
 
     const account_object &from_account = op.request_params.from(d);
-    // check signature
+    // TODO
+    // check signatures
     const auto& keys = from_account.active.get_keys();
     FC_ASSERT(keys.size() == 1, "do not support multisig acount, account ${a}", ("a", op.request_params.from));
     FC_ASSERT(verify_data_storage_signature(keys.at(0), op.signature, op.request_params), "verify user signature error");
@@ -106,9 +127,15 @@ void_result data_storage_evaluator::do_apply(const data_storage_operation &op)
             });
     dlog("data_storage_baas_object ${o}", ("o", new_object));
 
-    // pay to proxy_account
-    db().adjust_balance(op.get_from_account(), -op.request_params.amount);
-    db().adjust_balance(op.get_to_account(), op.request_params.amount);
+    // transfer asset
+    share_type commission_amount = cut_fee(op.request_params.amount.amount, op.request_params.percentage);
+    asset commission_asset = asset(commission_amount, op.request_params.amount.asset_id);
+    asset delta_asset = op.request_params.amount - commission_asset;
+    idump((commission_asset)(delta_asset));
+    db().adjust_balance(op.get_from_account(), -delta_asset);
+    db().adjust_balance(op.get_to_account(), delta_asset);
+    db().adjust_balance(op.get_proxy_account(), commission_asset);
+
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
