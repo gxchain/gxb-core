@@ -74,14 +74,15 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
     const account_object &from_account = op.request_params.from(d);
     // TODO
     // check signatures
-    const auto& keys = from_account.active.get_keys();
-    FC_ASSERT(keys.size() == 1, "do not support multisig acount, account ${a}", ("a", op.request_params.from));
-    FC_ASSERT(verify_data_storage_signature(keys.at(0), op.signature, op.request_params), "verify user signature error");
+    // const auto& keys = from_account.active.get_keys();
+    // FC_ASSERT(keys.size() == 1, "do not support multisig acount, account ${a}", ("a", op.request_params.from));
+    FC_ASSERT(op.request_params.signatures.size() > 0, "no signatures");
+    // FC_ASSERT(verify_data_storage_signature(keys.at(0), op.signature, op.request_params), "verify user signature error");
 
     // check data_storage_object
     const auto& data_storage_idx = d.get_index_type<data_storage_index>().indices().get<by_signature>();
-    auto maybe_found = data_storage_idx.find(op.signature);
-    FC_ASSERT(maybe_found == data_storage_idx.end(), "user request signature already used once! signature ${s}", ("s", op.signature));
+    auto maybe_found = data_storage_idx.find(op.request_params.signatures.at(0));
+    FC_ASSERT(maybe_found == data_storage_idx.end(), "user request signature already used once! signature ${s}", ("s", op.request_params.signatures.at(0)));
 
     // check account balance, check blacklist / whitelist
     const account_object &to_account = op.request_params.to(d);
@@ -122,7 +123,7 @@ void_result data_storage_evaluator::do_apply(const data_storage_operation &op)
 { try {
     // create data_storage_object
     const auto& new_object = db().create<data_storage_baas_object>([&](data_storage_baas_object& obj) {
-            obj.signature     = op.signature;
+            obj.signature     = op.request_params.signatures.at(0);
             obj.expiration    = op.request_params.expiration;
             });
     dlog("data_storage_baas_object ${o}", ("o", new_object));
