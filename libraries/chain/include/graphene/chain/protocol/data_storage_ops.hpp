@@ -30,17 +30,17 @@ namespace graphene { namespace chain {
         asset                   amount;
         fc::string              memo;
         fc::time_point_sec      expiration;
+        vector<signature_type>  signatures;
     };
 
     struct data_storage_operation : public base_operation {
         struct fee_parameters_type {
-            uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION / 100;
+            uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
         };
 
         fc::string                      proxy_memo;
         asset                           fee;
         data_storage_params             request_params;
-        signature_type                  signature;
         extensions_type                 extensions;
 
         account_id_type fee_payer() const { return request_params.proxy_account; }
@@ -72,7 +72,8 @@ FC_REFLECT(graphene::chain::data_storage_params,
             (amount)
             (percentage)
             (memo)
-            (expiration))
+            (expiration)
+            (signatures))
 
 FC_REFLECT(graphene::chain::data_storage_operation::fee_parameters_type, (fee))
 
@@ -80,5 +81,4 @@ FC_REFLECT(graphene::chain::data_storage_operation,
             (proxy_memo)
             (fee)
             (request_params)
-            (signature)
             (extensions))
