@@ -586,6 +586,8 @@
        }
        account_object get_account(account_id_type id) const
        {
+          if( _wallet.my_accounts.get<by_id>().count(id) )
+             return *_wallet.my_accounts.get<by_id>().find(id);
           auto rec = _remote_db->get_accounts({id}).front();
           FC_ASSERT(rec);
           return *rec;
@@ -600,6 +602,19 @@
              // It's an ID
              return get_account(*id);
           } else {
+             // It's a name
+             if( _wallet.my_accounts.get<by_name>().count(account_name_or_id) )
+             {
+                auto local_account = *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
+                auto blockchain_account = _remote_db->lookup_account_names({account_name_or_id}).front();
+                FC_ASSERT( blockchain_account );
+                if (local_account.id != blockchain_account->id)
+                   elog("my account id ${id} different from blockchain id ${id2}", ("id", local_account.id)("id2", blockchain_account->id));
+                if (local_account.name != blockchain_account->name)
+                   elog("my account name ${id} different from blockchain name ${id2}", ("id", local_account.name)("id2", blockchain_account->name));
+
+                return *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
+             }
              auto rec = _remote_db->lookup_account_names({account_name_or_id}).front();
              FC_ASSERT( rec && rec->name == account_name_or_id );
              return *rec;
@@ -884,6 +899,25 @@
                throw;
            }
            return std::make_pair(tx.id(),tx);
+       }
+
+       signed_transaction propose_builder_transaction(
+          transaction_handle_type handle,
+          time_point_sec expiration = time_point::now() + fc::minutes(1),
+          uint32_t review_period_seconds = 0, bool broadcast = true)
+       {
+          FC_ASSERT(_builder_transactions.count(handle));
+          proposal_create_operation op;
+          op.expiration_time = expiration;
+          signed_transaction& trx = _builder_transactions[handle];
+          std::transform(trx.operations.begin(), trx.operations.end(), std::back_inserter(op.proposed_ops),
+                         [](const operation& op) -> op_wrapper { return op; });
+          if( review_period_seconds )
+             op.review_period_seconds = review_period_seconds;
+          trx.operations = {op};
+          _remote_db->get_global_properties().parameters.current_fees->set_fee( trx.operations.front() );
+
+          return trx = sign_transaction(trx, broadcast);
        }
 
        signed_transaction propose_builder_transaction2(
@@ -2540,12 +2574,12 @@
            set<public_key_type> pks = _remote_db->get_potential_signatures(tx);
            flat_set<public_key_type> owned_keys;
            owned_keys.reserve(pks.size());
-           std::copy_if(pks.begin(), pks.end(), std::inserter(owned_keys, owned_keys.end()),
-                        [this](const public_key_type &pk) { return _keys.find(pk) != _keys.end(); });
+           std::copy_if( pks.begin(), pks.end(), std::inserter(owned_keys, owned_keys.end()),
+                   [this](const public_key_type& pk){ return _keys.find(pk) != _keys.end(); } );
            set<public_key_type> approving_key_set = _remote_db->get_required_signatures(tx, owned_keys);
 
            auto dyn_props = get_dynamic_global_properties();
-           tx.set_reference_block(dyn_props.head_block_id);
+           tx.set_reference_block( dyn_props.head_block_id );
 
            // first, some bookkeeping, expire old items from _recently_generated_transactions
            // since transactions include the head block id, we just need the index for keeping transactions unique
@@ -2557,7 +2591,8 @@
            _recently_generated_transactions.get<timestamp_index>().erase(begin_iter, oldest_transaction_record_iter);
 
            uint32_t expiration_time_offset = 0;
-           for (;;) {
+           for (;;)
+           {
                tx.set_expiration(dyn_props.time + fc::seconds(30 + expiration_time_offset));
                tx.signatures.clear();
 
@@ -2566,7 +2601,8 @@
 
                graphene::chain::transaction_id_type this_transaction_id = tx.id();
                auto iter = _recently_generated_transactions.find(this_transaction_id);
-               if (iter == _recently_generated_transactions.end()) {
+               if (iter == _recently_generated_transactions.end())
+               {
                    // we haven't generated this transaction before, the usual case
                    recently_generated_transaction_record this_transaction_record;
                    this_transaction_record.generation_time = dyn_props.time;
@@ -2579,11 +2615,15 @@
                ++expiration_time_offset;
            }
 
-           if (broadcast) {
-               try {
+           if (broadcast)
+           {
+               try
+               {
                    _remote_net_broadcast->broadcast_transaction(tx);
-               } catch (const fc::exception &e) {
-                   elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", tx.id().str())("e", e.to_detail_string()));
+               }
+               catch (const fc::exception& e)
+               {
+                   elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", tx.id().str())("e", e.to_detail_string()) );
                    throw;
                }
            }
@@ -2838,7 +2878,6 @@
 
              return ss.str();
           };
-
 
           m["get_blind_balances"] = [this](variant result, const fc::variants& a)
           {
@@ -3485,10 +3524,10 @@
                    ("n", number_of_accounts * 2)("time", (end - start).count() / 1000)("l", number_of_loop));
        }
 
-      bool verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key)
-      {
-          return trx.validate_signee(pub_key, _chain_id);
-      }
+       bool verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key)
+       {
+           return trx.validate_signee(pub_key, _chain_id);
+       }
 
        void transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times)
        {
@@ -3514,7 +3553,7 @@
                 
                 vector<public_key_type> paying_keys = from_account_obj->active.get_keys();
                 auto dyn_props = get_dynamic_global_properties();
-                tx.set_expiration( dyn_props.time + fc::seconds(30 + i) );
+                tx.set_expiration( dyn_props.time + fc::seconds(300 + i) );
                 for( public_key_type& key : paying_keys )
                 {
                     auto it = _keys.find(key);
@@ -3868,7 +3907,6 @@
        return my->_remote_db->get_account_lock_balances(get_account(account_id_or_name).id, flat_set<asset_id_type>());
     }
 
-
     vector<asset_object> wallet_api::list_assets(const string& lowerbound, uint32_t limit)const
     {
        return my->_remote_db->list_assets( lowerbound, limit );
@@ -4073,6 +4111,12 @@
        return is_known;
     }
 
+    bool wallet_api::is_account_registered(string name) const
+    {
+       bool is_known = my->_remote_db->is_account_registered(name);
+       return is_known;
+    }
+
     string wallet_api::serialize_transaction( signed_transaction tx )const
     {
        return fc::to_hex(fc::raw::pack(tx));
@@ -4251,6 +4295,15 @@
     pair<transaction_id_type,signed_transaction> wallet_api::broadcast_transaction(signed_transaction tx)
     {
        return my->broadcast_transaction(tx);
+    }
+
+    signed_transaction wallet_api::propose_builder_transaction(
+       transaction_handle_type handle,
+       time_point_sec expiration,
+       uint32_t review_period_seconds,
+       bool broadcast)
+    {
+       return my->propose_builder_transaction(handle, expiration, review_period_seconds, broadcast);
     }
 
     signed_transaction wallet_api::propose_builder_transaction2(

@@ -190,6 +190,11 @@ bool database_api::is_public_key_registered(string public_key) const
     return my->is_public_key_registered(public_key);
 }
 
+bool database_api::is_account_registered(string name) const
+{
+    return my->is_account_registered(name);
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Accounts                                                         //
