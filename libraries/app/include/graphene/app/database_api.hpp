@@ -190,6 +190,13 @@ class database_api
       */
      bool is_public_key_registered(string public_key) const;
 
+     /**
+      * Determine whether an account_name is registered on the blockchain
+      * @param name account_name
+      * @return true if account_name is registered
+      */
+     bool is_account_registered(string name) const;
+
       //////////////
       // Accounts //
       //////////////
@@ -764,8 +771,7 @@ class database_api
 
 
     /**
-     * 根据联盟ID查询
-     * brief get_leagues
+     * @brief get league by league_ids
      * @param league_ids
      * @return
      */
@@ -784,7 +790,7 @@ class database_api
      * @return uint32_t
      */   
     uint32_t get_witness_participation_rate() const;
-    
+
    private:
       std::shared_ptr< database_api_impl > my;
 
@@ -830,6 +836,7 @@ FC_API(graphene::app::database_api,
    (lookup_account_names)
    (lookup_accounts)
    (get_account_count)
+   (is_account_registered)
 
    // statistic
    (get_data_transaction_product_costs)
@@ -918,5 +925,5 @@ FC_API(graphene::app::database_api,
    (list_second_hand_datasources)
    (list_total_second_hand_transaction_counts_by_datasource)
    (get_witness_participation_rate)
-
+   
 )
