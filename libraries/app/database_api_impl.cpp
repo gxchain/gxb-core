@@ -68,7 +68,6 @@ optional<T> maybe_id( const string& name_or_id )
 //////////////////////////////////////////////////////////////////////
 database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
 {
-   dlog("creating database api ${x}", ("x",int64_t(this)));
    _new_connection = _db.new_objects.connect([this](const vector<object_id_type>& ids, const flat_set<account_id_type>& impacted_accounts) {
                                 on_objects_new(ids, impacted_accounts);
                                 });
@@ -92,7 +91,6 @@ database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
 
 database_api_impl::~database_api_impl()
 {
-    dlog("freeing database api ${x}", ("x", int64_t(this)));
 }
 
 fc::variants database_api_impl::get_objects(const vector<object_id_type>& ids)const
@@ -205,7 +203,7 @@ data_transaction_commission_percent_t database_api_impl::get_commission_percent(
             return ext.get<data_transaction_commission_percent_t>();
         }
     }
-    return data_transaction_commission_percent_t();
+    FC_THROW("no ommission_rate");
 }
 
 chain_property_object database_api_impl::get_chain_properties()const
@@ -308,6 +306,22 @@ bool database_api_impl::is_public_key_registered(string public_key) const
     auto itr = refs.account_to_key_memberships.find(key);
     bool is_known = itr != refs.account_to_key_memberships.end();
 
+    return is_known;
+}
+
+bool database_api_impl::is_account_registered(string name) const
+{
+    if (name.empty()) {
+        return false;
+    }
+
+    if (!is_valid_name(name)) {
+        return false;
+    }
+
+    const auto& idx = _db.get_index_type<account_index>().indices().get<by_name>();
+    auto iter = idx.find(name);
+    bool is_known = iter != idx.end();
     return is_known;
 }
 

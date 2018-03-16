@@ -606,7 +606,6 @@ class wallet_api
        * @returns a list of account objects
        */
       vector<account_object>            list_my_accounts();
-
       /** Lists all accounts registered in the blockchain.
        * This returns a list of all account names and their account ids, sorted by account name.
        *
@@ -620,7 +619,6 @@ class wallet_api
        * @returns a list of accounts mapping account names to account ids
        */
       map<string,account_id_type>       list_accounts(const string& lowerbound, uint32_t limit);
-
       /** List the balances of an account.
        * Each account can have multiple balances, one for each type of asset owned by that 
        * account.  The returned list will only contain assets for which the account has a
@@ -676,7 +674,7 @@ class wallet_api
        * This returns a list of operation history objects, which describe activity on the account.
        *
        * @param account_name_or_id the name or id of the account
-       * @param operation_indexs the type of operations
+       * @param operations_indexs the type of operations
        * @param start the start place of the operation_history_objects
        * @param limit the number of entries to return (starting from the most recent)
        * @returns account_history_operation_detail
@@ -816,6 +814,13 @@ class wallet_api
       /**
        * @ingroup Transaction Builder API
        */
+      signed_transaction propose_builder_transaction(
+          transaction_handle_type handle,
+          time_point_sec expiration = time_point::now() + fc::minutes(1),
+          uint32_t review_period_seconds = 0,
+          bool broadcast = true
+         );
+
       signed_transaction propose_builder_transaction2(
          transaction_handle_type handle,
          string account_name_or_id,
@@ -957,6 +962,13 @@ class wallet_api
       * @return Whether a public key is known
       */
      bool is_public_key_registered(string public_key) const;
+
+     /**
+      * Determine whether an account_name is registered on the blockchain
+      * @param name account_name
+      * @return true if account_name is registered
+      */
+      bool is_account_registered(string name) const;
 
       /** Converts a signed_transaction in JSON form to its binary representation.
        *
@@ -2120,9 +2132,15 @@ class wallet_api
        */
       void transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times);
 
+      /** get_hash
+       *
+       * @param value
+       * @return fc::sha256
+       */
+      fc::sha256 get_hash(const string& value);
       /** verify_transaction_signature 
        * @param trx
-       * @param pub_key
+       * @param public_key
        * @return bool
        */
       bool verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key);
@@ -2131,13 +2149,6 @@ class wallet_api
        * @return
        */
       void get_tps();
-
-      /** get_hash
-       *
-       * @param value
-       * @return fc::sha256
-       */
-      fc::sha256 get_hash(const string& value);
 
       void network_add_nodes( const vector<string>& nodes );
       vector< variant > network_get_connected_peers();
@@ -2237,6 +2248,7 @@ FC_API( graphene::wallet::wallet_api,
         (preview_builder_transaction)
         (sign_builder_transaction)
         (broadcast_transaction)
+        (propose_builder_transaction)
         (propose_builder_transaction2)
         (remove_builder_transaction)
         (is_new)
@@ -2315,6 +2327,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_data_transaction_product_costs_by_product_id)
         (get_data_transaction_total_count_by_product_id)
         (is_public_key_registered)
+        (is_account_registered)
         (get_market_history)
         (get_global_properties)
         (get_dynamic_global_properties)
@@ -2342,11 +2355,11 @@ FC_API( graphene::wallet::wallet_api,
         (dbg_update_object)
         (flood_transfer)
         (transfer_test)
+        (get_hash)
         (verify_transaction_signature)
         (flood_network)
         (flood_create_account)
         (get_tps)
-        (get_hash)
         (network_add_nodes)
         (network_get_connected_peers)
         (set_key_label)
