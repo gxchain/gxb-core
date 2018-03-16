@@ -1287,6 +1287,20 @@ class wallet_api
        */
       transaction_id_type get_transaction_id( const signed_transaction& trx )const { return trx.id(); }
 
+      /** Sign a memo message.
+       *
+       * @param from the name or id of signing account; or a public key.
+       * @param to the name or id of receiving account; or a public key.
+       * @param memo text to sign.
+       */
+      memo_data sign_memo(string from, string to, string memo);
+
+      /** Read a memo.
+       *
+       * @param memo JSON-enconded memo.
+       * @returns string with decrypted message..
+       */
+      string read_memo(const memo_data& memo);
 
       /** These methods are used for stealth transfers */
       ///@{
@@ -2362,6 +2376,8 @@ FC_API( graphene::wallet::wallet_api,
         (get_tps)
         (network_add_nodes)
         (network_get_connected_peers)
+        (sign_memo)
+        (read_memo)
         (set_key_label)
         (get_key_label)
         (get_public_key)
