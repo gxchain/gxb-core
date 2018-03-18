@@ -21,7 +21,7 @@
 #include <graphene/chain/protocol/ext.hpp>
 
 namespace graphene { namespace chain {
-    struct  data_storage_params
+    struct proxy_transfer_params
     {
         account_id_type         from;
         account_id_type         to;
@@ -33,14 +33,14 @@ namespace graphene { namespace chain {
         vector<signature_type>  signatures;
     };
 
-    struct data_storage_operation : public base_operation {
+    struct proxy_transfer_operation : public base_operation {
         struct fee_parameters_type {
             uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
         };
 
         fc::string                      proxy_memo;
         asset                           fee;
-        data_storage_params             request_params;
+        proxy_transfer_params           request_params;
         extensions_type                 extensions;
 
         account_id_type fee_payer() const { return request_params.proxy_account; }
@@ -65,7 +65,7 @@ namespace graphene { namespace chain {
 
 } } // graphene::chain
 
-FC_REFLECT(graphene::chain::data_storage_params,
+FC_REFLECT(graphene::chain::proxy_transfer_params,
             (from)
             (to)
             (proxy_account)
@@ -75,9 +75,9 @@ FC_REFLECT(graphene::chain::data_storage_params,
             (expiration)
             (signatures))
 
-FC_REFLECT(graphene::chain::data_storage_operation::fee_parameters_type, (fee))
+FC_REFLECT(graphene::chain::proxy_transfer_operation::fee_parameters_type, (fee))
 
-FC_REFLECT(graphene::chain::data_storage_operation,
+FC_REFLECT(graphene::chain::proxy_transfer_operation,
             (proxy_memo)
             (fee)
             (request_params)

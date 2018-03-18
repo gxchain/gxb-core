@@ -30,15 +30,15 @@ namespace graphene {
     class database;
 
         /**
-         * Query the data_storge_baas_object
+         * Query the signature_object
          * @brief
          */
-        class data_storage_baas_object : public graphene::db::abstract_object<data_storage_baas_object> {
+        class signature_object : public graphene::db::abstract_object<signature_object> {
         public:
             static const uint8_t space_id = implementation_ids;
-            static const uint8_t type_id = impl_data_storage_baas_object_type;
+            static const uint8_t type_id = impl_signature_object_type;
 
-            // user's signature who use baas service
+            // user's signature who use proxy_transfer service
             signature_type              signature;
             // expiration time
             fc::time_point_sec          expiration;
@@ -49,23 +49,23 @@ namespace graphene {
          */
         struct by_signature;
         struct by_expiration;
-        using data_storage_baas_multi_index_type = multi_index_container<
-            data_storage_baas_object,
+        using signature_multi_index_type = multi_index_container<
+            signature_object,
             indexed_by<
                 ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
-                ordered_unique< tag<by_signature>, member<data_storage_baas_object, signature_type, &data_storage_baas_object::signature> >,
-                ordered_non_unique< tag<by_expiration>, member<data_storage_baas_object, time_point_sec, &data_storage_baas_object::expiration > >
+                ordered_unique< tag<by_signature>, member<signature_object, signature_type, &signature_object::signature> >,
+                ordered_non_unique< tag<by_expiration>, member<signature_object, time_point_sec, &signature_object::expiration > >
              >
         >;
         /**
          * @ingroup object_index
          */
-        using data_storage_index = generic_index<data_storage_baas_object, data_storage_baas_multi_index_type>;
+        using signature_index = generic_index<signature_object, signature_multi_index_type>;
 
     }
 }
 
-FC_REFLECT_DERIVED(graphene::chain::data_storage_baas_object,
+FC_REFLECT_DERIVED(graphene::chain::signature_object,
                    (graphene::db::object),
                    (signature)
                    (expiration))

@@ -53,6 +53,7 @@
 #include <graphene/chain/league_object.hpp>
 #include <graphene/chain/pocs_object.hpp>
 #include <graphene/chain/second_hand_data_object.hpp>
+#include <graphene/chain/signature_object.hpp>
 
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
@@ -77,7 +78,7 @@
 #include <graphene/chain/league_evaluator.hpp>
 #include <graphene/chain/datasource_copyright_evaluator.hpp>
 #include <graphene/chain/loyalty_evaluator.hpp>
-#include <graphene/chain/data_storage_evaluator.hpp>
+#include <graphene/chain/proxy_transfer_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -167,6 +168,9 @@ const uint8_t data_transaction_complain_object::type_id;
 const uint8_t lock_balance_object::space_id;
 const uint8_t lock_balance_object::type_id;
 
+const uint8_t signature_object::space_id;
+const uint8_t signature_object::type_id;
+
 void database::initialize_evaluators()
 {
    _operation_evaluators.resize(255);
@@ -242,7 +246,7 @@ void database::initialize_evaluators()
    register_evaluator<data_transaction_datasource_validate_error_evaluator>();
    register_evaluator<data_transaction_complain_evaluator>();
    register_evaluator<datasource_copyright_clear_evaluator>();
-   register_evaluator<data_storage_evaluator>();
+   register_evaluator<proxy_transfer_evaluator>();
 
 }
 
@@ -300,6 +304,7 @@ void database::initialize_indexes()
 
    add_index< primary_index< simple_index< fba_accumulator_object       > > >();
 
+   add_index< primary_index<signature_index                            > >();
 
 }
 

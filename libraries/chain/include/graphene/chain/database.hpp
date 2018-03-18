@@ -443,7 +443,7 @@ namespace graphene { namespace chain {
          void update_signing_witness(const witness_object& signing_witness, const signed_block& new_block);
          void update_last_irreversible_block();
          void clear_expired_transactions();
-         void clear_expired_data_storage_baas_objs();
+         void clear_expired_signature_objs();
          void clear_expired_proposals();
          void clear_expired_orders();
          void update_expired_feeds();
