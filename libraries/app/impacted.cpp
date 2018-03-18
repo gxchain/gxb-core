@@ -277,10 +277,10 @@ struct get_impacted_account_visitor
 
    void operator() (const balance_unlock_operation& op) {}
 
-   void operator() (const data_storage_operation &op) {
-       _impacted.insert(op.request_params.from);
-       _impacted.insert(op.request_params.to);
-       _impacted.insert(op.request_params.proxy);
+   void operator() (const proxy_transfer_operation &op) {
+       _impacted.insert(op.get_from_account());
+       _impacted.insert(op.get_to_account());
+       _impacted.insert(op.get_proxy_account());
    }
 };
 

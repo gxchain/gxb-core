@@ -31,7 +31,7 @@
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
-#include <graphene/chain/data_storage_baas_object.hpp>
+#include <graphene/chain/signature_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 
@@ -158,13 +158,13 @@ void database::update_last_irreversible_block()
    }
 }
 
-void database::clear_expired_data_storage_baas_objs()
+void database::clear_expired_signature_objs()
 { try {
-   //Look for expired data_storage_baas_objs in the deduplication list, and remove them.
-   auto& data_storage_idx = static_cast<data_storage_index&>(get_mutable_index(implementation_ids, impl_data_storage_baas_object_type));
-   const auto& dedupe_index = data_storage_idx.indices().get<by_expiration>();
+   //Look for expired signature_objs in the deduplication list, and remove them.
+   auto& signature_idx = static_cast<signature_index&>(get_mutable_index(implementation_ids, impl_signature_object_type));
+   const auto& dedupe_index = signature_idx.indices().get<by_expiration>();
    while ((!dedupe_index.empty()) && (head_block_time() > dedupe_index.begin()->expiration))
-       data_storage_idx.remove(*dedupe_index.begin());
+       signature_idx.remove(*dedupe_index.begin());
 } FC_CAPTURE_AND_RETHROW() }
 
 void database::clear_expired_transactions()

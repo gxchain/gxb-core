@@ -17,17 +17,17 @@
     along with gxb-core.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <graphene/chain/data_storage_evaluator.hpp>
+#include <graphene/chain/proxy_transfer_evaluator.hpp>
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/is_authorized_asset.hpp>
-#include <graphene/chain/data_storage_baas_object.hpp>
+#include <graphene/chain/signature_object.hpp>
 
 namespace graphene { namespace chain {
 
 const uint8_t MAX_OP_STRING_LENGTH = 100;
 
-bool verify_data_storage_signature(const fc::ecc::public_key& expected_signee, const data_storage_params& params)
+bool verify_proxy_transfer_signature(const fc::ecc::public_key& expected_signee, const proxy_transfer_params& params)
 {
     auto p = params;
     p.signatures.clear();
@@ -42,7 +42,7 @@ bool verify_data_storage_signature(const fc::ecc::public_key& expected_signee, c
     return false;
 }
 
-share_type data_storage_evaluator::cut_fee(share_type a, uint16_t p)
+share_type proxy_transfer_evaluator::cut_fee(share_type a, uint16_t p)
 {
    if( a == 0 || p == 0 )
       return 0;
@@ -55,7 +55,7 @@ share_type data_storage_evaluator::cut_fee(share_type a, uint16_t p)
    return r.to_uint64();
 }
 
-void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op)
+void_result proxy_transfer_evaluator::do_evaluate(const proxy_transfer_operation &op)
 { try {
     const database& d = db();
 
@@ -80,12 +80,12 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
     FC_ASSERT(op.request_params.signatures.size() > 0, "no signatures");
     const auto& keys = from_account.active.get_keys();
     FC_ASSERT(keys.size() == 1, "do not support multisig acount, account ${a}", ("a", op.request_params.from));
-    FC_ASSERT(verify_data_storage_signature(keys.at(0), op.request_params), "verify user signature error");
+    FC_ASSERT(verify_proxy_transfer_signature(keys.at(0), op.request_params), "verify user signature error");
 
-    // check data_storage_object
-    const auto& data_storage_idx = d.get_index_type<data_storage_index>().indices().get<by_signature>();
-    auto maybe_found = data_storage_idx.find(op.request_params.signatures.at(0));
-    FC_ASSERT(maybe_found == data_storage_idx.end(), "user request signature already used once! signature ${s}", ("s", op.request_params.signatures.at(0)));
+    // check signature_object
+    const auto& signature_idx = d.get_index_type<signature_index>().indices().get<by_signature>();
+    auto maybe_found = signature_idx.find(op.request_params.signatures.at(0));
+    FC_ASSERT(maybe_found == signature_idx.end(), "user request signature already used once! signature ${s}", ("s", op.request_params.signatures.at(0)));
 
     // check account balance, check blacklist / whitelist
     const account_object &to_account = op.request_params.to(d);
@@ -122,14 +122,14 @@ void_result data_storage_evaluator::do_evaluate(const data_storage_operation &op
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
-void_result data_storage_evaluator::do_apply(const data_storage_operation &op)
+void_result proxy_transfer_evaluator::do_apply(const proxy_transfer_operation &op)
 { try {
-    // create data_storage_object
-    const auto& new_object = db().create<data_storage_baas_object>([&](data_storage_baas_object& obj) {
+    // create signature_object
+    const auto& new_object = db().create<signature_object>([&](signature_object& obj) {
             obj.signature     = op.request_params.signatures.at(0);
             obj.expiration    = op.request_params.expiration;
             });
-    dlog("data_storage_baas_object ${o}", ("o", new_object));
+    dlog("signature_object ${o}", ("o", new_object));
 
     // transfer asset
     share_type commission_amount = cut_fee(op.request_params.amount.amount, op.request_params.percentage);

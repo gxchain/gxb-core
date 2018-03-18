@@ -695,7 +695,7 @@ void database_fixture::sign(signed_transaction& trx, const fc::ecc::private_key&
    trx.sign( key, db.get_chain_id() );
 }
 
-signature_type database_fixture::sign_data_storage_param(const private_key_type& key, const data_storage_params& param)
+signature_type database_fixture::sign_proxy_transfer_param(const private_key_type& key, const proxy_transfer_params& param)
 {
     digest_type::encoder enc;
     fc::raw::pack(enc, param);
