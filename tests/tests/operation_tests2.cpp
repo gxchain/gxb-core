@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_create )
    trx.clear();
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE(data_storage_baas_test)
+BOOST_AUTO_TEST_CASE(proxy_transfer_test)
 { try {
    // alice --> dan, and bob is proxy_account
    ACTOR(alice);
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(data_storage_baas_test)
    generate_block();
 
    // construct trx
-   data_storage_params param;
+   proxy_transfer_params param;
    param.from = alice_id;
    param.to = dan_id;
    param.proxy_account = bob_id;
@@ -112,9 +112,9 @@ BOOST_AUTO_TEST_CASE(data_storage_baas_test)
    param.amount = asset(5000, gxs_id);
    param.memo = fc::json::to_string(alice_private_key.get_public_key());
    param.expiration = db.head_block_time() + fc::hours(1);
-   param.signatures.push_back(sign_data_storage_param(alice_private_key, param));
+   param.signatures.push_back(sign_proxy_transfer_param(alice_private_key, param));
 
-   data_storage_operation op;
+   proxy_transfer_operation op;
    op.proxy_memo = fc::json::to_string(bob_private_key.get_public_key());
    op.fee = asset(2000, gxs_id);
    op.request_params = param;
