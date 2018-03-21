@@ -27,20 +27,6 @@ namespace graphene { namespace chain {
 
 const uint8_t MAX_OP_STRING_LENGTH = 100;
 
-bool verify_proxy_transfer_signature(const fc::ecc::public_key& expected_signee, const proxy_transfer_params& params)
-{
-    auto p = params;
-    p.signatures.clear();
-    digest_type::encoder enc;
-    fc::raw::pack(enc, p);
-
-    for (const auto& sig : params.signatures) {
-        if (fc::ecc::public_key(sig, enc.result(), true) == expected_signee) {
-            return true;
-        }
-    }
-    return false;
-}
 
 share_type proxy_transfer_evaluator::cut_fee(share_type a, uint16_t p)
 {
@@ -80,7 +66,7 @@ void_result proxy_transfer_evaluator::do_evaluate(const proxy_transfer_operation
     FC_ASSERT(op.request_params.signatures.size() > 0, "no signatures");
     const auto& keys = from_account.active.get_keys();
     FC_ASSERT(keys.size() == 1, "do not support multisig acount, account ${a}", ("a", op.request_params.from));
-    FC_ASSERT(verify_proxy_transfer_signature(keys.at(0), op.request_params), "verify user signature error");
+    FC_ASSERT(op.request_params.verify_proxy_transfer_signature(keys.at(0)), "verify user signature error");
 
     // check signature_object
     const auto& signature_idx = d.get_index_type<signature_index>().indices().get<by_signature>();
