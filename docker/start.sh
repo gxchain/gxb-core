@@ -51,7 +51,7 @@ elif [[ "$bool_wallet" == "false" ]]
 
     if [[ "$replay" == "true" ]] || [[ -z "$replay" ]]; then
         ARGS+=" --replay-blockchain"
-    elif [[ "$replay" == "false" ]]
+    elif [[ "$replay" == "false" ]]; then
         ARGS+=" --resync-blockchain"
     fi
 
