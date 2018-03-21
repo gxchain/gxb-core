@@ -4179,6 +4179,11 @@
         return my->read_memo(memo);
     }
 
+    string wallet_api::serialize_proxy_transfer_params(proxy_transfer_params param) const
+    {
+       return fc::to_hex(fc::raw::pack(param));
+    }
+
     string wallet_api::serialize_transaction( signed_transaction tx )const
     {
        return fc::to_hex(fc::raw::pack(tx));
