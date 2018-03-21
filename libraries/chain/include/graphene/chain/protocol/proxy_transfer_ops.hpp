@@ -31,6 +31,21 @@ namespace graphene { namespace chain {
         fc::string              memo;
         fc::time_point_sec      expiration;
         vector<signature_type>  signatures;
+
+        bool verify_proxy_transfer_signature(const fc::ecc::public_key& expected_signee) const
+        {
+            auto p = *this;
+            p.signatures.clear();
+            digest_type::encoder enc;
+            fc::raw::pack(enc, p);
+
+            for (const auto& sig : this->signatures) {
+                if (fc::ecc::public_key(sig, enc.result(), true) == expected_signee) {
+                    return true;
+                }
+            }
+            return false;
+        }
     };
 
     struct proxy_transfer_operation : public base_operation {
