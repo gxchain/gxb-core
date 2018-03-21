@@ -264,10 +264,10 @@ struct get_impacted_account_visitor
 
    void operator() (const balance_unlock_operation& op) {}
 
-   void operator() (const data_storage_operation& op) {
-       _impacted.insert(op.request_params.proxy_account);
-       _impacted.insert(op.request_params.from);
-       _impacted.insert(op.request_params.to);
+   void operator() (const proxy_transfer_operation& op) {
+       _impacted.insert(op.get_from_account());
+       _impacted.insert(op.get_to_account());
+       _impacted.insert(op.get_proxy_account());
    }
 };
 
@@ -447,7 +447,7 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
               break;
              case impl_data_transaction_search_results_object_type:
               break;
-             case impl_data_storage_baas_object_type:
+             case impl_signature_object_type:
               break;
       }
 
