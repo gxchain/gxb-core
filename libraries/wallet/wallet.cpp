@@ -2675,7 +2675,6 @@
                    clear_text = memo->get_message(*my_key, memo->to);
                }
            } catch (const fc::exception& e) {
-               elog("Error when decrypting memo: ${e}", ("e", e.to_detail_string()));
            }
 
            return clear_text;
