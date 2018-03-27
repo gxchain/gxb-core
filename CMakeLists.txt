@@ -59,7 +59,7 @@ ENDIF(WIN32)
 
 FIND_PACKAGE(Boost 1.57 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 # For Boost 1.53 on windows, coroutine was not in BOOST_LIBRARYDIR and do not need it to build,  but if boost versin >= 1.54, find coroutine otherwise will cause link errors
-IF(NOT "${Boost_VERSION}" MATCHES "1.53(.*)")
+IF(NOT "${Boost_VERSION}" MATCHES "1.65(.*)")
    SET(BOOST_LIBRARIES_TEMP ${Boost_LIBRARIES})
    FIND_PACKAGE(Boost 1.54 REQUIRED COMPONENTS coroutine)
    LIST(APPEND BOOST_COMPONENTS coroutine)
@@ -152,7 +152,7 @@ endif()
 
 add_subdirectory( libraries )
 add_subdirectory( programs )
-#add_subdirectory( tests )
+add_subdirectory( tests )
 
 
 if (ENABLE_INSTALLER)
