@@ -1327,8 +1327,11 @@
              //    it is intended to only be used for key recovery
              _wallet.pending_account_registrations[account_name].push_back(key_to_wif( active_privkey ));
              _wallet.pending_account_registrations[account_name].push_back(key_to_wif( memo_privkey ));
-             if( save_wallet )
-                save_wallet_file();
+             idump((save_wallet));
+             if (save_wallet) {
+                 idump((save_wallet));
+                 save_wallet_file();
+             }
              if( broadcast )
                 _remote_net_broadcast->broadcast_transaction( tx );
              return tx;
@@ -1866,7 +1869,7 @@
 
        void get_tps()
        {
-           const uint16_t delta_block = 5;
+           const uint16_t delta_block = 3;
            while (true) {
                uint32_t head_block_num = get_dynamic_global_properties().head_block_number;
                // get total_trx
@@ -1889,7 +1892,7 @@
 
                // sleep interval
                uint8_t block_interval = get_global_properties().parameters.block_interval;
-               fc::usleep(fc::seconds(block_interval));
+               fc::usleep(fc::seconds(block_interval * 3));
            }
        }
 
@@ -2675,6 +2678,7 @@
                    clear_text = memo->get_message(*my_key, memo->to);
                }
            } catch (const fc::exception& e) {
+               elog("Error when decrypting memo: ${e}", ("e", e.to_detail_string()));
            }
 
            return clear_text;
@@ -3546,7 +3550,7 @@
                for (int i = 0; i < number_of_accounts; ++i) {
                    std::ostringstream brain_key;
                    brain_key << "brain key for account " << prefix << i;
-                   signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name, master.name, /* broadcast = */ true, /* save wallet = */ false);
+                   signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name, master.name, /* broadcast = */ true, /* save wallet = */ true);
                }
                fc::time_point end = fc::time_point::now();
                ilog("Created ${n} accounts in ${time} milliseconds",
@@ -3556,73 +3560,53 @@
            }
        }
 
-       void flood_transfer(string from_account, string account_prefix, uint32_t number_of_accounts, uint32_t number_of_loop)
-       {
-           fc::time_point start = fc::time_point::now();
-           for (int i = 0; i < number_of_loop; ++i) {
-               for (int j = 0; j < number_of_accounts; ++j) {
-                   try {
-                       signed_transaction trx = transfer(from_account, account_prefix + fc::to_string(j), "1", GRAPHENE_SYMBOL, "", true);
-                       trx = transfer(from_account, account_prefix + fc::to_string(i), "1", GRAPHENE_SYMBOL, "", true);
-                   } catch (...) {
-                   }
-               }
-           }
-           fc::time_point end = fc::time_point::now();
-           ilog("Transferred to ${n} accounts in ${time} milliseconds, loop ${l}",
-                   ("n", number_of_accounts * 2)("time", (end - start).count() / 1000)("l", number_of_loop));
-       }
-
        bool verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key)
        {
            return trx.validate_signee(pub_key, _chain_id);
        }
 
-       void transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times)
+       void flood_transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times)
        {
-            FC_ASSERT( !self.is_locked() );
-            fc::optional<asset_object> asset_obj = get_asset("GXC");
-            FC_ASSERT(asset_obj, "Could not find asset GXC");
+           FC_ASSERT(!self.is_locked());
+           fc::optional<asset_object> asset_obj = get_asset(ASSET_SYMBOL_GXC);
 
-            asset amount;
-            amount.asset_id = asset_obj->id;
-            amount.amount = 100000;
-            fc::optional<account_object> from_account_obj = get_account(from_account);
-            FC_ASSERT(from_account_obj, "Could not find account_object ${from_account}", ("from_account", from_account));
+           asset amount {1, asset_id_type()};
+           fc::optional<account_object> from_account_obj = get_account(from_account);
 
-            for(int i = 0; i < times; ++i) {
-                transfer_operation xfer_op;
-                xfer_op.from = from_account;
-                xfer_op.to = to_account;
-                xfer_op.amount = amount;
-                signed_transaction tx;
-                tx.operations.push_back(xfer_op);
-                set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, asset_obj);
-                tx.validate();
-                
-                vector<public_key_type> paying_keys = from_account_obj->active.get_keys();
-                auto dyn_props = get_dynamic_global_properties();
-                tx.set_expiration( dyn_props.time + fc::seconds(300 + i) );
-                for( public_key_type& key : paying_keys )
-                {
-                    auto it = _keys.find(key);
-                    if( it != _keys.end() )
-                    {
-                        fc::optional< fc::ecc::private_key > privkey = wif_to_key( it->second );
-                        FC_ASSERT( privkey.valid(), "Malformed private key in _keys" );
-                        tx.sign( *privkey, _chain_id );
-                    }
-                }
-                try
-                {
-                    _remote_net_broadcast->broadcast_transaction( tx );
-                }
-                catch (const fc::exception& e)
-                {
-                    elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", tx.id().str())("e", e.to_detail_string()) );
-                    throw;
-                }
-            }
+           transfer_operation op;
+           op.from = from_account;
+           op.to = to_account;
+           op.amount = amount;
+
+           signed_transaction tx;
+           tx.operations.push_back(op);
+           set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+           tx.validate();
+
+           fc::time_point start = fc::time_point::now();
+           auto dyn_props = get_dynamic_global_properties();
+           for (int i = 0; i < times; ++i) {
+               tx.set_expiration(dyn_props.time + fc::seconds(300 + i));
+
+               vector<public_key_type> paying_keys = from_account_obj->active.get_keys();
+               for (public_key_type &key : paying_keys) {
+                   auto it = _keys.find(key);
+                   if (it != _keys.end()) {
+                       fc::optional<fc::ecc::private_key> privkey = wif_to_key(it->second);
+                       FC_ASSERT(privkey.valid(), "Malformed private key in _keys");
+                       tx.sign(*privkey, _chain_id);
+                   }
+               }
+               try {
+                   _remote_net_broadcast->broadcast_transaction(tx);
+               } catch (const fc::exception &e) {
+                   elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", tx.id().str())("e", e.to_detail_string()));
+                   continue;
+               }
+           }
+           fc::time_point end = fc::time_point::now();
+           ilog("Transferred to ${n} accounts in ${time} milliseconds, loop ${l}",
+                   ("n", number_of_accounts * 2)("time", (end - start).count() / 1000)("l", number_of_loop));
        }
 
        fc::sha256 get_hash(const string& value)
@@ -3768,7 +3752,6 @@
                 }
              } catch (const fc::exception& e) {
                 out << " -- could not decrypt memo";
-                elog("Error when decrypting memo: ${e}", ("e", e.to_detail_string()));
              }
           }
        }
@@ -4597,11 +4580,11 @@
     }
     signed_transaction wallet_api::create_account_with_brain_key(string brain_key, string account_name,
                                                                  string registrar_account, string referrer_account,
-                                                                 bool broadcast /* = false */)
+                                                                 bool broadcast /* = false */, bool save_wallet)
     {
        return my->create_account_with_brain_key(
                 brain_key, account_name, registrar_account,
-                referrer_account, broadcast
+                referrer_account, broadcast, save_wallet
                 );
     }
     signed_transaction wallet_api::issue_asset(string to_account, string amount, string symbol,
@@ -4870,15 +4853,9 @@
        my->flood_create_account(account_prefix, number_of_accounts);
     }
 
-    void wallet_api::flood_transfer(string from_account, string account_prefix, uint32_t number_of_accounts, uint32_t number_of_loop)
+    void wallet_api::flood_transfer_test(account_id_type from_account, account_id_type to_account, uint31_t times)
     {
-       FC_ASSERT(!is_locked());
-       my->flood_transfer(from_account, account_prefix, number_of_accounts, number_of_loop);
-    }
-
-    void wallet_api::transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times)
-    {
-        my->transfer_test(from_account, to_account, times);
+        my->flood_transfer_test(from_account, to_account, times);
     }
 
     fc::sha256 wallet_api::get_hash(const string& value)
@@ -5021,9 +4998,9 @@
        }
        else if( method == "create_account_with_brain_key" )
        {
-          ss << "usage: create_account_with_brain_key BRAIN_KEY ACCOUNT_NAME REGISTRAR REFERRER BROADCAST\n\n";
-          ss << "example: create_account_with_brain_key \"my really long brain key\" \"newaccount\" \"1.3.11\" \"1.3.11\" true\n";
-          ss << "example: create_account_with_brain_key \"my really long brain key\" \"newaccount\" \"someaccount\" \"otheraccount\" true\n";
+          ss << "usage: create_account_with_brain_key BRAIN_KEY ACCOUNT_NAME REGISTRAR REFERRER BROADCAST SAVE_WALLET\n\n";
+          ss << "example: create_account_with_brain_key \"my really long brain key\" \"newaccount\" \"1.3.11\" \"1.3.11\" true true\n";
+          ss << "example: create_account_with_brain_key \"my really long brain key\" \"newaccount\" \"someaccount\" \"otheraccount\" true true\n";
           ss << "\n";
           ss << "This method should be used if you would like the wallet to generate new keys derived from the brain key.\n";
           ss << "The BRAIN_KEY will be used as the owner key, and the active key will be derived from the BRAIN_KEY.  Use\n";
