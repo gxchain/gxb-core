@@ -1252,7 +1252,8 @@ class wallet_api
                                                        string account_name,
                                                        string registrar_account,
                                                        string referrer_account,
-                                                       bool broadcast = false);
+                                                       bool broadcast = false,
+                                                       bool save_wallet = true);
 
       /** Transfer an amount from one account to another.
        * @param from the name or id of the account sending the funds
@@ -2132,24 +2133,15 @@ class wallet_api
        * @return
        */
       void flood_create_account(string account_prefix, uint32_t number_of_accounts);
-      /** flood_transfer
-       *
-       * @param from_account
-       * @param account_prefix
-       * @param number_of_accounts
-       * @param number_of_loop
-       * @return
-       */
-      void flood_transfer(string from_account, string account_prefix, uint32_t number_of_accounts, uint32_t number_of_loop);
 
-      /** transfer_test, Efficient transfer api
+      /** flood_transfer_test
        *
        * @param from_account
        * @param to_account
        * @param times
        * @return
        */
-      void transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times);
+      void flood_transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times);
 
       /** get_hash
        *
@@ -2158,7 +2150,7 @@ class wallet_api
        */
       fc::sha256 get_hash(const string& value);
 
-      /** verify_transaction_signature 
+      /** verify_transaction_signature
        * @param trx
        * @param pub_key
        * @return bool
@@ -2374,8 +2366,7 @@ FC_API( graphene::wallet::wallet_api,
         (dbg_generate_blocks)
         (dbg_stream_json_objects)
         (dbg_update_object)
-        (flood_transfer)
-        (transfer_test)
+        (flood_transfer_test)
         (get_hash)
         (verify_transaction_signature)
         (flood_network)
