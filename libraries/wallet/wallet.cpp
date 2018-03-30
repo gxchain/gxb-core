@@ -3586,7 +3586,8 @@
            fc::time_point start = fc::time_point::now();
            auto dyn_props = get_dynamic_global_properties();
            for (int i = 0; i < times; ++i) {
-               tx.set_expiration(dyn_props.time + fc::seconds(300 + i));
+               tx.set_expiration(dyn_props.time + fc::seconds(30 + i % 86360));
+               tx.signatures.clear();
 
                vector<public_key_type> paying_keys = from_account_obj->active.get_keys();
                for (public_key_type &key : paying_keys) {
@@ -3605,8 +3606,7 @@
                }
            }
            fc::time_point end = fc::time_point::now();
-           ilog("Transferred to ${n} accounts in ${time} milliseconds, loop ${l}",
-                   ("n", number_of_accounts * 2)("time", (end - start).count() / 1000)("l", number_of_loop));
+           ilog("finished in ${time} milliseconds, loop times ${l}", ("time", (end - start).count() / 1000)("l", times));
        }
 
        fc::sha256 get_hash(const string& value)
@@ -4853,7 +4853,7 @@
        my->flood_create_account(account_prefix, number_of_accounts);
     }
 
-    void wallet_api::flood_transfer_test(account_id_type from_account, account_id_type to_account, uint31_t times)
+    void wallet_api::flood_transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times)
     {
         my->flood_transfer_test(from_account, to_account, times);
     }
