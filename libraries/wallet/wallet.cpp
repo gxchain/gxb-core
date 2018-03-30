@@ -595,31 +595,18 @@
 
        account_object get_account(string account_name_or_id) const
        {
-          FC_ASSERT( account_name_or_id.size() > 0 );
+           FC_ASSERT(account_name_or_id.size() > 0);
 
-          if( auto id = maybe_id<account_id_type>(account_name_or_id) )
-          {
-             // It's an ID
-             return get_account(*id);
-          } else {
-             // It's a name
-             if( _wallet.my_accounts.get<by_name>().count(account_name_or_id) )
-             {
-                auto local_account = *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
-                auto blockchain_account = _remote_db->lookup_account_names({account_name_or_id}).front();
-                FC_ASSERT( blockchain_account );
-                if (local_account.id != blockchain_account->id)
-                   elog("my account id ${id} different from blockchain id ${id2}", ("id", local_account.id)("id2", blockchain_account->id));
-                if (local_account.name != blockchain_account->name)
-                   elog("my account name ${id} different from blockchain name ${id2}", ("id", local_account.name)("id2", blockchain_account->name));
-
-                return *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
-             }
-             auto rec = _remote_db->lookup_account_names({account_name_or_id}).front();
-             FC_ASSERT( rec && rec->name == account_name_or_id );
-             return *rec;
-          }
+           if (auto id = maybe_id<account_id_type>(account_name_or_id)) {
+               // It's an ID
+               return get_account(*id);
+           } else {
+               auto rec = _remote_db->lookup_account_names({account_name_or_id}).front();
+               FC_ASSERT(rec && rec->name == account_name_or_id);
+               return *rec;
+           }
        }
+
        account_id_type get_account_id(string account_name_or_id) const
        {
           return get_account(account_name_or_id).get_id();
