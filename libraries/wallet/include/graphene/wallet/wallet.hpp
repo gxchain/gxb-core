@@ -1089,12 +1089,12 @@ class wallet_api
                                           string asset_symbol,
                                           bool broadcast = false);
       /**
-       *  Upgrades an account to prime status.
-       *  This makes the account holder a 'lifetime member'.
+       * Upgrades an account to prime status.
+       * This makes the account holder a 'lifetime member'.
        *
-       *  @todo there is no option for annual membership
-       *  @param name the name or id of the account to upgrade
-       *  @param asset_symbol the symbol or id of the fee.
+       * @todo there is no option for annual membership
+       * @param name the name or id of the account to upgrade
+       * @param asset_symbol the symbol of the fee asset.
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction upgrading the account
        */
@@ -1411,6 +1411,34 @@ class wallet_api
                                       fc::optional<bitasset_options> bitasset_opts,
                                       bool broadcast = false);
 
+      /** Creates a new user-issued asset
+       *
+       * Many options can be changed later using \c update_asset2()
+       *
+       * Right now this function is difficult to use because you must provide raw JSON data
+       * structures for the options objects, and those include prices and asset ids.
+       *
+       * @param issuer the name or id of the account who will pay the fee and become the 
+       *               issuer of the new asset.  This can be updated later
+       * @param symbol the ticker symbol of the new asset
+       * @param precision the number of digits of precision to the right of the decimal point,
+       *                  must be less than or equal to 12
+       * @param common asset options required for all new assets.
+       *               Note that core_exchange_rate technically needs to store the asset ID of 
+       *               this new asset. Since this ID is not known at the time this operation is 
+       *               created, create this price as though the new asset has instance ID 1, and
+       *               the chain will overwrite it with the new asset's ID.
+       * @param fee_asset_symbol the symbol of the fee asset.
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction creating a new asset
+       */
+      signed_transaction create_asset2(string issuer,
+                                      string symbol,
+                                      uint8_t precision,
+                                      asset_options common,
+                                      string fee_asset_symbol,
+                                      bool broadcast = false);
+
       /** Issue new shares of an asset.
        *
        * @param to_account the name or id of the account to receive the new shares
@@ -1423,6 +1451,22 @@ class wallet_api
       signed_transaction issue_asset(string to_account, string amount,
                                      string symbol,
                                      string memo,
+                                     bool broadcast = false);
+
+      /** Issue new shares of an asset.
+       *
+       * @param to_account the name or id of the account to receive the new shares
+       * @param amount the amount to issue, in nominal units
+       * @param symbol the ticker symbol of the asset to issue
+       * @param memo a memo to include in the transaction, readable by the recipient
+       * @param fee_asset_symbol the symbol of the fee asset.
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction issuing the new shares
+       */
+      signed_transaction issue_asset2(string to_account, string amount,
+                                     string symbol,
+                                     string memo,
+                                     string fee_asset_symbol,
                                      bool broadcast = false);
 
       /** Update the core options on an asset.
@@ -1444,6 +1488,29 @@ class wallet_api
       signed_transaction update_asset(string symbol,
                                       optional<string> new_issuer,
                                       asset_options new_options,
+                                      bool broadcast = false);
+
+      /** Update the core options on an asset.
+       * There are a number of options which all assets in the network use. These options are 
+       * enumerated in the asset_object::asset_options struct. This command is used to update 
+       * these options for an existing asset.
+       *
+       * @note This operation cannot be used to update BitAsset-specific options. For these options,
+       * \c update_bitasset() instead.
+       *
+       * @param symbol the name or id of the asset to update
+       * @param new_issuer if changing the asset's issuer, the name or id of the new issuer.
+       *                   null if you wish to remain the issuer of the asset
+       * @param new_options the new asset_options object, which will entirely replace the existing
+       *                    options.
+       * @param fee_asset_symbol the symbol of the fee asset.
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction updating the asset
+       */
+      signed_transaction update_asset2(string symbol,
+                                      optional<string> new_issuer,
+                                      asset_options new_options,
+                                      string fee_asset_symbol,
                                       bool broadcast = false);
 
       /** Update the options specific to a BitAsset.
@@ -2176,6 +2243,9 @@ FC_API( graphene::wallet::wallet_api,
         (get_transaction_id)
         (create_asset)
         (update_asset)
+        (issue_asset2)
+        (create_asset2)
+        (update_asset2)
         (update_bitasset)
         (update_asset_feed_producers)
         (publish_asset_feed)
