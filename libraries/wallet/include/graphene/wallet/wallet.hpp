@@ -1252,8 +1252,7 @@ class wallet_api
                                                        string account_name,
                                                        string registrar_account,
                                                        string referrer_account,
-                                                       bool broadcast = false,
-                                                       bool save_wallet = true);
+                                                       bool broadcast = false);
 
       /** Transfer an amount from one account to another.
        * @param from the name or id of the account sending the funds
@@ -1382,125 +1381,6 @@ class wallet_api
                                          string amount,
                                          string symbol,
                                          bool broadcast = false );
-
-      /** Place a limit order attempting to sell one asset for another.
-       *
-       * Buying and selling are the same operation on Graphene; if you want to buy BTS 
-       * with USD, you should sell USD for BTS.
-       *
-       * The blockchain will attempt to sell the \c symbol_to_sell for as
-       * much \c symbol_to_receive as possible, as long as the price is at 
-       * least \c min_to_receive / \c amount_to_sell.   
-       *
-       * In addition to the transaction fees, market fees will apply as specified 
-       * by the issuer of both the selling asset and the receiving asset as
-       * a percentage of the amount exchanged.
-       *
-       * If either the selling asset or the receiving asset is whitelist
-       * restricted, the order will only be created if the seller is on
-       * the whitelist of the restricted asset type.
-       *
-       * Market orders are matched in the order they are included
-       * in the block chain.
-       *
-       * @todo Allow order expiration to be set here.  Document default/max expiration time
-       *
-       * @param seller_account the account providing the asset being sold, and which will 
-       *                       receive the proceeds of the sale.
-       * @param amount_to_sell the amount of the asset being sold to sell (in nominal units)
-       * @param symbol_to_sell the name or id of the asset to sell
-       * @param min_to_receive the minimum amount you are willing to receive in return for
-       *                       selling the entire amount_to_sell
-       * @param symbol_to_receive the name or id of the asset you wish to receive
-       * @param timeout_sec if the order does not fill immediately, this is the length of 
-       *                    time the order will remain on the order books before it is 
-       *                    cancelled and the un-spent funds are returned to the seller's 
-       *                    account
-       * @param fill_or_kill if true, the order will only be included in the blockchain
-       *                     if it is filled immediately; if false, an open order will be
-       *                     left on the books to fill any amount that cannot be filled
-       *                     immediately.
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction selling the funds
-       */
-      signed_transaction sell_asset(string seller_account,
-                                    string amount_to_sell,
-                                    string   symbol_to_sell,
-                                    string min_to_receive,
-                                    string   symbol_to_receive,
-                                    uint32_t timeout_sec = 0,
-                                    bool     fill_or_kill = false,
-                                    bool     broadcast = false);
-                                    
-      /** Place a limit order attempting to sell one asset for another.
-       * 
-       * This API call abstracts away some of the details of the sell_asset call to be more
-       * user friendly. All orders placed with sell never timeout and will not be killed if they
-       * cannot be filled immediately. If you wish for one of these parameters to be different, 
-       * then sell_asset should be used instead.
-       *
-       * @param seller_account the account providing the asset being sold, and which will
-       *                       receive the processed of the sale.
-       * @param base The name or id of the asset to sell.
-       * @param quote The name or id of the asset to recieve.
-       * @param rate The rate in base:quote at which you want to sell.
-       * @param amount The amount of base you want to sell.
-       * @param broadcast true to broadcast the transaction on the network.
-       * @returns The signed transaction selling the funds.                 
-       */
-      signed_transaction sell( string seller_account,
-                               string base,
-                               string quote,
-                               double rate,
-                               double amount,
-                               bool broadcast );
-                               
-      /** Place a limit order attempting to buy one asset with another.
-       *
-       * This API call abstracts away some of the details of the sell_asset call to be more
-       * user friendly. All orders placed with buy never timeout and will not be killed if they
-       * cannot be filled immediately. If you wish for one of these parameters to be different,
-       * then sell_asset should be used instead.
-       *
-       * @param buyer_account The account buying the asset for another asset.
-       * @param base The name or id of the asset to buy.
-       * @param quote The name or id of the assest being offered as payment.
-       * @param rate The rate in base:quote at which you want to buy.
-       * @param amount the amount of base you want to buy.
-       * @param broadcast true to broadcast the transaction on the network.
-       * @param The signed transaction selling the funds.
-       */
-      signed_transaction buy( string buyer_account,
-                              string base,
-                              string quote,
-                              double rate,
-                              double amount,
-                              bool broadcast );
-
-      /** Borrow an asset or update the debt/collateral ratio for the loan.
-       *
-       * This is the first step in shorting an asset.  Call \c sell_asset() to complete the short.
-       *
-       * @param borrower_name the name or id of the account associated with the transaction.
-       * @param amount_to_borrow the amount of the asset being borrowed.  Make this value
-       *                         negative to pay back debt.
-       * @param asset_symbol the symbol or id of the asset being borrowed.
-       * @param amount_of_collateral the amount of the backing asset to add to your collateral
-       *        position.  Make this negative to claim back some of your collateral.
-       *        The backing asset is defined in the \c bitasset_options for the asset being borrowed.
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction borrowing the asset
-       */
-      signed_transaction borrow_asset(string borrower_name, string amount_to_borrow, string asset_symbol,
-                                      string amount_of_collateral, bool broadcast = false);
-
-      /** Cancel an existing order
-       *
-       * @param order_id the id of order to be cancelled
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction canceling the order
-       */
-      signed_transaction cancel_order(object_id_type order_id, bool broadcast = false);
 
       /** Creates a new user-issued or market-issued asset.
        *
@@ -2133,15 +2013,24 @@ class wallet_api
        * @return
        */
       void flood_create_account(string account_prefix, uint32_t number_of_accounts);
+      /** flood_transfer
+       *
+       * @param from_account
+       * @param account_prefix
+       * @param number_of_accounts
+       * @param number_of_loop
+       * @return
+       */
+      void flood_transfer(string from_account, string account_prefix, uint32_t number_of_accounts, uint32_t number_of_loop);
 
-      /** flood_transfer_test
+      /** transfer_test, Efficient transfer api
        *
        * @param from_account
        * @param to_account
        * @param times
        * @return
        */
-      void flood_transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times);
+      void transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times);
 
       /** get_hash
        *
@@ -2150,7 +2039,7 @@ class wallet_api
        */
       fc::sha256 get_hash(const string& value);
 
-      /** verify_transaction_signature
+      /** verify_transaction_signature 
        * @param trx
        * @param pub_key
        * @return bool
@@ -2282,11 +2171,6 @@ FC_API( graphene::wallet::wallet_api,
         (register_account2)
         (upgrade_account)
         (create_account_with_brain_key)
-        (sell_asset)
-        (sell)
-        (buy)
-        (borrow_asset)
-        (cancel_order)
         (transfer)
         (transfer2)
         (get_transaction_id)
@@ -2366,7 +2250,8 @@ FC_API( graphene::wallet::wallet_api,
         (dbg_generate_blocks)
         (dbg_stream_json_objects)
         (dbg_update_object)
-        (flood_transfer_test)
+        (flood_transfer)
+        (transfer_test)
         (get_hash)
         (verify_transaction_signature)
         (flood_network)
