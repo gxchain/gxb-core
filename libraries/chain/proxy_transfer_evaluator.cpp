@@ -50,10 +50,10 @@ void_result proxy_transfer_evaluator::do_evaluate(const proxy_transfer_operation
     FC_ASSERT(op.request_params.memo.size() < MAX_OP_STRING_LENGTH, "memo ${r} too long, must < 100", ("r", op.request_params.memo));
 
     // fee asset must be GXS
-    const auto& asset_by_symbol = d.get_index_type<asset_index>().indices().get<by_symbol>();
-    auto gxs = asset_by_symbol.find(GRAPHENE_SYMBOL_GXS);
-    FC_ASSERT(gxs != asset_by_symbol.end());
-    FC_ASSERT(gxs->get_id() == op.fee.asset_id, "fee asset must be GXS");
+    // const auto& asset_by_symbol = d.get_index_type<asset_index>().indices().get<by_symbol>();
+    // auto gxs = asset_by_symbol.find(GRAPHENE_SYMBOL_GXS);
+    // FC_ASSERT(gxs != asset_by_symbol.end());
+    // FC_ASSERT(gxs->get_id() == op.fee.asset_id, "fee asset must be GXS");
 
     // check expiration
     const chain_parameters& chain_parameters = d.get_global_properties().parameters;
