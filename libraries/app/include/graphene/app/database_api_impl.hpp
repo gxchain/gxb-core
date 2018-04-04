@@ -93,6 +93,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Blocks and transactions
       optional<block_header> get_block_header(uint32_t block_num)const;
       optional<signed_block_with_info> get_block(uint32_t block_num)const;
+      optional<signed_block_with_info> get_block_by_id(block_id_type block_id)const;
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
 
       // Globals
@@ -115,9 +116,12 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
       map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
       uint64_t get_account_count()const;
+      bool is_account_registered(string name) const;
+
 
       // Balances
       vector<asset> get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
+      vector<asset> get_account_lock_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
       vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
       vector<balance_object> get_balance_objects( const vector<address>& addrs )const;
       vector<asset> get_vested_balances( const vector<balance_id_type>& objs )const;
@@ -244,6 +248,12 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
      * @return
      */
     vector<optional<league_object> > get_leagues(const vector<league_id_type>& league_ids) const;
+
+    /**
+     * @brief get witness participation rate
+     * @return uint32_t
+     */   
+    uint32_t get_witness_participation_rate() const;
 
    //private:
       template<typename T>

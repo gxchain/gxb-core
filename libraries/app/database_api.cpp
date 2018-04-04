@@ -118,6 +118,11 @@ optional<signed_block_with_info> database_api::get_block(uint32_t block_num)cons
    return my->get_block( block_num );
 }
 
+optional<signed_block_with_info> database_api::get_block_by_id(block_id_type block_id)const
+{
+   return my->get_block_by_id( block_id );
+}
+
 processed_transaction database_api::get_transaction( uint32_t block_num, uint32_t trx_in_block )const
 {
    return my->get_transaction( block_num, trx_in_block );
@@ -183,6 +188,11 @@ vector<vector<account_id_type>> database_api::get_key_references( vector<public_
 bool database_api::is_public_key_registered(string public_key) const
 {
     return my->is_public_key_registered(public_key);
+}
+
+bool database_api::is_account_registered(string name) const
+{
+    return my->is_account_registered(name);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -298,6 +308,10 @@ vector<asset> database_api::get_account_balances(account_id_type id, const flat_
    return my->get_account_balances( id, assets );
 }
 
+vector<asset> database_api::get_account_lock_balances(account_id_type id, const flat_set<asset_id_type>& assets)const
+{
+   return my->get_account_lock_balances( id, assets );
+}
 
 vector<asset> database_api::get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const
 {
@@ -669,6 +683,11 @@ vector<optional<league_data_product_object>> database_api::get_league_data_produ
 
 vector<optional<league_object>> database_api::get_leagues(const vector<league_id_type>& league_ids) const {
    return my->get_leagues(league_ids);
+}
+
+uint32_t database_api::get_witness_participation_rate() const
+{
+    return my->get_witness_participation_rate();
 }
 
 } } // graphene::app

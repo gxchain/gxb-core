@@ -85,6 +85,55 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_create )
    trx.clear();
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE(proxy_transfer_test)
+{ try {
+   // alice --> dan, and bob is proxy_account
+   ACTOR(alice);
+   ACTOR(bob);
+   ACTOR(dan);
+
+   // reserve core
+   fund_fee_pool(account_id_type()(db), get_asset(GRAPHENE_SYMBOL), GRAPHENE_MAX_SHARE_SUPPLY / 2);
+   generate_block();
+
+   // issue GXS
+   asset_id_type gxs_id = create_user_issued_asset(GRAPHENE_SYMBOL_GXS, alice_id(db), 0).id;
+   issue_uia(alice_id, asset(50000, gxs_id));
+   // transfer(account_id_type(), alice_id, asset(1000000));
+   transfer(alice_id, bob_id, asset(10000, gxs_id));
+   generate_block();
+
+   // construct trx
+   proxy_transfer_params param;
+   param.from = alice_id;
+   param.to = dan_id;
+   param.proxy_account = bob_id;
+   param.percentage = 10000; // 10%
+   param.amount = asset(5000, gxs_id);
+   param.memo = fc::json::to_string(alice_private_key.get_public_key());
+   param.expiration = db.head_block_time() + fc::hours(1);
+   param.signatures.push_back(sign_proxy_transfer_param(alice_private_key, param));
+
+   proxy_transfer_operation op;
+   op.proxy_memo = fc::json::to_string(bob_private_key.get_public_key());
+   op.fee = asset(2000, gxs_id);
+   op.request_params = param;
+
+   trx.clear();
+   trx.operations.push_back(op);
+   set_expiration(db, trx);
+   sign(trx, bob_private_key);
+   idump((trx));
+   PUSH_TX(db, trx);
+
+   // check balance
+   BOOST_TEST_MESSAGE("check account balances");
+   const auto &core = gxs_id(db);
+   BOOST_REQUIRE_EQUAL(get_balance(alice_id(db), core), 35000); // 40000 - 5000
+   BOOST_REQUIRE_EQUAL(get_balance(dan_id(db), core), 4500); // 5000 - (5000 * 10%)
+   BOOST_REQUIRE_EQUAL(get_balance(bob_id(db), core), 8500); // 10000 - 2000 + (5000 * 10%)
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( withdraw_permission_test )
 { try {
    INVOKE(withdraw_permission_create);
@@ -409,7 +458,7 @@ BOOST_AUTO_TEST_CASE( feed_limit_test )
    BOOST_TEST_MESSAGE("Checking current_feed is null");
    BOOST_CHECK(bitasset.current_feed.settlement_price.is_null());
 
-   BOOST_TEST_MESSAGE("Setting minimum feeds to 3");
+  BOOST_TEST_MESSAGE("Setting minimum feeds to 3");
    op.new_options.minimum_feeds = 3;
    trx.clear();
    trx.operations = {op};

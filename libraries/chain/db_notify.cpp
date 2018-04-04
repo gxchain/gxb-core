@@ -263,6 +263,12 @@ struct get_impacted_account_visitor
    void operator() (const balance_lock_operation& op) {}
 
    void operator() (const balance_unlock_operation& op) {}
+
+   void operator() (const proxy_transfer_operation& op) {
+       _impacted.insert(op.get_from_account());
+       _impacted.insert(op.get_to_account());
+       _impacted.insert(op.get_proxy_account());
+   }
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
@@ -376,8 +382,7 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
            }
            case lock_balance_object_type:{
                break;
-           }
-
+       }
 
       }
    }
@@ -441,6 +446,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
              case impl_league_search_results_object_type:
               break;
              case impl_data_transaction_search_results_object_type:
+              break;
+             case impl_signature_object_type:
               break;
       }
 

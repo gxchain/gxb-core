@@ -122,6 +122,13 @@ class database_api
       optional<signed_block_with_info> get_block(uint32_t block_num)const;
 
       /**
+       * @brief Retrieve a full, signed block
+       * @param block_id of the block to be returned
+       * @return the referenced block, or null if no matching block was found
+       */
+      optional<signed_block_with_info> get_block_by_id(block_id_type block_id)const;
+
+      /**
        * @brief used to fetch an individual transaction.
        */
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
@@ -182,6 +189,13 @@ class database_api
       * @return Whether a public key is known
       */
      bool is_public_key_registered(string public_key) const;
+
+     /**
+      * Determine whether an account_name is registered on the blockchain
+      * @param name account_name
+      * @return true if account_name is registered
+      */
+     bool is_account_registered(string name) const;
 
       //////////////
       // Accounts //
@@ -244,6 +258,14 @@ class database_api
        * @return Balances of the account
        */
       vector<asset> get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
+
+      /**
+       * @brief Get an account's lock balances in various assets
+       * @param id ID of the account to get lock balances for
+       * @param assets IDs of the assets to get lock balances of; if empty, get all assets account has a lock balance in
+       * @return lock balances of the account
+       */
+      vector<asset> get_account_lock_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
 
       /// Semantically equivalent to @ref get_account_balances, but takes a name instead of an ID.
       vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
@@ -749,8 +771,7 @@ class database_api
 
 
     /**
-     * 根据联盟ID查询
-     * brief get_leagues
+     * @brief get league by league_ids
      * @param league_ids
      * @return
      */
@@ -763,6 +784,12 @@ class database_api
 
     map<account_id_type, uint64_t> list_second_hand_datasources(time_point_sec start_date_time, time_point_sec end_date_time, uint32_t limit) const;
     uint32_t list_total_second_hand_transaction_counts_by_datasource(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, account_id_type datasource_account) const;
+
+    /**
+     * @brief get witness participation rate
+     * @return uint32_t
+     */   
+    uint32_t get_witness_participation_rate() const;
 
    private:
       std::shared_ptr< database_api_impl > my;
@@ -785,6 +812,7 @@ FC_API(graphene::app::database_api,
    // Blocks and transactions
    (get_block_header)
    (get_block)
+   (get_block_by_id)
    (get_transaction)
    (get_recent_transaction_by_id)
 
@@ -808,6 +836,7 @@ FC_API(graphene::app::database_api,
    (lookup_account_names)
    (lookup_accounts)
    (get_account_count)
+   (is_account_registered)
 
    // statistic
    (get_data_transaction_product_costs)
@@ -825,6 +854,7 @@ FC_API(graphene::app::database_api,
 
    // Balances
    (get_account_balances)
+   (get_account_lock_balances)
    (get_named_account_balances)
    (get_balance_objects)
    (get_vested_balances)
@@ -894,5 +924,6 @@ FC_API(graphene::app::database_api,
    (list_data_transactions_by_requester)
    (list_second_hand_datasources)
    (list_total_second_hand_transaction_counts_by_datasource)
-
+   (get_witness_participation_rate)
+   
 )

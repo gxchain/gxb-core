@@ -62,6 +62,7 @@ To build after all dependencies are installed:
     git clone https://github.com/gxchain/gxb-core.git
     cd gxb-core
     git submodule update --init --recursive
+    git checkout master
     mkdir build && cd build
     cmake -DCMAKE_BUILD_TYPE=Release ..
     # for ubuntu
