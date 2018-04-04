@@ -33,6 +33,7 @@
 #include <graphene/chain/is_authorized_asset.hpp>
 
 #include <graphene/chain/protocol/market.hpp>
+#include <graphene/chain/hardfork.hpp>
 
 #include <fc/uint128.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -41,6 +42,11 @@ namespace graphene { namespace chain {
 void_result limit_order_create_evaluator::do_evaluate(const limit_order_create_operation& op)
 { try {
    const database& d = db();
+
+   // add hardfork
+   if (d.head_block_time() >= HARDFORK_1004_TIME) {
+       FC_ASSERT(false, "creation of limit order is not used");
+   }
 
    FC_ASSERT( op.expiration >= d.head_block_time() );
 

@@ -12,6 +12,21 @@
 #ifndef HARDFORK_1001_TIME
 #define HARDFORK_1001_TIME (fc::time_point_sec( 1506787200 ))
 #endif
+// hardfork 1002
+// start at 2017-11-01 00:00:00
+// voting with GXS
+#ifndef HARDFORK_1002_TIME
+#define HARDFORK_1002_TIME (fc::time_point_sec(1509465600))
+#endif
+// hardfork 1003 is for commission allocation
+// x% --> reserve pool
+#ifndef HARDFORK_1003_TIME
+#define HARDFORK_1003_TIME (fc::time_point_sec( 1509292800 ))
+#endif
+// hardfork 1004 disable limit order
+#ifndef HARDFORK_1004_TIME
+#define HARDFORK_1004_TIME (fc::time_point_sec( 1524153600 ))
+#endif
 // #357 Disallow publishing certain malformed price feeds
 #ifndef HARDFORK_357_TIME
 #define HARDFORK_357_TIME (fc::time_point_sec( 1444416300 ))
