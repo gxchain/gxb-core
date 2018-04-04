@@ -1388,7 +1388,6 @@ namespace graphene { namespace net { namespace detail {
               wlog("Disconnecting peer ${peer} because they haven't made any progress on my remaining ${count} sync item requests",
                    ("peer", active_peer->get_remote_endpoint())("count", active_peer->sync_items_requested_from_peer.size()));
               disconnect_due_to_request_timeout = true;
-              break;
             }
             if (!disconnect_due_to_request_timeout &&
                 active_peer->item_ids_requested_from_peer &&
@@ -4573,10 +4572,8 @@ namespace graphene { namespace net { namespace detail {
               }
               std::string error_message = error_message_stream.str();
               wlog(error_message);
-              std::cout << "\033[31m" << error_message;
               _delegate->error_encountered( error_message, fc::oexception() );
-              std::cout << "\033[0m" << "\n";
-              fc::usleep( fc::seconds(5 ) );
+              fc::usleep(fc::seconds(5));
             }
             else // don't wait, just find a random port
             {

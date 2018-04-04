@@ -68,7 +68,6 @@ optional<T> maybe_id( const string& name_or_id )
 //////////////////////////////////////////////////////////////////////
 database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
 {
-   dlog("creating database api ${x}", ("x",int64_t(this)));
    _new_connection = _db.new_objects.connect([this](const vector<object_id_type>& ids, const flat_set<account_id_type>& impacted_accounts) {
                                 on_objects_new(ids, impacted_accounts);
                                 });
@@ -92,7 +91,6 @@ database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
 
 database_api_impl::~database_api_impl()
 {
-    dlog("freeing database api ${x}", ("x", int64_t(this)));
 }
 
 fc::variants database_api_impl::get_objects(const vector<object_id_type>& ids)const
@@ -176,6 +174,11 @@ optional<block_header> database_api_impl::get_block_header(uint32_t block_num) c
 optional<signed_block_with_info> database_api_impl::get_block(uint32_t block_num)const
 {
    return _db.fetch_block_by_number(block_num);
+}
+
+optional<signed_block_with_info> database_api_impl::get_block_by_id(block_id_type block_id)const
+{
+   return _db.fetch_block_by_id(block_id);
 }
 
 processed_transaction database_api_impl::get_transaction(uint32_t block_num, uint32_t trx_num)const
@@ -303,6 +306,22 @@ bool database_api_impl::is_public_key_registered(string public_key) const
     auto itr = refs.account_to_key_memberships.find(key);
     bool is_known = itr != refs.account_to_key_memberships.end();
 
+    return is_known;
+}
+
+bool database_api_impl::is_account_registered(string name) const
+{
+    if (name.empty()) {
+        return false;
+    }
+
+    if (!is_valid_name(name)) {
+        return false;
+    }
+
+    const auto& idx = _db.get_index_type<account_index>().indices().get<by_name>();
+    auto iter = idx.find(name);
+    bool is_known = iter != idx.end();
     return is_known;
 }
 
@@ -515,6 +534,46 @@ vector<asset> database_api_impl::get_account_balances(account_id_type acnt, cons
    }
 
    return result;
+}
+
+vector<asset> database_api_impl::get_account_lock_balances(account_id_type acnt, const flat_set<asset_id_type>& assets)const
+{
+    vector<asset> result;
+    flat_set<asset_id_type> asset_ids;
+    const account_balance_locked_index& lock_balance_index = _db.get_index_type<account_balance_locked_index>();
+    auto lock_blance_range = lock_balance_index.indices().get<by_account_asset>().equal_range(boost::make_tuple(acnt));
+
+    if (assets.empty())
+    {
+       // if the caller passes in an empty list of assets, return lock balances for all assets the account 
+       const account_balance_index& balance_index = _db.get_index_type<account_balance_index>();
+       auto balance_range = balance_index.indices().get<by_account_asset>().equal_range(boost::make_tuple(acnt));
+
+       for (const account_balance_object& balance : boost::make_iterator_range(balance_range.first, balance_range.second))
+       {
+          asset_ids.insert(balance.asset_type);
+       }
+    }
+    else
+    {
+       asset_ids = assets;
+    }
+
+    result.reserve(assets.size());
+    for (const asset_id_type& asset_id : asset_ids)
+    {
+       share_type amount = 0;
+       for (const lock_balance_object& lock_balance : boost::make_iterator_range(lock_blance_range.first, lock_blance_range.second))
+       {
+          if (asset_id == lock_balance.amount.asset_id)
+          {
+             amount += lock_balance.amount.amount;
+          }
+       }
+       result.push_back({amount, asset_id});
+    }
+
+    return result;
 }
 
 vector<asset> database_api_impl::get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets) const
@@ -1992,6 +2051,11 @@ vector<optional<league_object>> database_api_impl::get_leagues(const vector<leag
        return {};
     });
     return result;
+}
+
+uint32_t database_api_impl::get_witness_participation_rate() const
+{
+    return _db.witness_participation_rate();
 }
 
 } } // graphene::app

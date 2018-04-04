@@ -65,6 +65,10 @@ BOOST_FIXTURE_TEST_SUITE(database_api_tests, database_fixture)
           BOOST_CHECK(db_api.is_public_key_registered((string) dan_public));
           BOOST_CHECK(!db_api.is_public_key_registered((string) unregistered_public));
 
+          BOOST_CHECK(db_api.is_account_registered("dan"));
+          BOOST_CHECK(db_api.is_account_registered("nathan"));
+          BOOST_CHECK(!db_api.is_account_registered("unregistered"));
+
       } FC_LOG_AND_RETHROW()
   }
 
