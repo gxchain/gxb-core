@@ -83,6 +83,20 @@ signature_type graphene::chain::signed_transaction::sign(const private_key_type&
    return key.sign_compact(enc.result());
 }
 
+bool graphene::chain::signed_transaction::validate_signee(const fc::ecc::public_key& expected_signee, const chain_id_type& chain_id) const
+{
+    auto tx = *this;
+    tx.signatures.clear();
+    auto digest = tx.sig_digest(chain_id);
+
+    for (const auto& sig : signatures) {
+        if (fc::ecc::public_key(sig, digest, true) == expected_signee) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void transaction::set_expiration( fc::time_point_sec expiration_time )
 {
     expiration = expiration_time;
@@ -98,6 +112,8 @@ void transaction::get_required_authorities( flat_set<account_id_type>& active, f
 {
    for( const auto& op : operations )
       operation_get_required_authorities( op, active, owner, other );
+   for( const auto& account : owner )
+      active.erase( account );
 }
 
 
@@ -326,8 +342,8 @@ set<public_key_type> signed_transaction::get_required_signatures(
    vector<authority> other;
    get_required_authorities( required_active, required_owner, other );
 
-
-   sign_state s(get_signature_keys( chain_id ),get_active,available_keys);
+   flat_set<public_key_type> signature_keys = get_signature_keys( chain_id );
+   sign_state s( signature_keys, get_active, available_keys );
    s.max_recursion = max_recursion_depth;
 
    for( const auto& auth : other )
@@ -342,7 +358,8 @@ set<public_key_type> signed_transaction::get_required_signatures(
    set<public_key_type> result;
 
    for( auto& provided_sig : s.provided_signatures )
-      if( available_keys.find( provided_sig.first ) != available_keys.end() )
+      if( available_keys.find( provided_sig.first ) != available_keys.end()
+            && signature_keys.find( provided_sig.first ) == signature_keys.end() )
          result.insert( provided_sig.first );
 
    return result;

@@ -283,6 +283,7 @@ namespace graphene { namespace chain {
       impl_league_search_results_object_type,//20
       impl_data_transaction_search_results_object_type,//21
       //impl_search_results_object_type
+      impl_signature_object_type, //22
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -360,6 +361,7 @@ namespace graphene { namespace chain {
    class free_data_product_search_results_object;
    class league_data_product_search_results_object;
    class league_search_results_object;
+   class signature_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -383,6 +385,7 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_league_data_product_search_results_object_type, league_data_product_search_results_object >   league_data_product_search_results_id_type;
    typedef object_id< implementation_ids, impl_league_search_results_object_type, league_search_results_object >        league_search_results_id_type;
    typedef object_id< implementation_ids, impl_data_transaction_search_results_object_type, data_transaction_search_results_object >        data_transaction_search_results_id_type;
+   typedef object_id< implementation_ids, impl_signature_object_type, signature_object>      signature_id_type;
 
 
    //typedef object_id< implementation_ids, impl_search_results_object_type,search_results_object<DerivedClass>>          search_results_id_type;
@@ -538,6 +541,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_league_data_product_search_results_object_type)
                  (impl_league_search_results_object_type)
                  (impl_data_transaction_search_results_object_type)
+                 (impl_signature_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -583,6 +587,8 @@ FC_REFLECT_TYPENAME( graphene::chain::pocs_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::datasource_copyright_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::second_hand_data_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::data_transaction_complain_id_type)
+FC_REFLECT_TYPENAME( graphene::chain::lock_balance_id_type)
+FC_REFLECT_TYPENAME( graphene::chain::signature_id_type)
 
 FC_REFLECT( graphene::chain::void_t, )
 FC_REFLECT( graphene::chain::operation_ext_version_t, (version))
