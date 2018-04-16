@@ -1499,6 +1499,7 @@ class wallet_api
        * \c update_bitasset() instead.
        *
        * @param symbol the name or id of the asset to update
+       * @param new_symbol the new_name or id of the asset to update
        * @param new_issuer if changing the asset's issuer, the name or id of the new issuer.
        *                   null if you wish to remain the issuer of the asset
        * @param new_options the new asset_options object, which will entirely replace the existing
@@ -1508,6 +1509,7 @@ class wallet_api
        * @returns the signed transaction updating the asset
        */
       signed_transaction update_asset2(string symbol,
+                                      optional<string> new_symbol,
                                       optional<string> new_issuer,
                                       asset_options new_options,
                                       string fee_asset_symbol,
