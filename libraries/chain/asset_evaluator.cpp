@@ -275,7 +275,30 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
              "Flag change is forbidden by issuer permissions");
 
    asset_to_update = &a;
-   FC_ASSERT( o.issuer == a.issuer, "", ("o.issuer", o.issuer)("a.issuer", a.issuer) );
+   if (a.issuer == GRAPHENE_NULL_ACCOUNT && a.get_id() == asset_id_type()) {
+       FC_ASSERT(o.issuer == account_id_type(), "", ("o.issuer", o.issuer)("a.issuer", a.issuer));
+   } else {
+       FC_ASSERT(o.issuer == a.issuer, "", ("o.issuer", o.issuer)("a.issuer", a.issuer));
+   }
+
+   // get new_symbol
+   for (auto& ext : o.extensions) {
+        if (ext.which() == future_extensions::tag<asset_symbol_t>::value) {
+            new_asset_symbol = ext.get<asset_symbol_t>().symbol;
+            dlog("new_asset_symbol ${n}", ("n", new_asset_symbol));
+        }
+   }
+   if (!new_asset_symbol.empty()) {
+       // evaluate new_symbol
+       // check old symbol
+       auto& asset_indx = d.get_index_type<asset_index>().indices().get<by_symbol>();
+       auto asset_symbol_itr = asset_indx.find(a.symbol);
+       FC_ASSERT(asset_symbol_itr != asset_indx.end());
+       // check new symbol
+       auto new_asset_symbol_itr = asset_indx.find(new_asset_symbol);
+       FC_ASSERT(new_asset_symbol_itr == asset_indx.end());
+   }
+
 
    const auto& chain_parameters = d.get_global_properties().parameters;
 
@@ -305,10 +328,14 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o)
          d.cancel_order(*itr);
    }
 
-   d.modify(*asset_to_update, [&](asset_object& a) {
-      if( o.new_issuer )
-         a.issuer = *o.new_issuer;
-      a.options = o.new_options;
+   d.modify(*asset_to_update, [&](asset_object &a) {
+       if (o.new_issuer) {
+           a.issuer = *o.new_issuer;
+       }
+       if (!new_asset_symbol.empty()) {
+           a.symbol = new_asset_symbol;
+       }
+       a.options = o.new_options;
    });
 
    return void_result();

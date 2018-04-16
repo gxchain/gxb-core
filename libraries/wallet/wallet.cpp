@@ -1962,6 +1962,7 @@
        } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(new_options)(broadcast) ) }
 
        signed_transaction update_asset2(string symbol,
+                                       optional<string> new_symbol,
                                        optional<string> new_issuer,
                                        asset_options new_options,
                                        string fee_asset_symbol,
@@ -1970,7 +1971,7 @@
           fc::optional<asset_object> asset_to_update = find_asset(symbol);
           FC_ASSERT(asset_to_update, "No asset with that symbol exists!");
 
-          fc::optional<asset_object> fee_asset_obj = get_asset(fee_asset_symbol);
+          fc::optional<asset_object> fee_asset_obj = find_asset(fee_asset_symbol);
           FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", fee_asset_symbol));
 
           optional<account_id_type> new_issuer_account_id;
@@ -1981,9 +1982,18 @@
 
           asset_update_operation update_op;
           update_op.issuer = asset_to_update->issuer;
+          if (asset_to_update->issuer == GRAPHENE_NULL_ACCOUNT && asset_to_update->get_id() == asset_id_type()) {
+              update_op.issuer = account_id_type();
+          }
           update_op.asset_to_update = asset_to_update->id;
           update_op.new_issuer = new_issuer_account_id;
           update_op.new_options = new_options;
+
+          if (new_symbol) {
+              asset_symbol_t ext;
+              ext.symbol = *new_symbol;
+              update_op.extensions.insert(ext);
+          }
 
           signed_transaction tx;
           tx.operations.push_back(update_op);
@@ -1991,7 +2001,7 @@
           tx.validate();
 
           return sign_transaction(tx, broadcast);
-       } FC_CAPTURE_AND_RETHROW((symbol)(new_issuer)(new_options)(fee_asset_symbol)(broadcast)) }
+       } FC_CAPTURE_AND_RETHROW((symbol)(new_symbol)(new_issuer)(new_options)(fee_asset_symbol)(broadcast)) }
 
        signed_transaction update_bitasset(string symbol,
                                           bitasset_options new_options,
@@ -3618,7 +3628,7 @@
                 
                 vector<public_key_type> paying_keys = from_account_obj->active.get_keys();
                 auto dyn_props = get_dynamic_global_properties();
-                tx.set_expiration( dyn_props.time + fc::seconds(30 + i) );
+                tx.set_expiration( dyn_props.time + fc::seconds(300 + i) );
                 for( public_key_type& key : paying_keys )
                 {
                     auto it = _keys.find(key);
@@ -3977,34 +3987,33 @@
     }
 
     vector<operation_detail> wallet_api::get_account_history(string name, int limit)const
-
     {
-        vector<operation_detail> result;
-        auto account_id = get_account(name).get_id();
+       vector<operation_detail> result;
+       auto account_id = get_account(name).get_id();
 
-        while( limit > 0 )
-        {
-            operation_history_id_type start;
-            if( result.size() )
-            {
-                start = result.back().op.id;
-                start = start + 1;
-            }
+       while( limit > 0 )
+       {
+          operation_history_id_type start;
+          if( result.size() )
+          {
+             start = result.back().op.id;
+             start = start + 1;
+          }
 
-            vector<operation_history_object> current = my->_remote_hist->get_account_history(account_id, operation_history_id_type(), std::min(100,limit), start);
-            for( auto& o : current ) {
-                std::stringstream ss;
-                auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
-                result.push_back( operation_detail{ memo, ss.str(), o } );
-            }
-            if( int(current.size()) < std::min(100,limit) )
-                break;
-            limit -= current.size();
-        }
 
-        return result;
+          vector<operation_history_object> current = my->_remote_hist->get_account_history(account_id, operation_history_id_type(), std::min(100,limit), start);
+          for( auto& o : current ) {
+             std::stringstream ss;
+             auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
+             result.push_back( operation_detail{ memo, ss.str(), o } );
+          }
+          if( current.size() < std::min(100,limit) )
+             break;
+          limit -= current.size();
+       }
+
+       return result;
     }
-
 
     account_history_operation_detail wallet_api::get_account_history_by_operations(string account_name_or_id, vector<uint32_t> operation_indexs, uint32_t start, int limit)const
     {
@@ -4675,12 +4684,13 @@
 
 
     signed_transaction wallet_api::update_asset2(string symbol,
+                                                optional<string> new_symbol,
                                                 optional<string> new_issuer,
                                                 asset_options new_options,
                                                 string fee_asset_symbol,
                                                 bool broadcast /* = false */)
     {
-       return my->update_asset2(symbol, new_issuer, new_options, fee_asset_symbol, broadcast);
+       return my->update_asset2(symbol, new_symbol, new_issuer, new_options, fee_asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::update_bitasset(string symbol,
