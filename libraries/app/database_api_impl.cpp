@@ -681,6 +681,11 @@ vector<optional<asset_object>> database_api_impl::lookup_asset_symbols(const vec
          auto ptr = _db.find(variant(symbol_or_id).as<asset_id_type>());
          return ptr == nullptr? optional<asset_object>() : *ptr;
       }
+      // if symbol is GXS, and asset 1.3.1 exists
+      if (symbol_or_id == GRAPHENE_SYMBOL_GXS && auto o = _db.find(GRAPHENE_GXS_ALIAS_ASSET)) {
+        return *o;
+      }
+
       auto itr = assets_by_symbol.find(symbol_or_id);
       return itr == assets_by_symbol.end()? optional<asset_object>() : *itr;
    });
