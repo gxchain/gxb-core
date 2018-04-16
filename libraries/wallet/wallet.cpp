@@ -80,9 +80,6 @@
 
     #define BRAIN_KEY_WORD_COUNT 16
 
-    #define ASSET_SYMBOL_GXC "GXC"
-    #define ASSET_SYMBOL_GXS "GXS"
-
     namespace graphene { namespace wallet {
 
     namespace detail {
