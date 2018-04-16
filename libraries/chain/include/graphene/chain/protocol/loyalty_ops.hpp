@@ -45,6 +45,7 @@ namespace graphene { namespace chain {
       account_id_type fee_payer()const { return account; }
       void validate() const {
          FC_ASSERT(fee.amount >= 0);
+         FC_ASSERT(amount.asset_id == GRAPHENE_GXS_ASSET);
       }
       share_type      calculate_fee(const fee_parameters_type& k)const { return k.fee; }
    };
