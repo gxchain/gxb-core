@@ -1998,7 +1998,6 @@ class wallet_api
       optional<pocs_object> get_pocs_object(league_id_type league_id, string account, object_id_type product_id);
 
       void dbg_make_uia(string creator, string symbol);
-      void dbg_make_mia(string creator, string symbol);
       void dbg_push_blocks( std::string src_filename, uint32_t count );
       void dbg_generate_blocks( std::string debug_wif_key, uint32_t count );
       void dbg_stream_json_objects( const std::string& filename );
@@ -2250,7 +2249,6 @@ FC_API( graphene::wallet::wallet_api,
         (propose_fee_change)
         (approve_proposal)
         (dbg_make_uia)
-        (dbg_make_mia)
         (dbg_push_blocks)
         (dbg_generate_blocks)
         (dbg_stream_json_objects)
