@@ -4762,12 +4762,6 @@
        my->dbg_make_uia(creator, symbol);
     }
 
-    void wallet_api::dbg_make_mia(string creator, string symbol)
-    {
-       FC_ASSERT(!is_locked());
-       my->dbg_make_mia(creator, symbol);
-    }
-
     void wallet_api::dbg_push_blocks( std::string src_filename, uint32_t count )
     {
        my->dbg_push_blocks( src_filename, count );
