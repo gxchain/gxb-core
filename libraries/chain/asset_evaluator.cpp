@@ -53,6 +53,11 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
    auto asset_symbol_itr = asset_indx.find( op.symbol );
    FC_ASSERT( asset_symbol_itr == asset_indx.end() );
 
+   if (d.head_block_time() > HARDFORK_1006_TIME) {
+       FC_ASSERT(op.symbol != GRAPHENE_SYMBOL, "asset symbol GXC disabled");
+       FC_ASSERT(op.symbol != GRAPHENE_SYMBOL_GXS, "asset symbol GXS disabled");
+   }
+
    if( d.head_block_time() > HARDFORK_385_TIME )
    {
 
