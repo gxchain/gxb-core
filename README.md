@@ -59,14 +59,14 @@ cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DOPENSSL_INCLUDE_DIR=/usr/local
 
 To build after all dependencies are installed:
 
-    git clone https://github.com/gxchain/gxb-core.git
+    git lfs clone https://github.com/gxchain/gxb-core.git
     cd gxb-core
     git submodule update --init --recursive
     git checkout master
     mkdir build && cd build
     cmake -DCMAKE_BUILD_TYPE=Release ..
     # for ubuntu
-    cmake -DOPENSSL_ROOT_DIR=/usr/bin -DOPENSSL_INCLUDE_DIR=/usr/include/openssl -DOPENSSL_LIBRARIES=/usr/lib/openssh -DCMAKE_BUILD_TYPE=RelWithDebInfo .. && make -j4
+    cmake -DOPENSSL_ROOT_DIR=/usr/bin -DOPENSSL_INCLUDE_DIR=/usr/include/openssl -DOPENSSL_LIBRARIES=/usr/lib/openssh -DCMAKE_BUILD_TYPE=Release .. && make -j4
     # for OS X
     cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib -DCMAKE_BUILD_TYPE=Release .. && make -j4
 
