@@ -611,30 +611,27 @@
        optional<asset_object> find_asset(asset_id_type id)const
        {
           auto rec = _remote_db->get_assets({id}).front();
-          if( rec )
-             _asset_cache[id] = *rec;
           return rec;
        }
        optional<asset_object> find_asset(string asset_symbol_or_id)const
        {
-          FC_ASSERT( asset_symbol_or_id.size() > 0 );
+           FC_ASSERT(asset_symbol_or_id.size() > 0);
 
-          if( auto id = maybe_id<asset_id_type>(asset_symbol_or_id) )
-          {
-             // It's an ID
-             return find_asset(*id);
-          } else {
-             // It's a symbol
-             auto rec = _remote_db->lookup_asset_symbols({asset_symbol_or_id}).front();
-             if( rec )
-             {
-                if( rec->symbol != asset_symbol_or_id )
-                   return optional<asset_object>();
-
-                _asset_cache[rec->get_id()] = *rec;
-             }
-             return rec;
-          }
+           if (auto id = maybe_id<asset_id_type>(asset_symbol_or_id)) {
+               // It's an ID
+               return find_asset(*id);
+           } else {
+               // It's a symbol
+               auto rec = _remote_db->lookup_asset_symbols({asset_symbol_or_id}).front();
+               if (!rec) return optional<asset_object>();
+               if (rec->symbol != asset_symbol_or_id) {
+                   if (asset_symbol_or_id != GRAPHENE_SYMBOL_GXS
+                           && asset_symbol_or_id != GRAPHENE_SYMBOL) {
+                       return optional<asset_object>();
+                   }
+               }
+               return rec;
+           }
        }
        asset_object get_asset(asset_id_type id)const
        {
