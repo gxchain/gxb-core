@@ -27,18 +27,17 @@ namespace graphene { namespace chain {
 
 const uint8_t MAX_OP_STRING_LENGTH = 100;
 
-
 share_type proxy_transfer_evaluator::cut_fee(share_type a, uint16_t p)
 {
-   if( a == 0 || p == 0 )
-      return 0;
-   if( p == GRAPHENE_100_PERCENT )
-      return a;
+    if (a == 0 || p == 0)
+        return 0;
+    if (p == GRAPHENE_100_PERCENT)
+        return a;
 
-   fc::uint128 r(a.value);
-   r *= p;
-   r /= GRAPHENE_100_PERCENT;
-   return r.to_uint64();
+    fc::uint128 r(a.value);
+    r *= p;
+    r /= GRAPHENE_100_PERCENT;
+    return r.to_uint64();
 }
 
 void_result proxy_transfer_evaluator::do_evaluate(const proxy_transfer_operation &op)
@@ -46,14 +45,14 @@ void_result proxy_transfer_evaluator::do_evaluate(const proxy_transfer_operation
     const database& d = db();
 
     // check memo size
-    FC_ASSERT(op.proxy_memo.size() < MAX_OP_STRING_LENGTH, "proxy_memo ${r} too long, must < 100", ("r", op.proxy_memo));
-    FC_ASSERT(op.request_params.memo.size() < MAX_OP_STRING_LENGTH, "memo ${r} too long, must < 100", ("r", op.request_params.memo));
+    FC_ASSERT(op.proxy_memo.size() < MAX_OP_STRING_LENGTH, "proxy_memo ${r} too long, exceeds 100 bytes", ("r", op.proxy_memo));
+    FC_ASSERT(op.request_params.memo.size() < MAX_OP_STRING_LENGTH, "memo ${r} too long, exceeds 100 bytes", ("r", op.request_params.memo));
 
     // check expiration
     const chain_parameters& chain_parameters = d.get_global_properties().parameters;
     const auto& expiration = op.request_params.expiration;
     FC_ASSERT(expiration <= d.head_block_time() + chain_parameters.maximum_time_until_expiration
-            && expiration >= d.head_block_time(), "user expiration invalid, ${e}", ("e", expiration));
+            && expiration > d.head_block_time(), "user request param expiration invalid, ${e}", ("e", expiration));
 
     const account_object &from_account = op.request_params.from(d);
     // check signatures
@@ -115,8 +114,10 @@ void_result proxy_transfer_evaluator::do_apply(const proxy_transfer_operation &o
     share_type commission_amount = cut_fee(op.request_params.amount.amount, op.request_params.percentage);
     asset commission_asset = asset(commission_amount, op.request_params.amount.asset_id);
     asset delta_asset = op.request_params.amount - commission_asset;
-    idump((commission_asset)(delta_asset));
-    db().adjust_balance(op.get_from_account(), -delta_asset);
+    dlog("total amount: ${t}, commission amount ${c}, delta amount ${d}",
+            ("t", op.request_params.amount.amount)("c", commission_asset.amount)("d", delta_asset.amount));
+
+    db().adjust_balance(op.get_from_account(), -op.request_params.amount);
     db().adjust_balance(op.get_to_account(), delta_asset);
     db().adjust_balance(op.get_proxy_account(), commission_asset);
 

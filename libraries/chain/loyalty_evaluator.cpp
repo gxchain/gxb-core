@@ -26,11 +26,8 @@ void_result balance_lock_evaluator::do_evaluate(const balance_lock_operation& op
 { try {
     database& _db = db();
     // gxs assets
-    const auto& asset_by_symbol = _db.get_index_type<asset_index>().indices().get<by_symbol>();
-    auto gxs = asset_by_symbol.find(GRAPHENE_SYMBOL_GXS);
-    FC_ASSERT(gxs != asset_by_symbol.end());
-    FC_ASSERT(gxs->get_id() == op.amount.asset_id, "lock asset must be GXS");
-    FC_ASSERT(op.amount <= _db.get_balance(op.account, gxs->get_id()), "account balance not enough");
+    FC_ASSERT(op.amount.asset_id == GRAPHENE_GXS_ASSET, "lock asset must be GXS");
+    FC_ASSERT(op.amount <= _db.get_balance(op.account, GRAPHENE_GXS_ASSET), "account balance not enough");
     FC_ASSERT(op.amount.amount >= GRAPHENE_BLOCKCHAIN_PRECISION, "lock amount must > 1");
 
     //meme length must less than 63 characters

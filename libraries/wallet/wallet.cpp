@@ -80,9 +80,6 @@
 
     #define BRAIN_KEY_WORD_COUNT 16
 
-    #define ASSET_SYMBOL_GXC "GXC"
-    #define ASSET_SYMBOL_GXS "GXS"
-
     namespace graphene { namespace wallet {
 
     namespace detail {
@@ -614,30 +611,27 @@
        optional<asset_object> find_asset(asset_id_type id)const
        {
           auto rec = _remote_db->get_assets({id}).front();
-          if( rec )
-             _asset_cache[id] = *rec;
           return rec;
        }
        optional<asset_object> find_asset(string asset_symbol_or_id)const
        {
-          FC_ASSERT( asset_symbol_or_id.size() > 0 );
+           FC_ASSERT(asset_symbol_or_id.size() > 0);
 
-          if( auto id = maybe_id<asset_id_type>(asset_symbol_or_id) )
-          {
-             // It's an ID
-             return find_asset(*id);
-          } else {
-             // It's a symbol
-             auto rec = _remote_db->lookup_asset_symbols({asset_symbol_or_id}).front();
-             if( rec )
-             {
-                if( rec->symbol != asset_symbol_or_id )
-                   return optional<asset_object>();
-
-                _asset_cache[rec->get_id()] = *rec;
-             }
-             return rec;
-          }
+           if (auto id = maybe_id<asset_id_type>(asset_symbol_or_id)) {
+               // It's an ID
+               return find_asset(*id);
+           } else {
+               // It's a symbol
+               auto rec = _remote_db->lookup_asset_symbols({asset_symbol_or_id}).front();
+               if (!rec) return optional<asset_object>();
+               if (rec->symbol != asset_symbol_or_id) {
+                   if (asset_symbol_or_id != GRAPHENE_SYMBOL_GXS
+                           && asset_symbol_or_id != GRAPHENE_SYMBOL) {
+                       return optional<asset_object>();
+                   }
+               }
+               return rec;
+           }
        }
        asset_object get_asset(asset_id_type id)const
        {
@@ -1884,31 +1878,6 @@
                                        string symbol,
                                        uint8_t precision,
                                        asset_options common,
-                                       fc::optional<bitasset_options> bitasset_opts,
-                                       bool broadcast = false)
-       { try {
-          account_object issuer_account = get_account( issuer );
-          FC_ASSERT(!find_asset(symbol).valid(), "Asset with that symbol already exists!");
-
-          asset_create_operation create_op;
-          create_op.issuer = issuer_account.id;
-          create_op.symbol = symbol;
-          create_op.precision = precision;
-          create_op.common_options = common;
-          create_op.bitasset_opts = bitasset_opts;
-
-          signed_transaction tx;
-          tx.operations.push_back( create_op );
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-          tx.validate();
-
-          return sign_transaction( tx, broadcast );
-       } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(common)(bitasset_opts)(broadcast) ) }
-
-       signed_transaction create_asset2(string issuer,
-                                       string symbol,
-                                       uint8_t precision,
-                                       asset_options common,
                                        string fee_asset_symbol,
                                        bool broadcast = false)
        { try {
@@ -1933,35 +1902,7 @@
        } FC_CAPTURE_AND_RETHROW((issuer)(symbol)(precision)(common)(fee_asset_symbol)(broadcast)) }
 
        signed_transaction update_asset(string symbol,
-                                       optional<string> new_issuer,
-                                       asset_options new_options,
-                                       bool broadcast /* = false */)
-       { try {
-          optional<asset_object> asset_to_update = find_asset(symbol);
-          if (!asset_to_update)
-            FC_THROW("No asset with that symbol exists!");
-          optional<account_id_type> new_issuer_account_id;
-          if (new_issuer)
-          {
-            account_object new_issuer_account = get_account(*new_issuer);
-            new_issuer_account_id = new_issuer_account.id;
-          }
-
-          asset_update_operation update_op;
-          update_op.issuer = asset_to_update->issuer;
-          update_op.asset_to_update = asset_to_update->id;
-          update_op.new_issuer = new_issuer_account_id;
-          update_op.new_options = new_options;
-
-          signed_transaction tx;
-          tx.operations.push_back( update_op );
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-          tx.validate();
-
-          return sign_transaction( tx, broadcast );
-       } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(new_options)(broadcast) ) }
-
-       signed_transaction update_asset2(string symbol,
+                                       optional<string> new_symbol,
                                        optional<string> new_issuer,
                                        asset_options new_options,
                                        string fee_asset_symbol,
@@ -1970,7 +1911,7 @@
           fc::optional<asset_object> asset_to_update = find_asset(symbol);
           FC_ASSERT(asset_to_update, "No asset with that symbol exists!");
 
-          fc::optional<asset_object> fee_asset_obj = get_asset(fee_asset_symbol);
+          fc::optional<asset_object> fee_asset_obj = find_asset(fee_asset_symbol);
           FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", fee_asset_symbol));
 
           optional<account_id_type> new_issuer_account_id;
@@ -1981,9 +1922,18 @@
 
           asset_update_operation update_op;
           update_op.issuer = asset_to_update->issuer;
+          if (asset_to_update->issuer == GRAPHENE_NULL_ACCOUNT && asset_to_update->get_id() == asset_id_type()) {
+              update_op.issuer = account_id_type();
+          }
           update_op.asset_to_update = asset_to_update->id;
           update_op.new_issuer = new_issuer_account_id;
           update_op.new_options = new_options;
+
+          if (new_symbol) {
+              asset_symbol_t ext;
+              ext.symbol = *new_symbol;
+              update_op.extensions.insert(ext);
+          }
 
           signed_transaction tx;
           tx.operations.push_back(update_op);
@@ -1991,7 +1941,7 @@
           tx.validate();
 
           return sign_transaction(tx, broadcast);
-       } FC_CAPTURE_AND_RETHROW((symbol)(new_issuer)(new_options)(fee_asset_symbol)(broadcast)) }
+       } FC_CAPTURE_AND_RETHROW((symbol)(new_symbol)(new_issuer)(new_options)(fee_asset_symbol)(broadcast)) }
 
        signed_transaction update_bitasset(string symbol,
                                           bitasset_options new_options,
@@ -2760,37 +2710,7 @@
           return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW( (from)(to)(amount)(asset_symbol)(memo)(broadcast) ) }
 
-       signed_transaction issue_asset(string to_account, string amount, string symbol,
-                                      string memo, bool broadcast = false)
-       {
-          auto asset_obj = get_asset(symbol);
-
-          account_object to = get_account(to_account);
-          account_object issuer = get_account(asset_obj.issuer);
-
-          asset_issue_operation issue_op;
-          issue_op.issuer           = asset_obj.issuer;
-          issue_op.asset_to_issue   = asset_obj.amount_from_string(amount);
-          issue_op.issue_to_account = to.id;
-
-          if( memo.size() )
-          {
-             issue_op.memo = memo_data();
-             issue_op.memo->from = issuer.options.memo_key;
-             issue_op.memo->to = to.options.memo_key;
-             issue_op.memo->set_message(get_private_key(issuer.options.memo_key),
-                                        to.options.memo_key, memo);
-          }
-
-          signed_transaction tx;
-          tx.operations.push_back(issue_op);
-          set_operation_fees(tx,_remote_db->get_global_properties().parameters.current_fees);
-          tx.validate();
-
-          return sign_transaction(tx, broadcast);
-       }
-
-       signed_transaction issue_asset2(string to_account,
+       signed_transaction issue_asset(string to_account,
                                        string amount,
                                        string symbol,
                                        string memo,
@@ -3451,17 +3371,7 @@
           opts.flags &= ~(white_list | disable_force_settle | global_settle);
           opts.issuer_permissions = opts.flags;
           opts.core_exchange_rate = price(asset(1), asset(1,asset_id_type(1)));
-          create_asset(get_account(creator).name, symbol, 2, opts, {}, true);
-       }
-
-       void dbg_make_mia(string creator, string symbol)
-       {
-          asset_options opts;
-          opts.flags &= ~white_list;
-          opts.issuer_permissions = opts.flags;
-          opts.core_exchange_rate = price(asset(1), asset(1,asset_id_type(1)));
-          bitasset_options bopts;
-          create_asset(get_account(creator).name, symbol, 2, opts, bopts, true);
+          create_asset(get_account(creator).name, symbol, 2, opts, GRAPHENE_SYMBOL, true);
        }
 
        void dbg_push_blocks( const std::string& src_filename, uint32_t count )
@@ -3618,7 +3528,7 @@
                 
                 vector<public_key_type> paying_keys = from_account_obj->active.get_keys();
                 auto dyn_props = get_dynamic_global_properties();
-                tx.set_expiration( dyn_props.time + fc::seconds(30 + i) );
+                tx.set_expiration( dyn_props.time + fc::seconds(300 + i) );
                 for( public_key_type& key : paying_keys )
                 {
                     auto it = _keys.find(key);
@@ -3707,8 +3617,6 @@
        mode_t                  _old_umask;
     #endif
        const string _wallet_filename_extension = ".wallet";
-
-       mutable map<asset_id_type, asset_object> _asset_cache;
     };
 
     std::string operation_printer::fee(const asset& a)const {
@@ -4620,20 +4528,14 @@
                 );
     }
 
-    signed_transaction wallet_api::issue_asset(string to_account, string amount, string symbol,
-                                               string memo, bool broadcast)
-    {
-       return my->issue_asset(to_account, amount, symbol, memo, broadcast);
-    }
-
-    signed_transaction wallet_api::issue_asset2(string to_account,
+    signed_transaction wallet_api::issue_asset(string to_account,
                                                 string amount,
                                                 string symbol,
                                                 string memo,
                                                 string fee_asset_symbol,
                                                 bool broadcast)
     {
-       return my->issue_asset2(to_account, amount, symbol, memo, fee_asset_symbol, broadcast);
+       return my->issue_asset(to_account, amount, symbol, memo, fee_asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::transfer(string from, string to, string amount,
@@ -4646,40 +4548,21 @@
                                                 string symbol,
                                                 uint8_t precision,
                                                 asset_options common,
-                                                fc::optional<bitasset_options> bitasset_opts,
-                                                bool broadcast)
-
-    {
-       return my->create_asset(issuer, symbol, precision, common, bitasset_opts, broadcast);
-    }
-
-    signed_transaction wallet_api::create_asset2(string issuer,
-                                                string symbol,
-                                                uint8_t precision,
-                                                asset_options common,
                                                 string fee_asset_symbol,
                                                 bool broadcast)
 
     {
-       return my->create_asset2(issuer, symbol, precision, common, fee_asset_symbol, broadcast);
+       return my->create_asset(issuer, symbol, precision, common, fee_asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::update_asset(string symbol,
-                                                optional<string> new_issuer,
-                                                asset_options new_options,
-                                                bool broadcast /* = false */)
-    {
-       return my->update_asset(symbol, new_issuer, new_options, broadcast);
-    }
-
-
-    signed_transaction wallet_api::update_asset2(string symbol,
+                                                optional<string> new_symbol,
                                                 optional<string> new_issuer,
                                                 asset_options new_options,
                                                 string fee_asset_symbol,
                                                 bool broadcast /* = false */)
     {
-       return my->update_asset2(symbol, new_issuer, new_options, fee_asset_symbol, broadcast);
+       return my->update_asset(symbol, new_symbol, new_issuer, new_options, fee_asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::update_bitasset(string symbol,
@@ -4874,12 +4757,6 @@
     {
        FC_ASSERT(!is_locked());
        my->dbg_make_uia(creator, symbol);
-    }
-
-    void wallet_api::dbg_make_mia(string creator, string symbol)
-    {
-       FC_ASSERT(!is_locked());
-       my->dbg_make_mia(creator, symbol);
     }
 
     void wallet_api::dbg_push_blocks( std::string src_filename, uint32_t count )
@@ -5092,17 +4969,7 @@
           ss << "\n";
           ss << "Use this method to register an account for which you do not know the private keys.";
        }
-       else if( method == "create_asset" )
-       {
-          ss << "usage: ISSUER SYMBOL PRECISION_DIGITS OPTIONS BITASSET_OPTIONS BROADCAST\n\n";
-          ss << "PRECISION_DIGITS: the number of digits after the decimal point\n\n";
-          ss << "Example value of OPTIONS: \n";
-          ss << fc::json::to_pretty_string( graphene::chain::asset_options() );
-          ss << "\nExample value of BITASSET_OPTIONS: \n";
-          ss << fc::json::to_pretty_string( graphene::chain::bitasset_options() );
-          ss << "\nBITASSET_OPTIONS may be null\n";
-       }
-       else if (method == "create_asset2")
+       else if (method == "create_asset")
        {
            ss << "usage: ISSUER SYMBOL PRECISION_DIGITS OPTIONS BITASSET_OPTIONS FEE_ASSET_SYMBOL BROADCAST\n\n";
            ss << "PRECISION_DIGITS: the number of digits after the decimal point\n\n";
