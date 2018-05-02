@@ -1,17 +1,13 @@
-FROM ubuntu:14.04
+FROM gxchain/builder
+MAINTAINER GXS
 
-MAINTAINER GXB
-
-RUN set -ex \
-	&& apt-get update -y \
-	&& apt-get install -y wget
-
-# install gxb binaries
-RUN set -ex \
-	&& cd /tmp \
-	&& wget -qO gxb.tar.gz "http://gxb-package.oss-cn-hangzhou.aliyuncs.com/gxb-core/gxb_1.0.171222.tar.gz" \
-	&& tar -xzvf gxb.tar.gz -C /usr/local \
-	&& rm -rf /tmp/*
+RUN git lfs clone https://github.com/gxchain/gxb-core.git \
+    && cd gxb-core \
+    && git submodule update --init --recursive \
+    && mkdir build && cd build \
+    && cmake -DOPENSSL_ROOT_DIR=/usr/bin -DOPENSSL_INCLUDE_DIR=/usr/include/openssl -DOPENSSL_LIBRARIES=/usr/lib/openssh -DCMAKE_BUILD_TYPE=Release .. \ 
+    && make witness_node cli_wallet \
+    && cp -rf programs /usr/local/
 
 # Home directory $HOME
 WORKDIR /
@@ -37,5 +33,5 @@ EXPOSE 8092
 # Endpoint for P2P node to listen on
 EXPOSE 8093
 
-# Entry point 
+# Entry point
 ENTRYPOINT [ "/start.sh" ]
