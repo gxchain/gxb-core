@@ -68,6 +68,7 @@ namespace graphene { namespace chain {
             FC_ASSERT(fee.amount >= 0);
             FC_ASSERT(request_params.amount.amount >= 0);
             FC_ASSERT(proxy_memo.size() > 0);
+            FC_ASSERT(request_params.percentage >= 0 && request_params.percentage <= GRAPHENE_100_PERCENT);
             FC_ASSERT(get_from_account() != get_to_account());
         }
 
