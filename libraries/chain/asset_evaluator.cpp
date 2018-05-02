@@ -53,6 +53,11 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
    auto asset_symbol_itr = asset_indx.find( op.symbol );
    FC_ASSERT( asset_symbol_itr == asset_indx.end() );
 
+   if (d.head_block_time() > HARDFORK_1006_TIME) {
+       FC_ASSERT(op.symbol != GRAPHENE_SYMBOL, "asset symbol GXC disabled");
+       FC_ASSERT(op.symbol != GRAPHENE_SYMBOL_GXS, "asset symbol GXS disabled");
+   }
+
    if( d.head_block_time() > HARDFORK_385_TIME )
    {
 
@@ -91,8 +96,6 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
           wlog( "Asset ${s} has a name which requires hardfork 385", ("s",op.symbol) );
    }
 
-   core_fee_paid -= core_fee_paid.value/2;
-
    if( op.bitasset_opts )
    {
       const asset_object& backing = op.bitasset_opts->short_backing_asset(d);
@@ -119,13 +122,29 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
+void asset_create_evaluator::pay_fee()
+{
+   fee_is_odd = core_fee_paid.value & 1;
+   core_fee_paid -= core_fee_paid.value/2;
+   generic_evaluator::pay_fee();
+}
+
 object_id_type asset_create_evaluator::do_apply( const asset_create_operation& op )
 { try {
+   bool hf_1005 = fee_is_odd && db().head_block_time() > HARDFORK_1005_TIME;
+
    const asset_dynamic_data_object& dyn_asset =
       db().create<asset_dynamic_data_object>( [&]( asset_dynamic_data_object& a ) {
          a.current_supply = 0;
-         a.fee_pool = core_fee_paid; //op.calculate_fee(db().current_fee_schedule()).value / 2;
+         a.fee_pool = core_fee_paid - (hf_1005 ? 1 : 0);
       });
+   if( fee_is_odd && !hf_1005 )
+   {
+      const auto& core_dd = db().get<asset_object>( asset_id_type() ).dynamic_data( db() );
+      db().modify( core_dd, [=]( asset_dynamic_data_object& dd ) {
+         dd.current_supply++;
+      });
+   }
 
    asset_bitasset_data_id_type bit_asset_id;
    if( op.bitasset_opts.valid() )
@@ -275,7 +294,30 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
              "Flag change is forbidden by issuer permissions");
 
    asset_to_update = &a;
-   FC_ASSERT( o.issuer == a.issuer, "", ("o.issuer", o.issuer)("a.issuer", a.issuer) );
+   if (a.issuer == GRAPHENE_NULL_ACCOUNT && a.get_id() == asset_id_type()) {
+       FC_ASSERT(o.issuer == account_id_type(), "", ("o.issuer", o.issuer)("a.issuer", a.issuer));
+   } else {
+       FC_ASSERT(o.issuer == a.issuer, "", ("o.issuer", o.issuer)("a.issuer", a.issuer));
+   }
+
+   // get new_symbol
+   for (auto& ext : o.extensions) {
+        if (ext.which() == future_extensions::tag<asset_symbol_t>::value) {
+            new_asset_symbol = ext.get<asset_symbol_t>().symbol;
+            dlog("new_asset_symbol ${n}", ("n", new_asset_symbol));
+        }
+   }
+   if (!new_asset_symbol.empty()) {
+       // evaluate new_symbol
+       // check old symbol
+       auto& asset_indx = d.get_index_type<asset_index>().indices().get<by_symbol>();
+       auto asset_symbol_itr = asset_indx.find(a.symbol);
+       FC_ASSERT(asset_symbol_itr != asset_indx.end());
+       // check new symbol
+       auto new_asset_symbol_itr = asset_indx.find(new_asset_symbol);
+       FC_ASSERT(new_asset_symbol_itr == asset_indx.end());
+   }
+
 
    const auto& chain_parameters = d.get_global_properties().parameters;
 
@@ -305,10 +347,14 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o)
          d.cancel_order(*itr);
    }
 
-   d.modify(*asset_to_update, [&](asset_object& a) {
-      if( o.new_issuer )
-         a.issuer = *o.new_issuer;
-      a.options = o.new_options;
+   d.modify(*asset_to_update, [&](asset_object &a) {
+       if (o.new_issuer) {
+           a.issuer = *o.new_issuer;
+       }
+       if (!new_asset_symbol.empty()) {
+           a.symbol = new_asset_symbol;
+       }
+       a.options = o.new_options;
    });
 
    return void_result();
