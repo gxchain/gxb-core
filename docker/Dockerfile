@@ -1,8 +1,10 @@
 FROM gxchain/builder
 MAINTAINER GXS
 
-RUN git lfs clone https://github.com/gxchain/gxb-core.git \
-    && cd gxb-core \
+RUN git lfs clone https://github.com/gxchain/gxb-core.git
+RUN cd gxb-core \
+#RUN git lfs clone https://github.com/gxchain/gxb-core.git \
+#&& cd gxb-core \
     && git submodule update --init --recursive \
     && mkdir build && cd build \
     && cmake -DOPENSSL_ROOT_DIR=/usr/bin -DOPENSSL_INCLUDE_DIR=/usr/include/openssl -DOPENSSL_LIBRARIES=/usr/lib/openssh -DCMAKE_BUILD_TYPE=Release .. \ 
@@ -27,7 +29,7 @@ RUN chmod a+x /start.sh
 # rpc service port（cli_wallet or witness_node）
 EXPOSE 8091
 
-# P2P node to connect to on startup
+# P2P node to connect to on startup
 EXPOSE 8092
 
 # Endpoint for P2P node to listen on
