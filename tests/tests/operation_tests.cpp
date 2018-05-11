@@ -1249,7 +1249,13 @@ BOOST_AUTO_TEST_CASE( limit_order_fill_or_kill )
    GRAPHENE_CHECK_THROW(PUSH_TX( db, trx, ~0 ), fc::exception);
    op.fill_or_kill = false;
    trx.operations.back() = op;
-   PUSH_TX( db, trx, ~0 );
+   PUSH_TX(db, trx, ~0);
+
+   generate_blocks(HARDFORK_1004_TIME);
+   trx.set_expiration(db.head_block_time() + fc::hours(9));
+   idump((trx));
+   GRAPHENE_CHECK_THROW(PUSH_TX(db, trx, ~0), fc::exception);
+
 } FC_LOG_AND_RETHROW() }
 
 /// Shameless code coverage plugging. Otherwise, these calls never happen.

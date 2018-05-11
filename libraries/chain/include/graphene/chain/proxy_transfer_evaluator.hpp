@@ -23,13 +23,13 @@
 
 namespace graphene { namespace chain {
 
-   class data_storage_evaluator : public evaluator<data_storage_evaluator>
+   class proxy_transfer_evaluator : public evaluator<proxy_transfer_evaluator>
    {
      public:
-       typedef data_storage_operation operation_type;
+       typedef proxy_transfer_operation operation_type;
 
-       void_result do_evaluate(const data_storage_operation &o);
-       void_result do_apply(const data_storage_operation &o);
+       void_result do_evaluate(const proxy_transfer_operation &o);
+       void_result do_apply(const proxy_transfer_operation &o);
 
      private:
        share_type cut_fee(share_type a, uint16_t p);

@@ -244,32 +244,32 @@ namespace graphene { namespace app {
                                                                        unsigned limit, 
                                                                        operation_history_id_type start ) const
     {
-        FC_ASSERT( _app.chain_database() );
-        const auto& db = *_app.chain_database();
-        FC_ASSERT( limit <= 100 );
-        vector<operation_history_object> result;
-        try {
-            const account_transaction_history_object& node = account(db).statistics(db).most_recent_op(db);
-            if(start == operation_history_id_type() || start.instance.value > node.operation_id.instance.value)
-                start = node.operation_id;
-        } catch(...) { return result; }
-
-        const auto& hist_idx = db.get_index_type<account_transaction_history_index>();
-        const auto& by_op_idx = hist_idx.indices().get<by_op>();
-        auto index_start = by_op_idx.begin();
-        auto itr = by_op_idx.lower_bound(boost::make_tuple(account, start));
-
-        while(itr != index_start && itr->account == account && itr->operation_id.instance.value > stop.instance.value && result.size() < limit)
-        {
-            if(itr->operation_id.instance.value <= start.instance.value)
-                result.push_back(itr->operation_id(db));
-            --itr;
-        }
-        if(stop.instance.value == 0 && result.size() < limit && itr->account == account) {
-            result.push_back(itr->operation_id(db));
-        }
-
-        return result;
+       FC_ASSERT( _app.chain_database() );
+       const auto& db = *_app.chain_database();       
+       FC_ASSERT( limit <= 100 );
+       vector<operation_history_object> result;
+       const auto& stats = account(db).statistics(db);
+       if( stats.most_recent_op == account_transaction_history_id_type() ) return result;
+       const account_transaction_history_object* node = &stats.most_recent_op(db);
+       if( start == operation_history_id_type() )
+          start = node->operation_id;
+          
+       while(node && node->operation_id.instance.value > stop.instance.value && result.size() < limit)
+       {
+          if( node->operation_id.instance.value <= start.instance.value )
+             result.push_back( node->operation_id(db) );
+          if( node->next == account_transaction_history_id_type() )
+             node = nullptr;
+          else node = &node->next(db);
+       }
+       
+       if( stop.instance.value == 0 && result.size() < limit )
+       {
+          node = db.find(account_transaction_history_id_type());
+          if( node && node->account == account)
+             result.push_back( node->operation_id(db) );
+       }
+       return result;
     }
 
     history_operation_detail history_api::get_account_history_by_operations( account_id_type account,
