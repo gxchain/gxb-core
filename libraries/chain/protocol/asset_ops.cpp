@@ -117,7 +117,11 @@ void asset_update_operation::validate()const
    FC_ASSERT( fee.amount >= 0 );
    if( new_issuer )
       FC_ASSERT(issuer != *new_issuer);
-   new_options.validate();
+   if (asset_to_update == asset_id_type()) {
+       new_options.validate(false);
+   } else {
+       new_options.validate();
+   }
 
    asset dummy = asset(1, asset_to_update) * new_options.core_exchange_rate;
    FC_ASSERT(dummy.asset_id == asset_id_type());
@@ -201,7 +205,7 @@ void bitasset_options::validate() const
    FC_ASSERT(maximum_force_settlement_volume <= GRAPHENE_100_PERCENT);
 }
 
-void asset_options::validate()const
+void asset_options::validate(bool check_core_exchange_rate) const
 {
    FC_ASSERT( max_supply > 0 );
    FC_ASSERT( max_supply <= GRAPHENE_MAX_SHARE_SUPPLY );
@@ -213,7 +217,10 @@ void asset_options::validate()const
    FC_ASSERT( !(flags & global_settle) );
    // the witness_fed and committee_fed flags cannot be set simultaneously
    FC_ASSERT( (flags & (witness_fed_asset | committee_fed_asset)) != (witness_fed_asset | committee_fed_asset) );
-   core_exchange_rate.validate();
+
+   if (check_core_exchange_rate) {
+       core_exchange_rate.validate();
+   }
    FC_ASSERT( core_exchange_rate.base.asset_id.instance.value == 0 ||
               core_exchange_rate.quote.asset_id.instance.value == 0 );
 

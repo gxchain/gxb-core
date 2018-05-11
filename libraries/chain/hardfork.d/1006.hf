@@ -1,0 +1,6 @@
+// hardfork 1006
+// create asset, disable GXC and GXS
+#ifndef HARDFORK_1006_TIME
+#define HARDFORK_1006_TIME (fc::time_point_sec( 1522512000 ))
+#endif
+

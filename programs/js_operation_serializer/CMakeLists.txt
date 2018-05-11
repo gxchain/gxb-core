@@ -1,4 +1,3 @@
-link_directories("${PROJECT_BINARY_DIR}/libraries/chain")
 add_executable( js_operation_serializer main.cpp )
 if( UNIX AND NOT APPLE )
   set(rt_library rt )
