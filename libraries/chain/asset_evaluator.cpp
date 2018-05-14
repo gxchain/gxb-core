@@ -53,11 +53,6 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
    auto asset_symbol_itr = asset_indx.find( op.symbol );
    FC_ASSERT( asset_symbol_itr == asset_indx.end() );
 
-   if (d.head_block_time() > HARDFORK_1006_TIME) {
-       FC_ASSERT(op.symbol != GRAPHENE_SYMBOL, "asset symbol GXC disabled");
-       FC_ASSERT(op.symbol != GRAPHENE_SYMBOL_GXS, "asset symbol GXS disabled");
-   }
-
    if( d.head_block_time() > HARDFORK_385_TIME )
    {
 
@@ -300,25 +295,6 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
        FC_ASSERT(o.issuer == a.issuer, "", ("o.issuer", o.issuer)("a.issuer", a.issuer));
    }
 
-   // get new_symbol
-   for (auto& ext : o.extensions) {
-        if (ext.which() == future_extensions::tag<asset_symbol_t>::value) {
-            new_asset_symbol = ext.get<asset_symbol_t>().symbol;
-            dlog("new_asset_symbol ${n}", ("n", new_asset_symbol));
-        }
-   }
-   if (!new_asset_symbol.empty()) {
-       // evaluate new_symbol
-       // check old symbol
-       auto& asset_indx = d.get_index_type<asset_index>().indices().get<by_symbol>();
-       auto asset_symbol_itr = asset_indx.find(a.symbol);
-       FC_ASSERT(asset_symbol_itr != asset_indx.end());
-       // check new symbol
-       auto new_asset_symbol_itr = asset_indx.find(new_asset_symbol);
-       FC_ASSERT(new_asset_symbol_itr == asset_indx.end());
-   }
-
-
    const auto& chain_parameters = d.get_global_properties().parameters;
 
    FC_ASSERT( o.new_options.whitelist_authorities.size() <= chain_parameters.maximum_asset_whitelist_authorities );
@@ -350,9 +326,6 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o)
    d.modify(*asset_to_update, [&](asset_object &a) {
        if (o.new_issuer) {
            a.issuer = *o.new_issuer;
-       }
-       if (!new_asset_symbol.empty()) {
-           a.symbol = new_asset_symbol;
        }
        a.options = o.new_options;
    });
