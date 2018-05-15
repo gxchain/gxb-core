@@ -123,10 +123,6 @@ namespace graphene { namespace chain {
        vector< pair<fc::string, interest_rate_t> > params;
    };
 
-   struct asset_symbol_t {
-       string symbol;
-   };
-
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
 
@@ -602,7 +598,6 @@ FC_REFLECT( graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_base
 FC_REFLECT( graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
 FC_REFLECT( graphene::chain::interest_rate_t, (lock_days)(interest_rate)(is_valid) )
 FC_REFLECT( graphene::chain::lock_balance_params_t, (params) )
-FC_REFLECT( graphene::chain::asset_symbol_t, (symbol) )
 
 FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)
