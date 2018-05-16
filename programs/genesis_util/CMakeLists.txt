@@ -1,4 +1,3 @@
-link_directories("${PROJECT_BINARY_DIR}/libraries/chain")
 
 add_executable( genesis_update genesis_update.cpp )
 if( UNIX AND NOT APPLE )
