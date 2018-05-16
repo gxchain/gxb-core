@@ -79,7 +79,7 @@ namespace graphene { namespace chain {
 
       /// Perform internal consistency checks.
       /// @throws fc::exception if any check fails
-      void validate()const;
+      void validate(bool check_core_exchange_rate = true) const;
    };
 
    /**
