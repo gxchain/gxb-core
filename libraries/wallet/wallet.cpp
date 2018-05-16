@@ -625,10 +625,7 @@
                auto rec = _remote_db->lookup_asset_symbols({asset_symbol_or_id}).front();
                if (!rec) return optional<asset_object>();
                if (rec->symbol != asset_symbol_or_id) {
-                   if (asset_symbol_or_id != GRAPHENE_SYMBOL_GXS
-                           && asset_symbol_or_id != GRAPHENE_SYMBOL) {
-                       return optional<asset_object>();
-                   }
+                   return optional<asset_object>();
                }
                return rec;
            }
@@ -1902,7 +1899,6 @@
        } FC_CAPTURE_AND_RETHROW((issuer)(symbol)(precision)(common)(fee_asset_symbol)(broadcast)) }
 
        signed_transaction update_asset(string symbol,
-                                       optional<string> new_symbol,
                                        optional<string> new_issuer,
                                        asset_options new_options,
                                        string fee_asset_symbol,
@@ -1929,19 +1925,13 @@
           update_op.new_issuer = new_issuer_account_id;
           update_op.new_options = new_options;
 
-          if (new_symbol) {
-              asset_symbol_t ext;
-              ext.symbol = *new_symbol;
-              update_op.extensions.insert(ext);
-          }
-
           signed_transaction tx;
           tx.operations.push_back(update_op);
           set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
           tx.validate();
 
           return sign_transaction(tx, broadcast);
-       } FC_CAPTURE_AND_RETHROW((symbol)(new_symbol)(new_issuer)(new_options)(fee_asset_symbol)(broadcast)) }
+       } FC_CAPTURE_AND_RETHROW((symbol)(new_issuer)(new_options)(fee_asset_symbol)(broadcast)) }
 
        signed_transaction update_bitasset(string symbol,
                                           bitasset_options new_options,
@@ -4556,13 +4546,12 @@
     }
 
     signed_transaction wallet_api::update_asset(string symbol,
-                                                optional<string> new_symbol,
                                                 optional<string> new_issuer,
                                                 asset_options new_options,
                                                 string fee_asset_symbol,
                                                 bool broadcast /* = false */)
     {
-       return my->update_asset(symbol, new_symbol, new_issuer, new_options, fee_asset_symbol, broadcast);
+       return my->update_asset(symbol, new_issuer, new_options, fee_asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::update_bitasset(string symbol,
