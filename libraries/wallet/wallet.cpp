@@ -3494,6 +3494,11 @@
            return trx.validate_signee(pub_key, _chain_id);
        }
 
+       bool verify_proxy_transfer_signature(const proxy_transfer_params& param, public_key_type pub_key)
+       {
+           return param.verify_proxy_transfer_signature(pub_key);
+       }
+
        void transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times)
        {
             FC_ASSERT( !self.is_locked() );
@@ -4803,6 +4808,11 @@
     bool wallet_api::verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key)
     {
         return my->verify_transaction_signature(trx, pub_key);
+    }
+
+    bool wallet_api::verify_proxy_transfer_signature(const proxy_transfer_params& param, public_key_type pub_key)
+    {
+        return my->verify_proxy_transfer_signature(param, pub_key);
     }
 
     void wallet_api::flood_network(string account_prefix, uint32_t number_of_transactions)
