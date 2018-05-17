@@ -2048,6 +2048,8 @@ class wallet_api
        */
       bool verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key);
 
+      bool verify_proxy_transfer_signature(const proxy_transfer_params& param, public_key_type pub_key);
+
       /** get tps
        * @return
        */
@@ -2255,6 +2257,7 @@ FC_API( graphene::wallet::wallet_api,
         (transfer_test)
         (get_hash)
         (verify_transaction_signature)
+        (verify_proxy_transfer_signature)
         (flood_network)
         (flood_create_account)
         (get_tps)
