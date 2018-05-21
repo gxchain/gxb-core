@@ -21,6 +21,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif()
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
+include( InstallDirectoryPermissions )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 set(GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_SOURCE_DIR}/genesis.json" )
@@ -152,6 +153,8 @@ endif()
 add_subdirectory( libraries )
 add_subdirectory( programs )
 add_subdirectory( tests )
+
+install_directory_permissions(DIRECTORY ${CMAKE_INSTALL_FULL_SYSCONFDIR}/gxb)
 
 
 if (ENABLE_INSTALLER)
