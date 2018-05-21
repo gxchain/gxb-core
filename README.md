@@ -75,7 +75,7 @@ Alternate Boost versions can be specified using the `DBOOST_ROOT` CMake argument
 ### Running
 After building, the witness node can be launched with:
 ```
-    ./programs/witness_node/witness_node --rpc-endpoint="127.0.0.1:8090"
+    ./programs/witness_node/witness_node --rpc-endpoint="127.0.0.1:8090" --max-ops-per-account=0 --partial-operations=true --data-transaction-lifetime=1
 ```
 The node will automatically create a data directory including a config file. It may take several minutes to fully synchronize
 the blockchain.
