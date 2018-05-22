@@ -81,6 +81,11 @@ namespace graphene { namespace chain {
    using                               fc::ecc::range_proof_type;
    using                               fc::ecc::range_proof_info;
    using                               fc::ecc::commitment_type;
+
+   using int128_t            = __int128;
+   using uint128_t           = unsigned __int128;
+   using bytes               = vector<char>;
+
    struct void_t{};
 
    struct operation_ext_version_t {
