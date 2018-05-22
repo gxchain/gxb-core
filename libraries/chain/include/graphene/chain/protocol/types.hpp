@@ -38,6 +38,11 @@
 #include <fc/static_variant.hpp>
 #include <fc/smart_ref_fwd.hpp>
 
+#include <boost/interprocess/containers/string.hpp>
+#include <boost/interprocess/allocators/allocator.hpp>
+#include <boost/interprocess/managed_mapped_file.hpp>
+
+
 #include <memory>
 #include <vector>
 #include <deque>
@@ -82,7 +87,16 @@ namespace graphene { namespace chain {
    using                               fc::ecc::range_proof_info;
    using                               fc::ecc::commitment_type;
 
-   using bytes               = vector<char>;
+   namespace bip = boost::interprocess;
+
+   template<typename T>
+   using allocator = bip::allocator<T, bip::managed_mapped_file::segment_manager>;
+
+   template<typename T>
+   using shared_vector = std::vector<T, allocator<T> >;
+
+   using bytes         = std::vector<char>;
+   using shared_string = boost::interprocess::basic_string<char, std::char_traits<char>, allocator<char>>;
 
    struct void_t{};
 
