@@ -107,9 +107,11 @@ add_library( graphene_chain
            )
 
 add_dependencies( graphene_chain build_hardfork_hpp )
-target_link_libraries( graphene_chain fc graphene_db )
+target_link_libraries( graphene_chain fc graphene_db IR WAST WASM Runtime wasm asmjs )
 target_include_directories( graphene_chain
-                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" )
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
+           "${CMAKE_CURRENT_SOURCE_DIR}/../wasm-jit/Include"
+           "${CMAKE_CURRENT_BINARY_DIR}/include" )
 
 if(MSVC)
   set_source_files_properties( db_init.cpp db_block.cpp database.cpp block_database.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
