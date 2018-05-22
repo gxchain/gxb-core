@@ -6,4 +6,4 @@
 	url = https://github.com/gxchain/gxb-core.wiki.git
 [submodule "libraries/softfloat"]
 	path = libraries/softfloat
-	url = git@github.com:gxchain/berkeley-softfloat-3.git
+	url = https://github.com/gxchain/berkeley-softfloat-3.git
