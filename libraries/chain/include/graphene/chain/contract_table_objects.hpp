@@ -3,8 +3,6 @@
 #include <graphene/chain/multi_index_includes.hpp>
 #include <softfloat.hpp>
 
-#include <chainbase/chainbase.hpp>
-
 #include <array>
 #include <type_traits>
 
