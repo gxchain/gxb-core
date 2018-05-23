@@ -47,6 +47,42 @@ namespace graphene { namespace chain {
         }
     };
 
+struct contract_deploy_operation: public base_operation {
+
+    struct fee_parameters_type {
+        uint64_t fee = 1000 * GRAPHENE_BLOCKCHAIN_PRECISION;
+        uint64_t price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
+    };
+
+    asset fee;
+    fc::string name;
+    account_id_type creator_account;
+
+    fc::string vm_type;
+    fc::string vm_version;
+    fc::string code;
+    fc::string abi;
+
+    account_id_type fee_payer() const
+    {
+        return creator_account;
+    }
+
+    void validate() const
+    {
+        FC_ASSERT(fee.amount >= 0, "fee.amount < 0");
+        FC_ASSERT(is_valid_name(name), "contract name is invalid");
+    }
+
+    share_type calculate_fee(const fee_parameters_type& k) const
+    {
+        auto core_fee_required = k.fee;
+        auto data_fee = calculate_data_fee(fc::raw::pack_size(*this), k.price_per_kbyte);
+        core_fee_required += data_fee;
+        return core_fee_required;
+    }
+};
+
 
 } } // graphene::chain
 
@@ -59,3 +95,6 @@ FC_REFLECT(graphene::chain::contract_call_operation,
             (method)
             (data)
             (extensions))
+
+FC_REFLECT( graphene::chain::contract_deploy_operation::fee_parameters_type, (fee)(price_per_kbyte) )
+FC_REFLECT( graphene::chain::contract_deploy_operation, (fee)(name)(creator_account)(vm_type)(vm_version)(code)(abi) )
