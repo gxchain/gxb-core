@@ -285,7 +285,7 @@ struct get_impacted_account_visitor
 
    void operator() (const contract_call_operation &op) {
        _impacted.insert(op.account);
-   };
+   }
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
 {
