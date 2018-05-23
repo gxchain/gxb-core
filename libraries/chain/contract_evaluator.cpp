@@ -33,6 +33,7 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 
 void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 { try {
+    dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.name)("m", op.method)("d", op.data));
     dlog("contract_call_evaluator do_apply");
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
