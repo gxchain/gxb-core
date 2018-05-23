@@ -924,6 +924,69 @@
           _builder_transactions.erase(handle);
        }
 
+
+       signed_transaction deploy_contract(string name,
+                                         string account,
+                                         string vm_type,
+                                         string vm_version,
+                                         string code_file_path,
+                                         string abi_file_path,
+                                         bool broadcast = false)
+    {
+        try {
+            FC_ASSERT(!self.is_locked());
+            FC_ASSERT(is_valid_name(name));
+
+            account_object creator_account_object = this->get_account(account);
+            FC_ASSERT(creator_account_object.is_lifetime_member());
+            account_id_type creator_account_id = creator_account_object.id;
+
+            contract_deploy_operation contract_deploy_op;
+
+            contract_deploy_op.name = name;
+            contract_deploy_op.creator_account = creator_account_id;
+            contract_deploy_op.vm_type = vm_type;
+            contract_deploy_op.vm_version = vm_version;
+            contract_deploy_op.code = code_file_path;
+            contract_deploy_op.abi = abi_file_path;
+
+            signed_transaction tx;
+
+            tx.operations.push_back(contract_deploy_op);
+
+            auto current_fees =
+                    _remote_db->get_global_properties().parameters.current_fees;
+            set_operation_fees(tx, current_fees);
+
+            vector<public_key_type> paying_keys =
+                    creator_account_object.active.get_keys();
+
+            auto dyn_props = get_dynamic_global_properties();
+            tx.set_reference_block(dyn_props.head_block_id);
+            tx.set_expiration(dyn_props.time + fc::seconds(30));
+            tx.validate();
+
+            for (public_key_type& key : paying_keys) {
+                auto it = _keys.find(key);
+                if (it != _keys.end()) {
+                    fc::optional<fc::ecc::private_key> privkey = wif_to_key(
+                            it->second);
+                    if (!privkey.valid()) {
+                        FC_ASSERT(false, "Malformed private key in _keys");
+                    }
+                    tx.sign(*privkey, _chain_id);
+                }
+            }
+
+            if (broadcast)
+                _remote_net_broadcast->broadcast_transaction(tx);
+            return tx;
+        }FC_CAPTURE_AND_RETHROW(
+                (name)(account)(vm_type)(vm_version)(code_file_path)(abi_file_path)(broadcast))
+    }
+
+
+
        signed_transaction register_account(string name,
                                            public_key_type owner,
                                            public_key_type active,
@@ -4502,6 +4565,17 @@
     {
        return my->register_account2( name, owner_pubkey, active_pubkey, memo, registrar_account, referrer_account, referrer_percent, asset_symbol, broadcast );
     }
+
+    signed_transaction wallet_api::deploy_contract(string name,
+                                                  string account,
+                                                  string vm_type,
+                                                  string vm_version,
+                                                  string code_file_path,
+                                                  string abi_file_path,
+                                                  bool broadcast)
+{
+    return my->deploy_contract(name, account, vm_type, vm_version, code_file_path, abi_file_path, broadcast);
+}
 
     signed_transaction wallet_api::register_account(string name,
                                                     public_key_type owner_pubkey,
