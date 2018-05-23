@@ -6,8 +6,6 @@
 
 namespace graphene { namespace chain {
 
-class transaction_context;
-
 class apply_context {
    private:
 
@@ -22,15 +20,20 @@ class apply_context {
 
    /// Constructor
    public:
-      apply_context()
+      apply_context(const action& a)
+          : act(a)
+          , receiver(a.account)
       {
       }
 
+   public:
+      const action&       act; ///< message being applied
+      uint64_t            receiver;
 
    /// Execution methods:
    public:
 
-      void exec();
+      void exec() {}
 };
 
 } } // namespace graphene::chain
