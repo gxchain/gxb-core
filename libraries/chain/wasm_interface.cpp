@@ -29,7 +29,7 @@ namespace graphene { namespace chain {
          Serialization::MemoryInputStream stream((U8*)code.data(), code.size());
          WASM::serialize(stream, module);
       } catch(Serialization::FatalSerializationException& e) {
-         EOS_ASSERT(false, wasm_serialization_error, e.message.c_str());
+         GRAPHENE_ASSERT(false, wasm_serialization_error, e.message.c_str());
       }
 
       wasm_validations::wasm_binary_validation validator(module);
@@ -121,9 +121,9 @@ class privileged_api : public context_aware_api {
        * @param cpu_weight - the weight for determining share of compute capacity
        */
       void set_resource_limits( account_name account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight) {
-         EOS_ASSERT(ram_bytes >= -1, wasm_execution_error, "invalid value for ram resource limit expected [-1,INT64_MAX]");
-         EOS_ASSERT(net_weight >= -1, wasm_execution_error, "invalid value for net resource weight expected [-1,INT64_MAX]");
-         EOS_ASSERT(cpu_weight >= -1, wasm_execution_error, "invalid value for cpu resource weight expected [-1,INT64_MAX]");
+         GRAPHENE_ASSERT(ram_bytes >= -1, wasm_execution_error, "invalid value for ram resource limit expected [-1,INT64_MAX]");
+         GRAPHENE_ASSERT(net_weight >= -1, wasm_execution_error, "invalid value for net resource weight expected [-1,INT64_MAX]");
+         GRAPHENE_ASSERT(cpu_weight >= -1, wasm_execution_error, "invalid value for cpu resource weight expected [-1,INT64_MAX]");
          if( context.control.get_mutable_resource_limits_manager().set_account_limits(account, ram_bytes, net_weight, cpu_weight) ) {
             context.trx_context.validate_ram_usage.insert( account );
          }
@@ -137,15 +137,15 @@ class privileged_api : public context_aware_api {
          datastream<const char*> ds( packed_producer_schedule, datalen );
          vector<producer_key> producers;
          fc::raw::unpack(ds, producers);
-         EOS_ASSERT(producers.size() <= config::max_producers, wasm_execution_error, "Producer schedule exceeds the maximum producer count for this chain");
+         GRAPHENE_ASSERT(producers.size() <= config::max_producers, wasm_execution_error, "Producer schedule exceeds the maximum producer count for this chain");
          // check that producers are unique
          std::set<account_name> unique_producers;
          for (const auto& p: producers) {
-            EOS_ASSERT( context.is_account(p.producer_name), wasm_execution_error, "producer schedule includes a nonexisting account" );
-            EOS_ASSERT( p.block_signing_key.valid(), wasm_execution_error, "producer schedule includes an invalid key" );
+            GRAPHENE_ASSERT( context.is_account(p.producer_name), wasm_execution_error, "producer schedule includes a nonexisting account" );
+            GRAPHENE_ASSERT( p.block_signing_key.valid(), wasm_execution_error, "producer schedule includes an invalid key" );
             unique_producers.insert(p.producer_name);
          }
-         EOS_ASSERT( producers.size() == unique_producers.size(), wasm_execution_error, "duplicate producer name in producer schedule" );
+         GRAPHENE_ASSERT( producers.size() == unique_producers.size(), wasm_execution_error, "duplicate producer name in producer schedule" );
          return context.control.set_proposed_producers( std::move(producers) );
       }
 
@@ -815,29 +815,29 @@ class crypto_api : public context_aware_api {
 
 #define DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(IDX, TYPE)\
       int db_##IDX##_store( uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, const TYPE& secondary ) {\
-         EOS_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
+         GRAPHENE_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
          return context.IDX.store( scope, table, payer, id, secondary );\
       }\
       void db_##IDX##_update( int iterator, uint64_t payer, const TYPE& secondary ) {\
-         EOS_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
+         GRAPHENE_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
          return context.IDX.update( iterator, payer, secondary );\
       }\
       void db_##IDX##_remove( int iterator ) {\
          return context.IDX.remove( iterator );\
       }\
       int db_##IDX##_find_secondary( uint64_t code, uint64_t scope, uint64_t table, const TYPE& secondary, uint64_t& primary ) {\
-         EOS_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
+         GRAPHENE_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
          return context.IDX.find_secondary(code, scope, table, secondary, primary);\
       }\
       int db_##IDX##_find_primary( uint64_t code, uint64_t scope, uint64_t table, TYPE& secondary, uint64_t primary ) {\
          return context.IDX.find_primary(code, scope, table, secondary, primary);\
       }\
       int db_##IDX##_lowerbound( uint64_t code, uint64_t scope, uint64_t table,  TYPE& secondary, uint64_t& primary ) {\
-         EOS_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
+         GRAPHENE_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
          return context.IDX.lowerbound_secondary(code, scope, table, secondary, primary);\
       }\
       int db_##IDX##_upperbound( uint64_t code, uint64_t scope, uint64_t table,  TYPE& secondary, uint64_t& primary ) {\
-         EOS_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
+         GRAPHENE_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
          return context.IDX.upperbound_secondary(code, scope, table, secondary, primary);\
       }\
       int db_##IDX##_end( uint64_t code, uint64_t scope, uint64_t table ) {\
@@ -898,7 +898,7 @@ class memory_api : public context_aware_api {
       :context_aware_api(ctx,true){}
 
       char* memcpy( array_ptr<char> dest, array_ptr<const char> src, size_t length) {
-         EOS_ASSERT((std::abs((ptrdiff_t)dest.value - (ptrdiff_t)src.value)) >= length,
+         GRAPHENE_ASSERT((std::abs((ptrdiff_t)dest.value - (ptrdiff_t)src.value)) >= length,
                overlapping_memory_error, "memcpy can only accept non-aliasing pointers");
          return (char *)::memcpy(dest, src, length);
       }
