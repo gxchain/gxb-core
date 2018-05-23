@@ -48,6 +48,7 @@
 #include <deque>
 #include <cstdint>
 #include <graphene/chain/protocol/address.hpp>
+#include <graphene/chain/protocol/name.hpp>
 #include <graphene/db/object_id.hpp>
 #include <graphene/chain/protocol/config.hpp>
 

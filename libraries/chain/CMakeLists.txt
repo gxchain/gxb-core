@@ -34,6 +34,7 @@ add_library( graphene_chain
              # As database takes the longest to compile, start it first
              ${GRAPHENE_DB_FILES}
              fork_database.cpp
+             name.cpp
 
              protocol/types.cpp
              protocol/address.cpp
@@ -115,10 +116,12 @@ add_library( graphene_chain
            )
 
 add_dependencies( graphene_chain build_hardfork_hpp )
-target_link_libraries( graphene_chain fc graphene_db IR WAST WASM Runtime softfloat)
+target_link_libraries( graphene_chain fc graphene_db IR WAST WASM Runtime wasm
+    asmjs passes cfg ast emscripten-optimizer softfloat)
 target_include_directories( graphene_chain
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
            "${CMAKE_CURRENT_SOURCE_DIR}/../wasm-jit/Include"
+           "${CMAKE_CURRENT_SOURCE_DIR}/../../externals/binaryen/src"
            "${CMAKE_CURRENT_BINARY_DIR}/include" )
 
 if(MSVC)
