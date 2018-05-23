@@ -1032,7 +1032,7 @@ class wallet_api
        * @param code_file_path code_file_path
        * @param abi_file_path abi_file_path
        * @param broadcast broadcast
-       * @returns the brain key in its normalized form
+       * @returns signed_transaction
        */
     signed_transaction deploy_contract(string name,
                                       string account,
