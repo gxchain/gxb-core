@@ -48,6 +48,7 @@
 #include <graphene/chain/protocol/datasource_copyright_ops.hpp>
 #include <graphene/chain/protocol/loyalty_ops.hpp>
 #include <graphene/chain/protocol/proxy_transfer_ops.hpp>
+#include <graphene/chain/protocol/contract_ops.hpp>
 
 namespace graphene { namespace chain {
 
@@ -130,7 +131,8 @@ namespace graphene { namespace chain {
             data_transaction_complain_operation,//70
             balance_lock_operation,//71
             balance_unlock_operation,//72
-            proxy_transfer_operation //73
+            proxy_transfer_operation, //73
+            contract_call_operation //75
 
          > operation;
 
