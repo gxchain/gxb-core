@@ -79,6 +79,7 @@ add_library( graphene_chain
              datasource_copyright_evaluator.cpp
              loyalty_evaluator.cpp
              proxy_transfer_evaluator.cpp
+             contract_evaluator.cpp
 
              committee_member_evaluator.cpp
              asset_evaluator.cpp
