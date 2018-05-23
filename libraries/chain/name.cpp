@@ -1,4 +1,4 @@
-#include <graphene/chain/name.hpp>
+#include <graphene/chain/protocol/name.hpp>
 #include <fc/variant.hpp>
 #include <boost/algorithm/string.hpp>
 #include <fc/exception/exception.hpp>
