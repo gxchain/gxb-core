@@ -1,5 +1,7 @@
 add_subdirectory( fc )
 add_subdirectory( db )
+add_subdirectory( wasm-jit )
+add_subdirectory( softfloat )
 add_subdirectory( deterministic_openssl_rand )
 add_subdirectory( chain )
 add_subdirectory( egenesis )

@@ -3,6 +3,10 @@ project( gxb-core )
 cmake_minimum_required( VERSION 2.8.12 )
 
 set( BLOCKCHAIN_NAME "GXChain" )
+set( CMAKE_CXX_STANDARD 14 )
+set( CMAKE_CXX_EXTENSIONS ON )
+set( CXX_STANDARD_REQUIRED ON)
+
 
 set( CLI_CLIENT_EXECUTABLE_NAME graphene_client )
 set( GUI_CLIENT_EXECUTABLE_NAME gxb-core )
@@ -21,6 +25,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif()
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
+include( InstallDirectoryPermissions )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 set(GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_SOURCE_DIR}/genesis.json" )
@@ -149,9 +154,14 @@ if(ENABLE_COVERAGE_TESTING)
     SET(CMAKE_CXX_FLAGS "--coverage ${CMAKE_CXX_FLAGS}")
 endif()
 
+add_subdirectory( externals )
+
+include(wasm)
 add_subdirectory( libraries )
 add_subdirectory( programs )
 add_subdirectory( tests )
+
+install_directory_permissions(DIRECTORY ${CMAKE_INSTALL_FULL_SYSCONFDIR}/gxb)
 
 
 if (ENABLE_INSTALLER)

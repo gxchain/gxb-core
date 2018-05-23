@@ -4,3 +4,9 @@
 [submodule "docs"]
 	path = docs
 	url = https://github.com/gxchain/gxb-core.wiki.git
+[submodule "libraries/softfloat"]
+	path = libraries/softfloat
+	url = https://github.com/gxchain/berkeley-softfloat-3.git
+[submodule "externals/binaryen"]
+	path = externals/binaryen
+	url = https://github.com/gxchain/binaryen.git
