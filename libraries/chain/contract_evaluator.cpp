@@ -66,18 +66,16 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 )
 )=====";
 
-    auto wasm = graphene::chain::wast_to_wasm(wast_code);
+    std::vector<uint8_t> wasm = graphene::chain::wast_to_wasm(wast_code);
     auto code_id = fc::sha256::hash(wast_code, (uint32_t) strlen(wast_code));
 
-    // auto wasm_bytes = bytes(wasm.begin(), wasm.end());
-    // shared_string wasm_code;
-    // wasm_code.resize(wasm_bytes.size());
-    // memcpy(wasm_code.data(), wasm_bytes.data(), wasm_bytes.size());
+    auto wasm_bytes = bytes(wasm.begin(), wasm.end());
+    auto wasm_code = shared_string(wasm_bytes.data(), wasm_bytes.data() + wasm_bytes.size());
     dlog("wast code ${c}", ("c", wast_code));
     try {
-        // action a{1, 1, {}};
-        /// apply_context ap{a};
-        // wasm_interface(graphene::chain::wasm_interface::vm_type::binaryen).apply(code_id, wasm_code, ap);
+        action a{1, 1, {}};
+        apply_context ap{a};
+        wasm_interface(graphene::chain::wasm_interface::vm_type::binaryen).apply(code_id, wasm_code, ap);
         dlog("wasm exec success");
     } catch ( const wasm_exit& ){
         dlog("wasm exec failed");
