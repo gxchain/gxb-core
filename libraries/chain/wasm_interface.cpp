@@ -4,6 +4,8 @@
 #include <graphene/chain/wasm_interface_private.hpp>
 #include <graphene/chain/wasm_gxb_validation.hpp>
 #include <graphene/chain/wasm_gxb_injection.hpp>
+#include <graphene/chain/wasm_interface_private.hpp>
+
 #include <fc/exception/exception.hpp>
 #include <fc/crypto/sha256.hpp>
 #include <fc/crypto/sha1.hpp>
@@ -44,7 +46,7 @@ namespace graphene { namespace chain {
 	   }
 
    void wasm_interface::apply( const digest_type& code_id, const bytes& code, apply_context& context ) {
-      my->get_instantiated_module(code_id, code, context.trx_context)->apply(context);
+      my->get_instantiated_module(code_id, code)->apply(context);
    }
 
    wasm_instantiated_module_interface::~wasm_instantiated_module_interface() {}
