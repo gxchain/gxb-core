@@ -929,13 +929,46 @@
                                          string account,
                                          string vm_type,
                                          string vm_version,
-                                         string code_file_path,
-                                         string abi_file_path,
+                                         string contract_dir,
                                          bool broadcast = false)
     {
         try {
             FC_ASSERT(!self.is_locked());
             FC_ASSERT(is_valid_name(name));
+
+            std::string wasm;
+            std::string abi;
+
+            auto load_contract_callback = [&]() {
+               std::string wast;
+               fc::path cpath(contract_dir);
+
+               if( cpath.filename().generic_string() == "." ) cpath = cpath.parent_path();
+
+               fc::path wast_path = cpath / (cpath.filename().generic_string()+".wast");
+               fc::path wasm_path = cpath / (cpath.filename().generic_string()+".wasm");
+               fc::path abi_path = cpath / (cpath.filename().generic_string()+".abi");
+
+               bool wast_exist = fc::exists(wast_path);
+               bool wasm_exist = fc::exists(wasm_path);
+               bool abi_exist = fc::exists(abi_path);
+               
+               FC_ASSERT( abi_exist && (wast_exist || wasm_exist ), "need abi and wast/wasm file" );
+               
+               fc::read_file_contents(abi_path, abi);
+               FC_ASSERT( !abi.empty(), "abi file empty" ); //TODO verify abi content
+               
+               fc::read_file_contents(wasm_path, wasm);
+               const string binary_wasm_header("\x00\x61\x73\x6d", 4);
+               if(wasm.compare(0, 4, binary_wasm_header) == 0) {
+               } else {
+                  fc::read_file_contents(wast_path, wast);
+                  FC_ASSERT( !wast.empty(), "wasm and wast file both invalid");
+                  wasm = wast;// TODO convert wast to wasm, wast_to_wasm(wast);
+               }
+            };
+
+            load_contract_callback();
 
             account_object creator_account_object = this->get_account(account);
             FC_ASSERT(creator_account_object.is_lifetime_member());
@@ -947,8 +980,8 @@
             contract_deploy_op.creator_account = creator_account_id;
             contract_deploy_op.vm_type = vm_type;
             contract_deploy_op.vm_version = vm_version;
-            contract_deploy_op.code = code_file_path;
-            contract_deploy_op.abi = abi_file_path;
+            contract_deploy_op.code = wasm;
+            contract_deploy_op.abi = abi;
 
             signed_transaction tx;
 
@@ -982,7 +1015,7 @@
                 _remote_net_broadcast->broadcast_transaction(tx);
             return tx;
         }FC_CAPTURE_AND_RETHROW(
-                (name)(account)(vm_type)(vm_version)(code_file_path)(abi_file_path)(broadcast))
+                (name)(account)(vm_type)(vm_version)(contract_dir)(broadcast))
     }
 
 
@@ -4570,11 +4603,10 @@
                                                   string account,
                                                   string vm_type,
                                                   string vm_version,
-                                                  string code_file_path,
-                                                  string abi_file_path,
+                                                  string contract_dir,
                                                   bool broadcast)
 {
-    return my->deploy_contract(name, account, vm_type, vm_version, code_file_path, abi_file_path, broadcast);
+    return my->deploy_contract(name, account, vm_type, vm_version, contract_dir, broadcast);
 }
 
     signed_transaction wallet_api::register_account(string name,

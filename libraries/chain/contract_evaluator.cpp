@@ -97,7 +97,7 @@ object_id_type contract_deploy_evaluator::do_apply( const contract_deploy_operat
     if (dynamic_properties.accounts_registered_this_interval
             % global_properties.parameters.accounts_per_fee_scale == 0)
         db().modify(global_properties,
-                [&dynamic_properties](global_property_object& p) {
+                [&](global_property_object& p) {
                     p.parameters.current_fees->get<account_create_operation>().basic_fee <<= p.parameters.account_fee_scale_bitshifts;
                 });
 
