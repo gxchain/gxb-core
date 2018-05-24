@@ -1772,6 +1772,25 @@ class wallet_api
                                            bool approve,
                                            bool broadcast = false);
 
+      /** Update account multi-sig
+       *
+       * @param account account to update
+       * @param type owner / active / all
+       * @param weight_threshold weight_threshold of multi-sig account
+       * @param account_auths account names
+       * @param account_weights account weights
+       * @param fee_symbol fee asset symbol
+       * @param broadcast true if you wish to broadcast the transaction
+       * @return the signed transaction changing your account
+       */
+      signed_transaction update_account_multisig(string account,
+                                                 string type,
+                                                 uint32_t weight_threshold,
+                                                 vector<string> account_auths,
+                                                 vector<weight_type> account_weights,
+                                                 string fee_symbol,
+                                                 bool broadcast);
+
       /** Vote for a given witness.
        *
        * An account can publish a list of all witnesses they approve of.  This 
@@ -2203,6 +2222,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_vesting_balances)
         (withdraw_vesting)
         (vote_for_committee_member)
+        (update_account_multisig)
         (vote_for_witness)
         (set_voting_proxy)
         (set_desired_witness_and_committee_member_count)

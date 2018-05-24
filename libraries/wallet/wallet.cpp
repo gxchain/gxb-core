@@ -79,6 +79,9 @@
     #endif
 
     #define BRAIN_KEY_WORD_COUNT 16
+    #define OWNER "owner"
+    #define ACTIVE "active"
+    #define ALL "all"
 
     namespace graphene { namespace wallet {
 
@@ -2428,6 +2431,47 @@
        } FC_CAPTURE_AND_RETHROW( (witness_name)(amount) )
        }
 
+       signed_transaction update_account_multisig(string account, string type, uint32_t weight_threshold, vector<string> account_auths, vector<weight_type> account_weights, string fee_symbol, bool broadcast)
+       { try {
+             FC_ASSERT(OWNER == type || ACTIVE == type || ALL == type);
+             FC_ASSERT(account_auths.size() == account_weights.size());
+             account_object updating_account = get_account(account);
+
+             fc::optional<asset_object> asset_obj = get_asset(fee_symbol);
+             FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", fee_symbol));
+
+             vector<account_id_type> account_ids;
+             account_ids.reserve(account_auths.size());
+             std::transform(account_auths.begin(), account_auths.end(),
+                           std::inserter(account_ids, account_ids.end()),
+                           [this](const std::string& account_name_or_id){ return get_account_id(account_name_or_id); });
+             auto auth = authority();
+             auth.weight_threshold = weight_threshold;
+             for (uint8_t i = 0; i < account_ids.size(); ++i) {
+                 auth.add_authority(account_ids.at(i), account_weights.at(i));
+             }
+
+             account_update_operation op;
+             op.account = updating_account.id;
+             op.owner = updating_account.owner;
+             op.active = updating_account.active;
+             if (ACTIVE == type) {
+                 op.active = auth;
+             } else if (OWNER == type) {
+                 op.owner = auth;
+             } else if (ALL == type) {
+                 op.active = auth;
+                 op.owner = auth;
+             }
+
+             signed_transaction tx;
+             tx.operations.push_back(op);
+             set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, asset_obj);
+             tx.validate();
+
+             return sign_transaction(tx, broadcast);
+       } FC_CAPTURE_AND_RETHROW((account)(type)(weight_threshold)(account_auths)(account_weights)(fee_symbol)(broadcast)) }
+
        signed_transaction vote_for_committee_member(string voting_account,
                                             string committee_member,
                                             bool approve,
@@ -4698,6 +4742,17 @@
        bool broadcast /* = false */)
     {
        return my->withdraw_vesting( witness_name, amount, asset_symbol, broadcast );
+    }
+
+    signed_transaction wallet_api::update_account_multisig(string account,
+                                                           string type,
+                                                           uint32_t weight_threshold,
+                                                           vector<string> account_auths,
+                                                           vector<weight_type> account_weights,
+                                                           string fee_symbol,
+                                                           bool broadcast)
+    {
+      return my->update_account_multisig(account, type, weight_threshold, account_auths, account_weights, fee_symbol, broadcast);
     }
 
     signed_transaction wallet_api::vote_for_committee_member(string voting_account,
