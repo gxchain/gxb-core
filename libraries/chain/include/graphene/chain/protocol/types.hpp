@@ -88,17 +88,7 @@ namespace graphene { namespace chain {
    using                               fc::ecc::range_proof_info;
    using                               fc::ecc::commitment_type;
 
-   namespace bip = boost::interprocess;
-
-   template<typename T>
-   typedef bip::allocator<T, bip::managed_mapped_file::segment_manager> allocator;
-
    using bytes         = std::vector<char>;
-   typedef bip::basic_string< char, std::char_traits< char >, allocator< char > > shared_string;
-
-   template<typename T>
-   using shared_vector = std::vector<T, allocator<T> >;
-
 
    struct void_t{};
 

@@ -57,7 +57,7 @@ namespace graphene { namespace chain {
       table_id              t_id;
       uint64_t              primary_key;
       account_name          payer = 0;
-      shared_string         value;
+      bytes                 value;
    };
 
    using key_value_index = chainbase::shared_multi_index_container<
