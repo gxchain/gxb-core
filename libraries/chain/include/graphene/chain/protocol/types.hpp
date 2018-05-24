@@ -91,7 +91,7 @@ namespace graphene { namespace chain {
    namespace bip = boost::interprocess;
 
    template<typename T>
-   using allocator = bip::allocator<T, bip::managed_mapped_file::segment_manager>;
+   typedef bip::allocator<T, bip::managed_mapped_file::segment_manager> allocator;
 
    using bytes         = std::vector<char>;
    typedef bip::basic_string< char, std::char_traits< char >, allocator< char > > shared_string;
