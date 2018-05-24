@@ -93,11 +93,12 @@ namespace graphene { namespace chain {
    template<typename T>
    using allocator = bip::allocator<T, bip::managed_mapped_file::segment_manager>;
 
+   using bytes         = std::vector<char>;
+   typedef bip::basic_string< char, std::char_traits< char >, allocator< char > > shared_string;
+
    template<typename T>
    using shared_vector = std::vector<T, allocator<T> >;
 
-   using bytes         = std::vector<char>;
-   using shared_string = boost::interprocess::basic_string<char, std::char_traits<char>, allocator<char>>;
 
    struct void_t{};
 

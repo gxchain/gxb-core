@@ -127,6 +127,31 @@ BOOST_AUTO_TEST_CASE(proxy_transfer_test)
    BOOST_REQUIRE_EQUAL(get_balance(bob_id(db), core), 8500); // 10000 - 2000 + (5000 * 10%)
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE(contract_call_test)
+{ try {
+   ACTOR(alice);
+
+   transfer(account_id_type(), alice_id, asset(10000));
+   generate_block();
+
+   // construct trx
+   contract_call_operation op;
+   op.account = alice_id;
+   op.name = "bob";
+   op.method = "transfer";
+   op.data = "call data";
+   op.fee = asset(2000);
+
+   trx.clear();
+   trx.operations.push_back(op);
+   set_expiration(db, trx);
+   sign(trx, alice_private_key);
+   idump((trx));
+   PUSH_TX(db, trx);
+   trx.clear();
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( withdraw_permission_test )
 { try {
    INVOKE(withdraw_permission_create);
