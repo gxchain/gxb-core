@@ -249,6 +249,7 @@ void database::initialize_evaluators()
    register_evaluator<datasource_copyright_clear_evaluator>();
    register_evaluator<proxy_transfer_evaluator>();
    register_evaluator<contract_call_evaluator>();
+   register_evaluator<contract_deploy_evaluator>();
 
 }
 

@@ -32,4 +32,14 @@ namespace graphene { namespace chain {
        void_result do_apply(const contract_call_operation &op);
 
    };
+
+   class contract_deploy_evaluator : public evaluator<contract_deploy_evaluator>
+   {
+     public:
+       typedef contract_deploy_operation operation_type;
+
+       void_result do_evaluate(const contract_deploy_operation &op);
+       object_id_type do_apply(const contract_deploy_operation &op);
+
+   };
 } }
