@@ -203,7 +203,7 @@ namespace graphene { namespace chain {
          string name;
          string vm_type;
          string vm_version;
-         string code;
+         std::vector<uint8_t> code;
          string abi;
 
          /**

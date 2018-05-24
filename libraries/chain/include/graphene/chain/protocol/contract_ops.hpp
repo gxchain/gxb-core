@@ -60,7 +60,7 @@ struct contract_deploy_operation: public base_operation {
 
     fc::string vm_type;
     fc::string vm_version;
-    fc::string code;
+    std::vector<uint8_t> code;
     fc::string abi;
 
     account_id_type fee_payer() const
