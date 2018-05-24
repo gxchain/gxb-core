@@ -71,6 +71,7 @@
     #include <graphene/wallet/api_documentation.hpp>
     #include <graphene/wallet/reflect_util.hpp>
     #include <graphene/debug_witness/debug_api.hpp>
+    #include <graphene/chain/wast_to_wasm.hpp>
     #include <fc/smart_ref_impl.hpp>
 
     #ifndef WIN32
@@ -936,13 +937,11 @@
             FC_ASSERT(!self.is_locked());
             FC_ASSERT(is_valid_name(name));
 
-            std::string wasm;
             std::string abi;
+            std::vector<uint8_t> wasm;
 
             auto load_contract_callback = [&]() {
-               std::string wast;
                fc::path cpath(contract_dir);
-
                if( cpath.filename().generic_string() == "." ) cpath = cpath.parent_path();
 
                fc::path wast_path = cpath / (cpath.filename().generic_string()+".wast");
@@ -958,13 +957,18 @@
                fc::read_file_contents(abi_path, abi);
                FC_ASSERT( !abi.empty(), "abi file empty" ); //TODO verify abi content
                
-               fc::read_file_contents(wasm_path, wasm);
+               std::string wast;
+               std::string wasm_string;
+               fc::read_file_contents(wasm_path, wasm_string);
                const string binary_wasm_header("\x00\x61\x73\x6d", 4);
-               if(wasm.compare(0, 4, binary_wasm_header) == 0) {
+               if(wasm_string.compare(0, 4, binary_wasm_header) == 0) {
+                   for(auto it = wasm_string.begin(); it != wasm_string.end(); ++it) {//TODO
+                       wasm.push_back(*it);
+                   }
                } else {
                   fc::read_file_contents(wast_path, wast);
                   FC_ASSERT( !wast.empty(), "wasm and wast file both invalid");
-                  wasm = wast;// TODO convert wast to wasm, wast_to_wasm(wast);
+                  wasm = graphene::chain::wast_to_wasm(wast);
                }
             };
 
