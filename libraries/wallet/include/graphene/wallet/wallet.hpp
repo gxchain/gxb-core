@@ -1038,8 +1038,7 @@ class wallet_api
                                       string account,
                                       string vm_type,
                                       string vm_version,
-                                      string code_file_path,
-                                      string abi_file_path,
+                                      string contract_dir,
                                       bool broadcast = false);
 
       /** Registers a third party's account on the blockckain.
