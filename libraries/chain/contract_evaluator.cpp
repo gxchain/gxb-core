@@ -74,7 +74,10 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     try {
         action a{1, 1, {}};
         apply_context ap{a};
-        wasm_interface(graphene::chain::wasm_interface::vm_type::binaryen).apply(code_id, wasm_bytes, ap);
+        // wasm_interface(graphene::chain::wasm_interface::vm_type::binaryen).apply(code_id, wasm_bytes, ap);
+        graphene::chain::wasm_interface::vm_type runtime = graphene::chain::wasm_interface::vm_type::binaryen;
+        wasm_interface wi(runtime);
+        // wi.apply(code_id, wasm_bytes, ap);
         dlog("wasm exec success");
     } catch ( const wasm_exit& ){
         dlog("wasm exec failed");

@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <set>
 
+#include <graphene/chain/action.hpp>
+
 namespace graphene { namespace chain {
 
 class apply_context {

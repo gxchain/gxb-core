@@ -475,21 +475,6 @@ namespace graphene { namespace chain {
       friend bool operator != ( const extended_private_key_type& p1, const extended_private_key_type& p2);
    };
 
-   // action
-   struct action {
-       uint64_t             account;
-       uint64_t             name;
-       bytes                data;
-
-       action(){}
-
-       action(uint64_t acct, uint64_t n, const bytes &d)
-           : account(acct)
-           , name(n)
-           , data(d)
-       { }
-
-   };
 
 } }  // graphene::chain
 
@@ -637,5 +622,3 @@ FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (committee_fed_asset)
    )
 
-
-FC_REFLECT( graphene::chain::action, (account)(name)(data) )
