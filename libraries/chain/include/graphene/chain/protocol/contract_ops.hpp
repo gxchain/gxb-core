@@ -21,51 +21,24 @@
 #include <graphene/chain/protocol/ext.hpp>
 
 namespace graphene { namespace chain {
-    struct contract_call_operation : public base_operation {
-        struct fee_parameters_type {
-            uint64_t fee =  0 * GRAPHENE_BLOCKCHAIN_PRECISION;
-        };
-
-        account_id_type                      account;
-        asset                                fee;
-        fc::string                           name;
-        fc::string                           method;
-        fc::string                           data;
-        extensions_type                      extensions;
-
-        account_id_type fee_payer() const { return account; }
-
-        void validate() const
-        {
-            FC_ASSERT(fee.amount >= 0);
-            FC_ASSERT(data.size() > 0);
-        }
-
-        share_type calculate_fee(const fee_parameters_type &k) const
-        {
-            return k.fee;
-        }
-    };
-
-struct contract_deploy_operation: public base_operation {
-
+struct contract_deploy_operation : public base_operation {
     struct fee_parameters_type {
         uint64_t fee = 1000 * GRAPHENE_BLOCKCHAIN_PRECISION;
         uint64_t price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
     };
 
-    asset fee;
-    fc::string name;
-    account_id_type creator_account;
+    asset                           fee;
+    fc::string                      name;
+    account_id_type                 account;
 
-    fc::string vm_type;
-    fc::string vm_version;
-    std::vector<uint8_t> code;
-    fc::string abi;
+    fc::string                      vm_type;
+    fc::string                      vm_version;
+    std::vector<uint8_t>            code;
+    fc::string                      abi;
 
     account_id_type fee_payer() const
     {
-        return creator_account;
+        return account;
     }
 
     void validate() const
@@ -74,7 +47,7 @@ struct contract_deploy_operation: public base_operation {
         FC_ASSERT(is_valid_name(name), "contract name is invalid");
     }
 
-    share_type calculate_fee(const fee_parameters_type& k) const
+    share_type calculate_fee(const fee_parameters_type &k) const
     {
         auto core_fee_required = k.fee;
         auto data_fee = calculate_data_fee(fc::raw::pack_size(*this), k.price_per_kbyte);
@@ -83,8 +56,43 @@ struct contract_deploy_operation: public base_operation {
     }
 };
 
+struct contract_call_operation : public base_operation {
+    struct fee_parameters_type {
+        uint64_t fee = 0 * GRAPHENE_BLOCKCHAIN_PRECISION;
+    };
 
+    account_id_type                         account;
+    asset                                   fee;
+    fc::string                              name;
+    fc::string                              method;
+    fc::string                              data;
+    extensions_type                         extensions;
+
+    account_id_type fee_payer() const { return account; }
+
+    void validate() const
+    {
+        FC_ASSERT(fee.amount >= 0);
+        FC_ASSERT(data.size() > 0);
+    }
+
+    share_type calculate_fee(const fee_parameters_type &k) const
+    {
+        return k.fee;
+    }
+    };
 } } // graphene::chain
+
+FC_REFLECT(graphene::chain::contract_deploy_operation::fee_parameters_type,
+            (fee)(price_per_kbyte))
+FC_REFLECT(graphene::chain::contract_deploy_operation,
+            (fee)
+            (name)
+            (account)
+            (vm_type)
+            (vm_version)
+            (code)
+            (abi))
 
 FC_REFLECT(graphene::chain::contract_call_operation::fee_parameters_type, (fee))
 
@@ -96,5 +104,4 @@ FC_REFLECT(graphene::chain::contract_call_operation,
             (data)
             (extensions))
 
-FC_REFLECT( graphene::chain::contract_deploy_operation::fee_parameters_type, (fee)(price_per_kbyte) )
-FC_REFLECT( graphene::chain::contract_deploy_operation, (fee)(name)(creator_account)(vm_type)(vm_version)(code)(abi) )
+
