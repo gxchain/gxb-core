@@ -94,7 +94,7 @@ add_library( graphene_chain
              buyback.cpp
 
              wast_to_wasm.cpp
-             #wasm_interface.cpp
+             wasm_interface.cpp
              wasm_gxb_validation.cpp
              wasm_gxb_injection.cpp
 

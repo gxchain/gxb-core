@@ -11,7 +11,6 @@
 #include <fc/io/raw.hpp>
 
 #include <softfloat.hpp>
-#include <compiler_builtins.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <fstream>
@@ -60,27 +59,11 @@ class context_aware_api {
       context_aware_api(apply_context& ctx, bool context_free = false )
       :context(ctx)
       {
-         if( context.context_free )
-            FC_ASSERT( context_free, "only context free api's can be used in this context" );
-         context.used_context_free_api |= !context_free;
       }
 
    protected:
       apply_context&             context;
 
-};
-
-class context_free_api : public context_aware_api {
-   public:
-      context_free_api( apply_context& ctx )
-      :context_aware_api(ctx, true) {
-         /* the context_free_data is not available during normal application because it is prunable */
-         FC_ASSERT( context.context_free, "this API may only be called from context_free apply" );
-      }
-
-      int get_context_free_data( uint32_t index, array_ptr<char> buffer, size_t buffer_size )const {
-         return context.get_context_free_data( index, buffer, buffer_size );
-      }
 };
 
 class softfloat_api : public context_aware_api {
@@ -591,19 +574,6 @@ class crypto_api : public context_aware_api {
          return pubds.tellp();
       }
 
-      template<class Encoder> auto encode(char* data, size_t datalen) {
-         Encoder e;
-         const size_t bs = graphene::chain::config::hashing_checktime_block_size;
-         while ( datalen > bs ) {
-            e.write( data, bs );
-            data += bs;
-            datalen -= bs;
-            context.trx_context.checktime();
-         }
-         e.write( data, datalen );
-         return e.result();
-      }
-
       void assert_sha256(array_ptr<char> data, size_t datalen, const fc::sha256& hash_val) {
          auto result = encode<fc::sha256::encoder>( data, datalen );
          FC_ASSERT( result == hash_val, "hash mismatch" );
@@ -829,81 +799,6 @@ class memory_api : public context_aware_api {
       }
 };
 
-class transaction_api : public context_aware_api {
-   public:
-      using context_aware_api::context_aware_api;
-
-      void send_inline( array_ptr<char> data, size_t data_len ) {
-         //TODO: Why is this limit even needed? And why is it not consistently checked on actions in input or deferred transactions
-         FC_ASSERT( data_len < context.control.get_global_properties().configuration.max_inline_action_size,
-                    "inline action too big" );
-
-         action act;
-         fc::raw::unpack<action>(data, data_len, act);
-         context.execute_inline(std::move(act));
-      }
-
-      void send_context_free_inline( array_ptr<char> data, size_t data_len ) {
-         //TODO: Why is this limit even needed? And why is it not consistently checked on actions in input or deferred transactions
-         FC_ASSERT( data_len < context.control.get_global_properties().configuration.max_inline_action_size,
-                   "inline action too big" );
-
-         action act;
-         fc::raw::unpack<action>(data, data_len, act);
-         context.execute_context_free_inline(std::move(act));
-      }
-
-      void send_deferred( const uint128_t& sender_id, account_name payer, array_ptr<char> data, size_t data_len, uint32_t replace_existing) {
-         try {
-            transaction trx;
-            fc::raw::unpack<transaction>(data, data_len, trx);
-            context.schedule_deferred_transaction(sender_id, payer, std::move(trx), replace_existing);
-         } FC_CAPTURE_AND_RETHROW((fc::to_hex(data, data_len)));
-      }
-
-      bool cancel_deferred( const unsigned __int128& val ) {
-         fc::uint128_t sender_id(val>>64, uint64_t(val) );
-         return context.cancel_deferred_transaction( (unsigned __int128)sender_id );
-      }
-};
-
-
-class context_free_transaction_api : public context_aware_api {
-   public:
-      context_free_transaction_api( apply_context& ctx )
-      :context_aware_api(ctx,true){}
-
-      int read_transaction( array_ptr<char> data, size_t buffer_size ) {
-         bytes trx = context.get_packed_transaction();
-
-         auto s = trx.size();
-         if( buffer_size == 0) return s;
-
-         auto copy_size = std::min( buffer_size, s );
-         memcpy( data, trx.data(), copy_size );
-
-         return copy_size;
-      }
-
-      int transaction_size() {
-         return context.get_packed_transaction().size();
-      }
-
-      int expiration() {
-        return context.trx_context.trx.expiration.sec_since_epoch();
-      }
-
-      int tapos_block_num() {
-        return context.trx_context.trx.ref_block_num;
-      }
-      int tapos_block_prefix() {
-        return context.trx_context.trx.ref_block_prefix;
-      }
-
-      int get_action( uint32_t type, uint32_t index, array_ptr<char> buffer, size_t buffer_size )const {
-         return context.get_action( type, index, buffer, buffer_size );
-      }
-};
 
 class compiler_builtins : public context_aware_api {
    public:
@@ -1319,25 +1214,6 @@ REGISTER_INTRINSICS(console_api,
    (printhex,              void(int, int) )
 );
 
-REGISTER_INTRINSICS(context_free_transaction_api,
-   (read_transaction,       int(int, int)            )
-   (transaction_size,       int()                    )
-   (expiration,             int()                    )
-   (tapos_block_prefix,     int()                    )
-   (tapos_block_num,        int()                    )
-   (get_action,             int (int, int, int, int) )
-);
-
-REGISTER_INTRINSICS(transaction_api,
-   (send_inline,               void(int, int)               )
-   (send_context_free_inline,  void(int, int)               )
-   (send_deferred,             void(int, int64_t, int, int, int32_t) )
-   (cancel_deferred,           int(int)                     )
-);
-
-REGISTER_INTRINSICS(context_free_api,
-   (get_context_free_data, int(int, int, int) )
-)
 
 REGISTER_INTRINSICS(memory_api,
    (memcpy,                 int(int, int, int)  )
