@@ -275,7 +275,7 @@ struct get_impacted_account_visitor
    }
 
    void operator() (const contract_deploy_operation& op) {
-       _impacted.insert(op.creator_account);
+       _impacted.insert(op.account);
    }
 
 };
