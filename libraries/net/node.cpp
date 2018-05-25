@@ -4572,9 +4572,9 @@ namespace graphene { namespace net { namespace detail {
               }
               std::string error_message = error_message_stream.str();
               wlog(error_message);
-              std::cout << "\033[31m" << error_message;
+              std::cout << error_message;
               _delegate->error_encountered( error_message, fc::oexception() );
-              std::cout << "\033[0m" << "\n";
+              std::cout << "\n";
               fc::usleep( fc::seconds(5 ) );
             }
             else // don't wait, just find a random port
