@@ -88,17 +88,7 @@ namespace graphene { namespace chain {
    using                               fc::ecc::range_proof_info;
    using                               fc::ecc::commitment_type;
 
-   namespace bip = boost::interprocess;
-
-   template<typename T>
-   typedef bip::allocator<T, bip::managed_mapped_file::segment_manager> allocator;
-
    using bytes         = std::vector<char>;
-   typedef bip::basic_string< char, std::char_traits< char >, allocator< char > > shared_string;
-
-   template<typename T>
-   using shared_vector = std::vector<T, allocator<T> >;
-
 
    struct void_t{};
 
@@ -485,21 +475,6 @@ namespace graphene { namespace chain {
       friend bool operator != ( const extended_private_key_type& p1, const extended_private_key_type& p2);
    };
 
-   // action
-   struct action {
-       uint64_t             account;
-       uint64_t             name;
-       bytes                data;
-
-       action(){}
-
-       action(uint64_t acct, uint64_t n, const bytes &d)
-           : account(acct)
-           , name(n)
-           , data(d)
-       { }
-
-   };
 
 } }  // graphene::chain
 
@@ -647,5 +622,3 @@ FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (committee_fed_asset)
    )
 
-
-FC_REFLECT( graphene::chain::action, (account)(name)(data) )

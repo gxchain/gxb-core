@@ -4,6 +4,7 @@
 #include <graphene/chain/wasm_interface_private.hpp>
 #include <graphene/chain/wasm_gxb_validation.hpp>
 #include <graphene/chain/wasm_gxb_injection.hpp>
+
 #include <fc/exception/exception.hpp>
 #include <fc/crypto/sha256.hpp>
 #include <fc/crypto/sha1.hpp>
@@ -43,8 +44,8 @@ namespace graphene { namespace chain {
       //Hard: Kick off instantiation in a separate thread at this location
 	   }
 
-   void wasm_interface::apply( const digest_type& code_id, const shared_string& code, apply_context& context ) {
-      my->get_instantiated_module(code_id, code, context.trx_context)->apply(context);
+   void wasm_interface::apply( const digest_type& code_id, const bytes& code, apply_context& context ) {
+      my->get_instantiated_module(code_id, code)->apply();
    }
 
    wasm_instantiated_module_interface::~wasm_instantiated_module_interface() {}
@@ -80,110 +81,6 @@ class context_free_api : public context_aware_api {
       int get_context_free_data( uint32_t index, array_ptr<char> buffer, size_t buffer_size )const {
          return context.get_context_free_data( index, buffer, buffer_size );
       }
-};
-
-class privileged_api : public context_aware_api {
-   public:
-      privileged_api( apply_context& ctx )
-      :context_aware_api(ctx)
-      {
-         FC_ASSERT( context.privileged, "${code} does not have permission to call this API", ("code",context.receiver) );
-      }
-
-      /**
-       * This should return true if a feature is active and irreversible, false if not.
-       *
-       * Irreversiblity by fork-database is not consensus safe, therefore, this defines
-       * irreversiblity only by block headers not by BFT short-cut.
-       */
-      int is_feature_active( int64_t feature_name ) {
-         return false;
-      }
-
-      /**
-       *  This should schedule the feature to be activated once the
-       *  block that includes this call is irreversible. It should
-       *  fail if the feature is already pending.
-       *
-       *  Feature name should be base32 encoded name.
-       */
-      void activate_feature( int64_t feature_name ) {
-         FC_ASSERT( !"Unsupported Hardfork Detected" );
-      }
-
-      /**
-       * update the resource limits associated with an account.  Note these new values will not take effect until the
-       * next resource "tick" which is currently defined as a cycle boundary inside a block.
-       *
-       * @param account - the account whose limits are being modified
-       * @param ram_bytes - the limit for ram bytes
-       * @param net_weight - the weight for determining share of network capacity
-       * @param cpu_weight - the weight for determining share of compute capacity
-       */
-      void set_resource_limits( account_name account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight) {
-         GRAPHENE_ASSERT(ram_bytes >= -1, wasm_execution_error, "invalid value for ram resource limit expected [-1,INT64_MAX]");
-         GRAPHENE_ASSERT(net_weight >= -1, wasm_execution_error, "invalid value for net resource weight expected [-1,INT64_MAX]");
-         GRAPHENE_ASSERT(cpu_weight >= -1, wasm_execution_error, "invalid value for cpu resource weight expected [-1,INT64_MAX]");
-         if( context.control.get_mutable_resource_limits_manager().set_account_limits(account, ram_bytes, net_weight, cpu_weight) ) {
-            context.trx_context.validate_ram_usage.insert( account );
-         }
-      }
-
-      void get_resource_limits( account_name account, int64_t& ram_bytes, int64_t& net_weight, int64_t& cpu_weight ) {
-         context.control.get_resource_limits_manager().get_account_limits( account, ram_bytes, net_weight, cpu_weight);
-      }
-
-      bool set_active_producers( array_ptr<char> packed_producer_schedule, size_t datalen) {
-         datastream<const char*> ds( packed_producer_schedule, datalen );
-         vector<producer_key> producers;
-         fc::raw::unpack(ds, producers);
-         GRAPHENE_ASSERT(producers.size() <= config::max_producers, wasm_execution_error, "Producer schedule exceeds the maximum producer count for this chain");
-         // check that producers are unique
-         std::set<account_name> unique_producers;
-         for (const auto& p: producers) {
-            GRAPHENE_ASSERT( context.is_account(p.producer_name), wasm_execution_error, "producer schedule includes a nonexisting account" );
-            GRAPHENE_ASSERT( p.block_signing_key.valid(), wasm_execution_error, "producer schedule includes an invalid key" );
-            unique_producers.insert(p.producer_name);
-         }
-         GRAPHENE_ASSERT( producers.size() == unique_producers.size(), wasm_execution_error, "duplicate producer name in producer schedule" );
-         return context.control.set_proposed_producers( std::move(producers) );
-      }
-
-      uint32_t get_blockchain_parameters_packed( array_ptr<char> packed_blockchain_parameters, size_t buffer_size) {
-         auto& gpo = context.control.get_global_properties();
-
-         auto s = fc::raw::pack_size( gpo.configuration );
-         if( buffer_size == 0 ) return s;
-
-         if ( s <= buffer_size ) {
-            datastream<char*> ds( packed_blockchain_parameters, s );
-            fc::raw::pack(ds, gpo.configuration);
-            return s;
-         }
-         return 0;
-      }
-
-      void set_blockchain_parameters_packed( array_ptr<char> packed_blockchain_parameters, size_t datalen) {
-         datastream<const char*> ds( packed_blockchain_parameters, datalen );
-         chain::chain_config cfg;
-         fc::raw::unpack(ds, cfg);
-         context.db.modify( context.control.get_global_properties(),
-            [&]( auto& gprops ) {
-                 gprops.configuration = cfg;
-         });
-      }
-
-      bool is_privileged( account_name n )const {
-         return context.db.get<account_object, by_name>( n ).privileged;
-      }
-
-      void set_privileged( account_name n, bool is_priv ) {
-         const auto& a = context.db.get<account_object, by_name>( n );
-         context.db.modify( a, [&]( auto& ma ){
-            ma.privileged = is_priv;
-         });
-      }
-
 };
 
 class softfloat_api : public context_aware_api {
@@ -1324,26 +1221,6 @@ REGISTER_INTRINSICS(compiler_builtins,
    (__trunctfsf2,  float(int64_t, int64_t)                        )
 );
 
-REGISTER_INTRINSICS(privileged_api,
-   (is_feature_active,                int(int64_t)                          )
-   (activate_feature,                 void(int64_t)                         )
-   (get_resource_limits,              void(int64_t,int,int,int)             )
-   (set_resource_limits,              void(int64_t,int64_t,int64_t,int64_t) )
-   (set_active_producers,             int(int,int)                          )
-   (get_blockchain_parameters_packed, int(int, int)                         )
-   (set_blockchain_parameters_packed, void(int,int)                         )
-   (is_privileged,                    int(int64_t)                          )
-   (set_privileged,                   void(int64_t, int)                    )
-);
-
-REGISTER_INJECTED_INTRINSICS(transaction_context,
-   (checktime,      void())
-);
-
-REGISTER_INTRINSICS(producer_api,
-   (get_active_producers,      int(int, int) )
-);
-
 #define DB_SECONDARY_INDEX_METHODS_SIMPLE(IDX) \
    (db_##IDX##_store,          int(int64_t,int64_t,int64_t,int64_t,int))\
    (db_##IDX##_remove,         void(int))\
@@ -1398,14 +1275,6 @@ REGISTER_INTRINSICS(crypto_api,
    (sha256,                 void(int, int, int)           )
    (sha512,                 void(int, int, int)           )
    (ripemd160,              void(int, int, int)           )
-);
-
-
-REGISTER_INTRINSICS(permission_api,
-   (check_transaction_authorization, int(int, int, int, int, int, int)                  )
-   (check_permission_authorization,  int(int64_t, int64_t, int, int, int, int, int64_t) )
-   (get_permission_last_used,        int64_t(int64_t, int64_t) )
-   (get_account_creation_time,       int64_t(int64_t) )
 );
 
 
