@@ -41,49 +41,7 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.name)("m", op.method)("d", op.data));
     dlog("contract_call_evaluator do_apply");
 
-    static const char wast_code_x[] = R"=====(
-(module
-  (import "env" "_fwrite" (func $__fwrite (param i32 i32 i32 i32) (result i32)))
-  (import "env" "_stdout" (global $stdoutPtr i32))
-  (import "env" "memory" (memory 1))
-  (export "main" (func $main))
-
-  (data (i32.const 8) "Hello World!\n")
-
-  (func (export "establishStackSpace") (param i32 i32) (nop))
-
-  (func $main (result i32)
-    (local $stdout i32)
-    (set_local $stdout (i32.load align=4 (get_global $stdoutPtr)))
-
-    (return (call $__fwrite
-       (i32.const 8)         ;; void *ptr    => Address of our string
-       (i32.const 1)         ;; size_t size  => Data size
-       (i32.const 13)        ;; size_t nmemb => Length of our string
-       (get_local $stdout))  ;; stream
-    )
-  )
-)
-)=====";
-
-    static const char wast_code[] = R"=====(
-(module
- (import "env" "sha256" (func $sha256 (param i32 i32 i32)))
- (table 0 anyfunc)
- (memory $0 32)
- (data (i32.const 4) "hello")
- (export "apply" (func $apply))
- (func $apply (param $0 i64) (param $1 i64) (param $2 i64)
-  (call $sha256
-   (i32.const 4)
-   (i32.const 5)
-   (i32.const 5)
-  )
- )
-)
-)=====";
-
-
+    const char *wast_code = op.data.c_str();
     std::vector<uint8_t> wasm = graphene::chain::wast_to_wasm(wast_code);
     auto code_id = fc::sha256::hash(wast_code, (uint32_t) strlen(wast_code));
     auto wasm_bytes = bytes(wasm.begin(), wasm.end());

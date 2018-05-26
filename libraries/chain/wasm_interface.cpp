@@ -66,6 +66,19 @@ class context_aware_api {
 
 };
 
+class call_depth_api : public context_aware_api {
+   public:
+      call_depth_api( apply_context& ctx )
+      :context_aware_api(ctx,true){}
+      void call_depth_assert() {
+         FC_THROW_EXCEPTION(wasm_execution_error, "Exceeded call depth maximum");
+      }
+};
+
+REGISTER_INJECTED_INTRINSICS(call_depth_api,
+   (call_depth_assert,  void()               )
+);
+
 std::istream& operator>>(std::istream& in, wasm_interface::vm_type& runtime) {
    std::string s;
    in >> s;

@@ -134,12 +134,27 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    transfer(account_id_type(), alice_id, asset(10000));
    generate_block();
 
+    static const char wast_code[] = R"=====(
+(module
+ (table 0 anyfunc)
+ (memory $0 1)
+ (data (i32.const 8) "Hello World!\n")
+ (export "memory" (memory $0))
+ (export "apply" (func $apply))
+ (global i64 (i64.const -11))
+ (global i64 (i64.const 56))
+ (func $apply (param $0 i64) (param $1 i64) (param $2 i64)
+   (set_global 1 (get_local 1))
+ )
+)
+)=====";
+
    // construct trx
    contract_call_operation op;
    op.account = alice_id;
    op.name = "bob";
    op.method = "transfer";
-   op.data = "call data";
+   op.data = wast_code;
    op.fee = asset(2000);
 
    trx.clear();
