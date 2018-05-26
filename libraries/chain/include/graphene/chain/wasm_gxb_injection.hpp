@@ -785,14 +785,14 @@ namespace graphene { namespace chain { namespace wasm_injections {
             _module_injectors.init();
             // initialize static fields of injectors
             injector_utils::init( mod );
-            checktime_injection::init();
-            call_depth_check::init();
+            // checktime_injection::init();
+            // call_depth_check::init();
          }
 
          void inject() {
             _module_injectors.inject( *_module );
             // inject checktime first
-            injector_utils::add_import<ResultType::none>( *_module, u8"checktime", checktime_injection::chktm_idx );
+            // injector_utils::add_import<ResultType::none>( *_module, u8"checktime", checktime_injection::chktm_idx );
 
             for ( auto& fd : _module->functions.defs ) {
                wasm_ops::EOSIO_OperatorDecoderStream<pre_op_injectors> pre_decoder(fd.code);
@@ -816,9 +816,9 @@ namespace graphene { namespace chain { namespace wasm_injections {
                wasm_ops::EOSIO_OperatorDecoderStream<post_op_injectors> post_decoder(fd.code);
                wasm_ops::instruction_stream post_code(fd.code.size()*2);
 
-               wasm_ops::op_types<>::call_t chktm;
-               chktm.field = injector_utils::injected_index_mapping.find(checktime_injection::chktm_idx)->second;
-               chktm.pack(&post_code);
+               // wasm_ops::op_types<>::call_t chktm;
+               // chktm.field = injector_utils::injected_index_mapping.find(checktime_injection::chktm_idx)->second;
+               // chktm.pack(&post_code);
 
                while ( post_decoder ) {
                   auto op = post_decoder.decodeOp();

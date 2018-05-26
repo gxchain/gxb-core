@@ -41,48 +41,16 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.name)("m", op.method)("d", op.data));
     dlog("contract_call_evaluator do_apply");
 
-    static const char wast_code[] = R"=====(
-(module
-  (import "env" "_fwrite" (func $__fwrite (param i32 i32 i32 i32) (result i32)))
-  (import "env" "_stdout" (global $stdoutPtr i32))
-  (import "env" "memory" (memory 1))
-  (export "main" (func $main))
-
-  (data (i32.const 8) "Hello World!\n")
-
-  (func (export "establishStackSpace") (param i32 i32) (nop))
-
-  (func $main (result i32)
-    (local $stdout i32)
-    (set_local $stdout (i32.load align=4 (get_global $stdoutPtr)))
-
-    (return (call $__fwrite
-       (i32.const 8)         ;; void *ptr    => Address of our string
-       (i32.const 1)         ;; size_t size  => Data size
-       (i32.const 13)        ;; size_t nmemb => Length of our string
-       (get_local $stdout))  ;; stream
-    )
-  )
-)
-)=====";
-
+    const char *wast_code = op.data.c_str();
     std::vector<uint8_t> wasm = graphene::chain::wast_to_wasm(wast_code);
     auto code_id = fc::sha256::hash(wast_code, (uint32_t) strlen(wast_code));
-
     auto wasm_bytes = bytes(wasm.begin(), wasm.end());
     dlog("wast code ${c}, code_id ${i}", ("c", wast_code)("i", code_id));
-    try {
-        action a{1, 1, {}};
-        apply_context ap{a};
-        // wasm_interface(graphene::chain::wasm_interface::vm_type::binaryen).apply(code_id, wasm_bytes, ap);
-        graphene::chain::wasm_interface::vm_type runtime = graphene::chain::wasm_interface::vm_type::binaryen;
-        dlog("runtime ${r}", ("r", runtime));
-        wasm_interface wi(runtime);
-        wi.apply(code_id, wasm_bytes, ap);
-        dlog("wasm exec success");
-    } catch ( const wasm_exit& ){
-        dlog("wasm exec failed");
-    }
+
+    action a{1, 1, {}};
+    apply_context ap{a};
+    wasm_interface(graphene::chain::wasm_interface::vm_type::binaryen).apply(code_id, wasm_bytes, ap);
+    dlog("wasm exec success");
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
