@@ -5,9 +5,11 @@
 #include <set>
 
 #include <graphene/chain/action.hpp>
+#include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {
 
+class database;
 class apply_context {
    private:
 
@@ -22,14 +24,16 @@ class apply_context {
 
    /// Constructor
    public:
-      apply_context(const action& a)
+      apply_context(const database&d, const action& a)
           : act(a)
+          , db(d)
           , receiver(a.account)
       {
       }
 
    public:
       const action&       act; ///< message being applied
+      const database&     db;
       uint64_t            receiver;
 
    /// Execution methods:

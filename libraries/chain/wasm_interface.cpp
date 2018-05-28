@@ -203,6 +203,22 @@ class console_api : public context_aware_api {
       bool ignore;
 };
 
+class system_api : public context_aware_api {
+   public:
+      using context_aware_api::context_aware_api;
+
+      uint64_t current_time() {
+          return static_cast<uint64_t>(context.db.head_block_time().sec_since_epoch());
+      }
+
+      /*
+      uint64_t publication_time() {
+         return static_cast<uint64_t>( context.trx_context.published.time_since_epoch().count() );
+      }
+      */
+
+};
+
 REGISTER_INJECTED_INTRINSICS(call_depth_api,
    (call_depth_assert,  void()               )
 );
@@ -219,6 +235,11 @@ REGISTER_INTRINSICS(console_api,
    (printqf,               void(int)      )
    (printn,                void(int64_t)  )
    (printhex,              void(int, int) )
+);
+
+REGISTER_INTRINSICS(system_api,
+        (current_time, int64_t()       )
+        // (publication_time,   int64_t() )
 );
 
 std::istream& operator>>(std::istream& in, wasm_interface::vm_type& runtime) {

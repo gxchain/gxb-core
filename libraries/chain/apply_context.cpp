@@ -32,6 +32,7 @@ void apply_context::exec()
  )
 )
 )=====";
+
        std::vector<uint8_t> wasm = graphene::chain::wast_to_wasm(wast_code);
        auto code_id = fc::sha256::hash(wast_code, (uint32_t) strlen(wast_code));
        auto wasm_bytes = bytes(wasm.begin(), wasm.end());

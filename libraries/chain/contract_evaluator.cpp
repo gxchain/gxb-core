@@ -44,7 +44,7 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     const char *wast_code = op.data.c_str();
 
     action a{1, 1, {}};
-    apply_context ctx{a};
+    apply_context ctx{db(), a};
     ctx.exec();
 
     return void_result();
