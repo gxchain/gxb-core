@@ -42,15 +42,10 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     dlog("contract_call_evaluator do_apply");
 
     const char *wast_code = op.data.c_str();
-    std::vector<uint8_t> wasm = graphene::chain::wast_to_wasm(wast_code);
-    auto code_id = fc::sha256::hash(wast_code, (uint32_t) strlen(wast_code));
-    auto wasm_bytes = bytes(wasm.begin(), wasm.end());
-    dlog("wast code ${c}, code_id ${i}", ("c", wast_code)("i", code_id));
 
     action a{1, 1, {}};
-    apply_context ap{a};
-    wasm_interface(graphene::chain::wasm_interface::vm_type::binaryen).apply(code_id, wasm_bytes, ap);
-    dlog("wasm exec success");
+    apply_context ctx{a};
+    ctx.exec();
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }

@@ -35,7 +35,7 @@ class apply_context {
    /// Execution methods:
    public:
 
-      void exec() {}
+      void exec();
 
    /// Console methods:
    public:

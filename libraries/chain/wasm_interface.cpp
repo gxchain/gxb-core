@@ -8,6 +8,7 @@
 #include <fc/exception/exception.hpp>
 #include <fc/crypto/sha256.hpp>
 #include <fc/crypto/sha1.hpp>
+#include <fc/crypto/hex.hpp>
 #include <fc/io/raw.hpp>
 
 #include <softfloat.hpp>
