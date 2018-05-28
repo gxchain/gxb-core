@@ -1019,6 +1019,28 @@ class wallet_api
        */
       string normalize_brain_key(string s) const;
 
+
+
+
+      /** Deploy contract
+       *
+       * deploy contract
+       * @param name name
+       * @param account this account use to deploy contract
+       * @param vm_type vm_type
+       * @param vm_version vm_version
+       * @param code_file_path code_file_path
+       * @param abi_file_path abi_file_path
+       * @param broadcast broadcast
+       * @returns signed_transaction
+       */
+    signed_transaction deploy_contract(string name,
+                                      string account,
+                                      string vm_type,
+                                      string vm_version,
+                                      string contract_dir,
+                                      bool broadcast = false);
+
       /** Registers a third party's account on the blockckain.
        *
        * This function is used to register an account for which you do not own the private keys.
@@ -2191,6 +2213,7 @@ FC_API( graphene::wallet::wallet_api,
         (suggest_brain_key)
         (derive_owner_keys_from_brain_key)
         (register_account)
+        (deploy_contract)
         (register_account2)
         (upgrade_account)
         (create_account_with_brain_key)

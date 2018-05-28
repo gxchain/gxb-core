@@ -201,6 +201,10 @@ namespace graphene { namespace chain {
 
          // The account's name. This name must be unique among all account names on the graph. May not be empty.
          string name;
+         string vm_type;
+         string vm_version;
+         std::vector<uint8_t> code;
+         string abi;
 
          /**
           * The owner authority represents absolute control over the account. Usually the keys in this authority will
@@ -469,7 +473,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_object,
                     (graphene::db::object),
                     (membership_expiration_date)(merchant_expiration_date)(datasource_expiration_date)(data_transaction_member_expiration_date)(registrar)(referrer)(lifetime_referrer)(merchant_auth_referrer)(datasource_auth_referrer)
                     (network_fee_percentage)(lifetime_referrer_fee_percentage)(referrer_rewards_percentage)
-                    (name)(owner)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
+                    (name)(vm_type)(vm_version)(code)(abi)(owner)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
                     (whitelisted_accounts)(blacklisted_accounts)
                     (cashback_vb)
                     (owner_special_authority)(active_special_authority)

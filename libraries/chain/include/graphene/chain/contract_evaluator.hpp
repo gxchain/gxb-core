@@ -19,17 +19,25 @@
 #pragma once
 #include <graphene/chain/protocol/operations.hpp>
 #include <graphene/chain/evaluator.hpp>
-#include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {
 
-   class contract_call_evaluator : public evaluator<contract_call_evaluator>
-   {
-     public:
-       typedef contract_call_operation operation_type;
+class contract_deploy_evaluator : public evaluator<contract_deploy_evaluator>
+{
+  public:
+    typedef contract_deploy_operation operation_type;
 
-       void_result do_evaluate(const contract_call_operation &op);
-       void_result do_apply(const contract_call_operation &op);
+    void_result do_evaluate(const contract_deploy_operation &op);
+    object_id_type do_apply(const contract_deploy_operation &op);
+};
 
-   };
+class contract_call_evaluator : public evaluator<contract_call_evaluator>
+{
+  public:
+    typedef contract_call_operation operation_type;
+
+    void_result do_evaluate(const contract_call_operation &op);
+    void_result do_apply(const contract_call_operation &op);
+};
+
 } }

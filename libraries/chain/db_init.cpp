@@ -248,6 +248,7 @@ void database::initialize_evaluators()
    register_evaluator<data_transaction_complain_evaluator>();
    register_evaluator<datasource_copyright_clear_evaluator>();
    register_evaluator<proxy_transfer_evaluator>();
+   register_evaluator<contract_deploy_evaluator>();
    register_evaluator<contract_call_evaluator>();
 
 }

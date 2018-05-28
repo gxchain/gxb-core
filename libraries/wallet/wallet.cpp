@@ -71,6 +71,7 @@
     #include <graphene/wallet/api_documentation.hpp>
     #include <graphene/wallet/reflect_util.hpp>
     #include <graphene/debug_witness/debug_api.hpp>
+    #include <graphene/chain/wast_to_wasm.hpp>
     #include <fc/smart_ref_impl.hpp>
 
     #ifndef WIN32
@@ -925,6 +926,79 @@
        void remove_builder_transaction(transaction_handle_type handle)
        {
           _builder_transactions.erase(handle);
+       }
+
+       signed_transaction deploy_contract(string name,
+                                          string account,
+                                          string vm_type,
+                                          string vm_version,
+                                          string contract_dir,
+                                          bool broadcast = false)
+       {
+           try {
+               FC_ASSERT(!self.is_locked());
+               FC_ASSERT(is_valid_name(name));
+
+               std::string abi;
+               std::vector<uint8_t> wasm;
+
+               auto load_contract = [&]() {
+                   fc::path cpath(contract_dir);
+                   if (cpath.filename().generic_string() == ".") cpath = cpath.parent_path();
+
+                   fc::path wast_path = cpath / (cpath.filename().generic_string() + ".wast");
+                   fc::path wasm_path = cpath / (cpath.filename().generic_string() + ".wasm");
+                   fc::path abi_path = cpath / (cpath.filename().generic_string() + ".abi");
+
+                   bool wast_exist = fc::exists(wast_path);
+                   bool wasm_exist = fc::exists(wasm_path);
+                   bool abi_exist = fc::exists(abi_path);
+
+                   FC_ASSERT(abi_exist && (wast_exist || wasm_exist), "need abi and wast/wasm file");
+
+                   fc::read_file_contents(abi_path, abi);
+                   FC_ASSERT(!abi.empty(), "abi file empty"); //TODO verify abi content
+
+                   std::string wast;
+                   std::string wasm_string;
+                   fc::read_file_contents(wasm_path, wasm_string);
+                   const string binary_wasm_header("\x00\x61\x73\x6d", 4);
+                   if (wasm_string.compare(0, 4, binary_wasm_header) == 0) {
+                       for (auto it = wasm_string.begin(); it != wasm_string.end(); ++it) { //TODO
+                           wasm.push_back(*it);
+                       }
+                   } else {
+                       fc::read_file_contents(wast_path, wast);
+                       FC_ASSERT(!wast.empty(), "wasm and wast file both invalid");
+                       wasm = graphene::chain::wast_to_wasm(wast);
+                   }
+               };
+
+               load_contract();
+
+               account_object creator_account_object = this->get_account(account);
+               account_id_type creator_account_id = creator_account_object.id;
+
+               contract_deploy_operation contract_deploy_op;
+
+               contract_deploy_op.name = name;
+               contract_deploy_op.account = creator_account_id;
+               contract_deploy_op.vm_type = vm_type;
+               contract_deploy_op.vm_version = vm_version;
+               contract_deploy_op.code = wasm;
+               contract_deploy_op.abi = abi;
+
+               signed_transaction tx;
+
+               tx.operations.push_back(contract_deploy_op);
+
+               auto current_fees = _remote_db->get_global_properties().parameters.current_fees;
+               set_operation_fees(tx, current_fees);
+
+               return sign_transaction(tx, broadcast);
+           }
+           FC_CAPTURE_AND_RETHROW(
+               (name)(account)(vm_type)(vm_version)(contract_dir)(broadcast))
        }
 
        signed_transaction register_account(string name,
@@ -4546,6 +4620,16 @@
     {
        return my->register_account2( name, owner_pubkey, active_pubkey, memo, registrar_account, referrer_account, referrer_percent, asset_symbol, broadcast );
     }
+
+    signed_transaction wallet_api::deploy_contract(string name,
+                                                  string account,
+                                                  string vm_type,
+                                                  string vm_version,
+                                                  string contract_dir,
+                                                  bool broadcast)
+{
+    return my->deploy_contract(name, account, vm_type, vm_version, contract_dir, broadcast);
+}
 
     signed_transaction wallet_api::register_account(string name,
                                                     public_key_type owner_pubkey,
