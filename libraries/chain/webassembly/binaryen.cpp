@@ -29,7 +29,7 @@ class binaryen_instantiated_module : public wasm_instantiated_module_interface {
       }
 
    private:
-      linear_memory_type&        _shared_linear_memory;
+      linear_memory_type&        _shared_linear_memory;      
       std::vector<uint8_t>       _initial_memory;
       call_indirect_table_type   _table;
       import_lut_type            _import_lut;
@@ -73,7 +73,7 @@ std::unique_ptr<wasm_instantiated_module_interface> binaryen_runtime::instantiat
       table.resize(module->table.initial);
       for (auto& segment : module->table.segments) {
          Address offset = ConstantExpressionRunner<TrivialGlobalManager>(globals).visit(segment.offset).value.geti32();
-         assert(offset + segment.data.size() <= module->table.initial);
+         FC_ASSERT(offset + segment.data.size() <= module->table.initial);
          for (size_t i = 0; i != segment.data.size(); ++i) {
             table[offset + i] = segment.data[i];
          }
