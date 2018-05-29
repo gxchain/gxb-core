@@ -73,8 +73,6 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.name)("m", op.method)("d", op.data));
     dlog("contract_call_evaluator do_apply");
 
-    const char *wast_code = op.data.c_str();
-
     action a{1, 1, {}};
     apply_context ctx{db(), a};
     ctx.exec();
