@@ -16,21 +16,19 @@ void apply_context::exec()
    auto start = fc::time_point::now();
    try {
        static const char wast_code[] = R"=====(
-            (module
-             (table 0 anyfunc)
-             (memory $0 1)
-             (data (i32.const 8) "Hello World!\n")
-             (export "memory" (memory $0))
-             (export "apply" (func $apply))
-             (func $add (; 0 ;) (param $0 i32) (param $1 i32) (result i32)
-              (i32.add
-               (get_local $1)
-               (get_local $0)
-              )
-             )
-             (func $apply (param $0 i64) (param $1 i64) (param $2 i64)
-             )
-            )
+(module
+(import "env" "prints" (func $prints (param i32)))
+ (table 0 anyfunc)
+ (memory $0 1)
+ (data (i32.const 4) "Hello World!\n")
+ (export "memory" (memory $0))
+ (export "apply" (func $apply))
+ (func $apply (param $0 i64) (param $1 i64) (param $2 i64)
+    (call $prints
+    (i32.const 4)
+    )
+ )
+)
            )=====";
 
        std::vector<uint8_t> wasm = graphene::chain::wast_to_wasm(wast_code);
