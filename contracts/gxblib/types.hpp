@@ -97,7 +97,7 @@ namespace gxblib {
    struct name {
       operator uint64_t()const { return value; }
 
-      // keep in sync with name::operator string() in eosio source code definition for name
+      // keep in sync with name::operator string() in graphene source code definition for name
       std::string to_string() const {
          static const char* charmap = ".12345abcdefghijklmnopqrstuvwxyz";
 
@@ -126,7 +126,7 @@ namespace gxblib {
    };
    /// @}
 
-} // namespace eosio
+} // namespace graphene
 
 namespace std {
    /**
