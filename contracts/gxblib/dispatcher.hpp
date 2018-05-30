@@ -75,7 +75,7 @@ namespace graphene {
 extern "C" { \
    void apply( uint64_t receiver, uint64_t code, uint64_t action ) { \
       auto self = receiver; \
-      if( code == self || action == N(onerror) ) { \
+      if (code == self) { \
          TYPE thiscontract( self ); \
          switch( action ) { \
             GXB_API( TYPE, MEMBERS ) \
