@@ -13,3 +13,6 @@
 [submodule "externals/magic_get"]
 	path = externals/magic_get
 	url = https://github.com/gxchain/magic_get.git
+[submodule "contracts/libc++/upstream"]
+	path = contracts/libc++/upstream
+	url = https://github.com/gxchain/libcxx.git
