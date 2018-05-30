@@ -8,34 +8,6 @@
 #include <boost/mp11/tuple.hpp>
 #define N(X) ::graphene::string_to_name(#X)
 namespace graphene {
-   template<typename Contract, typename FirstAction>
-   bool dispatch( uint64_t code, uint64_t act ) {
-      if( code == FirstAction::get_account() && FirstAction::get_name() == act ) {
-         Contract().on( unpack_action_data<FirstAction>() );
-         return true;
-      }
-      return false;
-   }
-
-
-   /**
-    * This method will dynamically dispatch an incoming set of actions to
-    *
-    * ```
-    * static Contract::on( ActionType )
-    * ```
-    *
-    * For this to work the Actions must be dervied from the 
-    *
-    */
-   template<typename Contract, typename FirstAction, typename SecondAction, typename... Actions>
-   bool dispatch( uint64_t code, uint64_t act ) {
-      if( code == FirstAction::get_account() && FirstAction::get_name() == act ) {
-         Contract().on( unpack_action_data<FirstAction>() );
-         return true;
-      }
-      return graphene::dispatch<Contract,SecondAction,Actions...>( code, act );
-   }
 
    template<typename T, typename Q, typename... Args>
    bool execute_action( T* obj, void (Q::*func)(Args...)  ) {
@@ -75,7 +47,7 @@ namespace graphene {
 extern "C" { \
    void apply( uint64_t receiver, uint64_t code, uint64_t action ) { \
       auto self = receiver; \
-      if( code == self || action == N(onerror) ) { \
+      if (code == self) { \
          TYPE thiscontract( self ); \
          switch( action ) { \
             GXB_API( TYPE, MEMBERS ) \

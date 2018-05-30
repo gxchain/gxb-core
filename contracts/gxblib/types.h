@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdint.h>
-#include <wchar.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,11 +48,6 @@ struct ALIGNED(checksum512) {
 
 typedef struct checksum256 transaction_id_type;
 typedef struct checksum256 block_id_type;
-
-struct account_permission {
-   account_name account;
-   permission_name permission;
-};
 
 #ifdef __cplusplus
 } /// extern "C"

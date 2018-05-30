@@ -10,3 +10,12 @@
 [submodule "externals/binaryen"]
 	path = externals/binaryen
 	url = https://github.com/gxchain/binaryen.git
+[submodule "externals/magic_get"]
+	path = externals/magic_get
+	url = https://github.com/gxchain/magic_get.git
+[submodule "contracts/libc++/upstream"]
+	path = contracts/libc++/upstream
+	url = https://github.com/gxchain/libcxx.git
+[submodule "contracts/musl/upstream"]
+	path = contracts/musl/upstream
+	url = https://github.com/gxchain/musl.git
