@@ -1,9 +1,9 @@
 FROM gxchain/builder
 MAINTAINER GXS
 
-RUN git lfs clone https://github.com/gxchain/gxb-core.git
+RUN git clone https://github.com/gxchain/gxb-core.git
 RUN cd gxb-core \
-#RUN git lfs clone https://github.com/gxchain/gxb-core.git \
+#RUN git clone https://github.com/gxchain/gxb-core.git \
 #&& cd gxb-core \
     && git submodule update --init --recursive \
     && mkdir build && cd build \
