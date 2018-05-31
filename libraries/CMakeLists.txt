@@ -1,4 +1,5 @@
 add_subdirectory( fc )
+add_subdirectory( builtins )
 add_subdirectory( db )
 add_subdirectory( wasm-jit )
 add_subdirectory( softfloat )
