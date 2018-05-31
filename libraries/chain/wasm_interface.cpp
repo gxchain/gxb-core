@@ -31,9 +31,9 @@ namespace graphene { namespace chain {
          Serialization::MemoryInputStream stream((U8*)code.data(), code.size());
          WASM::serialize(stream, module);
       } catch(const Serialization::FatalSerializationException& e) {
-         FC_ASSERT(false, wasm_serialization_error, e.message.c_str());
+         GRAPHENE_ASSERT(false, wasm_serialization_error, e.message.c_str());
       } catch(const IR::ValidationException& e) {
-         FC_ASSERT(false, wasm_serialization_error, e.message.c_str());
+         GRAPHENE_ASSERT(false, wasm_serialization_error, e.message.c_str());
       }
 
       wasm_validations::wasm_binary_validation validator(module);
