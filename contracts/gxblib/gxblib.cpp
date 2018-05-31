@@ -525,7 +525,7 @@ void* __dso_handle = 0;
 
 void* malloc(size_t size)
 {
-   return gxb::memory_heap.malloc(size);
+   return graphene::memory_heap.malloc(size);
 }
 
 void* calloc(size_t count, size_t size)
@@ -537,12 +537,12 @@ void* calloc(size_t count, size_t size)
 
 void* realloc(void* ptr, size_t size)
 {
-   return gxb::memory_heap.realloc(ptr, size);
+   return graphene::memory_heap.realloc(ptr, size);
 }
 
 void free(void* ptr)
 {
-   return gxb::memory_heap.free(ptr);
+   return graphene::memory_heap.free(ptr);
 }
 
 }

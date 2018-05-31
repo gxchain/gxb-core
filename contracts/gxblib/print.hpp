@@ -148,7 +148,7 @@ namespace graphene {
     * @brief Prints a 64 bit names as base32 encoded string
     * @param name 64 bit name to be printed
     */
-   inline void print( name name ) {
+   inline void print( gxblib::name name ) {
       printn(name.value);
    }
 
