@@ -79,6 +79,72 @@ class call_depth_api : public context_aware_api {
       }
 };
 
+class action_api : public context_aware_api {
+   public:
+   action_api( apply_context& ctx )
+      :context_aware_api(ctx,true){}
+
+      int read_action_data(array_ptr<char> memory, size_t buffer_size) {
+         auto s = context.act.data.size();
+         if( buffer_size == 0 ) return s;
+
+         auto copy_size = std::min( buffer_size, s );
+         memcpy( memory, context.act.data.data(), copy_size );
+
+         return copy_size;
+      }
+
+      int action_data_size() {
+         return context.act.data.size();
+      }
+
+      name current_receiver() {
+         return context.receiver;
+      }
+};
+
+class database_api : public context_aware_api {
+   public:
+      using context_aware_api::context_aware_api;
+
+      int db_store_i64( uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, array_ptr<const char> buffer, size_t buffer_size ) {
+         return context.db_store_i64( scope, table, payer, id, buffer, buffer_size );
+      }
+      void db_update_i64( int itr, uint64_t payer, array_ptr<const char> buffer, size_t buffer_size ) {
+         context.db_update_i64( itr, payer, buffer, buffer_size );
+      }
+      void db_remove_i64( int itr ) {
+         context.db_remove_i64( itr );
+      }
+      int db_get_i64( int itr, array_ptr<char> buffer, size_t buffer_size ) {
+         return context.db_get_i64( itr, buffer, buffer_size );
+      }
+      int db_next_i64( int itr, uint64_t& primary ) {
+         return context.db_next_i64(itr, primary);
+      }
+      int db_previous_i64( int itr, uint64_t& primary ) {
+         return context.db_previous_i64(itr, primary);
+      }
+      int db_find_i64( uint64_t code, uint64_t scope, uint64_t table, uint64_t id ) {
+         return context.db_find_i64( code, scope, table, id );
+      }
+      int db_lowerbound_i64( uint64_t code, uint64_t scope, uint64_t table, uint64_t id ) {
+         return context.db_lowerbound_i64( code, scope, table, id );
+      }
+      int db_upperbound_i64( uint64_t code, uint64_t scope, uint64_t table, uint64_t id ) {
+         return context.db_upperbound_i64( code, scope, table, id );
+      }
+      int db_end_i64( uint64_t code, uint64_t scope, uint64_t table ) {
+         return context.db_end_i64( code, scope, table );
+      }
+
+      DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx64,  uint64_t)
+      DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx128, uint128_t)
+      DB_API_METHOD_WRAPPERS_ARRAY_SECONDARY(idx256, 2, uint128_t)
+      DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_double, float64_t)
+      DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_long_double, float128_t)
+};
+
 class console_api : public context_aware_api {
    public:
       console_api( apply_context& ctx )
@@ -243,6 +309,31 @@ REGISTER_INTRINSICS(console_api,
 REGISTER_INTRINSICS(system_api,
         (current_time, int64_t()       )
         // (publication_time,   int64_t() )
+);
+
+REGISTER_INTRINSICS(action_api,
+   (read_action_data,       int(int, int)  )
+   (action_data_size,       int()          )
+   (current_receiver,   int64_t()          )
+);
+
+REGISTER_INTRINSICS( database_api,
+   (db_store_i64,        int(int64_t,int64_t,int64_t,int64_t,int,int))
+   (db_update_i64,       void(int,int64_t,int,int))
+   (db_remove_i64,       void(int))
+   (db_get_i64,          int(int, int, int))
+   (db_next_i64,         int(int, int))
+   (db_previous_i64,     int(int, int))
+   (db_find_i64,         int(int64_t,int64_t,int64_t,int64_t))
+   (db_lowerbound_i64,   int(int64_t,int64_t,int64_t,int64_t))
+   (db_upperbound_i64,   int(int64_t,int64_t,int64_t,int64_t))
+   (db_end_i64,          int(int64_t,int64_t,int64_t))
+
+   DB_SECONDARY_INDEX_METHODS_SIMPLE(idx64)
+   DB_SECONDARY_INDEX_METHODS_SIMPLE(idx128)
+   DB_SECONDARY_INDEX_METHODS_ARRAY(idx256)
+   DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_double)
+   DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_long_double)
 );
 
 std::istream& operator>>(std::istream& in, wasm_interface::vm_type& runtime) {

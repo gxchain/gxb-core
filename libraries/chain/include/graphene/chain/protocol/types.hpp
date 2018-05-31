@@ -293,6 +293,8 @@ namespace graphene { namespace chain {
       impl_data_transaction_search_results_object_type,//21
       //impl_search_results_object_type
       impl_signature_object_type, //22
+      impl_table_id_object_type, //23
+      impl_key_value_object_type //24
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -395,6 +397,8 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_league_search_results_object_type, league_search_results_object >        league_search_results_id_type;
    typedef object_id< implementation_ids, impl_data_transaction_search_results_object_type, data_transaction_search_results_object >        data_transaction_search_results_id_type;
    typedef object_id< implementation_ids, impl_signature_object_type, signature_object>      signature_id_type;
+   typedef object_id< implementation_ids, impl_table_id_object_type, table_id_object>        table_id_object_id_type;
+   typedef object_id< implementation_ids, impl_key_value_object_type, key_value_object>      key_value_object_id_type;
 
 
    //typedef object_id< implementation_ids, impl_search_results_object_type,search_results_object<DerivedClass>>          search_results_id_type;
@@ -553,6 +557,8 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_league_search_results_object_type)
                  (impl_data_transaction_search_results_object_type)
                  (impl_signature_object_type)
+                 (impl_table_id_object_type)
+                 (impl_key_value_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -600,6 +606,8 @@ FC_REFLECT_TYPENAME( graphene::chain::second_hand_data_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::data_transaction_complain_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::lock_balance_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::signature_id_type)
+FC_REFLECT_TYPENAME( graphene::chain::table_id_object_id_type)
+FC_REFLECT_TYPENAME( graphene::chain::key_value_object_id_type)
 
 FC_REFLECT( graphene::chain::void_t, )
 FC_REFLECT( graphene::chain::operation_ext_version_t, (version))
