@@ -107,7 +107,7 @@ namespace graphene { namespace chain {
    using permission_name  = name;
    using table_name       = name;
    
-   typedef vector<std::pair<uint16_t,vector<char>>> extensions_type;
+   typedef vector<std::pair<uint16_t,vector<char>>> abi_extensions_type;
 
    struct operation_ext_version_t {
        uint8_t version = 0;

@@ -113,7 +113,7 @@ struct abi_def {
    vector<table_def>     tables;
    vector<clause_pair>   ricardian_clauses;
    vector<error_message> error_messages;
-   extensions_type       abi_extensions;
+   abi_extensions_type   abi_extensions;
 };
 
 abi_def gxb_contract_abi(const abi_def& gxb_system_abi);

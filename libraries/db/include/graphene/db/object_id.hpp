@@ -163,7 +163,7 @@ struct reflector<graphene::db::object_id<SpaceID,TypeID,T> >
     static inline void visit( const Visitor& visitor )
     {
        typedef decltype(((type*)nullptr)->instance) member_type;
-       visitor.TEMPLATE operator()<member_type,type,&type::instance>( "instance" );
+       visitor.FC_TEMPLATE operator()<member_type,type,&type::instance>( "instance" );
     }
 };
 
