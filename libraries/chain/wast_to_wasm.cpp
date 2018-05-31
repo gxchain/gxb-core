@@ -44,10 +44,14 @@ namespace graphene { namespace chain {
          WASM::serialize(stream,module);
          return stream.getBytes();
       }
-      catch(Serialization::FatalSerializationException exception)
+      catch(const Serialization::FatalSerializationException& exception)
       {
          ss << "Error serializing WebAssembly binary file:" << std::endl;
          ss << exception.message << std::endl;
+         FC_ASSERT( !"error converting to wasm", "${msg}", ("msg",ss.get()) );
+      } catch(const IR::ValidationException& e) {
+         ss << "Error validating WebAssembly binary file:" << std::endl;
+         ss << e.message << std::endl;
          FC_ASSERT( !"error converting to wasm", "${msg}", ("msg",ss.get()) );
       }
 
@@ -57,7 +61,7 @@ namespace graphene { namespace chain {
       return wasm_to_wast( wasm.data(), wasm.size() );
    } /// wasm_to_wast
 
-   std::string     wasm_to_wast( const uint8_t* data, uint64_t size )
+   std::string     wasm_to_wast( const uint8_t* data, uint64_t size ) 
    { try {
        IR::Module module;
        Serialization::MemoryInputStream stream((const U8*)data,size);
