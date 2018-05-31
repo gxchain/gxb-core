@@ -3,7 +3,7 @@
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/wasm_gxb_constraints.hpp>
 
-#define EOSIO_INJECTED_MODULE_NAME "gxb_injection"
+#define GXB_INJECTED_MODULE_NAME "gxb_injection"
 
 using namespace fc;
 

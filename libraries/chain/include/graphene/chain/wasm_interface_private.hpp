@@ -5,6 +5,7 @@
 #include <graphene/chain/webassembly/binaryen.hpp>
 #include <graphene/chain/webassembly/runtime_interface.hpp>
 #include <graphene/chain/wasm_gxb_injection.hpp>
+#include <fc/scoped_exit.hpp>
 
 #include "IR/Module.h"
 #include "Runtime/Intrinsics.h"
@@ -56,7 +57,10 @@ namespace graphene { namespace chain {
             try {
                Serialization::MemoryInputStream stream((const U8*)code.data(), code.size());
                WASM::serialize(stream, module);
-            } catch(Serialization::FatalSerializationException& e) {
+               module.userSections.clear();
+            } catch(const Serialization::FatalSerializationException& e) {
+               GRAPHENE_ASSERT(false, wasm_serialization_error, e.message.c_str());
+            } catch(const IR::ValidationException& e) {
                GRAPHENE_ASSERT(false, wasm_serialization_error, e.message.c_str());
             }
 
@@ -68,7 +72,9 @@ namespace graphene { namespace chain {
                Serialization::ArrayOutputStream outstream;
                WASM::serialize(outstream, module);
                bytes = outstream.getBytes();
-            } catch(Serialization::FatalSerializationException& e) {
+            } catch(const Serialization::FatalSerializationException& e) {
+               GRAPHENE_ASSERT(false, wasm_serialization_error, e.message.c_str());
+            } catch(const IR::ValidationException& e) {
                GRAPHENE_ASSERT(false, wasm_serialization_error, e.message.c_str());
             }
             it = instantiation_cache.emplace(code_id, runtime_interface->instantiate_module((const char*)bytes.data(), bytes.size(), parse_initial_memory(module))).first;
@@ -111,7 +117,7 @@ namespace graphene { namespace chain {
    BOOST_PP_SEQ_FOR_EACH(_REGISTER_INTRINSIC, CLS, _WRAPPED_SEQ(MEMBERS))
 
 #define _REGISTER_INJECTED_INTRINSIC(R, CLS, INFO)\
-   BOOST_PP_CAT(BOOST_PP_OVERLOAD(_REGISTER_INTRINSIC, _UNWRAP_SEQ INFO) _EXPAND_ARGS(CLS, EOSIO_INJECTED_MODULE_NAME, INFO), BOOST_PP_EMPTY())
+   BOOST_PP_CAT(BOOST_PP_OVERLOAD(_REGISTER_INTRINSIC, _UNWRAP_SEQ INFO) _EXPAND_ARGS(CLS, GXB_INJECTED_MODULE_NAME, INFO), BOOST_PP_EMPTY())
 
 #define REGISTER_INJECTED_INTRINSICS(CLS, MEMBERS)\
    BOOST_PP_SEQ_FOR_EACH(_REGISTER_INJECTED_INTRINSIC, CLS, _WRAPPED_SEQ(MEMBERS))
