@@ -31,9 +31,9 @@ namespace graphene { namespace chain {
          Serialization::MemoryInputStream stream((U8*)code.data(), code.size());
          WASM::serialize(stream, module);
       } catch(const Serialization::FatalSerializationException& e) {
-         EOS_ASSERT(false, wasm_serialization_error, e.message.c_str());
+         FC_ASSERT(false, wasm_serialization_error, e.message.c_str());
       } catch(const IR::ValidationException& e) {
-         EOS_ASSERT(false, wasm_serialization_error, e.message.c_str());
+         FC_ASSERT(false, wasm_serialization_error, e.message.c_str());
       }
 
       wasm_validations::wasm_binary_validation validator(module);
@@ -83,7 +83,7 @@ class console_api : public context_aware_api {
    public:
       console_api( apply_context& ctx )
       : context_aware_api(ctx,true)
-      , ignore(!ctx.control.contracts_console()) {}
+      , ignore(true) {}
 
       // Kept as intrinsic rather than implementing on WASM side (using prints_l and strlen) because strlen is faster on native side.
       void prints(null_terminated_ptr str) {
