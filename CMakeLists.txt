@@ -1,6 +1,6 @@
 # Defines gxb-core library target.
 project( gxb-core )
-cmake_minimum_required( VERSION 2.8.12 )
+cmake_minimum_required( VERSION 3.5 )
 
 set( BLOCKCHAIN_NAME "GXChain" )
 set( CMAKE_CXX_STANDARD 14 )
@@ -25,6 +25,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif()
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
+include( GNUInstallDirs )
 include( InstallDirectoryPermissions )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
@@ -53,6 +54,7 @@ LIST(APPEND BOOST_COMPONENTS thread
                              chrono
                              unit_test_framework
                              context
+                             iostreams
                              locale)
 SET( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
 

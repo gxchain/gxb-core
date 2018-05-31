@@ -20,6 +20,9 @@ add_custom_command(OUTPUT share/gxb/skeleton/skeleton.cpp
                    VERBATIM)
 add_custom_target(copy_skeleton_contract ALL DEPENDS share/gxb/skeleton/skeleton.cpp)
 
+MESSAGE( STATUS "------- cmake_install_full_includedir ------ is: "
+    ${CMAKE_INSTALL_FULL_INCLUDEDIR} )
+
 install(DIRECTORY gxblib DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR})
 install(DIRECTORY musl DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR})
 install(DIRECTORY libc++ DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR})

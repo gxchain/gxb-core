@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gxbilib/types.h>
+#include <gxblib/types.h>
 
 #ifdef __cplusplus
 extern "C" {
