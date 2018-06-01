@@ -1,12 +1,15 @@
 #pragma once
 
 #include <graphene/chain/multi_index_includes.hpp>
+#include <fc/uint128.hpp>
 #include <softfloat.hpp>
 
 #include <array>
 #include <type_traits>
 
 namespace graphene { namespace chain {
+
+typedef __uint128_t uint128_t;
 
    /**
     * @brief The table_id_object class tracks the mapping of (scope, code, table) to an opaque identifier
@@ -82,8 +85,8 @@ template <typename SecondaryKey, uint64_t ObjectTypeId, typename SecondaryKeyLes
 struct secondary_index {
     class index_object : public graphene::db::abstract_object<index_object> {
         typedef SecondaryKey secondary_key_type;
+    public:
 
-        typename chainbase::object<ObjectTypeId, index_object>::id_type id;
         table_id t_id;
         uint64_t primary_key;
         account_name payer = 0;
