@@ -7,10 +7,11 @@
 //#include <eosio/chain/authority.hpp>
 //#include <eosio/chain/chain_config.hpp>
 //#include <eosio/chain/transaction.hpp>
-//#include <eosio/chain/asset.hpp>
+//#include <graphene/chain/protocol/asset.hpp>
 #include <fc/io/raw.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <fc/io/varint.hpp>
+#include <graphene/chain/symbol.hpp>
 
 using namespace boost;
 
@@ -52,6 +53,7 @@ namespace graphene { namespace chain {
       set_abi(abi);
    }
 
+//   using abi_int128_t            = __int128;
    void abi_serializer::configure_built_in_types() {
 
       built_in_types.emplace("bool",                      pack_unpack<uint8_t>());
@@ -63,7 +65,7 @@ namespace graphene { namespace chain {
       built_in_types.emplace("uint32",                    pack_unpack<uint32_t>());
       built_in_types.emplace("int64",                     pack_unpack<int64_t>());
       built_in_types.emplace("uint64",                    pack_unpack<uint64_t>());
-      built_in_types.emplace("int128",                    pack_unpack<int128_t>());
+//      built_in_types.emplace("int128",                    pack_unpack<abi_int128_t>());//TODO FIXME
       built_in_types.emplace("uint128",                   pack_unpack<uint128_t>());
       built_in_types.emplace("varint32",                  pack_unpack<fc::signed_int>());
       built_in_types.emplace("varuint32",                 pack_unpack<fc::unsigned_int>());
@@ -75,7 +77,7 @@ namespace graphene { namespace chain {
 
       built_in_types.emplace("time_point",                pack_unpack<fc::time_point>());
       built_in_types.emplace("time_point_sec",            pack_unpack<fc::time_point_sec>());
-      built_in_types.emplace("block_timestamp_type",      pack_unpack<block_timestamp_type>());
+//      built_in_types.emplace("block_timestamp_type",      pack_unpack<block_timestamp_type>());
 
       built_in_types.emplace("name",                      pack_unpack<name>());
 
@@ -92,7 +94,7 @@ namespace graphene { namespace chain {
       built_in_types.emplace("symbol",                    pack_unpack<symbol>());
       built_in_types.emplace("symbol_code",               pack_unpack<symbol_code>());
       built_in_types.emplace("asset",                     pack_unpack<asset>());
-      built_in_types.emplace("extended_asset",            pack_unpack<extended_asset>());
+//      built_in_types.emplace("extended_asset",            pack_unpack<extended_asset>());
    }
 
    void abi_serializer::set_abi(const abi_def& abi) {

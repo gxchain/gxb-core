@@ -107,6 +107,11 @@ namespace graphene { namespace chain {
    using permission_name  = name;
    using table_name       = name;
    
+//   using int128_t            = boost::multiprecision::int128_t;
+   using checksum256_type    = fc::sha256;
+   using checksum512_type    = fc::sha512;
+   using checksum160_type    = fc::ripemd160;
+   
    typedef vector<std::pair<uint16_t,vector<char>>> abi_extensions_type;
 
    struct operation_ext_version_t {

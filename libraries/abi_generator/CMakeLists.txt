@@ -19,30 +19,30 @@ target_include_directories(abi_generator
                                   "/usr/local/opt/openssl/include"
                                   "${LLVM_INCLUDE_DIRS}")
 
-#target_link_libraries(abi_generator eosio_chain
-#  clangRewrite
-#  clangTooling
-#  clangToolingCore
-#  clangFrontend
-#  clangDriver
-#  clangSerialization
-#  clangParse
-#  clangSema
-#  clangAnalysis
-#  clangAST
-#  clangBasic
-#  clangEdit
-#  clangLex
-#)
+target_link_libraries(abi_generator
+  clangRewrite
+  clangTooling
+  clangToolingCore
+  clangFrontend
+  clangDriver
+  clangSerialization
+  clangParse
+  clangSema
+  clangAnalysis
+  clangAST
+  clangBasic
+  clangEdit
+  clangLex
+)
 
 target_link_libraries(abi_generator
-  LLVMX86AsmParser # MC, MCParser, Support, X86CodeGen, X86Desc, X86Info
-  LLVMX86CodeGen # Analysis, AsmPrinter, CodeGen, Core, MC, Support, Target, 
+#  LLVMX86AsmParser # MC, MCParser, Support, X86CodeGen, X86Desc, X86Info
+#  LLVMX86CodeGen # Analysis, AsmPrinter, CodeGen, Core, MC, Support, Target, 
                  # X86AsmPrinter, X86Desc, X86Info, X86Utils
-  LLVMX86Desc # MC, MCDisassembler, Object, Support, X86AsmPrinter, X86Info
-  LLVMX86AsmPrinter # MC, Support, X86Utils
-  LLVMX86Info # Support
-  LLVMX86Utils # Core, Support
+#  LLVMX86Desc # MC, MCDisassembler, Object, Support, X86AsmPrinter, X86Info
+#  LLVMX86AsmPrinter # MC, Support, X86Utils
+#  LLVMX86Info # Support
+#  LLVMX86Utils # Core, Support
   LLVMCodeGen # Analysis, Core, MC, Scalar, Support, Target, TransformUtils
   LLVMipo
   LLVMScalarOpts
@@ -61,6 +61,10 @@ target_link_libraries(abi_generator
   #LLVMBinaryFormat # Support
   LLVMSupport # Demangle
   LLVMDemangle
+  LLVMMC
+  fc
+  graphene_db
+  graphene_chain
 )
 
 #if (USE_PCH)

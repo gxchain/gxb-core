@@ -110,6 +110,8 @@ add_library( graphene_chain
              block_database.cpp
 
              is_authorized_asset.cpp
+             
+             abi_serializer.cpp
 
              ${HEADERS}
              ${PROTOCOL_HEADERS}
