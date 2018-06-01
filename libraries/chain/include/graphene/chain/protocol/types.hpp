@@ -88,7 +88,11 @@ namespace graphene { namespace chain {
    using                               fc::ecc::range_proof_info;
    using                               fc::ecc::commitment_type;
 
-   using bytes         = std::vector<char>;
+   using bytes              = std::vector<char>;
+   using account_name       = name;
+   using action_name        = name;
+   using scope_name         = name;
+   using table_name         = name;
 
    struct void_t{};
 
@@ -373,6 +377,8 @@ namespace graphene { namespace chain {
    class league_data_product_search_results_object;
    class league_search_results_object;
    class signature_object;
+   class table_id_object;
+   class key_value_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;

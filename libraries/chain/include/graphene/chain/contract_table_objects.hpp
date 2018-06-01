@@ -40,13 +40,13 @@ using table_id_multi_index = multi_index_container<
   >
 >;
 
-using table_id = table_id_object::id;
+using table_id = table_id_object_id_type;
 
 struct by_scope_primary;
 struct by_scope_secondary;
 struct by_scope_tertiary;
 
-struct key_value_object : public graphene::db::abstract_object<key_value_object>
+class key_value_object : public graphene::db::abstract_object<key_value_object>
 {
   public:
       static const uint8_t space_id = implementation_ids;
@@ -55,10 +55,10 @@ struct key_value_object : public graphene::db::abstract_object<key_value_object>
     typedef uint64_t key_type;
     static const int number_of_keys = 1;
 
-    table_id            t_id;
-    uint64_t            primary_key;
-    account_name        payer = 0;
-    bytes               value;
+    table_id                    t_id;
+    uint64_t                    primary_key;
+    account_name                payer = 0;
+    bytes                       value;
 };
 
 using key_value_index = multi_index_container<
@@ -77,79 +77,6 @@ using key_value_index = multi_index_container<
 
 struct by_primary;
 struct by_secondary;
-
-template <typename SecondaryKey, uint64_t ObjectTypeId, typename SecondaryKeyLess = std::less<SecondaryKey>>
-struct secondary_index {
-    struct index_object : public chainbase::object<ObjectTypeId, index_object> {
-        OBJECT_CTOR(index_object)
-        typedef SecondaryKey secondary_key_type;
-
-        typename chainbase::object<ObjectTypeId, index_object>::id_type id;
-        table_id t_id;
-        uint64_t primary_key;
-        account_name payer = 0;
-        SecondaryKey secondary_key;
-    };
-
-    typedef chainbase::shared_multi_index_container<
-        index_object,
-        indexed_by<
-            ordered_unique<tag<by_id>, member<index_object, typename index_object::id_type, &index_object::id>>,
-            ordered_unique<tag<by_primary>,
-               composite_key<index_object,
-                 member<index_object, table_id, &index_object::t_id>,
-                 member<index_object, uint64_t, &index_object::primary_key>>,
-               composite_key_compare<std::less<table_id>, std::less<uint64_t>>>,
-            ordered_unique<tag<by_secondary>,
-               composite_key<index_object,
-                 member<index_object, table_id, &index_object::t_id>,
-                 member<index_object, SecondaryKey, &index_object::secondary_key>,
-                 member<index_object, uint64_t, &index_object::primary_key>>,
-               composite_key_compare<std::less<table_id>, SecondaryKeyLess, std::less<uint64_t>>
-            >
-        >
-    > index_index;
-};
-
-typedef secondary_index<uint64_t, index64_object_type>::index_object index64_object;
-typedef secondary_index<uint64_t, index64_object_type>::index_index index64_index;
-
-typedef secondary_index<uint128_t, index128_object_type>::index_object index128_object;
-typedef secondary_index<uint128_t, index128_object_type>::index_index index128_index;
-
-typedef std::array<uint128_t, 2> key256_t;
-typedef secondary_index<key256_t, index256_object_type>::index_object index256_object;
-typedef secondary_index<key256_t, index256_object_type>::index_index index256_index;
-
-struct soft_double_less {
-    bool operator()(const float64_t &lhs, const float64_t &rhs) const
-    {
-        return f64_lt(lhs, rhs);
-    }
-};
-
-struct soft_long_double_less {
-    bool operator()(const float128_t lhs, const float128_t &rhs) const
-    {
-        return f128_lt(lhs, rhs);
-    }
-};
-
-/**
-    *  This index supports a deterministic software implementation of double as the secondary key.
-    *
-    *  The software double implementation is using the Berkeley softfloat library (release 3).
-    */
-typedef secondary_index<float64_t, index_double_object_type, soft_double_less>::index_object index_double_object;
-typedef secondary_index<float64_t, index_double_object_type, soft_double_less>::index_index index_double_index;
-
-/**
-    *  This index supports a deterministic software implementation of long double as the secondary key.
-    *
-    *  The software long double implementation is using the Berkeley softfloat library (release 3).
-    */
-typedef secondary_index<float128_t, index_long_double_object_type, soft_long_double_less>::index_object index_long_double_object;
-typedef secondary_index<float128_t, index_long_double_object_type, soft_long_double_less>::index_index index_long_double_index;
 
 
 } }  // namespace graphene::chain

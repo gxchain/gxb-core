@@ -458,6 +458,10 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
               break;
              case impl_signature_object_type:
               break;
+             case impl_table_id_object_type:
+              break;
+             case impl_key_value_object_type:
+              break;
       }
 
    }

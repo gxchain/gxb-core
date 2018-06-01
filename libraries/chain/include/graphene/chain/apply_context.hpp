@@ -34,14 +34,14 @@ class apply_context {
              return ei;
          }
 
-         const table_id_object &get_table(table_id_object::id_type i) const
+         const table_id_object &get_table(table_id i) const
          {
              auto itr = _table_cache.find(i);
              FC_ASSERT(itr != _table_cache.end(), "an invariant was broken, table should be in cache");
              return *itr->second.first;
          }
 
-         int get_end_iterator_by_table_id(table_id_object::id_type i) const
+         int get_end_iterator_by_table_id(table_id i) const
          {
              auto itr = _table_cache.find(i);
              FC_ASSERT(itr != _table_cache.end(), "an invariant was broken, table should be in cache");
@@ -90,7 +90,7 @@ class apply_context {
          }
 
        private:
-         map<table_id_object::id_type, pair<const table_id_object *, int>> _table_cache;
+         map<table_id, pair<const table_id_object *, int>> _table_cache;
          vector<const table_id_object *> _end_iterator_to_table;
          vector<const T *> _iterator_to_object;
          map<const T *, int> _object_to_iterator;
@@ -199,7 +199,7 @@ class apply_context {
                   ++t.count;
               });
 
-              context.update_db_usage(payer, config::billable_size_v<ObjectType>);
+              // context.update_db_usage(payer, config::billable_size_v<ObjectType>);
 
               itr_cache.cache_table(tab);
               return itr_cache.add(obj);
@@ -208,7 +208,7 @@ class apply_context {
           void remove(int iterator)
           {
               const auto &obj = itr_cache.get(iterator);
-              context.update_db_usage(obj.payer, -(config::billable_size_v<ObjectType>) );
+              // context.update_db_usage(obj.payer, -(config::billable_size_v<ObjectType>) );
 
               const auto &table_obj = itr_cache.get_table(obj.t_id);
               FC_ASSERT(table_obj.code == context.receiver, "db access violation");
@@ -238,11 +238,11 @@ class apply_context {
 
                 if (payer == account_name()) payer = obj.payer;
 
-                int64_t billing_size = config::billable_size_v<ObjectType>;
+                // int64_t billing_size = config::billable_size_v<ObjectType>;
 
                 if (obj.payer != payer) {
-                    context.update_db_usage(obj.payer, -(billing_size));
-                    context.update_db_usage(payer, +(billing_size));
+                    // context.update_db_usage(obj.payer, -(billing_size));
+                    // context.update_db_usage(payer, +(billing_size));
                 }
 
                 context.db.modify(obj, [&](auto &o) {

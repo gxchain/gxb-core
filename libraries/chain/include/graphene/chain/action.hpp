@@ -4,9 +4,6 @@
 
 namespace graphene { namespace chain {
 
-typedef uint64_t account_name;
-typedef uint64_t action_name;
-
    struct action {
       account_name               account;
       action_name                name;
