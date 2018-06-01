@@ -27,8 +27,8 @@ namespace graphene {
          free(buffer);
       }
 
-      auto f2 = [&]( auto... a ){  
-         (obj->*func)( a... ); 
+      auto f2 = [&]( auto... a ){
+         (obj->*func)( a... );
       };
 
       boost::mp11::tuple_apply( f2, args );

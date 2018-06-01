@@ -78,6 +78,47 @@ using key_value_index = multi_index_container<
 struct by_primary;
 struct by_secondary;
 
+template <typename SecondaryKey, uint64_t ObjectTypeId, typename SecondaryKeyLess = std::less<SecondaryKey>>
+struct secondary_index {
+    class index_object : public graphene::db::abstract_object<index_object> {
+        typedef SecondaryKey secondary_key_type;
+
+        typename chainbase::object<ObjectTypeId, index_object>::id_type id;
+        table_id t_id;
+        uint64_t primary_key;
+        account_name payer = 0;
+        SecondaryKey secondary_key;
+    };
+
+    typedef multi_index_container<
+        index_object,
+        indexed_by<
+            ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+            ordered_unique<tag<by_primary>,
+               composite_key<index_object,
+                 member<index_object, table_id, &index_object::t_id>,
+                 member<index_object, uint64_t, &index_object::primary_key>>,
+               composite_key_compare<std::less<table_id>, std::less<uint64_t>>>,
+            ordered_unique<tag<by_secondary>,
+               composite_key<index_object,
+                 member<index_object, table_id, &index_object::t_id>,
+                 member<index_object, SecondaryKey, &index_object::secondary_key>,
+                 member<index_object, uint64_t, &index_object::primary_key>>,
+               composite_key_compare<std::less<table_id>, SecondaryKeyLess, std::less<uint64_t>>
+            >
+        >
+    > index_index;
+};
+
+typedef secondary_index<uint64_t, index64_object_type>::index_object index64_object;
+typedef secondary_index<uint64_t, index64_object_type>::index_index index64_index;
+
+typedef secondary_index<uint128_t, index128_object_type>::index_object index128_object;
+typedef secondary_index<uint128_t, index128_object_type>::index_index index128_index;
+
+typedef std::array<uint128_t, 2> key256_t;
+typedef secondary_index<key256_t, index256_object_type>::index_object index256_object;
+typedef secondary_index<key256_t, index256_object_type>::index_index index256_index;
 
 } }  // namespace graphene::chain
 

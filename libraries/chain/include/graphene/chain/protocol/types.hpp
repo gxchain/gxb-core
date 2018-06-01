@@ -266,6 +266,11 @@ namespace graphene { namespace chain {
       second_hand_data_object_type,//23
       data_transaction_complain_object_type,//24
       lock_balance_object_type,//25
+      index64_object_type,
+      index128_object_type,
+      index256_object_type,
+      index_double_object_type,
+      index_long_double_object_type,
 
       OBJECT_TYPE_COUNT /////< Sentry value which contains the number of different object types
 
@@ -537,6 +542,11 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (second_hand_data_object_type)
                  (data_transaction_complain_object_type)
                  (lock_balance_object_type)
+                 (index64_object_type)
+                 (index128_object_type)
+                 (index256_object_type)
+                 (index_double_object_type)
+                 (index_long_double_object_type)
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,
