@@ -1,7 +1,7 @@
 #pragma once
 
 #include <graphene/chain/multi_index_includes.hpp>
-#include <fc/uint128.hpp>
+#include <graphene/chain/protocol/types.hpp>
 #include <softfloat.hpp>
 
 #include <array>
@@ -52,8 +52,8 @@ struct by_scope_tertiary;
 class key_value_object : public graphene::db::abstract_object<key_value_object>
 {
   public:
-      static const uint8_t space_id = implementation_ids;
-      static const uint8_t type_id  = impl_key_value_object_type;
+    static const uint8_t space_id = implementation_ids;
+    static const uint8_t type_id = impl_key_value_object_type;
 
     typedef uint64_t key_type;
     static const int number_of_keys = 1;
@@ -84,13 +84,13 @@ struct by_secondary;
 template <typename SecondaryKey, uint64_t ObjectTypeId, typename SecondaryKeyLess = std::less<SecondaryKey>>
 struct secondary_index {
     class index_object : public graphene::db::abstract_object<index_object> {
-        typedef SecondaryKey secondary_key_type;
     public:
+        typedef SecondaryKey secondary_key_type;
 
-        table_id t_id;
-        uint64_t primary_key;
-        account_name payer = 0;
-        SecondaryKey secondary_key;
+        table_id            t_id;
+        uint64_t            primary_key;
+        account_name        payer = 0;
+        SecondaryKey        secondary_key;
     };
 
     typedef multi_index_container<
@@ -122,6 +122,28 @@ typedef secondary_index<uint128_t, index128_object_type>::index_index index128_i
 typedef std::array<uint128_t, 2> key256_t;
 typedef secondary_index<key256_t, index256_object_type>::index_object index256_object;
 typedef secondary_index<key256_t, index256_object_type>::index_index index256_index;
+
+struct soft_double_less
+{
+    bool operator()(const float64_t &lhs, const float64_t &rhs) const
+    {
+        return f64_lt(lhs, rhs);
+    }
+};
+
+struct soft_long_double_less
+{
+    bool operator()(const float128_t lhs, const float128_t &rhs) const
+    {
+        return f128_lt(lhs, rhs);
+    }
+};
+
+typedef secondary_index<float64_t, index_double_object_type, soft_double_less>::index_object index_double_object;
+typedef secondary_index<float64_t,index_double_object_type,soft_double_less>::index_index   index_double_index;
+
+typedef secondary_index<float128_t,index_long_double_object_type,soft_long_double_less>::index_object  index_long_double_object;
+typedef secondary_index<float128_t,index_long_double_object_type,soft_long_double_less>::index_index   index_long_double_index;
 
 } }  // namespace graphene::chain
 
