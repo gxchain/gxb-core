@@ -315,12 +315,12 @@ class multi_index
                return lb;
             }
 
-            const T& get( secondary_key_type&& secondary )const {
-               return get( secondary );
+            const T& get( secondary_key_type&& secondary, const char* error_msg = "unable to find secondary key" )const {
+               return get( secondary, error_msg );
             }
 
             // Gets the object with the smallest primary key in the case where the secondary key is not unique.
-            const T& get( const secondary_key_type& secondary )const {
+            const T& get( const secondary_key_type& secondary, const char* error_msg = "unable to find secondary key" )const {
                auto result = find( secondary );
                // gxb_assert( result != cend(), "unable to find secondary key" );
                return *result;
