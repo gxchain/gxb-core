@@ -257,11 +257,11 @@ class database_api : public context_aware_api {
          return context.db_end_i64( code, scope, table );
       }
 
-      DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx64,  uint64_t)
-      DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx128, uint128_t)
-      DB_API_METHOD_WRAPPERS_ARRAY_SECONDARY(idx256, 2, uint128_t)
-      DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_double, float64_t)
-      DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_long_double, float128_t)
+      // DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx64,  uint64_t)
+      // DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx128, uint128_t)
+      // DB_API_METHOD_WRAPPERS_ARRAY_SECONDARY(idx256, 2, uint128_t)
+      // DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_double, float64_t)
+      // DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_long_double, float128_t)
 };
 
 class console_api : public context_aware_api {
@@ -473,11 +473,11 @@ REGISTER_INTRINSICS( database_api,
    (db_upperbound_i64,   int(int64_t,int64_t,int64_t,int64_t))
    (db_end_i64,          int(int64_t,int64_t,int64_t))
 
-   DB_SECONDARY_INDEX_METHODS_SIMPLE(idx64)
-   DB_SECONDARY_INDEX_METHODS_SIMPLE(idx128)
-   DB_SECONDARY_INDEX_METHODS_ARRAY(idx256)
-   DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_double)
-   DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_long_double)
+   // DB_SECONDARY_INDEX_METHODS_SIMPLE(idx64)
+   // DB_SECONDARY_INDEX_METHODS_SIMPLE(idx128)
+   // DB_SECONDARY_INDEX_METHODS_ARRAY(idx256)
+   // DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_double)
+   // DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_long_double)
 );
 
 std::istream& operator>>(std::istream& in, wasm_interface::vm_type& runtime) {

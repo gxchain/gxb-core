@@ -8,6 +8,7 @@
 #include <type_traits>
 
 namespace graphene { namespace chain {
+class database;
 
 typedef __uint128_t uint128_t;
 
