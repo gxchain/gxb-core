@@ -222,57 +222,107 @@ class action_api : public context_aware_api {
          return context.IDX.previous_secondary(iterator, primary);\
       }
 
-class database_api : public context_aware_api {
-   public:
-      using context_aware_api::context_aware_api;
+class database_api : public context_aware_api
+{
+  public:
+    using context_aware_api::context_aware_api;
 
-      int db_store_i64( uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, array_ptr<const char> buffer, size_t buffer_size ) {
-         return context.db_store_i64( scope, table, payer, id, buffer, buffer_size );
-      }
-      void db_update_i64( int itr, uint64_t payer, array_ptr<const char> buffer, size_t buffer_size ) {
-         context.db_update_i64( itr, payer, buffer, buffer_size );
-      }
-      void db_remove_i64( int itr ) {
-         context.db_remove_i64( itr );
-      }
-      int db_get_i64( int itr, array_ptr<char> buffer, size_t buffer_size ) {
-         return context.db_get_i64( itr, buffer, buffer_size );
-      }
-      int db_next_i64( int itr, uint64_t& primary ) {
-         return context.db_next_i64(itr, primary);
-      }
-      int db_previous_i64( int itr, uint64_t& primary ) {
-         return context.db_previous_i64(itr, primary);
-      }
-      int db_find_i64( uint64_t code, uint64_t scope, uint64_t table, uint64_t id ) {
-         return context.db_find_i64( code, scope, table, id );
-      }
-      int db_lowerbound_i64( uint64_t code, uint64_t scope, uint64_t table, uint64_t id ) {
-         return context.db_lowerbound_i64( code, scope, table, id );
-      }
-      int db_upperbound_i64( uint64_t code, uint64_t scope, uint64_t table, uint64_t id ) {
-         return context.db_upperbound_i64( code, scope, table, id );
-      }
-      int db_end_i64( uint64_t code, uint64_t scope, uint64_t table ) {
-         return context.db_end_i64( code, scope, table );
-      }
+    int db_store_i64(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, array_ptr<const char> buffer, size_t buffer_size)
+    {
+        return context.db_store_i64(scope, table, payer, id, buffer, buffer_size);
+    }
+    void db_update_i64(int itr, uint64_t payer, array_ptr<const char> buffer, size_t buffer_size)
+    {
+        context.db_update_i64(itr, payer, buffer, buffer_size);
+    }
+    void db_remove_i64(int itr)
+    {
+        context.db_remove_i64(itr);
+    }
+    int db_get_i64(int itr, array_ptr<char> buffer, size_t buffer_size)
+    {
+        return context.db_get_i64(itr, buffer, buffer_size);
+    }
+    int db_next_i64(int itr, uint64_t &primary)
+    {
+        return context.db_next_i64(itr, primary);
+    }
+    int db_previous_i64(int itr, uint64_t &primary)
+    {
+        return context.db_previous_i64(itr, primary);
+    }
+    int db_find_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
+    {
+        return context.db_find_i64(code, scope, table, id);
+    }
+    int db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
+    {
+        return context.db_lowerbound_i64(code, scope, table, id);
+    }
+    int db_upperbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
+    {
+        return context.db_upperbound_i64(code, scope, table, id);
+    }
+    int db_end_i64(uint64_t code, uint64_t scope, uint64_t table)
+    {
+        return context.db_end_i64(code, scope, table);
+    }
 
-      // DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx64,  uint64_t)
-      // DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx128, uint128_t)
-      // DB_API_METHOD_WRAPPERS_ARRAY_SECONDARY(idx256, 2, uint128_t)
-      // DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_double, float64_t)
-      // DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_long_double, float128_t)
+    // DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx64,  uint64_t)
+    // DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx128, uint128_t)
+    // DB_API_METHOD_WRAPPERS_ARRAY_SECONDARY(idx256, 2, uint128_t)
+    // DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_double, float64_t)
+    // DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_long_double, float128_t)
 };
 
-class console_api : public context_aware_api {
-   public:
-      console_api( apply_context& ctx )
-      : context_aware_api(ctx,true)
-      , ignore(false) {}
+class memory_api : public context_aware_api
+{
+  public:
+    memory_api(apply_context &ctx)
+        : context_aware_api(ctx, true)
+    {
+    }
 
-      // Kept as intrinsic rather than implementing on WASM side (using prints_l and strlen) because strlen is faster on native side.
-      void prints(null_terminated_ptr str) {
-         if ( !ignore ) {
+    char *memcpy(array_ptr<char> dest, array_ptr<const char> src, size_t length)
+    {
+        EOS_ASSERT((std::abs((ptrdiff_t) dest.value - (ptrdiff_t) src.value)) >= length,
+                   overlapping_memory_error, "memcpy can only accept non-aliasing pointers");
+        return (char *) ::memcpy(dest, src, length);
+    }
+
+    char *memmove(array_ptr<char> dest, array_ptr<const char> src, size_t length)
+    {
+        return (char *) ::memmove(dest, src, length);
+    }
+
+    int memcmp(array_ptr<const char> dest, array_ptr<const char> src, size_t length)
+    {
+        int ret = ::memcmp(dest, src, length);
+        if (ret < 0)
+            return -1;
+         if(ret > 0)
+            return 1;
+         return 0;
+      }
+
+      char* memset( array_ptr<char> dest, int value, size_t length ) {
+         return (char *)::memset( dest, value, length );
+      }
+};
+
+class console_api : public context_aware_api
+{
+  public:
+    console_api(apply_context &ctx)
+        : context_aware_api(ctx, true)
+        , ignore(false)
+    {
+    }
+
+    // Kept as intrinsic rather than implementing on WASM side (using prints_l and strlen) because strlen is faster on native side.
+    void prints(null_terminated_ptr str)
+    {
+        if (!ignore) {
             context.console_append<const char*>(str);
          }
       }
@@ -391,15 +441,17 @@ class console_api : public context_aware_api {
       bool ignore;
 };
 
-class system_api : public context_aware_api {
-   public:
-      using context_aware_api::context_aware_api;
+class system_api : public context_aware_api
+{
+  public:
+    using context_aware_api::context_aware_api;
 
-      uint64_t current_time() {
-          return static_cast<uint64_t>(context.db.head_block_time().sec_since_epoch());
-      }
+    uint64_t current_time()
+    {
+        return static_cast<uint64_t>(context.db.head_block_time().sec_since_epoch());
+    }
 
-      /*
+    /*
       uint64_t publication_time() {
          return static_cast<uint64_t>( context.trx_context.published.time_since_epoch().count() );
       }
@@ -411,29 +463,36 @@ REGISTER_INJECTED_INTRINSICS(call_depth_api,
    (call_depth_assert,  void()               )
 );
 
+REGISTER_INTRINSICS(memory_api,
+(memcpy,                 int(int, int, int))
+(memmove,                int(int, int, int))
+(memcmp,                 int(int, int, int))
+(memset,                 int(int, int, int))
+);
+
 REGISTER_INTRINSICS(console_api,
-   (prints,                void(int)      )
-   (prints_l,              void(int, int) )
-   (printi,                void(int64_t)  )
-   (printui,               void(int64_t)  )
-   (printi128,             void(int)      )
-   (printui128,            void(int)      )
-   (printsf,               void(float)    )
-   (printdf,               void(double)   )
-   (printqf,               void(int)      )
-   (printn,                void(int64_t)  )
-   (printhex,              void(int, int) )
+(prints,                void(int)      )
+(prints_l,              void(int, int) )
+(printi,                void(int64_t)  )
+(printui,               void(int64_t)  )
+(printi128,             void(int)      )
+(printui128,            void(int)      )
+(printsf,               void(float)    )
+(printdf,               void(double)   )
+(printqf,               void(int)      )
+(printn,                void(int64_t)  )
+(printhex,              void(int, int) )
 );
 
 REGISTER_INTRINSICS(system_api,
-        (current_time, int64_t()       )
-        // (publication_time,   int64_t() )
+(current_time, int64_t()       )
+// (publication_time,   int64_t() )
 );
 
 REGISTER_INTRINSICS(action_api,
-   (read_action_data,       int(int, int)  )
-   (action_data_size,       int()          )
-   (current_receiver,   int64_t()          )
+(read_action_data,       int(int, int)  )
+(action_data_size,       int()          )
+(current_receiver,       int64_t()      )
 );
 
 #define DB_SECONDARY_INDEX_METHODS_SIMPLE(IDX) \
