@@ -38,6 +38,8 @@ class contract_call_evaluator : public evaluator<contract_call_evaluator>
 
     void_result do_evaluate(const contract_call_operation &op);
     void_result do_apply(const contract_call_operation &op);
+
+    const account_object* acnt;
 };
 
 } }

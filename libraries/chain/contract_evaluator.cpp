@@ -65,6 +65,18 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
 void_result contract_call_evaluator::do_evaluate(const contract_call_operation &op)
 { try {
     dlog("contract_call_evaluator do_evaluator");
+    FC_ASSERT(op.name.size() > 0);
+    FC_ASSERT(op.method.size() > 0);
+
+    database& d = db();
+    auto& acnt_indx = d.get_index_type<account_index>();
+    auto current_account_itr = acnt_indx.indices().get<by_name>().find(op.name);
+    FC_ASSERT(current_account_itr != acnt_indx.indices().get<by_name>().end(), "contract not found, name ${n}", ("n", op.name));
+    FC_ASSERT(current_account_itr->code.size() > 0, "contract has no code, name ${n}", ("n", op.name));
+    FC_ASSERT(current_account_itr->abi.size() > 0, "contract has no abi, name ${n}", ("n", op.name));
+
+    acnt = &(*current_account_itr);
+
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
