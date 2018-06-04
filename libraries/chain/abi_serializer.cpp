@@ -49,7 +49,6 @@ namespace graphene { namespace chain {
       set_abi(abi);
    }
 
-//   using abi_int128_t            = __int128;
    void abi_serializer::configure_built_in_types() {
 
       built_in_types.emplace("bool",                      pack_unpack<uint8_t>());
@@ -61,7 +60,7 @@ namespace graphene { namespace chain {
       built_in_types.emplace("uint32",                    pack_unpack<uint32_t>());
       built_in_types.emplace("int64",                     pack_unpack<int64_t>());
       built_in_types.emplace("uint64",                    pack_unpack<uint64_t>());
-//      built_in_types.emplace("int128",                    pack_unpack<abi_int128_t>());//TODO FIXME
+      built_in_types.emplace("int128",                    pack_unpack<int128_t>());
       built_in_types.emplace("uint128",                   pack_unpack<uint128_t>());
       built_in_types.emplace("varint32",                  pack_unpack<fc::signed_int>());
       built_in_types.emplace("varuint32",                 pack_unpack<fc::unsigned_int>());

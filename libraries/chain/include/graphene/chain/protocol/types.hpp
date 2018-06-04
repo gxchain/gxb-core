@@ -103,6 +103,8 @@ namespace graphene { namespace chain {
    using table_name       = name;
    
 //   using int128_t            = boost::multiprecision::int128_t;
+   using int128_t            = __int128;
+   
    using checksum256_type    = fc::sha256;
    using checksum512_type    = fc::sha512;
    using checksum160_type    = fc::ripemd160;
