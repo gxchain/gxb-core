@@ -1040,6 +1040,23 @@ class wallet_api
                                       string vm_version,
                                       string contract_dir,
                                       bool broadcast = false);
+    
+    
+    /** call contract
+     *
+     * call contract
+     * @param account this account use to call contract
+     * @param contract contract
+     * @param method method
+     * @param arg arg
+     * @param broadcast broadcast
+     * @returns signed_transaction
+     */
+  signed_transaction call_contract(string account,
+                                    string contract,
+                                    string method,
+                                    string arg,
+                                    bool broadcast = false);
 
       /** Registers a third party's account on the blockckain.
        *

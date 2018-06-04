@@ -1000,6 +1000,40 @@
            FC_CAPTURE_AND_RETHROW(
                (name)(account)(vm_type)(vm_version)(contract_dir)(broadcast))
        }
+       
+       
+       signed_transaction call_contract(string account,
+                                       string contract,
+                                       string method,
+                                       string arg,
+                                       bool broadcast = false)
+              {
+                  try {
+                      FC_ASSERT(!self.is_locked());
+
+                      account_object account_object = this->get_account(account);
+                      account_id_type account_id = account_object.id;
+
+                      contract_call_operation contract_call_op;
+                      contract_call_op.account = account_id;
+//                      contract_call_op.fee = 1;
+                      contract_call_op.name = contract;
+                      contract_call_op.method = method;
+                      contract_call_op.data = arg;
+//                      contract_call_op.extensions;
+
+                      signed_transaction tx;
+
+                      tx.operations.push_back(contract_call_op);
+
+                      auto current_fees = _remote_db->get_global_properties().parameters.current_fees;
+                      set_operation_fees(tx, current_fees);
+
+                      return sign_transaction(tx, broadcast);
+                  }
+                  FC_CAPTURE_AND_RETHROW(
+                      (account)(contract)(method)(arg)(broadcast))
+              }
 
        signed_transaction register_account(string name,
                                            public_key_type owner,
@@ -4629,6 +4663,15 @@
                                                   bool broadcast)
 {
     return my->deploy_contract(name, account, vm_type, vm_version, contract_dir, broadcast);
+}
+    
+    signed_transaction wallet_api::call_contract(string account,
+                                      string contract,
+                                      string method,
+                                      string arg,
+                                      bool broadcast)
+{
+    return my->call_contract(account, contract, method, arg, broadcast);
 }
 
     signed_transaction wallet_api::register_account(string name,
