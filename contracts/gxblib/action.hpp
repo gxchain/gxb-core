@@ -1,7 +1,3 @@
-/**
- *  @file
- *  @copyright defined in LICENSE.txt
- */
 #pragma once
 #include <gxblib/action.h>
 #include <gxblib/datastream.hpp>
@@ -51,7 +47,6 @@ namespace graphene {
       return unpack<T>( buffer, size );
    }
 
-   using ::require_auth;
    using ::require_recipient;
 
    /**
@@ -75,24 +70,6 @@ namespace graphene {
       require_recipient( remaining_accounts... );
    }
 
-   struct permission_level {
-      permission_level( account_name a, permission_name p ):actor(a),permission(p){}
-      permission_level(){}
-
-      account_name    actor;
-      permission_name permission;
-
-      friend bool operator == ( const permission_level& a, const permission_level& b ) {
-         return std::tie( a.actor, a.permission ) == std::tie( b.actor, b.permission );
-      }
-
-      GXBLIB_SERIALIZE( permission_level, (actor)(permission) )
-   };
-
-   void require_auth(const permission_level& level) {
-      require_auth2( level.actor, level.permission );
-   }
-
    /**
     * This is the packed representation of an action along with
     * meta-data about the authorization levels.
@@ -100,7 +77,6 @@ namespace graphene {
    struct action {
       account_name               account;
       action_name                name;
-      vector<permission_level>   authorization;
       bytes                      data;
 
       action() = default;
@@ -110,10 +86,9 @@ namespace graphene {
        *  @param value - will be serialized via pack into data
        */
       template<typename Action>
-      action( vector<permission_level>&& auth, const Action& value ) {
+      action(const Action& value ) {
          account       = Action::get_account();
          name          = Action::get_name();
-         authorization = move(auth);
          data          = pack(value);
       }
 
@@ -122,8 +97,7 @@ namespace graphene {
        *  @param value - will be serialized via pack into data
        */
       template<typename Action>
-      action( const permission_level& auth, const Action& value )
-      :authorization(1,auth) {
+      action( const Action& value ) {
          account       = Action::get_account();
          name          = Action::get_name();
          data          = pack(value);
@@ -148,8 +122,8 @@ namespace graphene {
        *  @param value - will be serialized via pack into data
        */
       template<typename T>
-      action( const permission_level& auth, account_name a, action_name n, T&& value )
-      :account(a), name(n), authorization(1,auth), data(pack(std::forward<T>(value))) {}
+      action(account_name a, action_name n, T&& value )
+      :account(a), name(n), data(pack(std::forward<T>(value))) {}
 
       /**
        *  @tparam T - the type of the action data
@@ -159,10 +133,10 @@ namespace graphene {
        *  @param value - will be serialized via pack into data
        */
       template<typename T>
-      action( vector<permission_level> auths, account_name a, action_name n, T&& value )
-      :account(a), name(n), authorization(std::move(auths)), data(pack(std::forward<T>(value))) {}
+      action( account_name a, action_name n, T&& value )
+      :account(a), name(n), data(pack(std::forward<T>(value))) {}
 
-      GXBLIB_SERIALIZE( action, (account)(name)(authorization)(data) )
+      GXBLIB_SERIALIZE( action, (account)(name)(data) )
 
       void send() const {
          auto serialize = pack(*this);
@@ -197,9 +171,8 @@ namespace graphene {
 
    template<typename... Args>
    void dispatch_inline( account_name code, action_name act,
-                         vector<permission_level> perms,
                          std::tuple<Args...> args ) {
-      action( perms, code, act, std::move(args) ).send();
+      action(code, act, std::move(args) ).send();
    }
 
    template<typename, uint64_t>
@@ -207,10 +180,10 @@ namespace graphene {
 
    template<typename T, uint64_t Name, typename... Args>
    struct inline_dispatcher<void(T::*)(Args...), Name> {
-      static void call(account_name code, const permission_level& perm, std::tuple<Args...> args) {
-         dispatch_inline(code, Name, vector<permission_level>(1, perm), std::move(args));
+      static void call(account_name code, std::tuple<Args...> args) {
+         dispatch_inline(code, Name, std::move(args));
       }
-      static void call(account_name code, vector<permission_level> perms, std::tuple<Args...> args) {
+      static void call(account_name code, std::tuple<Args...> args) {
          dispatch_inline(code, Name, std::move(perms), std::move(args));
       }
    };
