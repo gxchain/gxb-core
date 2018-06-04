@@ -137,13 +137,17 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
 
    static const char wast_code[] = R"=====(
 (module
-(import "env" "prints" (func $prints (param i32)))
+ (import "env" "prints" (func $prints (param i32)))
+ (import "env" "printi" (func $printi (param i32)))
  (table 0 anyfunc)
  (memory $0 1)
  (data (i32.const 4) "Hello World!\n")
  (export "memory" (memory $0))
  (export "apply" (func $apply))
  (func $apply (param $0 i64) (param $1 i64) (param $2 i64)
+    (call $prints
+    (i32.const 4)
+    )
     (call $prints
     (i32.const 4)
     )
@@ -156,6 +160,7 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    deploy_op.vm_type = "0";
    deploy_op.vm_version = "0";
    deploy_op.code = graphene::chain::wast_to_wasm(wast_code);
+   deploy_op.code_version = fc::sha256::hash(wast_code, (uint32_t) strlen(wast_code));
    deploy_op.abi = "abi";
    deploy_op.fee = asset(2000);
    trx.clear();
@@ -171,7 +176,7 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    op.account = alice_id;
    op.name = "bob";
    op.method = "hi";
-   op.data = wast_code;
+   op.data = "hi";
    op.fee = asset(2000);
 
    trx.clear();

@@ -56,6 +56,7 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
             obj.vm_type = o.vm_type;
             obj.vm_version = o.vm_version;
             obj.code = o.code;
+            obj.code_version = o.code_version;
             obj.abi = o.abi;
         });
 
@@ -85,7 +86,7 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.name)("m", op.method)("d", op.data));
     dlog("contract_call_evaluator do_apply");
 
-    action a{1, 1, {}};
+    action a{op.account, op.name, {}};
     apply_context ctx{db(), a};
     ctx.exec();
 
