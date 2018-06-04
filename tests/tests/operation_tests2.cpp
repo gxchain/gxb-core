@@ -135,27 +135,20 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    transfer(account_id_type(), alice_id, asset(10000));
    generate_block();
 
-    static const char wast_code[] = R"=====(
+   static const char wast_code[] = R"=====(
 (module
+(import "env" "prints" (func $prints (param i32)))
  (table 0 anyfunc)
- (import "env" "prints" (func $prints (param i32)))
  (memory $0 1)
- (data (i32.const 8) "Hello World!\n")
+ (data (i32.const 4) "Hello World!\n")
  (export "memory" (memory $0))
  (export "apply" (func $apply))
- (func $add (; 0 ;) (param $0 i32) (param $1 i32) (result i32)
-  (i32.add
-   (get_local $1)
-   (get_local $0)
-  )
- )
  (func $apply (param $0 i64) (param $1 i64) (param $2 i64)
-(call $prints
-(i32.const 8)
-)
+    (call $prints
+    (i32.const 4)
+    )
  )
-)
-)=====";
+))=====";
    // create contract
    contract_deploy_operation deploy_op;
    deploy_op.account = alice_id;
