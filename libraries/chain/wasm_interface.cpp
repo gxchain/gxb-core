@@ -187,29 +187,29 @@ class action_api : public context_aware_api {
 
 #define DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(IDX, TYPE)\
       int db_##IDX##_store( uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, const TYPE& secondary ) {\
-         EOS_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
+         GRAPHENE_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
          return context.IDX.store( scope, table, payer, id, secondary );\
       }\
       void db_##IDX##_update( int iterator, uint64_t payer, const TYPE& secondary ) {\
-         EOS_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
+         GRAPHENE_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
          return context.IDX.update( iterator, payer, secondary );\
       }\
       void db_##IDX##_remove( int iterator ) {\
          return context.IDX.remove( iterator );\
       }\
       int db_##IDX##_find_secondary( uint64_t code, uint64_t scope, uint64_t table, const TYPE& secondary, uint64_t& primary ) {\
-         EOS_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
+         GRAPHENE_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
          return context.IDX.find_secondary(code, scope, table, secondary, primary);\
       }\
       int db_##IDX##_find_primary( uint64_t code, uint64_t scope, uint64_t table, TYPE& secondary, uint64_t primary ) {\
          return context.IDX.find_primary(code, scope, table, secondary, primary);\
       }\
       int db_##IDX##_lowerbound( uint64_t code, uint64_t scope, uint64_t table,  TYPE& secondary, uint64_t& primary ) {\
-         EOS_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
+         GRAPHENE_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
          return context.IDX.lowerbound_secondary(code, scope, table, secondary, primary);\
       }\
       int db_##IDX##_upperbound( uint64_t code, uint64_t scope, uint64_t table,  TYPE& secondary, uint64_t& primary ) {\
-         EOS_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
+         GRAPHENE_ASSERT( !softfloat_api::is_nan( secondary ), transaction_exception, "NaN is not an allowed value for a secondary key" );\
          return context.IDX.upperbound_secondary(code, scope, table, secondary, primary);\
       }\
       int db_##IDX##_end( uint64_t code, uint64_t scope, uint64_t table ) {\
