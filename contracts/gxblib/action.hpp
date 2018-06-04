@@ -47,28 +47,6 @@ namespace graphene {
       return unpack<T>( buffer, size );
    }
 
-   using ::require_recipient;
-
-   /**
-    *  All of the listed accounts will be added to the set of accounts to be notified
-    *
-    *  This helper method enables you to add multiple accounts to accounts to be notified list with a single
-    *  call rather than having to call the similar C API multiple times.
-    *
-    *  @note action.code is also considered as part of the set of notified accounts
-    *
-    *  @brief Verify specified accounts exist in the set of notified accounts
-    *
-    *  Example:
-    *  @code
-    *  require_recipient(N(Account1), N(Account2), N(Account3)); // throws exception if any of them not in set.
-    *  @endcode
-    */
-   template<typename... accounts>
-   void require_recipient( account_name name, accounts... remaining_accounts ){
-      require_recipient( name );
-      require_recipient( remaining_accounts... );
-   }
 
    /**
     * This is the packed representation of an action along with
@@ -92,42 +70,9 @@ namespace graphene {
          data          = pack(value);
       }
 
-      /**
-       *  @tparam Action - a type derived from action_meta<Scope,Name>
-       *  @param value - will be serialized via pack into data
-       */
-      template<typename Action>
-      action( const Action& value ) {
-         account       = Action::get_account();
-         name          = Action::get_name();
-         data          = pack(value);
-      }
-
-      /**
-       *  @tparam Action - a type derived from action_meta<Scope,Name>
-       *  @param value - will be serialized via pack into data
-       */
-      template<typename Action>
-      action( const Action& value ) {
-         account       = Action::get_account();
-         name          = Action::get_name();
-         data          = pack(value);
-      }
 
       /**
        *  @tparam T - the type of the action data
-       *  @param auth - a single permission_level to be used as the authorization of the action
-       *  @param a - name of the contract account
-       *  @param n - name of the action
-       *  @param value - will be serialized via pack into data
-       */
-      template<typename T>
-      action(account_name a, action_name n, T&& value )
-      :account(a), name(n), data(pack(std::forward<T>(value))) {}
-
-      /**
-       *  @tparam T - the type of the action data
-       *  @param auths - vector permission_levels defining the authorizations of the action
        *  @param a - name of the contract account
        *  @param n - name of the action
        *  @param value - will be serialized via pack into data
@@ -137,17 +82,6 @@ namespace graphene {
       :account(a), name(n), data(pack(std::forward<T>(value))) {}
 
       GXBLIB_SERIALIZE( action, (account)(name)(data) )
-
-      void send() const {
-         auto serialize = pack(*this);
-         ::send_inline(serialize.data(), serialize.size());
-      }
-
-      void send_context_free() const {
-         gxb_assert( authorization.size() == 0, "context free actions cannot have authorizations");
-         auto serialize = pack(*this);
-         ::send_context_free_inline(serialize.data(), serialize.size());
-      }
 
       /**
        * Retrieve the unpacked data as T
@@ -169,31 +103,10 @@ namespace graphene {
       static uint64_t get_name()  { return Name; }
    };
 
-   template<typename... Args>
-   void dispatch_inline( account_name code, action_name act,
-                         std::tuple<Args...> args ) {
-      action(code, act, std::move(args) ).send();
-   }
-
-   template<typename, uint64_t>
-   struct inline_dispatcher;
-
-   template<typename T, uint64_t Name, typename... Args>
-   struct inline_dispatcher<void(T::*)(Args...), Name> {
-      static void call(account_name code, std::tuple<Args...> args) {
-         dispatch_inline(code, Name, std::move(args));
-      }
-      static void call(account_name code, std::tuple<Args...> args) {
-         dispatch_inline(code, Name, std::move(perms), std::move(args));
-      }
-   };
 
  ///@} actioncpp api
 
 } // namespace graphene
-
-#define INLINE_ACTION_SENDER3( CONTRACT_CLASS, FUNCTION_NAME, ACTION_NAME  )\
-::graphene::inline_dispatcher<decltype(&CONTRACT_CLASS::FUNCTION_NAME), ACTION_NAME>::call
 
 #define INLINE_ACTION_SENDER2( CONTRACT_CLASS, NAME )\
 INLINE_ACTION_SENDER3( CONTRACT_CLASS, NAME, ::graphene::string_to_name(#NAME) )
