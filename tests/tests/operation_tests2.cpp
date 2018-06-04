@@ -38,6 +38,7 @@
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/worker_object.hpp>
+#include <graphene/chain/wast_to_wasm.hpp>
 
 #include <graphene/utilities/tempdir.hpp>
 
