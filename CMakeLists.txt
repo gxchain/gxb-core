@@ -160,6 +160,7 @@ include(wasm)
 add_subdirectory( libraries )
 add_subdirectory( programs )
 add_subdirectory( tests )
+add_subdirectory( tools )
 
 install_directory_permissions(DIRECTORY ${CMAKE_INSTALL_FULL_SYSCONFDIR}/gxb)
 

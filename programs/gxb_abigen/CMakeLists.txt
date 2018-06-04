@@ -1,3 +1,4 @@
+cmake_minimum_required( VERSION 2.8.12 )
 set(SOURCES main.cpp)
 find_package(LLVM 4.0 REQUIRED CONFIG)
 
