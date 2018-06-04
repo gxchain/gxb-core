@@ -1,12 +1,8 @@
-/**
- *  @file
- *  @copyright defined in eos/LICENSE.txt
- */
 #include <graphene/chain/abi_serializer.hpp>
 //#include <graphene/chain/contract_types.hpp>
-//#include <eosio/chain/authority.hpp>
-//#include <eosio/chain/chain_config.hpp>
-//#include <eosio/chain/transaction.hpp>
+//#include <graphene/chain/authority.hpp>
+//#include <graphene/chain/chain_config.hpp>
+//#include <graphene/chain/transaction.hpp>
 //#include <graphene/chain/protocol/asset.hpp>
 #include <fc/io/raw.hpp>
 #include <boost/algorithm/string/predicate.hpp>
