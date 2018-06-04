@@ -21,9 +21,10 @@ endif()
 target_link_libraries(gxb-abigen abi_generator)
 
 
-#install( TARGETS
-#   gxb-abigen
-#   RUNTIME DESTINATION ${CMAKE_INSTALL_FULL_BINDIR}
-#   LIBRARY DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
-#   ARCHIVE DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
-#)
+install( TARGETS
+   gxb-abigen
+
+   RUNTIME DESTINATION bin
+   LIBRARY DESTINATION lib
+   ARCHIVE DESTINATION lib
+)
