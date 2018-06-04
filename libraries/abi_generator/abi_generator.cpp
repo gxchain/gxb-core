@@ -71,7 +71,7 @@ string abi_generator::translate_type(const string& type_name) {
   string built_in_type = type_name;
 
   if (type_name == "unsigned __int128" || type_name == "uint128_t") built_in_type = "uint128";
-  else if (type_name == "__int128"          || type_name == "int128_t")  built_in_type = "unt128";
+  else if (type_name == "__int128"          || type_name == "int128_t")  built_in_type = "int128";
 
   else if (type_name == "unsigned long long" || type_name == "uint64_t") built_in_type = "uint64";
   else if (type_name == "unsigned long"      || type_name == "uint32_t") built_in_type = "uint32";

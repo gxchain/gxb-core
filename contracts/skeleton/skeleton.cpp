@@ -1,5 +1,6 @@
 #include <gxblib/gxb.hpp>
 
+using namespace gxblib;
 using namespace graphene;
 
 class hello : public graphene::contract {

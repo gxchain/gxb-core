@@ -60,7 +60,7 @@ namespace gxblib {
     * @brief used to generate a compile time uint64_t from the base32 encoded string interpretation of X
     * @ingroup types
     */
-   #define N(X) ::gxblib::string_to_name(#X)
+//   #define N(X) ::gxblib::string_to_name(#X)
 
 
    static constexpr uint64_t name_suffix( uint64_t tmp ) {

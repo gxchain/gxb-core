@@ -36,7 +36,7 @@ namespace graphene {
    }
 
 #define GXB_API_CALL( r, OP, elem ) \
-   case ::graphene::string_to_name( BOOST_PP_STRINGIZE(elem) ): \
+   case gxblib::string_to_name( BOOST_PP_STRINGIZE(elem) ): \
       graphene::execute_action( &thiscontract, &OP::elem ); \
       break;
 
