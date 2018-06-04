@@ -4,7 +4,7 @@
 #include <graphene/abi_generator/abi_generator.hpp>
 
 using namespace graphene;
-using namespace graphene::chain::contracts;
+//using namespace graphene::chain::contracts;
 
 using mvo = fc::mutable_variant_object;
 
