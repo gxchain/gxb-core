@@ -26,8 +26,9 @@
 #include <boost/multiprecision/cpp_int.hpp>
 
 namespace graphene { namespace chain {
-      typedef boost::multiprecision::uint128_t uint128_t;
+
       typedef boost::multiprecision::int128_t  int128_t;
+      typedef boost::multiprecision::uint128_t uint128_t;
 
       bool operator == ( const price& a, const price& b )
       {
