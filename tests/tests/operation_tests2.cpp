@@ -137,8 +137,9 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
 
     static const char wast_code[] = R"=====(
 (module
- (table 0 anyfunc)
  (import "env" "prints" (func $prints (param i32)))
+ (import "env" "printi" (func $printi (param i32)))
+ (table 0 anyfunc)
  (memory $0 1)
  (data (i32.const 8) "Hello World!\n")
  (export "memory" (memory $0))
@@ -150,6 +151,9 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
   )
  )
  (func $apply (param $0 i64) (param $1 i64) (param $2 i64)
+(call $prints
+(i32.const 8)
+)
 (call $prints
 (i32.const 8)
 )
