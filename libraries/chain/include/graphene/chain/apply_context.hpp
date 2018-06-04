@@ -166,6 +166,7 @@ class apply_context {
       apply_context(const database&d, const action& a)
           : act(a)
           , db(d)
+          , receiver_name(a.name)
           , receiver(a.account)
       {
          reset_console();
@@ -174,6 +175,7 @@ class apply_context {
    public:
       const action&       act; ///< message being applied
       const database&     db;
+      string              receiver_name;
       uint64_t            receiver;
 
 

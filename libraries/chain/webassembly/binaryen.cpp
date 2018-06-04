@@ -25,6 +25,7 @@ class binaryen_instantiated_module : public wasm_instantiated_module_interface {
          LiteralList args = {Literal(uint64_t(context.receiver)),
 	                     Literal(uint64_t(context.act.account)),
                              Literal(uint64_t(context.act.name))};
+         dlog("binaryen apply");
          call("apply", args, context);
       }
 

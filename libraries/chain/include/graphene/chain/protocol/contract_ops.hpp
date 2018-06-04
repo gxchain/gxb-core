@@ -34,6 +34,7 @@ struct contract_deploy_operation : public base_operation {
     fc::string                      vm_type;
     fc::string                      vm_version;
     std::vector<uint8_t>            code;
+    digest_type                     code_version;
     fc::string                      abi;
 
     account_id_type fee_payer() const
@@ -92,6 +93,7 @@ FC_REFLECT(graphene::chain::contract_deploy_operation,
             (vm_type)
             (vm_version)
             (code)
+            (code_version)
             (abi))
 
 FC_REFLECT(graphene::chain::contract_call_operation::fee_parameters_type, (fee))
