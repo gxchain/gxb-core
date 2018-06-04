@@ -1,10 +1,7 @@
-/**
- *  @file
- *  @copyright defined in eos/LICENSE.txt
- */
 #pragma once
 #include <graphene/chain/abi_def.hpp>
 //#include <graphene/chain/trace.hpp>
+#include <graphene/chain/action.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <fc/variant_object.hpp>
 
