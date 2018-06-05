@@ -1019,8 +1019,8 @@
 //                      contract_call_op.fee = 0;
                       contract_call_op.act.account = contract;
                       contract_call_op.act.name = method;
-                      contract_call_op.act.data = arg;
-                      fc::variant action_args_var = fc::json::from_string(arg, fc::json::relaxed_parser);
+//                      contract_call_op.act.data = arg;
+//                      fc::variant action_args_var = fc::json::from_string(arg, fc::json::relaxed_parser);
 //                      contract_call_op.extensions;
 
                       signed_transaction tx;
