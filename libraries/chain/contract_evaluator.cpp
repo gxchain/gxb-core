@@ -70,7 +70,7 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     // FC_ASSERT(op.act.method.size() > 0);
 
     database& d = db();
-    string act_name = op.name.to_string();
+    string act_name = op.act.name.to_string();
     auto& acnt_indx = d.get_index_type<account_index>();
     auto current_account_itr = acnt_indx.indices().get<by_name>().find(act_name);
     FC_ASSERT(current_account_itr != acnt_indx.indices().get<by_name>().end(), "contract not found, name ${n}", ("n", act_name));
@@ -87,7 +87,7 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.act.name.to_string())("m", op.act.account.to_string())("d", op.act.data));
     dlog("contract_call_evaluator do_apply");
 
-    action a{op.account, op.name, {}};
+    action a{op.account, op.act.name, {}};
     apply_context ctx{db(), a};
     ctx.exec();
 
