@@ -19,6 +19,7 @@
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/ext.hpp>
+#include <graphene/chain/action.hpp>
 
 namespace graphene { namespace chain {
 struct contract_deploy_operation : public base_operation {
@@ -34,6 +35,7 @@ struct contract_deploy_operation : public base_operation {
     fc::string                      vm_type;
     fc::string                      vm_version;
     std::vector<uint8_t>            code;
+    digest_type                     code_version;
     fc::string                      abi;
 
     account_id_type fee_payer() const
@@ -63,9 +65,7 @@ struct contract_call_operation : public base_operation {
 
     account_id_type                         account;
     asset                                   fee;
-    fc::string                              name;
-    fc::string                              method;
-    fc::string                              data;
+    action                                  act;
     extensions_type                         extensions;
 
     account_id_type fee_payer() const { return account; }
@@ -73,7 +73,7 @@ struct contract_call_operation : public base_operation {
     void validate() const
     {
         FC_ASSERT(fee.amount >= 0);
-        FC_ASSERT(data.size() > 0);
+        FC_ASSERT(act.data.size() > 0);
     }
 
     share_type calculate_fee(const fee_parameters_type &k) const
@@ -92,6 +92,7 @@ FC_REFLECT(graphene::chain::contract_deploy_operation,
             (vm_type)
             (vm_version)
             (code)
+            (code_version)
             (abi))
 
 FC_REFLECT(graphene::chain::contract_call_operation::fee_parameters_type, (fee))
@@ -99,9 +100,7 @@ FC_REFLECT(graphene::chain::contract_call_operation::fee_parameters_type, (fee))
 FC_REFLECT(graphene::chain::contract_call_operation,
             (account)
             (fee)
-            (name)
-            (method)
-            (data)
+            (act)
             (extensions))
 
 

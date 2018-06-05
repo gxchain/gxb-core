@@ -1,6 +1,7 @@
 #pragma once
 
 #include <graphene/chain/protocol/types.hpp>
+#include <graphene/chain/protocol/name.hpp>
 
 namespace graphene { namespace chain {
 
@@ -24,9 +25,9 @@ namespace graphene { namespace chain {
     *  were properly declared when it executes.
     */
    struct action {
-      account_name               account;
-      action_name                name;
-      bytes                      data;
+      account_name             account;
+      action_name              name;
+      bytes                    data;
 
       action(){}
 

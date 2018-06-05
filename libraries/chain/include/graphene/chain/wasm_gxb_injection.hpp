@@ -795,7 +795,7 @@ namespace graphene { namespace chain { namespace wasm_injections {
             // injector_utils::add_import<ResultType::none>( *_module, u8"checktime", checktime_injection::chktm_idx );
 
             for ( auto& fd : _module->functions.defs ) {
-               wasm_ops::EOSIO_OperatorDecoderStream<pre_op_injectors> pre_decoder(fd.code);
+               wasm_ops::GRAPHENE_OperatorDecoderStream<pre_op_injectors> pre_decoder(fd.code);
                wasm_ops::instruction_stream pre_code(fd.code.size()*2);
 
                while ( pre_decoder ) {
@@ -813,7 +813,7 @@ namespace graphene { namespace chain { namespace wasm_injections {
                fd.code = pre_code.get();
             }
             for ( auto& fd : _module->functions.defs ) {
-               wasm_ops::EOSIO_OperatorDecoderStream<post_op_injectors> post_decoder(fd.code);
+               wasm_ops::GRAPHENE_OperatorDecoderStream<post_op_injectors> post_decoder(fd.code);
                wasm_ops::instruction_stream post_code(fd.code.size()*2);
 
                // wasm_ops::op_types<>::call_t chktm;

@@ -13,30 +13,16 @@ namespace graphene { namespace chain {
 
 void apply_context::exec()
 {
-   auto start = fc::time_point::now();
+   // auto start = fc::time_point::now();
    try {
-       static const char wast_code[] = R"=====(
-(module
-(import "env" "prints" (func $prints (param i32)))
- (table 0 anyfunc)
- (memory $0 1)
- (data (i32.const 4) "Hello World!\n")
- (export "memory" (memory $0))
- (export "apply" (func $apply))
- (func $apply (param $0 i64) (param $1 i64) (param $2 i64)
-    (call $prints
-    (i32.const 4)
-    )
- )
-)
-           )=====";
+       auto& acnt_indx = db.get_index_type<account_index>();
+       auto account_itr = acnt_indx.indices().get<by_name>().find(receiver_name.to_string());
 
-       std::vector<uint8_t> wasm = graphene::chain::wast_to_wasm(wast_code);
-       auto code_id = fc::sha256::hash(wast_code, (uint32_t) strlen(wast_code));
-       auto wasm_bytes = bytes(wasm.begin(), wasm.end());
-       dlog("wast code ${c}, code_id ${i}", ("c", wast_code)("i", code_id));
+       std::string wast(account_itr->code.begin(), account_itr->code.end());
+       dlog("wast code: ${c}", ("c", account_itr->code));
+       auto wasm_bytes = bytes(account_itr->code.begin(), account_itr->code.end());
 
-       wasm_interface(graphene::chain::wasm_interface::vm_type::binaryen).apply(code_id, wasm_bytes, *this);
+       wasm_interface(graphene::chain::wasm_interface::vm_type::binaryen).apply(account_itr->code_version, wasm_bytes, *this);
        dlog("wasm exec success");
    } FC_CAPTURE_AND_RETHROW((_pending_console_output.str()));
 
