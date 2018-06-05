@@ -203,9 +203,9 @@ namespace graphene { namespace chain {
          string                 name;
          string                 vm_type;
          string                 vm_version;
-         std::vector<uint8_t>   code;
+         bytes                  code;
          digest_type            code_version;
-         std::vector<char>      abi;
+         bytes                  abi;
 
          /**
           * The owner authority represents absolute control over the account. Usually the keys in this authority will
