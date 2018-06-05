@@ -1583,21 +1583,6 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    trx.clear();
    generate_block();
 
-   // call contract, action bye
-   contract_call_operation op2;
-   op2.account = alice_id;
-   const char *b = "goodbye";
-   action act2 {string_to_name("bob"), string_to_name("hi"), bytes(b, b+strlen(b))};
-   op2.act = act2;
-   op2.fee = asset(2000);
-   trx.clear();
-   trx.operations.push_back(op2);
-   set_expiration(db, trx);
-   sign(trx, alice_private_key);
-   idump((trx));
-   PUSH_TX(db, trx);
-   trx.clear();
-
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( withdraw_permission_test )
