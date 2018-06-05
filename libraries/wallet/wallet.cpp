@@ -1016,10 +1016,11 @@
 
                       contract_call_operation contract_call_op;
                       contract_call_op.account = account_id;
-//                      contract_call_op.fee = 1;
-                      contract_call_op.name = contract;
-                      contract_call_op.method = method;
-                      contract_call_op.data = arg;
+//                      contract_call_op.fee = 0;
+                      contract_call_op.act.account = contract;
+                      contract_call_op.act.name = method;
+                      contract_call_op.act.data = arg;
+                      fc::variant action_args_var = fc::json::from_string(arg, fc::json::relaxed_parser);
 //                      contract_call_op.extensions;
 
                       signed_transaction tx;
