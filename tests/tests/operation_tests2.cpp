@@ -1565,7 +1565,6 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    sign(trx, alice_private_key);
    idump((trx));
    PUSH_TX(db, trx);
-   generate_block();
 
    // call contract, action hi
    contract_call_operation op;
