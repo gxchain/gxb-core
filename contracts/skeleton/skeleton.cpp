@@ -8,9 +8,9 @@ class hello : public graphene::contract {
       using contract::contract;
 
       /// @abi action
-      void hi( account_name user ) {
-         print( "Hello, ", name{user} );
+      void hi(account_name user) {
+          print("Hello, ", name{user});
       }
 };
 
-GXB_ABI( hello, (hi) )
+GXB_ABI(hello, (hi))
