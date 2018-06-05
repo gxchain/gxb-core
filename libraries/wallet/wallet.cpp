@@ -72,6 +72,7 @@
     #include <graphene/wallet/reflect_util.hpp>
     #include <graphene/debug_witness/debug_api.hpp>
     #include <graphene/chain/wast_to_wasm.hpp>
+    #include <graphene/chain/abi_def.hpp>
     #include <fc/smart_ref_impl.hpp>
 
     #ifndef WIN32
@@ -939,7 +940,7 @@
                FC_ASSERT(!self.is_locked());
                FC_ASSERT(is_valid_name(name));
 
-               std::string abi;
+               vector<char> abi;
                std::vector<uint8_t> wasm;
 
                auto load_contract = [&]() {
@@ -956,7 +957,8 @@
 
                    FC_ASSERT(abi_exist && (wast_exist || wasm_exist), "need abi and wast/wasm file");
 
-                   fc::read_file_contents(abi_path, abi);
+                   abi_def abi_def_object = fc::json::from_file(abi_path).as<abi_def>();
+                   abi = fc::raw::pack(abi_def_object);
                    FC_ASSERT(!abi.empty(), "abi file empty"); //TODO verify abi content
 
                    std::string wast;
@@ -1019,6 +1021,7 @@
 //                      contract_call_op.fee = 0;
                       contract_call_op.act.account = contract;
                       contract_call_op.act.name = method;
+                      contract_call_op.act.data = {};//TODO fixme
 //                      contract_call_op.act.data = arg;
 //                      fc::variant action_args_var = fc::json::from_string(arg, fc::json::relaxed_parser);
 //                      contract_call_op.extensions;
