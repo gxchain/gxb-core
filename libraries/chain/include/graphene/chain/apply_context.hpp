@@ -8,6 +8,7 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/contract_table_objects.hpp>
+#include <graphene/chain/protocol/name.hpp>
 
 namespace graphene { namespace chain {
 
@@ -166,10 +167,11 @@ class apply_context {
       apply_context(const database&d, const action& a)
           : act(a)
           , db(d)
-          , receiver_name(a.name)
           , receiver(a.account)
       {
-         reset_console();
+        name<uint64_t>n(a);
+        receiver_name = n.to_string();
+        reset_console();
       }
 
    public:
