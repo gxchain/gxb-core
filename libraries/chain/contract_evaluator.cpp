@@ -86,7 +86,6 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 { try {
     dlog("contract_call_evaluator do_apply");
     idump((op.act));
-    dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.act.account.to_string())("m", op.act.name.to_string())("d", op.act.data));
     apply_context ctx{db(), op.act};
     ctx.exec();
 

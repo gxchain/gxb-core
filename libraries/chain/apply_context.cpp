@@ -27,7 +27,7 @@ void apply_context::exec()
 
    auto console = _pending_console_output.str();
    dlog("CONSOLE OUTPUT BEGIN =====================\n"
-           + console
+           + console + "\n"
            + " CONSOLE OUTPUT END   =====================" );
 
    reset_console();

@@ -139,21 +139,22 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
 (module
  (type $FUNCSIG$vij (func (param i32 i64)))
  (type $FUNCSIG$j (func (result i64)))
+ (type $FUNCSIG$vi (func (param i32)))
  (type $FUNCSIG$i (func (result i32)))
  (type $FUNCSIG$iii (func (param i32 i32) (result i32)))
  (type $FUNCSIG$iiii (func (param i32 i32 i32) (result i32)))
- (type $FUNCSIG$vi (func (param i32)))
  (type $FUNCSIG$v (func))
  (import "env" "action_data_size" (func $action_data_size (result i32)))
  (import "env" "current_time" (func $current_time (result i64)))
  (import "env" "memcpy" (func $memcpy (param i32 i32 i32) (result i32)))
  (import "env" "prints" (func $prints (param i32)))
  (import "env" "read_action_data" (func $read_action_data (param i32 i32) (result i32)))
- (table 2 2 anyfunc)
- (elem (i32.const 0) $__wasm_nullptr $_ZN5hello2hiEy)
+ (table 3 3 anyfunc)
+ (elem (i32.const 0) $__wasm_nullptr $_ZN5hello2hiEy $_ZN5hello3byeEy)
  (memory $0 1)
- (data (i32.const 4) "\00a\00\00")
- (data (i32.const 16) "hello world!\00")
+ (data (i32.const 4) "\10a\00\00")
+ (data (i32.const 16) "bye-bye!\00")
+ (data (i32.const 32) "hello world!\00")
  (export "memory" (memory $0))
  (export "_ZeqRK11checksum256S1_" (func $_ZeqRK11checksum256S1_))
  (export "_ZeqRK11checksum160S1_" (func $_ZeqRK11checksum160S1_))
@@ -208,7 +209,7 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
      (i32.load offset=4
       (i32.const 0)
      )
-     (i32.const 32)
+     (i32.const 48)
     )
    )
   )
@@ -219,27 +220,62 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
      (get_local $0)
     )
    )
-   (i64.store offset=24
+   (i64.store offset=40
     (get_local $3)
     (get_local $1)
    )
-   (br_if $label$0
-    (i64.ne
-     (get_local $2)
-     (i64.const 7746191359077253120)
+   (block $label$1
+    (br_if $label$1
+     (i64.eq
+      (get_local $2)
+      (i64.const 4581286720942637056)
+     )
     )
+    (br_if $label$0
+     (i64.ne
+      (get_local $2)
+      (i64.const 7746191359077253120)
+     )
+    )
+    (i32.store offset=36
+     (get_local $3)
+     (i32.const 0)
+    )
+    (i32.store offset=32
+     (get_local $3)
+     (i32.const 1)
+    )
+    (i64.store offset=8 align=4
+     (get_local $3)
+     (i64.load offset=32
+      (get_local $3)
+     )
+    )
+    (drop
+     (call $_ZN8graphene14execute_actionI5helloS1_JyEEEbPT_MT0_FvDpT1_E
+      (i32.add
+       (get_local $3)
+       (i32.const 40)
+      )
+      (i32.add
+       (get_local $3)
+       (i32.const 8)
+      )
+     )
+    )
+    (br $label$0)
    )
-   (i32.store offset=20
+   (i32.store offset=28
     (get_local $3)
     (i32.const 0)
    )
-   (i32.store offset=16
+   (i32.store offset=24
     (get_local $3)
-    (i32.const 1)
+    (i32.const 2)
    )
-   (i64.store offset=8 align=4
+   (i64.store offset=16 align=4
     (get_local $3)
-    (i64.load offset=16
+    (i64.load offset=24
      (get_local $3)
     )
    )
@@ -247,11 +283,11 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
     (call $_ZN8graphene14execute_actionI5helloS1_JyEEEbPT_MT0_FvDpT1_E
      (i32.add
       (get_local $3)
-      (i32.const 24)
+      (i32.const 40)
      )
      (i32.add
       (get_local $3)
-      (i32.const 8)
+      (i32.const 16)
      )
     )
    )
@@ -260,13 +296,13 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    (i32.const 0)
    (i32.add
     (get_local $3)
-    (i32.const 32)
+    (i32.const 48)
    )
   )
  )
  (func $_ZN5hello2hiEy (type $FUNCSIG$vij) (param $0 i32) (param $1 i64)
   (call $prints
-   (i32.const 16)
+   (i32.const 32)
   )
  )
  (func $_ZN8graphene14execute_actionI5helloS1_JyEEEbPT_MT0_FvDpT1_E (param $0 i32) (param $1 i32) (result i32)
@@ -424,9 +460,14 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
   )
   (i32.const 1)
  )
+ (func $_ZN5hello3byeEy (type $FUNCSIG$vij) (param $0 i32) (param $1 i64)
+  (call $prints
+   (i32.const 16)
+  )
+ )
  (func $malloc (param $0 i32) (result i32)
   (call $_ZN8graphene14memory_manager6mallocEm
-   (i32.const 32)
+   (i32.const 48)
    (get_local $0)
   )
  )
@@ -882,13 +923,13 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    (block $label$1
     (br_if $label$1
      (i32.eqz
-      (i32.load8_u offset=8428
+      (i32.load8_u offset=8444
        (i32.const 0)
       )
      )
     )
     (set_local $7
-     (i32.load offset=8432
+     (i32.load offset=8448
       (i32.const 0)
      )
     )
@@ -897,11 +938,11 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    (set_local $7
     (current_memory)
    )
-   (i32.store8 offset=8428
+   (i32.store8 offset=8444
     (i32.const 0)
     (i32.const 1)
    )
-   (i32.store offset=8432
+   (i32.store offset=8448
     (i32.const 0)
     (tee_local $7
      (i32.shl
@@ -952,7 +993,7 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
        )
       )
       (set_local $3
-       (i32.load offset=8432
+       (i32.load offset=8448
         (i32.const 0)
        )
       )
@@ -960,7 +1001,7 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
      (set_local $8
       (i32.const 0)
      )
-     (i32.store offset=8432
+     (i32.store offset=8448
       (i32.const 0)
       (get_local $3)
      )
@@ -1014,18 +1055,18 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
      )
      (block $label$6
       (br_if $label$6
-       (i32.load8_u offset=8428
+       (i32.load8_u offset=8444
         (i32.const 0)
        )
       )
       (set_local $3
        (current_memory)
       )
-      (i32.store8 offset=8428
+      (i32.store8 offset=8444
        (i32.const 0)
        (i32.const 1)
       )
-      (i32.store offset=8432
+      (i32.store offset=8448
        (i32.const 0)
        (tee_local $3
         (i32.shl
@@ -1093,12 +1134,12 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
        )
       )
       (set_local $6
-       (i32.load offset=8432
+       (i32.load offset=8448
         (i32.const 0)
        )
       )
      )
-     (i32.store offset=8432
+     (i32.store offset=8448
       (i32.const 0)
       (i32.add
        (get_local $6)
@@ -1358,7 +1399,7 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
     (br_if $label$1
      (i32.lt_s
       (tee_local $2
-       (i32.load offset=8416
+       (i32.load offset=8432
         (i32.const 0)
        )
       )
@@ -1366,7 +1407,7 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
      )
     )
     (set_local $3
-     (i32.const 8224)
+     (i32.const 8240)
     )
     (set_local $1
      (i32.add
@@ -1374,7 +1415,7 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
        (get_local $2)
        (i32.const 12)
       )
-      (i32.const 8224)
+      (i32.const 8240)
      )
     )
     (loop $label$2
@@ -1526,16 +1567,31 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    PUSH_TX(db, trx);
    generate_block();
 
-   // call contract
+   // call contract, action hi
    contract_call_operation op;
    op.account = alice_id;
-   char *a = "hello";
+   const char *a = "hello";
    action act {string_to_name("bob"), string_to_name("hi"), bytes(a, a+strlen(a))};
    op.act = act;
    op.fee = asset(2000);
-
    trx.clear();
    trx.operations.push_back(op);
+   set_expiration(db, trx);
+   sign(trx, alice_private_key);
+   idump((trx));
+   PUSH_TX(db, trx);
+   trx.clear();
+   generate_block();
+
+   // call contract, action bye
+   contract_call_operation op2;
+   op2.account = alice_id;
+   const char *b = "goodbye";
+   action act2 {string_to_name("bob"), string_to_name("hi"), bytes(b, b+strlen(b))};
+   op2.act = act2;
+   op2.fee = asset(2000);
+   trx.clear();
+   trx.operations.push_back(op2);
    set_expiration(db, trx);
    sign(trx, alice_private_key);
    idump((trx));
