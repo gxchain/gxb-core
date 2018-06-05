@@ -16,7 +16,7 @@ void apply_context::exec()
    // auto start = fc::time_point::now();
    try {
        auto& acnt_indx = db.get_index_type<account_index>();
-       auto account_itr = acnt_indx.indices().get<by_name>().find(receiver_name);
+       auto account_itr = acnt_indx.indices().get<by_name>().find(receiver_name.to_string());
 
        std::string wast(account_itr->code.begin(), account_itr->code.end());
        dlog("wast code: ${c}", ("c", account_itr->code));

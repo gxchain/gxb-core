@@ -70,11 +70,12 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     // FC_ASSERT(op.act.method.size() > 0);
 
     database& d = db();
+    string act_name = op.name.to_string();
     auto& acnt_indx = d.get_index_type<account_index>();
-    auto current_account_itr = acnt_indx.indices().get<by_name>().find(op.act.name);
-    FC_ASSERT(current_account_itr != acnt_indx.indices().get<by_name>().end(), "contract not found, name ${n}", ("n", op.act.name));
-    FC_ASSERT(current_account_itr->code.size() > 0, "contract has no code, name ${n}", ("n", op.act.name));
-    FC_ASSERT(current_account_itr->abi.size() > 0, "contract has no abi, name ${n}", ("n", op.act.name));
+    auto current_account_itr = acnt_indx.indices().get<by_name>().find(act_name);
+    FC_ASSERT(current_account_itr != acnt_indx.indices().get<by_name>().end(), "contract not found, name ${n}", ("n", act_name));
+    FC_ASSERT(current_account_itr->code.size() > 0, "contract has no code, name ${n}", ("n", act_name));
+    FC_ASSERT(current_account_itr->abi.size() > 0, "contract has no abi, name ${n}", ("n", act_name));
 
     acnt = &(*current_account_itr);
 
@@ -83,10 +84,10 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 
 void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 { try {
-    dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.act.name)("m", op.act.account)("d", op.act.data));
+    dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.act.name.to_string())("m", op.act.account.to_string())("d", op.act.data));
     dlog("contract_call_evaluator do_apply");
 
-    action a{op.account, op.act.name, {}};
+    action a{op.account, op.name, {}};
     apply_context ctx{db(), a};
     ctx.exec();
 

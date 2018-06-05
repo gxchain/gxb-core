@@ -25,8 +25,8 @@ namespace graphene { namespace chain {
     *  were properly declared when it executes.
     */
    struct action {
-      uint64_t                 account;
-      uint64_t                 name;
+      account_name             account;
+      action_name              name;
       bytes                    data;
 
       action(){}
