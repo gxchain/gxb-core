@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    deploy_op.vm_version = "0";
    deploy_op.code = graphene::chain::wast_to_wasm(wast_code);
    deploy_op.code_version = fc::sha256::hash(wast_code, (uint32_t) strlen(wast_code));
-   deploy_op.abi = "abi";
+   deploy_op.abi = {'a', 'b', 'i'};
    deploy_op.fee = asset(2000);
    trx.clear();
    trx.operations.push_back(deploy_op);
