@@ -1029,8 +1029,7 @@ class wallet_api
        * @param account this account use to deploy contract
        * @param vm_type vm_type
        * @param vm_version vm_version
-       * @param code_file_path code_file_path
-       * @param abi_file_path abi_file_path
+       * @param contract_dir contract_dir
        * @param broadcast broadcast
        * @returns signed_transaction
        */
@@ -1042,7 +1041,7 @@ class wallet_api
                                       bool broadcast = false);
     
     
-    /** call contract
+    /** Call contract
      *
      * call contract
      * @param account this account use to call contract
@@ -2231,6 +2230,7 @@ FC_API( graphene::wallet::wallet_api,
         (derive_owner_keys_from_brain_key)
         (register_account)
         (deploy_contract)
+        (call_contract)
         (register_account2)
         (upgrade_account)
         (create_account_with_brain_key)
