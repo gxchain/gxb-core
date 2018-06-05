@@ -174,9 +174,9 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    // call contract
    contract_call_operation op;
    op.account = alice_id;
-   op.name = "bob";
-   op.method = "hi";
-   op.data = "hi";
+//   op.name = "bob";
+//   op.method = "hi";
+//   op.data = "hi";
    op.fee = asset(2000);
 
    trx.clear();

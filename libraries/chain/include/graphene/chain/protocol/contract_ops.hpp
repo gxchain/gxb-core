@@ -36,7 +36,7 @@ struct contract_deploy_operation : public base_operation {
     fc::string                      vm_version;
     std::vector<uint8_t>            code;
     digest_type                     code_version;
-    fc::string                      abi;
+    bytes                           abi;
 
     account_id_type fee_payer() const
     {
@@ -73,7 +73,7 @@ struct contract_call_operation : public base_operation {
     void validate() const
     {
         FC_ASSERT(fee.amount >= 0);
-        FC_ASSERT(act.data.size() > 0);
+        FC_ASSERT(act.data.size() >= 0);
     }
 
     share_type calculate_fee(const fee_parameters_type &k) const
