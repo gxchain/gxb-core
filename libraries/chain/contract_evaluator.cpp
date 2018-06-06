@@ -43,9 +43,9 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
 { try {
         dlog("contract_deploy_evaluator do_apply");
         const auto &new_acnt_object = db().create<account_object>([&](account_object &obj) {
-//            auto verify_code_version = fc::sha256::hash(obj.code);
+            auto verify_code_version = fc::sha256::hash(o.code);
 //            dlog("verify_code_version=${v}, code_version=${c}", ("v", verify_code_version)("c", o.code_version));
-//            FC_ASSERT(verify_code_version == o.code_version, "code_version verify failed");
+            FC_ASSERT(verify_code_version == o.code_version, "code_version verify failed");
             
             obj.registrar = o.account;
             obj.referrer = o.account;
