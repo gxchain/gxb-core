@@ -1265,10 +1265,10 @@ REGISTER_INTRINSICS(system_api,
 
 REGISTER_INTRINSICS(context_free_system_api,
 (abort,                void()              )
-(eosio_assert,         void(int, int)      )
-(eosio_assert_message, void(int, int, int) )
-(eosio_assert_code,    void(int, int64_t)  )
-(eosio_exit,           void(int)           )
+(gxb_assert,           void(int, int)      )
+(gxb_assert_message,   void(int, int, int) )
+(gxb_assert_code,      void(int, int64_t)  )
+(gxb_exit,             void(int)           )
 );
 
 
