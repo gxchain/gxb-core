@@ -30,6 +30,7 @@
 #include <graphene/chain/block_database.hpp>
 #include <graphene/chain/genesis_state.hpp>
 #include <graphene/chain/evaluator.hpp>
+#include <graphene/chain/wasm_interface.hpp>
 
 #include <graphene/db/object_database.hpp>
 #include <graphene/db/object.hpp>
@@ -421,6 +422,10 @@ namespace graphene { namespace chain {
          vector<std::reference_wrapper<const typename Index::object_type>> sort_votable_objects(size_t count)const;
 
          //////////////////// db_block.cpp ////////////////////
+
+       public:
+         wasm_interface                 wasmif;
+         const wasm_interface& get_wasm_interface() { return wasmif; }
 
        public:
          // these were formerly private, but they have a fairly well-defined API, so let's make them public
