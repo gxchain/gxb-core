@@ -1,7 +1,7 @@
 #pragma once
 
 static const char contract_test_wast_code[] = R"=====(
-module
+(module
  (type $FUNCSIG$vij (func (param i32 i64)))
  (type $FUNCSIG$v (func))
  (type $FUNCSIG$j (func (result i64)))
