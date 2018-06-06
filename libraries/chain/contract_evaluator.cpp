@@ -30,6 +30,11 @@ namespace graphene { namespace chain {
 void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operation &op)
 { try {
         dlog("contract_deploy_evaluator do_evaluator");
+        auto verify_code_version = fc::sha256::hash(op.code);
+        FC_ASSERT(verify_code_version == op.code_version,
+                "code_version verify failed, target code_version=${t}, actual code_version=${a}",
+                ("t", op.code_version)("a", verify_code_version));
+        
         database &d = db();
         auto &acnt_indx = d.get_index_type<account_index>();
         if (op.name.size()) {
@@ -43,10 +48,6 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
 { try {
         dlog("contract_deploy_evaluator do_apply");
         const auto &new_acnt_object = db().create<account_object>([&](account_object &obj) {
-            auto verify_code_version = fc::sha256::hash(o.code);
-//            dlog("verify_code_version=${v}, code_version=${c}", ("v", verify_code_version)("c", o.code_version));
-            FC_ASSERT(verify_code_version == o.code_version, "code_version verify failed");
-            
             obj.registrar = o.account;
             obj.referrer = o.account;
             obj.lifetime_referrer = o.account;
