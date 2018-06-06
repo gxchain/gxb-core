@@ -786,7 +786,7 @@ namespace graphene { namespace chain { namespace wasm_injections {
             // initialize static fields of injectors
             injector_utils::init( mod );
             // checktime_injection::init();
-            // call_depth_check::init();
+            call_depth_check::init();
          }
 
          void inject() {

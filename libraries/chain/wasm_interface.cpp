@@ -103,6 +103,52 @@ class action_api : public context_aware_api {
       }
 };
 
+class context_free_system_api : public context_aware_api
+{
+  public:
+    explicit context_free_system_api(apply_context &ctx)
+        : context_aware_api(ctx, true) {}
+
+    void abort()
+    {
+        edump(("abort() called"));
+        FC_ASSERT(false, "abort() called");
+    }
+
+    void gxb_assert(bool condition, null_terminated_ptr msg)
+    {
+        if (BOOST_UNLIKELY(!condition)) {
+            std::string message(msg);
+            edump((message));
+            GRAPHENE_THROW(graphene_assert_message_exception, "assertion failure with message: ${s}", ("s", message));
+        }
+    }
+
+    void gxb_assert_message(bool condition, array_ptr<const char> msg, size_t msg_len)
+    {
+        if (BOOST_UNLIKELY(!condition)) {
+            std::string message(msg, msg_len);
+            edump((message));
+            GRAPHENE_THROW(graphene_assert_message_exception, "assertion failure with message: ${s}", ("s", message));
+        }
+    }
+
+    void gxb_assert_code(bool condition, uint64_t error_code)
+    {
+        if (BOOST_UNLIKELY(!condition)) {
+            edump((error_code));
+            GRAPHENE_THROW(graphene_assert_code_exception,
+                      "assertion failure with error code: ${error_code}", ("error_code", error_code));
+        }
+    }
+
+    void gxb_exit(int32_t code)
+    {
+        throw wasm_exit{code};
+    }
+
+};
+
 #define DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(IDX, TYPE)\
       int db_##IDX##_store( uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, const TYPE& secondary ) {\
          return context.IDX.store( scope, table, payer, id, secondary );\
@@ -1216,6 +1262,15 @@ REGISTER_INTRINSICS(system_api,
 (current_time, int64_t()       )
 // (publication_time,   int64_t() )
 );
+
+REGISTER_INTRINSICS(context_free_system_api,
+(abort,                void()              )
+(eosio_assert,         void(int, int)      )
+(eosio_assert_message, void(int, int, int) )
+(eosio_assert_code,    void(int, int64_t)  )
+(eosio_exit,           void(int)           )
+);
+
 
 REGISTER_INTRINSICS(action_api,
 (read_action_data,       int(int, int)  )

@@ -32,6 +32,8 @@
       FC_THROW_EXCEPTION( exc_type, FORMAT, __VA_ARGS__ );            \
    FC_MULTILINE_MACRO_END
 
+#define GRAPHENE_THROW( exc_type, FORMAT, ... ) \
+    throw exc_type( FC_LOG_MESSAGE( error, FORMAT, __VA_ARGS__ ) );
 
 #define GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( op_name )                \
    FC_DECLARE_DERIVED_EXCEPTION(                                      \
@@ -112,6 +114,13 @@ namespace graphene { namespace chain {
    FC_DECLARE_DERIVED_EXCEPTION( wasm_execution_error,              graphene::chain::wasm_exception, 3070002, "Runtime Error Processing WASM" )
    FC_DECLARE_DERIVED_EXCEPTION( wasm_serialization_error,          graphene::chain::wasm_exception, 3070003, "Serialization Error Processing WASM" )
    FC_DECLARE_DERIVED_EXCEPTION( overlapping_memory_error,          graphene::chain::wasm_exception, 3070004, "memcpy with overlapping memory" )
+
+   FC_DECLARE_DERIVED_EXCEPTION( action_validate_exception,         graphene::chain::chain_exception, 3070005, "action exception" )
+   FC_DECLARE_DERIVED_EXCEPTION( account_name_exists_exception,     graphene::chain::action_validate_exception, 3070006, "account name already exists" )
+   FC_DECLARE_DERIVED_EXCEPTION( invalid_action_args_exception,     graphene::chain::action_validate_exception, 3070007, "Invalid Action Arguments" )
+   FC_DECLARE_DERIVED_EXCEPTION( graphene_assert_message_exception, graphene::chain::action_validate_exception, 3070008, "graphene_assert_message assertion failure" )
+   FC_DECLARE_DERIVED_EXCEPTION( graphene_assert_code_exception,    graphene::chain::action_validate_exception, 3070009, "graphene_assert_code assertion failure" )
+
 
    FC_DECLARE_DERIVED_EXCEPTION( resource_exhausted_exception, chain_exception, 3080000, "resource exhausted exception" )
    FC_DECLARE_DERIVED_EXCEPTION( ram_usage_exceeded, resource_exhausted_exception, 3080001, "account using more than allotted RAM usage" )
