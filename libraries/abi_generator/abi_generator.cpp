@@ -139,12 +139,7 @@ bool abi_generator::inspect_type_methods_for_actions(const Decl* decl) { try {
   };
 
   const auto export_methods = [&export_method](const CXXRecordDecl* rec_decl) {
-
-
     auto export_methods_impl = [&export_method](const CXXRecordDecl* rec_decl, auto& ref) -> void {
-
-
-      auto tmp = rec_decl->bases();
       auto rec_name = rec_decl->getName().str();
 
       rec_decl->forallBases([&ref](const CXXRecordDecl* base) -> bool {

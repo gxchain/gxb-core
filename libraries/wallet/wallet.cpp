@@ -73,6 +73,7 @@
     #include <graphene/debug_witness/debug_api.hpp>
     #include <graphene/chain/wast_to_wasm.hpp>
     #include <graphene/chain/abi_def.hpp>
+    #include <graphene/chain/protocol/name.hpp>
     #include <fc/smart_ref_impl.hpp>
 
     #ifndef WIN32
@@ -1019,9 +1020,10 @@
                       contract_call_operation contract_call_op;
                       contract_call_op.account = account_id;
 //                      contract_call_op.fee = 0;
-                      contract_call_op.act.account = contract;
-                      contract_call_op.act.name = method;
+                      contract_call_op.act.account = string_to_name(contract.c_str());
+                      contract_call_op.act.name = string_to_name(method.c_str());
                       contract_call_op.act.data = {};//TODO fixme
+                      wlog("account=${acc}", ("acc", uint64_t(contract_call_op.act.account)));
 //                      contract_call_op.act.data = arg;
 //                      fc::variant action_args_var = fc::json::from_string(arg, fc::json::relaxed_parser);
 //                      contract_call_op.extensions;

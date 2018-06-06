@@ -89,10 +89,6 @@ namespace graphene { namespace chain {
    using                               fc::ecc::commitment_type;
 
    using bytes              = std::vector<char>;
-   using account_name       = name;
-   using action_name        = name;
-   using scope_name         = name;
-   using table_name         = name;
 
    struct void_t{};
    
