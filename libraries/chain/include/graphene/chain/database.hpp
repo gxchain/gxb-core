@@ -425,7 +425,6 @@ namespace graphene { namespace chain {
 
        public:
          wasm_interface                 wasmif;
-//         const wasm_interface& get_wasm_interface() { return wasmif; }
 
        public:
          // these were formerly private, but they have a fairly well-defined API, so let's make them public

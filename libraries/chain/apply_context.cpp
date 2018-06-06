@@ -17,22 +17,19 @@ void apply_context::exec()
    try {
        auto& acnt_indx = db.get_index_type<account_index>();
        auto account_itr = acnt_indx.indices().get<by_name>().find(receiver.to_string());
-       dlog("receiver: ${r}", ("r", receiver.to_string()));
-       // dlog("wast code: ${c}", ("c", account_itr->code));
+       dlog("contract receiver: ${r}", ("r", receiver.to_string()));
        auto wasm_bytes = bytes(account_itr->code.begin(), account_itr->code.end());
        try {
            wasm_interface &wasm = const_cast<wasm_interface&>(db.wasmif);
-           // wasm_interface(graphene::chain::wasm_interface::vm_type::binaryen).apply(account_itr->code_version, wasm_bytes, *this);
            wasm.apply(account_itr->code_version, wasm_bytes, *this);
        } catch (const wasm_exit&) {}
-       dlog("wasm exec success");
    } FC_CAPTURE_AND_RETHROW((_pending_console_output.str()));
 
 
    auto console = _pending_console_output.str();
    dlog("CONSOLE OUTPUT BEGIN =====================\n"
            + console + "\n"
-           + " CONSOLE OUTPUT END   =====================" );
+           + " CONSOLE OUTPUT END =====================" );
 
    reset_console();
    auto end = fc::time_point::now();
