@@ -168,6 +168,7 @@ class apply_context {
           : act(a)
           , db(d)
           , receiver(a.account)
+          , wasm_if(graphene::chain::wasm_interface::vm_type::binaryen)
       {
         reset_console();
       }
@@ -176,6 +177,7 @@ class apply_context {
       const action&       act; ///< message being applied
       const database&     db;
       account_name        receiver;
+      wasm_interface      wasm_if;
 
 
    private:
@@ -184,6 +186,7 @@ class apply_context {
    /// Execution methods:
    public:
       void exec();
+      wasm_interface& get_wasm_interface();
 
    /// Database methods:
    public:
