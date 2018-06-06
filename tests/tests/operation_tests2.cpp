@@ -1555,7 +1555,8 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    deploy_op.name = "bob";
    deploy_op.vm_type = "0";
    deploy_op.vm_version = "0";
-   deploy_op.code = graphene::chain::wast_to_wasm(wast_code);
+   auto wasm = graphene::chain::wast_to_wasm(wast_code);
+   deploy_op.code = bytes(wasm.begin(), wasm.end());
    deploy_op.code_version = fc::sha256::hash(wast_code, (uint32_t)strlen(wast_code));
    const char *abi = "abi";
    deploy_op.abi = bytes(abi, abi+strlen(abi));
@@ -1571,7 +1572,7 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    contract_call_operation op;
    op.account = alice_id;
    const char *a = "hello";
-   action act {string_to_name("bob"), string_to_name("hi"), bytes(a, a+strlen(a))};
+   action act {N(bob), N(hi), bytes(a, a+strlen(a))};
    op.act = act;
    op.fee = asset(2000);
    trx.clear();
