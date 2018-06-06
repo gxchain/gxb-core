@@ -71,6 +71,7 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
 void_result contract_call_evaluator::do_evaluate(const contract_call_operation &op)
 { try {
     dlog("contract_call_evaluator do_evaluator");
+    idump((op.act));
     // FC_ASSERT(op.act.name.size() > 0);
     // FC_ASSERT(op.act.method.size() > 0);
 
@@ -82,6 +83,7 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     FC_ASSERT(current_account_itr->code.size() > 0, "contract has no code, name ${n}", ("n", act_name));
     FC_ASSERT(current_account_itr->abi.size() > 0, "contract has no abi, name ${n}", ("n", act_name));
 
+    // contract object
     acnt = &(*current_account_itr);
 
     return void_result();
@@ -89,15 +91,11 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 
 void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 { try {
-    idump((op.act));
     dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.act.account.to_string())("m", op.act.name.to_string())("d", op.act.data));
-    dlog("contract_call_evaluator do_apply");
-
     action a{op.account, op.act.name, {}};
     apply_context ctx{db(), op.act};
     ctx.exec();
 
-    dlog("contract_call_evaluator do_apply success");
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
