@@ -43,6 +43,10 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
 { try {
         dlog("contract_deploy_evaluator do_apply");
         const auto &new_acnt_object = db().create<account_object>([&](account_object &obj) {
+//            auto verify_code_version = fc::sha256::hash(obj.code);
+//            dlog("verify_code_version=${v}, code_version=${c}", ("v", verify_code_version)("c", o.code_version));
+//            FC_ASSERT(verify_code_version == o.code_version, "code_version verify failed");
+            
             obj.registrar = o.account;
             obj.referrer = o.account;
             obj.lifetime_referrer = o.account;
@@ -51,7 +55,7 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
             obj.network_fee_percentage = params.network_percent_of_fee;
             obj.lifetime_referrer_fee_percentage = params.lifetime_referrer_percent_of_fee;
             obj.referrer_rewards_percentage = 0;
-
+            
             obj.name = o.name;
             obj.vm_type = o.vm_type;
             obj.vm_version = o.vm_version;
