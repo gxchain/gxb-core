@@ -15,14 +15,15 @@ void apply_context::exec()
 {
    auto start = fc::time_point::now();
    try {
-       auto& acnt_indx = d.get_index_type<account_index>();
+       auto& acnt_indx = db.get_index_type<account_index>();
        auto account_itr = acnt_indx.indices().get<by_name>().find(receiver.to_string());
        dlog("receiver: ${r}", ("r", receiver.to_string()));
        // dlog("wast code: ${c}", ("c", account_itr->code));
        auto wasm_bytes = bytes(account_itr->code.begin(), account_itr->code.end());
        try {
+           wasm_interface &wasm = const_cast<wasm_interface&>(db.wasmif);
            // wasm_interface(graphene::chain::wasm_interface::vm_type::binaryen).apply(account_itr->code_version, wasm_bytes, *this);
-           d.get_wasm_interface().apply(account_itr->code_version, wasm_bytes, *this);
+           wasm.apply(account_itr->code_version, wasm_bytes, *this);
        } catch (const wasm_exit&) {}
        dlog("wasm exec success");
    } FC_CAPTURE_AND_RETHROW((_pending_console_output.str()));
