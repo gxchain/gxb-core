@@ -988,8 +988,8 @@
                contract_deploy_op.account = creator_account_id;
                contract_deploy_op.vm_type = vm_type;
                contract_deploy_op.vm_version = vm_version;
-               contract_deploy_op.code = wasm;
-               contract_deploy_op.abi = abi;
+               contract_deploy_op.code = bytes(wasm.begin(), wasm.end());
+               contract_deploy_op.abi = bytes(abi.begin(), abi.end());
 
                signed_transaction tx;
 

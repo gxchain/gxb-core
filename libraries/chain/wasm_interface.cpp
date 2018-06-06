@@ -760,7 +760,7 @@ class memory_api : public context_aware_api
     char *memcpy(array_ptr<char> dest, array_ptr<const char> src, size_t length)
     {
         GRAPHENE_ASSERT((std::abs((ptrdiff_t) dest.value - (ptrdiff_t) src.value)) >= length,
-                   overlapping_memory_error, "memcpy can only accept non-aliasing pointers");
+                overlapping_memory_error, "memcpy can only accept non-aliasing pointers");
         return (char *) ::memcpy(dest, src, length);
     }
 
@@ -774,14 +774,15 @@ class memory_api : public context_aware_api
         int ret = ::memcmp(dest, src, length);
         if (ret < 0)
             return -1;
-         if(ret > 0)
+        if(ret > 0)
             return 1;
-         return 0;
-      }
+        return 0;
+    }
 
-      char* memset( array_ptr<char> dest, int value, size_t length ) {
-         return (char *)::memset( dest, value, length );
-      }
+    char *memset(array_ptr<char> dest, int value, size_t length)
+    {
+        return (char *)::memset( dest, value, length );
+    }
 };
 
 class compiler_builtins : public context_aware_api {

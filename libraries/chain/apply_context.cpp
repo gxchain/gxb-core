@@ -13,26 +13,28 @@ namespace graphene { namespace chain {
 
 void apply_context::exec()
 {
-   // auto start = fc::time_point::now();
+   auto start = fc::time_point::now();
    try {
        auto& acnt_indx = db.get_index_type<account_index>();
-       auto account_itr = acnt_indx.indices().get<by_name>().find(receiver_name.to_string());
-
-       std::string wast(account_itr->code.begin(), account_itr->code.end());
-       dlog("wast code: ${c}", ("c", account_itr->code));
+       auto account_itr = acnt_indx.indices().get<by_name>().find(receiver.to_string());
+       dlog("receiver: ${r}", ("r", receiver.to_string()));
+       // dlog("wast code: ${c}", ("c", account_itr->code));
        auto wasm_bytes = bytes(account_itr->code.begin(), account_itr->code.end());
-
-       wasm_interface(graphene::chain::wasm_interface::vm_type::binaryen).apply(account_itr->code_version, wasm_bytes, *this);
+       try {
+           wasm_interface(graphene::chain::wasm_interface::vm_type::binaryen).apply(account_itr->code_version, wasm_bytes, *this);
+       } catch (const wasm_exit&) {}
        dlog("wasm exec success");
    } FC_CAPTURE_AND_RETHROW((_pending_console_output.str()));
 
 
    auto console = _pending_console_output.str();
    dlog("CONSOLE OUTPUT BEGIN =====================\n"
-           + console
+           + console + "\n"
            + " CONSOLE OUTPUT END   =====================" );
 
    reset_console();
+   auto end = fc::time_point::now();
+   dlog("elapsed ${n}", ("n", end - start));
 }
 
 void apply_context::reset_console()

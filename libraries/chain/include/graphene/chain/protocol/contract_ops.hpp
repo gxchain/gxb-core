@@ -34,7 +34,7 @@ struct contract_deploy_operation : public base_operation {
 
     fc::string                      vm_type;
     fc::string                      vm_version;
-    std::vector<uint8_t>            code;
+    bytes                           code;
     digest_type                     code_version;
     bytes                           abi;
 
