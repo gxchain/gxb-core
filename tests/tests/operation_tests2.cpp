@@ -1555,11 +1555,7 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    deploy_op.name = "bob";
    deploy_op.vm_type = "0";
    deploy_op.vm_version = "0";
-<<<<<<< HEAD
-   vector<uint8_t> wasm = graphene::chain::wast_to_wasm(wast_code);
-=======
    auto wasm = graphene::chain::wast_to_wasm(wast_code);
->>>>>>> 612da83a0cc5a4892424dbf2bc9c54a5a1afd2b4
    deploy_op.code = bytes(wasm.begin(), wasm.end());
    deploy_op.code_version = fc::sha256::hash(wast_code, (uint32_t)strlen(wast_code));
    const char *abi = "abi";
