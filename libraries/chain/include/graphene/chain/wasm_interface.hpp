@@ -1,6 +1,5 @@
 #pragma once
 #include <graphene/chain/protocol/types.hpp>
-#include <graphene/chain/apply_context.hpp>
 #include "Runtime/Linker.h"
 #include "Runtime/Runtime.h"
 
