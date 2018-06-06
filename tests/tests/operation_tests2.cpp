@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(proxy_transfer_test)
    BOOST_REQUIRE_EQUAL(get_balance(bob_id(db), core), 8500); // 10000 - 2000 + (5000 * 10%)
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE(contract_call_test)
+BOOST_AUTO_TEST_CASE(contract_test)
 { try {
    ACTOR(alice);
 
@@ -1550,6 +1550,7 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
 )
 )=====";
    // create contract
+   BOOST_TEST_MESSAGE("contract deploy test");
    contract_deploy_operation deploy_op;
    deploy_op.account = alice_id;
    deploy_op.name = "bob";
@@ -1557,32 +1558,46 @@ BOOST_AUTO_TEST_CASE(contract_call_test)
    deploy_op.vm_version = "0";
    auto wasm = graphene::chain::wast_to_wasm(wast_code);
    deploy_op.code = bytes(wasm.begin(), wasm.end());
-   deploy_op.code_version = fc::sha256::hash(wast_code, (uint32_t)strlen(wast_code));
+   deploy_op.code_version = fc::sha256::hash(deploy_op.code);
    const char *abi = "abi";
    deploy_op.abi = bytes(abi, abi+strlen(abi));
    deploy_op.fee = asset(2000);
-   trx.clear();
    trx.operations.push_back(deploy_op);
    set_expiration(db, trx);
    sign(trx, alice_private_key);
    idump((trx));
    PUSH_TX(db, trx);
+   trx.clear();
 
    // call contract, action hi
+   BOOST_TEST_MESSAGE("contract call test, hi");
    contract_call_operation op;
    op.account = alice_id;
    const char *a = "hello";
    action act {N(bob), N(hi), bytes(a, a+strlen(a))};
    op.act = act;
-   op.fee = asset(2000);
-   trx.clear();
+   op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(op);
    trx.operations.push_back(op);
    set_expiration(db, trx);
    sign(trx, alice_private_key);
    idump((trx));
    PUSH_TX(db, trx);
    trx.clear();
-   generate_block();
+
+   // call contract, action hi
+   BOOST_TEST_MESSAGE("contract call test, bye");
+   contract_call_operation call_op;
+   call_op.account = alice_id;
+   const char *b = "bye";
+   action act2 {N(bob), N(bye), bytes(b, b+strlen(b))};
+   call_op.act = act2;
+   call_op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(call_op);
+   trx.operations.push_back(call_op);
+   set_expiration(db, trx);
+   sign(trx, alice_private_key);
+   idump((trx));
+   PUSH_TX(db, trx);
+   trx.clear();
 
 } FC_LOG_AND_RETHROW() }
 
