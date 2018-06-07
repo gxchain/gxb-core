@@ -2700,13 +2700,13 @@
           return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW( (from)(to)(amount)(asset_symbol)(memo)(broadcast) ) }
 
-       pair<transaction_id_type,signed_transaction> transfer3(string from,
-                                                              string to,
-                                                              string amount,
-                                                              string asset_symbol,
-                                                              string memo,
-                                                              string fee_asset_symbol,
-                                                              bool broadcast)
+       pair<graphene::chain::transaction_id_type,signed_transaction> transfer3(string from,
+                                                                               string to,
+                                                                               string amount,
+                                                                               string asset_symbol,
+                                                                               string memo,
+                                                                               string fee_asset_symbol,
+                                                                               bool broadcast)
        { try {
           FC_ASSERT(!self.is_locked());
           fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
@@ -2737,7 +2737,7 @@
           tx.validate();
 
           auto trx = sign_transaction(tx, broadcast);
-          return std::make_pair(trx.id(),trx);
+          return std::make_pair(trx.id(), trx);
        } FC_CAPTURE_AND_RETHROW((from)(to)(amount)(asset_symbol)(memo)(fee_asset_symbol)(broadcast)) }
 
        signed_transaction issue_asset(string to_account,
@@ -4574,13 +4574,13 @@
        return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
     }
 
-    pair<transaction_id_type,signed_transaction> wallet_api::transfer3(string from,
-                                                                       string to,
-                                                                       string amount,
-                                                                       string asset_symbol,
-                                                                       string memo,
-                                                                       string fee_asset_symbol,
-                                                                       bool broadcast)
+    pair<graphene::chain::transaction_id_type,signed_transaction> wallet_api::transfer3(string from,
+                                                                                        string to,
+                                                                                        string amount,
+                                                                                        string asset_symbol,
+                                                                                        string memo,
+                                                                                        string fee_asset_symbol,
+                                                                                        bool broadcast)
     {
        return my->transfer3(from, to, amount, asset_symbol, memo, fee_asset_symbol, broadcast);
     }
