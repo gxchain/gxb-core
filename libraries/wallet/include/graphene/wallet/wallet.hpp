@@ -1288,6 +1288,15 @@ class wallet_api
 
 
       /**
+       *  This method works just like transfer2, except it supports any asset for tx fee
+       */
+      pair<transaction_id_type,signed_transaction> transfer3(string from,
+                                                             string to,
+                                                             string amount,
+                                                             string asset_symbol,
+                                                             string memo,
+                                                             string fee_asset_symbol);
+      /**
        *  This method is used to convert a JSON transaction to its transactin ID.
        */
       transaction_id_type get_transaction_id( const signed_transaction& trx )const { return trx.id(); }
@@ -2175,6 +2184,7 @@ FC_API( graphene::wallet::wallet_api,
         (create_account_with_brain_key)
         (transfer)
         (transfer2)
+        (transfer3)
         (get_transaction_id)
         (issue_asset)
         (create_asset)

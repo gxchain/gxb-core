@@ -2700,6 +2700,40 @@
           return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW( (from)(to)(amount)(asset_symbol)(memo)(broadcast) ) }
 
+       signed_transaction transfer3(string from, string to, string amount,
+                                   string asset_symbol, string memo, string fee_asset_symbol, bool broadcast)
+       { try {
+          FC_ASSERT(!self.is_locked());
+          fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
+          FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
+          fc::optional<asset_object> fee_asset_obj = get_asset(fee_asset_symbol);
+
+          account_object from_account = get_account(from);
+          account_object to_account = get_account(to);
+          account_id_type from_id = from_account.id;
+          account_id_type to_id = get_account_id(to);
+
+          transfer_operation xfer_op;
+          xfer_op.from = from_id;
+          xfer_op.to = to_id;
+          xfer_op.amount = asset_obj->amount_from_string(amount);
+
+          if (memo.size()) {
+              xfer_op.memo = memo_data();
+              xfer_op.memo->from = from_account.options.memo_key;
+              xfer_op.memo->to = to_account.options.memo_key;
+              xfer_op.memo->set_message(get_private_key(from_account.options.memo_key),
+                                        to_account.options.memo_key, memo);
+             }
+
+          signed_transaction tx;
+          tx.operations.push_back(xfer_op);
+          set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+          tx.validate();
+
+          return sign_transaction(tx, broadcast);
+       } FC_CAPTURE_AND_RETHROW((from)(to)(amount)(asset_symbol)(memo)(fee_asset_symbol)(broadcast)) }
+
        signed_transaction issue_asset(string to_account,
                                        string amount,
                                        string symbol,
@@ -4532,6 +4566,12 @@
                                             string asset_symbol, string memo, bool broadcast /* = false */)
     {
        return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
+    }
+
+    signed_transaction wallet_api::transfer3(string from, string to, string amount,
+                                            string asset_symbol, string memo, string fee_asset_symbol, bool broadcast)
+    {
+       return my->transfer3(from, to, amount, asset_symbol, memo, fee_asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::create_asset(string issuer,
