@@ -1054,7 +1054,7 @@ class wallet_api
   signed_transaction call_contract(string account,
                                     string contract,
                                     string method,
-                                    string arg,
+                                    string args,
                                     bool broadcast = false);
 
       /** Registers a third party's account on the blockckain.
