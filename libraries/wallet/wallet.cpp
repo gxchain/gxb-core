@@ -72,7 +72,7 @@
     #include <graphene/wallet/reflect_util.hpp>
     #include <graphene/debug_witness/debug_api.hpp>
     #include <graphene/chain/wast_to_wasm.hpp>
-    #include <graphene/chain/abi_def.hpp>
+    #include <graphene/chain/abi_serializer.hpp>
     #include <graphene/chain/protocol/name.hpp>
     #include <fc/smart_ref_impl.hpp>
 
@@ -107,14 +107,14 @@
     struct operation_printer
     {
     private:
-       ostream& out;
+       std::ostream& out;
        const wallet_api_impl& wallet;
        operation_result result;
 
        std::string fee(const asset& a) const;
 
     public:
-       operation_printer( ostream& out, const wallet_api_impl& wallet, const operation_result& r = operation_result() )
+       operation_printer( std::ostream& out, const wallet_api_impl& wallet, const operation_result& r = operation_result() )
           : out(out),
             wallet(wallet),
             result(r)
@@ -464,7 +464,7 @@
           while( fc::exists(dest_path) )
           {
              ++suffix;
-             dest_path = destination_filename + "-" + to_string( suffix ) + _wallet_filename_extension;
+             dest_path = destination_filename + "-" + fc::to_string( suffix ) + _wallet_filename_extension;
           }
           wlog( "backing up wallet ${src} to ${dest}",
                 ("src", src_path)
@@ -1009,25 +1009,35 @@
        signed_transaction call_contract(string account,
                                        string contract,
                                        string method,
-                                       string arg,
+                                       string args,
                                        bool broadcast = false)
               {
                   try {
                       FC_ASSERT(!self.is_locked());
 
-                      account_object account_object = this->get_account(account);
-                      account_id_type account_id = account_object.id;
+                      account_object caller_account = this->get_account(account);
+                      account_object contract_account = this->get_account(contract);
+                      account_id_type account_id = caller_account.id;
 
                       contract_call_operation contract_call_op;
                       contract_call_op.account = account_id;
 //                      contract_call_op.fee = 0;
+//                      contract_call_op.extensions;
                       contract_call_op.act.account = string_to_name(contract.c_str());
                       contract_call_op.act.name = string_to_name(method.c_str());
-                      contract_call_op.act.data = {};//TODO fixme
-                      wlog("account=${acc}", ("acc", uint64_t(contract_call_op.act.account)));
-//                      contract_call_op.act.data = arg;
-//                      fc::variant action_args_var = fc::json::from_string(arg, fc::json::relaxed_parser);
-//                      contract_call_op.extensions;
+                      fc::variant action_args_var = fc::json::from_string(args, fc::json::relaxed_parser);
+                      abi_def abi;
+                      
+                      if (abi_serializer::to_abi(contract_account.abi, abi)) {
+                          abi_serializer abis(abi);
+                          auto action_type = abis.get_action_type(method);
+                          GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
+                          bytes x = abis.variant_to_binary(action_type, action_args_var);
+                          contract_call_op.act.data = x;
+                      } else {
+                          GRAPHENE_ASSERT(false, abi_not_found_exception, "No ABI found for ${contract}", ("contract", contract));
+                      }
+                      dlog("contract_call_op.act.data=${d}", ("d", contract_call_op.act.data));
 
                       signed_transaction tx;
 
@@ -1039,7 +1049,7 @@
                       return sign_transaction(tx, broadcast);
                   }
                   FC_CAPTURE_AND_RETHROW(
-                      (account)(contract)(method)(arg)(broadcast))
+                      (account)(contract)(method)(args)(broadcast))
               }
 
        signed_transaction register_account(string name,
@@ -4675,10 +4685,10 @@
     signed_transaction wallet_api::call_contract(string account,
                                       string contract,
                                       string method,
-                                      string arg,
+                                      string args,
                                       bool broadcast)
 {
-    return my->call_contract(account, contract, method, arg, broadcast);
+    return my->call_contract(account, contract, method, args, broadcast);
 }
 
     signed_transaction wallet_api::register_account(string name,

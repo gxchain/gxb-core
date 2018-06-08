@@ -129,8 +129,10 @@ namespace graphene { namespace chain {
    FC_DECLARE_DERIVED_EXCEPTION( tx_cpu_usage_exceeded, resource_exhausted_exception, 3080004, "transaction exceeded the current CPU usage limit imposed on the transaction" )
    FC_DECLARE_DERIVED_EXCEPTION( block_cpu_usage_exceeded, resource_exhausted_exception, 3080005, "transaction CPU usage is too much for the remaining allowable usage of the current block" )
    FC_DECLARE_DERIVED_EXCEPTION( deadline_exception, resource_exhausted_exception, 3080006, "transaction took too long" )
+   FC_DECLARE_DERIVED_EXCEPTION( abi_not_found_exception, chain_type_exception, 3010008, "No ABI found" )
    FC_DECLARE_DERIVED_EXCEPTION( leeway_deadline_exception, deadline_exception, 3081001, "transaction reached the deadline set due to leeway on account CPU limits" )
 
+   FC_DECLARE_DERIVED_EXCEPTION( action_validate_exception, chain_exception, 3050000, "action exception" )
 
    GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( transfer );
    GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( from_account_not_whitelisted, transfer, 1, "owner mismatch" )
