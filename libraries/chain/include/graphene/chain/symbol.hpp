@@ -13,14 +13,6 @@ namespace graphene {
    namespace chain {
 #define CORE_SYMBOL SY(4,SYS)
 #define CORE_SYMBOL_NAME "SYS"
-      /**
-         class symbol represents a token and contains precision and name.
-         When encoded as a uint64_t, first byte represents the number of decimals, remaining bytes
-         represent token name.
-         Name must only include upper case alphabets.
-         from_string constructs a symbol from an input a string of the form "4,EOS"
-         where the integer represents number of decimals. Number of decimals must be larger than zero.
-       */
 
       static constexpr uint64_t string_to_symbol_c(uint8_t precision, const char* str) {
          uint32_t len = 0;

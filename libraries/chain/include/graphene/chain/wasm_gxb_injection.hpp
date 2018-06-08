@@ -27,8 +27,8 @@ namespace graphene { namespace chain { namespace wasm_injections {
       static std::map<uint32_t, uint32_t>              injected_index_mapping;
       static uint32_t                                  next_injected_index;
 
-      static void init( Module& mod ) {
-         type_slots.clear();
+      static void init( Module& mod ) { 
+         type_slots.clear(); 
          registered_injected.clear();
          injected_index_mapping.clear();
          build_type_slots( mod );
@@ -42,7 +42,7 @@ namespace graphene { namespace chain { namespace wasm_injections {
             for ( auto param : mod.types[i]->parameters )
                type_slot_list.push_back( static_cast<uint16_t>(param) );
             type_slots.emplace( type_slot_list, i );
-         }
+         } 
       }
 
       template <ResultType Result, ValueType... Params>
@@ -74,8 +74,8 @@ namespace graphene { namespace chain { namespace wasm_injections {
             registered_injected.emplace( func_name, index );
             decltype(module.functions.imports) new_import = { {{func_type_index}, GXB_INJECTED_MODULE_NAME, std::move(func_name)} };
             // prepend to the head of the imports
-            module.functions.imports.insert( module.functions.imports.begin()+(registered_injected.size()-1), new_import.begin(), new_import.end() );
-            injected_index_mapping.emplace( index, actual_index );
+            module.functions.imports.insert( module.functions.imports.begin()+(registered_injected.size()-1), new_import.begin(), new_import.end() ); 
+            injected_index_mapping.emplace( index, actual_index ); 
 
             // shift all exported functions by 1
             for ( int i=0; i < module.exports.size(); i++ ) {
@@ -100,7 +100,7 @@ namespace graphene { namespace chain { namespace wasm_injections {
          }
       }
    };
-
+   
    struct noop_injection_visitor {
       static void inject( IR::Module& m );
       static void initializer();
@@ -115,7 +115,7 @@ namespace graphene { namespace chain { namespace wasm_injections {
       static void inject( IR::Module& m );
       static void initializer();
    };
-
+   
    struct tables_injection_visitor {
       static void inject( IR::Module& m );
       static void initializer();
@@ -138,8 +138,8 @@ namespace graphene { namespace chain { namespace wasm_injections {
 
    using wasm_validate_func = std::function<void(IR::Module&)>;
 
-
-   // just pass
+  
+   // just pass 
    struct no_injections_injectors {
       static void inject( IR::Module& m ) {}
    };
@@ -159,10 +159,10 @@ namespace graphene { namespace chain { namespace wasm_injections {
    struct instruction_counter {
       static constexpr bool kills = false;
       static constexpr bool post = false;
-      static void init() {
-         icnt=0;
-         tcnt=0;
-         bcnt=0;
+      static void init() { 
+         icnt=0; 
+         tcnt=0; 
+         bcnt=0; 
          while ( !fcnts.empty() )
             fcnts.pop();
       }
@@ -173,7 +173,7 @@ namespace graphene { namespace chain { namespace wasm_injections {
       static uint32_t icnt; /* instructions so far */
       static uint32_t tcnt; /* total instructions */
       static uint32_t bcnt; /* total instructions from block types */
-      static std::queue<uint32_t> fcnts;
+      static std::queue<uint32_t> fcnts; 
    };
 
    struct checktime_block_type {
@@ -183,7 +183,7 @@ namespace graphene { namespace chain { namespace wasm_injections {
       while( !x.empty() ) \
          x.pop()
 
-      static void init() {
+      static void init() { 
          CLEAR(block_stack);
          CLEAR(type_stack);
          CLEAR(orderings);
@@ -209,7 +209,7 @@ namespace graphene { namespace chain { namespace wasm_injections {
       static constexpr bool post = false;
       static void init() {}
       static void accept( wasm_ops::instr* inst, wasm_ops::visitor_arg& arg ) {
-         if ( checktime_block_type::type_stack.empty() )
+         if ( checktime_block_type::type_stack.empty() ) 
             return;
          if ( !checktime_block_type::type_stack.top() ) { // empty or is not a loop
             checktime_block_type::block_stack.pop();
@@ -246,7 +246,7 @@ namespace graphene { namespace chain { namespace wasm_injections {
       static void accept( wasm_ops::instr* inst, wasm_ops::visitor_arg& arg ) {
          auto mapped_index = injector_utils::injected_index_mapping.find(chktm_idx);
 
-         wasm_ops::op_types<>::call_t chktm;
+         wasm_ops::op_types<>::call_t chktm; 
          chktm.field = mapped_index->second;
          chktm.pack(arg.new_code);
       }
@@ -272,11 +272,11 @@ namespace graphene { namespace chain { namespace wasm_injections {
       }
 
    };
-
+   
    struct call_depth_check {
       static constexpr bool kills = true;
       static constexpr bool post = false;
-      static int32_t global_idx;
+      static int32_t global_idx; 
       static void init() {
          global_idx = -1;
       }
@@ -291,15 +291,15 @@ namespace graphene { namespace chain { namespace wasm_injections {
          injector_utils::add_import<ResultType::none>(*(arg.module), "call_depth_assert", assert_idx);
 
          wasm_ops::op_types<>::call_t call_assert;
-         wasm_ops::op_types<>::get_global_t get_global_inst;
+         wasm_ops::op_types<>::get_global_t get_global_inst; 
          wasm_ops::op_types<>::set_global_t set_global_inst;
 
-         wasm_ops::op_types<>::i32_eqz_t eqz_inst;
-         wasm_ops::op_types<>::i32_const_t const_inst;
+         wasm_ops::op_types<>::i32_eqz_t eqz_inst; 
+         wasm_ops::op_types<>::i32_const_t const_inst; 
          wasm_ops::op_types<>::i32_add_t add_inst;
          wasm_ops::op_types<>::end_t end_inst;
-         wasm_ops::op_types<>::if__t if_inst;
-         wasm_ops::op_types<>::else__t else_inst;
+         wasm_ops::op_types<>::if__t if_inst; 
+         wasm_ops::op_types<>::else__t else_inst; 
 
          call_assert.field = assert_idx;
          get_global_inst.field = global_idx;
@@ -682,8 +682,8 @@ namespace graphene { namespace chain { namespace wasm_injections {
    struct pre_op_injectors : wasm_ops::op_types<pass_injector> {
       using call_t            = wasm_ops::call                    <call_depth_check>;
       using call_indirect_t   = wasm_ops::call_indirect           <call_depth_check>;
-
-      // float binops
+      
+      // float binops 
       using f32_add_t         = wasm_ops::f32_add                 <f32_binop_injector<wasm_ops::f32_add_code>>;
       using f32_sub_t         = wasm_ops::f32_sub                 <f32_binop_injector<wasm_ops::f32_sub_code>>;
       using f32_div_t         = wasm_ops::f32_div                 <f32_binop_injector<wasm_ops::f32_div_code>>;
@@ -707,7 +707,7 @@ namespace graphene { namespace chain { namespace wasm_injections {
       using f32_gt_t          = wasm_ops::f32_gt                  <f32_relop_injector<wasm_ops::f32_gt_code>>;
       using f32_ge_t          = wasm_ops::f32_ge                  <f32_relop_injector<wasm_ops::f32_ge_code>>;
 
-      // float binops
+      // float binops 
       using f64_add_t         = wasm_ops::f64_add                 <f64_binop_injector<wasm_ops::f64_add_code>>;
       using f64_sub_t         = wasm_ops::f64_sub                 <f64_binop_injector<wasm_ops::f64_sub_code>>;
       using f64_div_t         = wasm_ops::f64_div                 <f64_binop_injector<wasm_ops::f64_div_code>>;
@@ -735,7 +735,7 @@ namespace graphene { namespace chain { namespace wasm_injections {
       using f64_promote_f32_t = wasm_ops::f64_promote_f32         <f32_promote_injector>;
       using f32_demote_f64_t  = wasm_ops::f32_demote_f64          <f64_demote_injector>;
 
-
+      
       using i32_trunc_s_f32_t = wasm_ops::i32_trunc_s_f32         <f32_trunc_i32_injector<wasm_ops::i32_trunc_s_f32_code>>;
       using i32_trunc_u_f32_t = wasm_ops::i32_trunc_u_f32         <f32_trunc_i32_injector<wasm_ops::i32_trunc_u_f32_code>>;
       using i32_trunc_s_f64_t = wasm_ops::i32_trunc_s_f64         <f64_trunc_i32_injector<wasm_ops::i32_trunc_s_f64_code>>;
@@ -744,7 +744,7 @@ namespace graphene { namespace chain { namespace wasm_injections {
       using i64_trunc_u_f32_t = wasm_ops::i64_trunc_u_f32         <f32_trunc_i64_injector<wasm_ops::i64_trunc_u_f32_code>>;
       using i64_trunc_s_f64_t = wasm_ops::i64_trunc_s_f64         <f64_trunc_i64_injector<wasm_ops::i64_trunc_s_f64_code>>;
       using i64_trunc_u_f64_t = wasm_ops::i64_trunc_u_f64         <f64_trunc_i64_injector<wasm_ops::i64_trunc_u_f64_code>>;
-
+   
       using f32_convert_s_i32 = wasm_ops::f32_convert_s_i32       <i32_convert_f32_injector<wasm_ops::f32_convert_s_i32_code>>;
       using f32_convert_s_i64 = wasm_ops::f32_convert_s_i64       <i64_convert_f32_injector<wasm_ops::f32_convert_s_i64_code>>;
       using f32_convert_u_i32 = wasm_ops::f32_convert_u_i32       <i32_convert_f32_injector<wasm_ops::f32_convert_u_i32_code>>;
@@ -775,24 +775,24 @@ namespace graphene { namespace chain { namespace wasm_injections {
          }
       }
    };
-
-   // inherit from this class and define your own injectors
+ 
+   // inherit from this class and define your own injectors 
    class wasm_binary_injection {
       using standard_module_injectors = module_injectors< max_memory_injection_visitor >;
 
       public:
-         wasm_binary_injection( IR::Module& mod )  : _module( &mod ) {
+         wasm_binary_injection( IR::Module& mod )  : _module( &mod ) { 
             _module_injectors.init();
             // initialize static fields of injectors
             injector_utils::init( mod );
-            // checktime_injection::init();
+            checktime_injection::init();
             call_depth_check::init();
          }
 
          void inject() {
             _module_injectors.inject( *_module );
             // inject checktime first
-            // injector_utils::add_import<ResultType::none>( *_module, u8"checktime", checktime_injection::chktm_idx );
+            injector_utils::add_import<ResultType::none>( *_module, u8"checktime", checktime_injection::chktm_idx );
 
             for ( auto& fd : _module->functions.defs ) {
                wasm_ops::GRAPHENE_OperatorDecoderStream<pre_op_injectors> pre_decoder(fd.code);
@@ -816,9 +816,9 @@ namespace graphene { namespace chain { namespace wasm_injections {
                wasm_ops::GRAPHENE_OperatorDecoderStream<post_op_injectors> post_decoder(fd.code);
                wasm_ops::instruction_stream post_code(fd.code.size()*2);
 
-               // wasm_ops::op_types<>::call_t chktm;
-               // chktm.field = injector_utils::injected_index_mapping.find(checktime_injection::chktm_idx)->second;
-               // chktm.pack(&post_code);
+               wasm_ops::op_types<>::call_t chktm; 
+               chktm.field = injector_utils::injected_index_mapping.find(checktime_injection::chktm_idx)->second;
+               chktm.pack(&post_code);
 
                while ( post_decoder ) {
                   auto op = post_decoder.decodeOp();

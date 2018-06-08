@@ -1,9 +1,10 @@
 #include <graphene/chain/wasm_interface.hpp>
-#include <graphene/chain/exceptions.hpp>
-#include <boost/core/ignore_unused.hpp>
+#include <graphene/chain/apply_context.hpp>
+#include <graphene/chain/transaction_context.hpp>
 #include <graphene/chain/wasm_interface_private.hpp>
 #include <graphene/chain/wasm_gxb_validation.hpp>
 #include <graphene/chain/wasm_gxb_injection.hpp>
+#include <graphene/chain/exceptions.hpp>
 
 #include <fc/exception/exception.hpp>
 #include <fc/crypto/sha256.hpp>
@@ -15,6 +16,7 @@
 #include <compiler_builtins.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include <boost/core/ignore_unused.hpp>
 #include <fstream>
 
 namespace graphene { namespace chain {
@@ -48,7 +50,7 @@ namespace graphene { namespace chain {
 	   }
 
    void wasm_interface::apply( const digest_type& code_id, const bytes& code, apply_context& context ) {
-      my->get_instantiated_module(code_id, code)->apply(context);
+      my->get_instantiated_module(code_id, code, context.trx_context)->apply(context);
    }
 
    wasm_instantiated_module_interface::~wasm_instantiated_module_interface() {}
@@ -63,6 +65,10 @@ class context_aware_api {
       context_aware_api(apply_context& ctx, bool context_free = false )
       :context(ctx)
       {
+      }
+
+      void checktime() {
+          context.trx_context.checktime();
       }
 
    protected:
@@ -1320,6 +1326,10 @@ REGISTER_INTRINSICS( database_api,
    // DB_SECONDARY_INDEX_METHODS_ARRAY(idx256)
    // DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_double)
    // DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_long_double)
+);
+
+REGISTER_INJECTED_INTRINSICS(transaction_context,
+(checktime,      void())
 );
 
 REGISTER_INTRINSICS(compiler_builtins,
