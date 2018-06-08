@@ -9,7 +9,7 @@
 #include <sstream>
 
 #include <graphene/chain/abi_serializer.hpp>
-#include <graphene/chain/protocol/types.hpp>
+//#include <graphene/chain/protocol/types.hpp>
 #include <fc/io/json.hpp>
 
 //clashes with something deep in the AST includes in clang 6 and possibly other versions of clang
