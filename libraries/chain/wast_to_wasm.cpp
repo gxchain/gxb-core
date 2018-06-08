@@ -11,10 +11,10 @@
 
 namespace graphene { namespace chain {
 
-   std::vector<uint8_t> wast_to_wasm( const std::string& wast )
-   {
+   std::vector<uint8_t> wast_to_wasm( const std::string& wast ) 
+   { 
       std::stringstream ss;
-
+      
       try {
       IR::Module module;
       std::vector<WAST::Error> parse_errors;

@@ -11,6 +11,7 @@
 #include <iterator>
 #include <memory>
 #include <fc/optional.hpp>
+#include <fc/exception/exception.hpp>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -53,7 +54,7 @@ struct instr;
 using namespace fc;
 using wasm_op_ptr   = std::unique_ptr<instr>;
 using wasm_instr_ptr      = std::shared_ptr<instr>;
-using wasm_return_t       = std::vector<uint8_t>;
+using wasm_return_t       = std::vector<uint8_t>; 
 using wasm_instr_callback = std::function<std::vector<wasm_instr_ptr>(uint8_t)>;
 using code_vector         = std::vector<uint8_t>;
 using code_iterator       = std::vector<uint8_t>::iterator;
@@ -105,7 +106,7 @@ inline void pack( instruction_stream* stream, uint32_t field ) {
    stream->set(sizeof(packed), packed);
 }
 inline void pack( instruction_stream* stream, uint64_t field ) {
-   const char packed[] = { char(field), char(field >> 8), char(field >> 16), char(field >> 24),
+   const char packed[] = { char(field), char(field >> 8), char(field >> 16), char(field >> 24), 
                            char(field >> 32), char(field >> 40), char(field >> 48), char(field >> 56) };
    stream->set(sizeof(packed), packed);
 }
@@ -118,15 +119,15 @@ inline void pack( instruction_stream* stream,  memoryoptype field ) {
    stream->set(sizeof(packed), packed);
 }
 inline void pack( instruction_stream* stream, memarg field ) {
-   const char packed[] = { char(field.a), char(field.a >> 8), char(field.a >> 16), char(field.a >> 24),
+   const char packed[] = { char(field.a), char(field.a >> 8), char(field.a >> 16), char(field.a >> 24), 
                            char(field.o), char(field.o >> 8), char(field.o >> 16), char(field.o >> 24)};
    stream->set(sizeof(packed), packed);
 
 }
 inline void pack( instruction_stream* stream, branchtabletype field ) {
-   const char packed[] = { char(field.target_depth), char(field.target_depth >> 8), char(field.target_depth >> 16), char(field.target_depth >> 24),
-            char(field.target_depth >> 32), char(field.target_depth >> 40), char(field.target_depth >> 48), char(field.target_depth >> 56),
-            char(field.table_index), char(field.table_index >> 8), char(field.table_index >> 16), char(field.table_index >> 24),
+   const char packed[] = { char(field.target_depth), char(field.target_depth >> 8), char(field.target_depth >> 16), char(field.target_depth >> 24), 
+            char(field.target_depth >> 32), char(field.target_depth >> 40), char(field.target_depth >> 48), char(field.target_depth >> 56), 
+            char(field.table_index), char(field.table_index >> 8), char(field.table_index >> 16), char(field.table_index >> 24), 
             char(field.table_index >> 32), char(field.table_index >> 40), char(field.table_index >> 48), char(field.table_index >> 56) };
    stream->set(sizeof(packed), packed);
 }
@@ -145,7 +146,7 @@ struct field_specific_params<voidtype> {
    static auto unpack( char* opcode, voidtype& f ) {}
    static void pack(instruction_stream* stream, voidtype& f) {}
    static auto to_string(voidtype& f) { return ""; }
-};
+}; 
 
 #define CONSTRUCT_OP_HAS_DATA( r, DATA, OP )                                                        \
 template <typename ... Mutators>                                                                    \
@@ -564,7 +565,7 @@ struct instr_base : instr {
       for ( auto m : { Mutators::accept... } ) {
          m(this, arg);
       }
-   }
+   } 
 };
 
 // construct the instructions
@@ -594,7 +595,7 @@ struct op_types {
 }; // op_types
 
 
-/**
+/** 
  * Section for cached ops
  */
 template <class Op_Types>
@@ -620,7 +621,7 @@ class cached_ops {
 };
 
 template <class Op_Types>
-std::vector<instr*> cached_ops<Op_Types>::_cached_ops;
+std::vector<instr*> cached_ops<Op_Types>::_cached_ops; 
 
 #define INIT_FIELD( r, P, OP ) \
    template <class Op_Types>   \
@@ -662,14 +663,14 @@ struct GRAPHENE_OperatorDecoderStream
    operator bool() const { return nextByte < end; }
 
    instr* decodeOp() {
-      assert(nextByte + sizeof(IR::Opcode) <= end);
-      IR::Opcode opcode = *(IR::Opcode*)nextByte;
+      FC_ASSERT(nextByte + sizeof(IR::Opcode) <= end);
+      IR::Opcode opcode = *(IR::Opcode*)nextByte;  
       switch(opcode)
       {
       #define VISIT_OPCODE(opcode,name,nameString,Imm,...) \
          case IR::Opcode::name: \
          { \
-            assert(nextByte + sizeof(IR::OpcodeAndImm<IR::Imm>) <= end); \
+            FC_ASSERT(nextByte + sizeof(IR::OpcodeAndImm<IR::Imm>) <= end); \
             IR::OpcodeAndImm<IR::Imm>* encodedOperator = (IR::OpcodeAndImm<IR::Imm>*)nextByte; \
             nextByte += sizeof(IR::OpcodeAndImm<IR::Imm>); \
             auto op = _cached_ops->at(BOOST_PP_CAT(name, _code)); \
@@ -680,7 +681,7 @@ struct GRAPHENE_OperatorDecoderStream
       #undef VISIT_OPCODE
       default:
          nextByte += sizeof(IR::Opcode);
-         return _cached_ops->at(error_code);
+         return _cached_ops->at(error_code); 
       }
    }
 
@@ -692,7 +693,7 @@ struct GRAPHENE_OperatorDecoderStream
    }
    inline uint32_t index() { return nextByte - start; }
 private:
-   // cached ops to take the address of
+   // cached ops to take the address of 
    static const std::vector<instr*>* _cached_ops;
    const U8* start;
    const U8* nextByte;

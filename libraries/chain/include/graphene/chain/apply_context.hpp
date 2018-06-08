@@ -13,6 +13,7 @@
 namespace graphene { namespace chain {
 
 class database;
+class transaction_context;
 class apply_context {
    private:
      template <typename T>
@@ -164,18 +165,20 @@ class apply_context {
 
    /// Constructor
    public:
-      apply_context(const database&d, const action& a)
-          : act(a)
-          , db(d)
-          , receiver(a.account)
+     apply_context(const database &d, transaction_context &trx_ctx, const action &a)
+         : act(a)
+         , trx_context(trx_ctx)
+         , db(d)
+         , receiver(a.account)
       {
-        reset_console();
+         reset_console();
       }
 
    public:
-      const action&       act; ///< message being applied
-      const database&     db;
-      account_name        receiver;
+      const action&                 act; ///< message being applied
+      transaction_context&          trx_context; ///< transaction context in which the action is running
+      const database&               db;
+      account_name                  receiver;
 
 
    private:
