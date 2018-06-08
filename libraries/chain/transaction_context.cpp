@@ -6,7 +6,6 @@
 namespace graphene { namespace chain {
 
    transaction_context::transaction_context()
-   :trx(t)
    {
    }
 

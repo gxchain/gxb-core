@@ -21,6 +21,7 @@
 #include <graphene/chain/database.hpp>
 
 #include <graphene/chain/apply_context.hpp>
+#include <graphene/chain/transaction_context.hpp>
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/wast_to_wasm.hpp>
 
