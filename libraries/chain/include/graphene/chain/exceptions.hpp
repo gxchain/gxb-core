@@ -132,8 +132,6 @@ namespace graphene { namespace chain {
    FC_DECLARE_DERIVED_EXCEPTION( abi_not_found_exception, chain_type_exception, 3010008, "No ABI found" )
    FC_DECLARE_DERIVED_EXCEPTION( leeway_deadline_exception, deadline_exception, 3081001, "transaction reached the deadline set due to leeway on account CPU limits" )
 
-   FC_DECLARE_DERIVED_EXCEPTION( action_validate_exception, chain_exception, 3050000, "action exception" )
-
    GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( transfer );
    GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( from_account_not_whitelisted, transfer, 1, "owner mismatch" )
    GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( to_account_not_whitelisted, transfer, 2, "owner mismatch" )
