@@ -115,10 +115,10 @@ bool abi_generator::inspect_type_methods_for_actions(const Decl* decl) { try {
       qt.setLocalFastQualifiers(0);
 
       string field_name = p->getNameAsString();
-      string field_type_name = add_type(qt);
+      string field_type_name = add_type(qt, 0);
 
       field_def struct_field{field_name, field_type_name};
-      ABI_ASSERT(is_builtin_type(get_vector_element_type(struct_field.type)) 
+      ABI_ASSERT(is_builtin_type(get_vector_element_type(struct_field.type))
         || find_struct(get_vector_element_type(struct_field.type))
         || find_type(get_vector_element_type(struct_field.type))
         , "Unknown type ${type} [${abi}]",("type",struct_field.type)("abi",*output));
@@ -139,7 +139,12 @@ bool abi_generator::inspect_type_methods_for_actions(const Decl* decl) { try {
   };
 
   const auto export_methods = [&export_method](const CXXRecordDecl* rec_decl) {
+
+
     auto export_methods_impl = [&export_method](const CXXRecordDecl* rec_decl, auto& ref) -> void {
+
+
+      auto tmp = rec_decl->bases();
       auto rec_name = rec_decl->getName().str();
 
       rec_decl->forallBases([&ref](const CXXRecordDecl* base) -> bool {
@@ -222,8 +227,8 @@ void abi_generator::handle_decl(const Decl* decl) { try {
 
         auto qt = action_decl->getTypeForDecl()->getCanonicalTypeInternal();
 
-        auto type_name = add_struct(qt);
-        ABI_ASSERT(!is_builtin_type(type_name), 
+        auto type_name = add_struct(qt, "", 0);
+        ABI_ASSERT(!is_builtin_type(type_name),
           "A built-in type with the same name exists, try using another name: ${type_name}", ("type_name",type_name));
 
         if(params.size()==0) {
@@ -231,7 +236,7 @@ void abi_generator::handle_decl(const Decl* decl) { try {
         }
 
         for(const auto& action : params) {
-          const auto* ac = find_action(action);  
+          const auto* ac = find_action(action);
           if( ac ) {
             ABI_ASSERT(ac->type == type_name, "Same action name with different type ${action}",("action",action));
             continue;
@@ -245,9 +250,9 @@ void abi_generator::handle_decl(const Decl* decl) { try {
         ABI_ASSERT(table_decl != nullptr);
 
         auto qt = table_decl->getTypeForDecl()->getCanonicalTypeInternal();
-        auto type_name = add_struct(qt);
+        auto type_name = add_struct(qt, "", 0);
 
-        ABI_ASSERT(!is_builtin_type(type_name), 
+        ABI_ASSERT(!is_builtin_type(type_name),
           "A built-in type with the same name exists, try using another name: ${type_name}", ("type_name",type_name));
 
         const auto* s = find_struct(type_name);
@@ -274,7 +279,7 @@ void abi_generator::handle_decl(const Decl* decl) { try {
         //TODO: assert that we are adding the same table
         const auto* ta = find_table(table.name);
         if(!ta) {
-          output->tables.push_back(table);  
+          output->tables.push_back(table);
         }
       }
     }
@@ -349,7 +354,7 @@ void abi_generator::guess_key_names(table_def& table, const struct_def s) {
   vector<field_def> fields;
   get_all_fields(s, fields);
 
- if( table.index_type == "i64i64i64" || table.index_type == "i128i128" 
+ if( table.index_type == "i64i64i64" || table.index_type == "i128i128"
     || table.index_type == "i64") {
 
     table.key_names.clear();
@@ -419,7 +424,11 @@ const struct_def* abi_generator::find_struct(const type_name& name) {
 type_name abi_generator::resolve_type(const type_name& type){
   const auto* td = find_type(type);
   if( td ) {
-    return resolve_type(td->type);
+    for( auto i = output->types.size(); i > 0; --i ) { // avoid infinite recursion
+      const type_name& t = td->type;
+      td = find_type(t);
+      if( td == nullptr ) return t;
+    }
   }
   return type;
 }
@@ -443,7 +452,7 @@ bool abi_generator::is_typedef(const clang::QualType& qt) {
 }
 
 bool abi_generator::is_elaborated(const clang::QualType& qt) {
-  return isa<ElaboratedType>(qt.getTypePtr()); 
+  return isa<ElaboratedType>(qt.getTypePtr());
 }
 
 bool abi_generator::is_vector(const clang::QualType& vqt) {
@@ -475,7 +484,7 @@ clang::QualType abi_generator::get_vector_element_type(const clang::QualType& qt
   const auto* tst = clang::dyn_cast<const clang::TemplateSpecializationType>(qt.getTypePtr());
   ABI_ASSERT(tst != nullptr);
   const clang::TemplateArgument& arg0 = tst->getArg(0);
-  return arg0.getAsType();  
+  return arg0.getAsType();
 }
 
 string abi_generator::get_vector_element_type(const string& type_name) {
@@ -486,12 +495,14 @@ string abi_generator::get_vector_element_type(const string& type_name) {
 
 string abi_generator::get_type_name(const clang::QualType& qt, bool with_namespace=false) {
   auto name = clang::TypeName::getFullyQualifiedName(qt, *ast_context);
-  if(!with_namespace) 
+  if(!with_namespace)
     name = remove_namespace(name);
   return name;
 }
 
-clang::QualType abi_generator::add_typedef(const clang::QualType& tqt) {
+clang::QualType abi_generator::add_typedef(const clang::QualType& tqt, size_t recursion_depth) {
+
+  ABI_ASSERT( ++recursion_depth < max_recursion_depth, "recursive definition, max_recursion_depth" );
 
   clang::QualType qt(get_named_type_if_elaborated(tqt));
 
@@ -502,7 +513,7 @@ clang::QualType abi_generator::add_typedef(const clang::QualType& tqt) {
   auto underlying_type_name = get_type_name(underlying_type);
 
   if ( is_vector(underlying_type) ) {
-    underlying_type_name = add_vector(underlying_type);
+    underlying_type_name = add_vector(underlying_type, recursion_depth);
   }
 
   type_def abi_typedef;
@@ -517,7 +528,7 @@ clang::QualType abi_generator::add_typedef(const clang::QualType& tqt) {
   }
 
   if( is_typedef(underlying_type) && !is_builtin_type(get_type_name(underlying_type)) )
-    return add_typedef(underlying_type);
+    return add_typedef(underlying_type, recursion_depth);
 
   return underlying_type;
 }
@@ -535,6 +546,7 @@ clang::CXXRecordDecl::base_class_range abi_generator::get_struct_bases(const cla
   auto cxxrecord_decl = clang::dyn_cast<CXXRecordDecl>(record_type->getDecl());
   ABI_ASSERT(cxxrecord_decl != nullptr);
   //record_type->getCanonicalTypeInternal().dump();
+  ABI_ASSERT(cxxrecord_decl->hasDefinition(), "No definition for ${t}", ("t", qt.getAsString()));
 
   auto bases = cxxrecord_decl->bases();
 
@@ -554,22 +566,26 @@ const clang::RecordDecl::field_range abi_generator::get_struct_fields(const clan
   return record_type->getDecl()->fields();
 }
 
-string abi_generator::add_vector(const clang::QualType& vqt) {
+string abi_generator::add_vector(const clang::QualType& vqt, size_t recursion_depth) {
+
+  ABI_ASSERT( ++recursion_depth < max_recursion_depth, "recursive definition, max_recursion_depth" );
 
   clang::QualType qt(get_named_type_if_elaborated(vqt));
 
   auto vector_element_type = get_vector_element_type(qt);
   ABI_ASSERT(!is_vector(vector_element_type), "Only one-dimensional arrays are supported");
 
-  add_type(vector_element_type);
+  add_type(vector_element_type, recursion_depth);
 
   auto vector_element_type_str = translate_type(get_type_name(vector_element_type));
   vector_element_type_str += "[]";
 
-  return vector_element_type_str;  
+  return vector_element_type_str;
 }
 
-string abi_generator::add_type(const clang::QualType& tqt) {
+string abi_generator::add_type(const clang::QualType& tqt, size_t recursion_depth) {
+
+  ABI_ASSERT( ++recursion_depth < max_recursion_depth, "recursive definition, max_recursion_depth" );
 
   clang::QualType qt(get_named_type_if_elaborated(tqt));
 
@@ -582,7 +598,7 @@ string abi_generator::add_type(const clang::QualType& tqt) {
   }
 
   if( is_typedef(qt) ) {
-    qt = add_typedef(qt);
+    qt = add_typedef(qt, recursion_depth);
     if( is_builtin_type(translate_type(get_type_name(qt))) ) {
       return type_name;
     }
@@ -590,12 +606,12 @@ string abi_generator::add_type(const clang::QualType& tqt) {
   }
 
   if( is_vector(qt) ) {
-    auto vector_type_name = add_vector(qt);
+    auto vector_type_name = add_vector(qt, recursion_depth);
     return is_type_def ? type_name : vector_type_name;
   }
 
   if( is_struct(qt) ) {
-    return add_struct(qt, full_type_name);
+    return add_struct(qt, full_type_name, recursion_depth);
   }
 
   ABI_ASSERT(false, "types can only be: vector, struct, class or a built-in type. (${type}) ", ("type",get_type_name(qt)));
@@ -609,7 +625,9 @@ clang::QualType abi_generator::get_named_type_if_elaborated(const clang::QualTyp
   return qt;
 }
 
-string abi_generator::add_struct(const clang::QualType& sqt, string full_name) {
+string abi_generator::add_struct(const clang::QualType& sqt, string full_name, size_t recursion_depth) {
+
+  ABI_ASSERT( ++recursion_depth < max_recursion_depth, "recursive definition, max_recursion_depth" );
 
   clang::QualType qt(get_named_type_if_elaborated(sqt));
 
@@ -639,7 +657,7 @@ string abi_generator::add_struct(const clang::QualType& sqt, string full_name) {
     const auto* record_type = base_qt->getAs<clang::RecordType>();
     if( record_type && is_struct(base_qt) && !record_type->getDecl()->field_empty() ) {
       ABI_ASSERT(total_bases == 0, "Multiple inheritance not supported - ${type}", ("type",full_name));
-      base_name = add_type(base_qt);
+      base_name = add_type(base_qt, recursion_depth);
       ++total_bases;
     }
     ++bitr;
@@ -650,10 +668,10 @@ string abi_generator::add_struct(const clang::QualType& sqt, string full_name) {
     clang::QualType qt = field->getType();
 
     string field_name = field->getNameAsString();
-    string field_type_name = add_type(qt);
+    string field_type_name = add_type(qt, recursion_depth);
 
     field_def struct_field{field_name, field_type_name};
-    ABI_ASSERT(is_builtin_type(get_vector_element_type(struct_field.type)) 
+    ABI_ASSERT(is_builtin_type(get_vector_element_type(struct_field.type))
       || find_struct(get_vector_element_type(struct_field.type))
       || find_type(get_vector_element_type(struct_field.type))
       , "Unknown type ${type} [${abi}]",("type",struct_field.type)("abi",*output));
