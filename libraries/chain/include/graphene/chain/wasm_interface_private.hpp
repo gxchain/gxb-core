@@ -4,7 +4,7 @@
 #include <graphene/chain/webassembly/wavm.hpp>
 #include <graphene/chain/webassembly/binaryen.hpp>
 #include <graphene/chain/webassembly/runtime_interface.hpp>
-#include <graphene/chain/wasm_gxb_injection.hpp>
+#include <graphene/chain/wasm_injection.hpp>
 #include <fc/scoped_exit.hpp>
 
 #include "IR/Module.h"

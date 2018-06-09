@@ -1,7 +1,7 @@
 #pragma once
 
 #include <graphene/chain/wasm_interface.hpp>
-#include <graphene/chain/wasm_gxb_constraints.hpp>
+#include <graphene/chain/wasm_constraints.hpp>
 
 #define GXB_INJECTED_MODULE_NAME "gxb_injection"
 

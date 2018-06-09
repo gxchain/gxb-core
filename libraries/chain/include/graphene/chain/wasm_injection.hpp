@@ -1,7 +1,7 @@
 #pragma once
 
-#include <graphene/chain/wasm_gxb_binary_ops.hpp>
-#include <graphene/chain/wasm_gxb_constraints.hpp>
+#include <graphene/chain/wasm_binary_ops.hpp>
+#include <graphene/chain/wasm_constraints.hpp>
 #include <graphene/chain/webassembly/common.hpp>
 #include <fc/exception/exception.hpp>
 #include <graphene/chain/exceptions.hpp>

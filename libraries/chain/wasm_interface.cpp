@@ -2,8 +2,8 @@
 #include <graphene/chain/apply_context.hpp>
 #include <graphene/chain/transaction_context.hpp>
 #include <graphene/chain/wasm_interface_private.hpp>
-#include <graphene/chain/wasm_gxb_validation.hpp>
-#include <graphene/chain/wasm_gxb_injection.hpp>
+#include <graphene/chain/wasm_validation.hpp>
+#include <graphene/chain/wasm_injection.hpp>
 #include <graphene/chain/exceptions.hpp>
 
 #include <fc/exception/exception.hpp>

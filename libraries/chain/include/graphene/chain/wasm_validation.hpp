@@ -2,7 +2,7 @@
 
 #include <fc/exception/exception.hpp>
 #include <graphene/chain/exceptions.hpp>
-#include <graphene/chain/wasm_gxb_binary_ops.hpp>
+#include <graphene/chain/wasm_binary_ops.hpp>
 #include <functional>
 #include <vector>
 #include <iostream>

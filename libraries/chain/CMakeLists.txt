@@ -97,8 +97,8 @@ add_library( graphene_chain
              transaction_context.cpp
              wast_to_wasm.cpp
              wasm_interface.cpp
-             wasm_gxb_validation.cpp
-             wasm_gxb_injection.cpp
+             wasm_validation.cpp
+             wasm_injection.cpp
 
              webassembly/wavm.cpp
              webassembly/binaryen.cpp

@@ -2,7 +2,7 @@
 #include "Runtime.h"
 #include "Platform/Platform.h"
 #include "RuntimePrivate.h"
-#include <graphene/chain/wasm_gxb_constraints.hpp>
+#include <graphene/chain/wasm_constraints.hpp>
 
 namespace Runtime
 {

@@ -1,4 +1,4 @@
-#include "../../../chain/include/graphene/chain/wasm_gxb_constraints.hpp"
+#include "../../../chain/include/graphene/chain/wasm_constraints.hpp"
 #include "Inline/BasicTypes.h"
 #include "Inline/Serialization.h"
 #include "Inline/UTF8.h"

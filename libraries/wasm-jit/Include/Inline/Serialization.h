@@ -2,7 +2,7 @@
 
 #include "Platform/Platform.h"
 
-#include "../../../chain/include/graphene/chain/wasm_gxb_constraints.hpp"
+#include "../../../chain/include/graphene/chain/wasm_constraints.hpp"
 #include <string>
 #include <vector>
 #include <string.h>

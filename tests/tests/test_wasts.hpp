@@ -16,6 +16,7 @@ static const char contract_test_wast_code[] = R"=====(
  (import "env" "current_time" (func $current_time (result i64)))
  (import "env" "memcpy" (func $memcpy (param i32 i32 i32) (result i32)))
  (import "env" "memset" (func $memset (param i32 i32 i32) (result i32)))
+ (import "env" "printi" (func $printi (param i64)))
  (import "env" "printn" (func $printn (param i64)))
  (import "env" "prints" (func $prints (param i32)))
  (import "env" "prints_l" (func $prints_l (param i32 i32)))
@@ -23,12 +24,15 @@ static const char contract_test_wast_code[] = R"=====(
  (table 3 3 anyfunc)
  (elem (i32.const 0) $__wasm_nullptr $_ZN5hello2hiEy $_ZN5hello3byeEy)
  (memory $0 1)
- (data (i32.const 4) "@a\00\00")
+ (data (i32.const 4) "pa\00\00")
  (data (i32.const 16) "Bye, \00")
  (data (i32.const 32) "Hello, \00")
- (data (i32.const 48) "dan\00")
- (data (i32.const 52) "@\00\00\00")
- (data (i32.const 64) ".12345abcdefghijklmnopqrstuvwxyz\00")
+ (data (i32.const 48) "\n\00")
+ (data (i32.const 64) "dan\00")
+ (data (i32.const 80) "loop \00")
+ (data (i32.const 96) " name, \00")
+ (data (i32.const 104) "p\00\00\00")
+ (data (i32.const 112) ".12345abcdefghijklmnopqrstuvwxyz\00")
  (export "memory" (memory $0))
  (export "_ZeqRK11checksum256S1_" (func $_ZeqRK11checksum256S1_))
  (export "_ZeqRK11checksum160S1_" (func $_ZeqRK11checksum160S1_))
@@ -177,13 +181,14 @@ static const char contract_test_wast_code[] = R"=====(
  (func $_ZN5hello2hiEy (type $FUNCSIG$vij) (param $0 i32) (param $1 i64)
   (local $2 i32)
   (local $3 i32)
-  (local $4 i64)
+  (local $4 i32)
   (local $5 i64)
   (local $6 i64)
-  (local $7 i32)
+  (local $7 i64)
+  (local $8 i32)
   (i32.store offset=4
    (i32.const 0)
-   (tee_local $7
+   (tee_local $8
     (i32.sub
      (i32.load offset=4
       (i32.const 0)
@@ -198,16 +203,19 @@ static const char contract_test_wast_code[] = R"=====(
   (call $printn
    (get_local $1)
   )
+  (call $prints
+   (i32.const 48)
+  )
   (set_local $1
    (i64.const 0)
   )
-  (set_local $4
+  (set_local $5
    (i64.const 59)
   )
-  (set_local $3
-   (i32.const 48)
+  (set_local $4
+   (i32.const 64)
   )
-  (set_local $5
+  (set_local $6
    (i64.const 0)
   )
   (loop $label$0
@@ -228,7 +236,7 @@ static const char contract_test_wast_code[] = R"=====(
            (i32.add
             (tee_local $2
              (i32.load8_s
-              (get_local $3)
+              (get_local $4)
              )
             )
             (i32.const -97)
@@ -246,7 +254,7 @@ static const char contract_test_wast_code[] = R"=====(
         )
         (br $label$3)
        )
-       (set_local $6
+       (set_local $7
         (i64.const 0)
        )
        (br_if $label$2
@@ -277,7 +285,7 @@ static const char contract_test_wast_code[] = R"=====(
        )
       )
      )
-     (set_local $6
+     (set_local $7
       (i64.shr_s
        (i64.shl
         (i64.extend_u/i32
@@ -289,22 +297,22 @@ static const char contract_test_wast_code[] = R"=====(
       )
      )
     )
-    (set_local $6
+    (set_local $7
      (i64.shl
       (i64.and
-       (get_local $6)
+       (get_local $7)
        (i64.const 31)
       )
       (i64.and
-       (get_local $4)
+       (get_local $5)
        (i64.const 4294967295)
       )
      )
     )
    )
-   (set_local $3
+   (set_local $4
     (i32.add
-     (get_local $3)
+     (get_local $4)
      (i32.const 1)
     )
    )
@@ -314,17 +322,17 @@ static const char contract_test_wast_code[] = R"=====(
      (i64.const 1)
     )
    )
-   (set_local $5
+   (set_local $6
     (i64.or
+     (get_local $7)
      (get_local $6)
-     (get_local $5)
     )
    )
    (br_if $label$0
     (i64.ne
-     (tee_local $4
+     (tee_local $5
       (i64.add
-       (get_local $4)
+       (get_local $5)
        (i64.const -5)
       )
      )
@@ -333,36 +341,47 @@ static const char contract_test_wast_code[] = R"=====(
    )
   )
   (i64.store offset=24
-   (get_local $7)
-   (get_local $5)
+   (get_local $8)
+   (get_local $6)
   )
   (call $_ZNK6gxblib4name9to_stringEv
    (i32.add
-    (get_local $7)
+    (get_local $8)
     (i32.const 8)
    )
    (i32.add
-    (get_local $7)
+    (get_local $8)
     (i32.const 24)
    )
+  )
+  (call $prints
+   (i32.const 80)
+  )
+  (call $printi
+   (i64.const 0)
+  )
+  (call $prints
+   (i32.const 96)
   )
   (call $prints_l
    (select
     (i32.load offset=16
-     (get_local $7)
+     (get_local $8)
     )
-    (i32.or
-     (i32.add
-      (get_local $7)
-      (i32.const 8)
+    (tee_local $4
+     (i32.or
+      (i32.add
+       (get_local $8)
+       (i32.const 8)
+      )
+      (i32.const 1)
      )
-     (i32.const 1)
     )
-    (tee_local $2
+    (tee_local $3
      (i32.and
-      (tee_local $3
+      (tee_local $2
        (i32.load8_u offset=8
-        (get_local $7)
+        (get_local $8)
        )
       )
       (i32.const 1)
@@ -371,21 +390,104 @@ static const char contract_test_wast_code[] = R"=====(
    )
    (select
     (i32.load offset=12
-     (get_local $7)
+     (get_local $8)
     )
     (i32.shr_u
-     (get_local $3)
+     (get_local $2)
      (i32.const 1)
     )
-    (get_local $2)
+    (get_local $3)
    )
+  )
+  (call $prints
+   (i32.const 48)
+  )
+  (call $prints
+   (i32.const 80)
+  )
+  (call $printi
+   (i64.const 1)
+  )
+  (call $prints
+   (i32.const 96)
+  )
+  (call $prints_l
+   (select
+    (i32.load offset=16
+     (get_local $8)
+    )
+    (get_local $4)
+    (tee_local $3
+     (i32.and
+      (tee_local $2
+       (i32.load8_u offset=8
+        (get_local $8)
+       )
+      )
+      (i32.const 1)
+     )
+    )
+   )
+   (select
+    (i32.load offset=12
+     (get_local $8)
+    )
+    (i32.shr_u
+     (get_local $2)
+     (i32.const 1)
+    )
+    (get_local $3)
+   )
+  )
+  (call $prints
+   (i32.const 48)
+  )
+  (call $prints
+   (i32.const 80)
+  )
+  (call $printi
+   (i64.const 2)
+  )
+  (call $prints
+   (i32.const 96)
+  )
+  (call $prints_l
+   (select
+    (i32.load offset=16
+     (get_local $8)
+    )
+    (get_local $4)
+    (tee_local $3
+     (i32.and
+      (tee_local $2
+       (i32.load8_u offset=8
+        (get_local $8)
+       )
+      )
+      (i32.const 1)
+     )
+    )
+   )
+   (select
+    (i32.load offset=12
+     (get_local $8)
+    )
+    (i32.shr_u
+     (get_local $2)
+     (i32.const 1)
+    )
+    (get_local $3)
+   )
+  )
+  (call $prints
+   (i32.const 48)
   )
   (block $label$6
    (br_if $label$6
     (i32.eqz
      (i32.and
       (i32.load8_u offset=8
-       (get_local $7)
+       (get_local $8)
       )
       (i32.const 1)
      )
@@ -394,7 +496,7 @@ static const char contract_test_wast_code[] = R"=====(
    (call $_ZdlPv
     (i32.load
      (i32.add
-      (get_local $7)
+      (get_local $8)
       (i32.const 16)
      )
     )
@@ -403,7 +505,7 @@ static const char contract_test_wast_code[] = R"=====(
   (i32.store offset=4
    (i32.const 0)
    (i32.add
-    (get_local $7)
+    (get_local $8)
     (i32.const 32)
    )
   )
@@ -641,7 +743,7 @@ static const char contract_test_wast_code[] = R"=====(
    (set_local $3
     (i32.load8_u
      (i32.add
-      (i32.load offset=52
+      (i32.load offset=104
        (i32.const 0)
       )
       (i32.wrap/i64
@@ -870,7 +972,7 @@ static const char contract_test_wast_code[] = R"=====(
  )
  (func $malloc (param $0 i32) (result i32)
   (call $_ZN8graphene14memory_manager6mallocEm
-   (i32.const 100)
+   (i32.const 148)
    (get_local $0)
   )
  )
@@ -1326,13 +1428,13 @@ static const char contract_test_wast_code[] = R"=====(
    (block $label$1
     (br_if $label$1
      (i32.eqz
-      (i32.load8_u offset=8496
+      (i32.load8_u offset=8544
        (i32.const 0)
       )
      )
     )
     (set_local $7
-     (i32.load offset=8500
+     (i32.load offset=8548
       (i32.const 0)
      )
     )
@@ -1341,11 +1443,11 @@ static const char contract_test_wast_code[] = R"=====(
    (set_local $7
     (current_memory)
    )
-   (i32.store8 offset=8496
+   (i32.store8 offset=8544
     (i32.const 0)
     (i32.const 1)
    )
-   (i32.store offset=8500
+   (i32.store offset=8548
     (i32.const 0)
     (tee_local $7
      (i32.shl
@@ -1396,7 +1498,7 @@ static const char contract_test_wast_code[] = R"=====(
        )
       )
       (set_local $3
-       (i32.load offset=8500
+       (i32.load offset=8548
         (i32.const 0)
        )
       )
@@ -1404,7 +1506,7 @@ static const char contract_test_wast_code[] = R"=====(
      (set_local $8
       (i32.const 0)
      )
-     (i32.store offset=8500
+     (i32.store offset=8548
       (i32.const 0)
       (get_local $3)
      )
@@ -1458,18 +1560,18 @@ static const char contract_test_wast_code[] = R"=====(
      )
      (block $label$6
       (br_if $label$6
-       (i32.load8_u offset=8496
+       (i32.load8_u offset=8544
         (i32.const 0)
        )
       )
       (set_local $3
        (current_memory)
       )
-      (i32.store8 offset=8496
+      (i32.store8 offset=8544
        (i32.const 0)
        (i32.const 1)
       )
-      (i32.store offset=8500
+      (i32.store offset=8548
        (i32.const 0)
        (tee_local $3
         (i32.shl
@@ -1537,12 +1639,12 @@ static const char contract_test_wast_code[] = R"=====(
        )
       )
       (set_local $6
-       (i32.load offset=8500
+       (i32.load offset=8548
         (i32.const 0)
        )
       )
      )
-     (i32.store offset=8500
+     (i32.store offset=8548
       (i32.const 0)
       (i32.add
        (get_local $6)
@@ -1802,7 +1904,7 @@ static const char contract_test_wast_code[] = R"=====(
     (br_if $label$1
      (i32.lt_s
       (tee_local $2
-       (i32.load offset=8484
+       (i32.load offset=8532
         (i32.const 0)
        )
       )
@@ -1810,7 +1912,7 @@ static const char contract_test_wast_code[] = R"=====(
      )
     )
     (set_local $3
-     (i32.const 8292)
+     (i32.const 8340)
     )
     (set_local $1
      (i32.add
@@ -1818,7 +1920,7 @@ static const char contract_test_wast_code[] = R"=====(
        (get_local $2)
        (i32.const 12)
       )
-      (i32.const 8292)
+      (i32.const 8340)
      )
     )
     (loop $label$2
@@ -1909,7 +2011,7 @@ static const char contract_test_wast_code[] = R"=====(
     )
     (i32.store8
      (tee_local $0
-      (i32.load offset=8504
+      (i32.load offset=8552
        (i32.const 0)
       )
      )

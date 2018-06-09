@@ -1,6 +1,6 @@
 #include <graphene/chain/webassembly/wavm.hpp>
-#include <graphene/chain/wasm_gxb_constraints.hpp>
-#include <graphene/chain/wasm_gxb_injection.hpp>
+#include <graphene/chain/wasm_constraints.hpp>
+#include <graphene/chain/wasm_injection.hpp>
 #include <graphene/chain/apply_context.hpp>
 #include <graphene/chain/exceptions.hpp>
 
