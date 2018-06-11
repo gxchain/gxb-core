@@ -34,7 +34,6 @@
 #include "clang/Tooling/CommonOptionsParser.h"
 #include "clang/Tooling/Core/QualTypeNames.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Support/CommandLine.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 
@@ -157,7 +156,7 @@ namespace graphene {
    };
 
    /**
-     * @brief Generates graphene::abi_def struct handling events from ASTConsumer
+     * @brief Generates eosio::abi_def struct handling events from ASTConsumer
      */
    class abi_generator {
       private:
@@ -344,6 +343,25 @@ namespace graphene {
             callback_handler(CompilerInstance& compiler_instance, find_gxb_abi_macro_action& act)
             : compiler_instance(compiler_instance), act(act) {}
 
+            string remove_namespace(const string& full_name) {
+               int i = full_name.size();
+               int on_spec = 0;
+               int colons = 0;
+               while( --i >= 0 ) {
+                  if( full_name[i] == '>' ) {
+                     ++on_spec; colons=0;
+                  } else if( full_name[i] == '<' ) {
+                     --on_spec; colons=0;
+                  } else if( full_name[i] == ':' && !on_spec) {
+                     if (++colons == 2)
+                        return full_name.substr(i+2);
+                  } else {
+                     colons = 0;
+                  }
+               }
+               return full_name;
+            }
+
             void MacroExpands (const Token &token, const MacroDefinition &md, SourceRange range, const MacroArgs *args) override {
 
                auto* id = token.getIdentifierInfo();
@@ -367,7 +385,7 @@ namespace graphene {
                auto res = regex_search(macrostr, smatch, r);
                ABI_ASSERT( res );
 
-               act.contract = smatch[1].str();
+               act.contract = remove_namespace(smatch[1].str());
 
                auto actions_str = smatch[2].str();
                boost::trim(actions_str);

@@ -9,7 +9,7 @@ void abi_generator::set_target_contract(const string& contract, const vector<str
 
 void abi_generator::enable_optimizaton(abi_generator::optimization o) {
   optimizations |= o;
-} 
+}
 
 bool abi_generator::is_opt_enabled(abi_generator::optimization o) {
   return (optimizations & o) != 0;
@@ -35,10 +35,10 @@ void abi_generator::set_compiler_instance(CompilerInstance& compiler_instance) {
   this->compiler_instance = &compiler_instance;
 }
 
-void abi_generator::handle_tagdecl_definition(TagDecl* tag_decl) { 
+void abi_generator::handle_tagdecl_definition(TagDecl* tag_decl) {
   ast_context = &tag_decl->getASTContext();
   auto decl_location = tag_decl->getLocation().printToString(ast_context->getSourceManager());
-  try {    
+  try {
   handle_decl(tag_decl);
 } FC_CAPTURE_AND_RETHROW((decl_location)) }
 
@@ -82,6 +82,7 @@ string abi_generator::translate_type(const string& type_name) {
   else if (type_name == "long"               || type_name == "int32_t")  built_in_type = "int32";
   else if (type_name == "short"              || type_name == "int16_t")  built_in_type = "int16";
   else if (type_name == "char"               || type_name == "int8_t")   built_in_type = "int8";
+  else if (type_name == "double")   built_in_type = "float64";
 
   return built_in_type;
 }
@@ -90,9 +91,6 @@ bool abi_generator::inspect_type_methods_for_actions(const Decl* decl) { try {
 
   const auto* rec_decl = dyn_cast<CXXRecordDecl>(decl);
   if(rec_decl == nullptr) return false;
-
-  if( rec_decl->getName().str() != target_contract )
-    return false;
 
   const auto* type = rec_decl->getTypeForDecl();
   ABI_ASSERT(type != nullptr);
@@ -103,9 +101,24 @@ bool abi_generator::inspect_type_methods_for_actions(const Decl* decl) { try {
 
     auto method_name = method->getNameAsString();
 
+    // Try to get "action" annotation from method comment
+    bool raw_comment_is_action = false;
+    const RawComment* raw_comment = ast_context->getRawCommentForDeclNoCache(method);
+    if(raw_comment != nullptr) {
+      SourceManager& source_manager = ast_context->getSourceManager();
+      string raw_text = raw_comment->getRawText(source_manager);
+      regex r(R"(@abi (action)((?: [a-z0-9]+)*))");
+      smatch smatch;
+      regex_search(raw_text, smatch, r);
+      raw_comment_is_action = smatch.size() == 3;
+    }
 
-    if( std::find(target_actions.begin(), target_actions.end(), method_name) == target_actions.end() )
+    // Check if current method is listed the EOSIO_ABI macro
+    bool is_action_from_macro = rec_decl->getName().str() == target_contract && std::find(target_actions.begin(), target_actions.end(), method_name) != target_actions.end();
+    
+    if(!raw_comment_is_action && !is_action_from_macro) {
       return;
+    }
 
     ABI_ASSERT(find_struct(method_name) == nullptr, "action already exists ${method_name}", ("method_name",method_name));
 
@@ -180,18 +193,11 @@ void abi_generator::handle_decl(const Decl* decl) { try {
     return;
   }
 
-  // If GXB_ABI macro was found, check if the current declaration
-  // is of the type specified in the macro and export their methods (actions).
-  bool type_has_actions = false;
-  if( target_contract.size() ) {
-    type_has_actions = inspect_type_methods_for_actions(decl);
-  }
-
-  // The current Decl was the type referenced in GXB_ABI macro
+  // Check if the current declaration has actions (EOSIO_ABI, or explicit)
+  bool type_has_actions = inspect_type_methods_for_actions(decl);
   if( type_has_actions ) return;
 
-  // The current Decl was not the type referenced in GXB_ABI macro
-  // so we try to see if it has comments attached to the declaration
+  // The current Decl doesn't have actions
   const RawComment* raw_comment = ast_context->getRawCommentForDeclNoCache(decl);
   if(raw_comment == nullptr) {
     return;
@@ -200,7 +206,7 @@ void abi_generator::handle_decl(const Decl* decl) { try {
   string raw_text = raw_comment->getRawText(source_manager);
   regex r;
 
-  // If GXB_ABI macro was found, we will only check if the current Decl
+  // If EOSIO_ABI macro was found, we will only check if the current Decl
   // is intented to be an ABI table record, otherwise we check for both (action or table)
   if( target_contract.size() )
     r = regex(R"(@abi (table)((?: [a-z0-9]+)*))");
@@ -266,9 +272,10 @@ void abi_generator::handle_decl(const Decl* decl) { try {
           table.name = params[0];
         }
 
-        if(params.size() >= 2)
+        if(params.size() >= 2) {
           table.index_type = params[1];
-        else { try {
+          ABI_ASSERT(table.index_type == "i64", "Only i64 index is supported. ${index_type}",("index_type",table.index_type));
+        } else { try {
           guess_index_type(table, *s);
         } FC_CAPTURE_AND_RETHROW( (type_name) ) }
 
@@ -315,34 +322,14 @@ void abi_generator::get_all_fields(const struct_def& s, vector<field_def>& field
   }
 }
 
-bool abi_generator::is_i64i64i64_index(const vector<field_def>& fields) {
-  return fields.size() >= 3 && is_64bit(fields[0].type) && is_64bit(fields[1].type) && is_64bit(fields[2].type);
-}
-
 bool abi_generator::is_i64_index(const vector<field_def>& fields) {
   return fields.size() >= 1 && is_64bit(fields[0].type);
 }
 
-bool abi_generator::is_i128i128_index(const vector<field_def>& fields) {
-  return fields.size() >= 2 && is_128bit(fields[0].type) && is_128bit(fields[1].type);
-}
-
-bool abi_generator::is_str_index(const vector<field_def>& fields) {
-  return fields.size() == 2 && is_string(fields[0].type);
-}
-
 void abi_generator::guess_index_type(table_def& table, const struct_def s) {
-
   vector<field_def> fields;
   get_all_fields(s, fields);
-
-  if( is_str_index(fields) ) {
-    table.index_type = "str";
-  } else if ( is_i64i64i64_index(fields) ) {
-    table.index_type = "i64i64i64";
-  } else if( is_i128i128_index(fields) ) {
-    table.index_type = "i128i128";
-  } else if( is_i64_index(fields) ) {
+  if( is_i64_index(fields) ) {
     table.index_type = "i64";
   } else {
     ABI_ASSERT(false, "Unable to guess index type");
@@ -354,8 +341,7 @@ void abi_generator::guess_key_names(table_def& table, const struct_def s) {
   vector<field_def> fields;
   get_all_fields(s, fields);
 
- if( table.index_type == "i64i64i64" || table.index_type == "i128i128"
-    || table.index_type == "i64") {
+ if( table.index_type == "i64") {
 
     table.key_names.clear();
     table.key_types.clear();
@@ -367,18 +353,13 @@ void abi_generator::guess_key_names(table_def& table, const struct_def s) {
       table.key_types.emplace_back(f.type);
       key_size += type_size[f.type]/8;
 
-      if((table.index_type == "i64i64i64" && key_size >= sizeof(uint64_t)*3) ||
-         (table.index_type == "i64" && key_size >= sizeof(uint64_t)) ||
-         (table.index_type == "i128i128" && key_size >= sizeof(__int128)*2)) {
+      if(table.index_type == "i64" && key_size >= sizeof(uint64_t)) {
         valid_key = true;
         break;
       }
     }
 
     ABI_ASSERT(valid_key, "Unable to guess key names");
-  } else if( table.index_type == "str" && is_str_index(fields) ) {
-    table.key_names  = vector<field_name>{fields[0].name};
-    table.key_types  = vector<type_name>{fields[0].type};
   } else {
     ABI_ASSERT(false, "Unable to guess key names");
   }
