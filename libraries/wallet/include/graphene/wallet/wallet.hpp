@@ -1300,7 +1300,7 @@ class wallet_api
           /**
        *  This method is used to convert a JSON transaction to its transactin ID.
        */
-          transaction_id_type get_transaction_id(const signed_transaction &trx) const
+      transaction_id_type get_transaction_id(const signed_transaction &trx) const
       {
           return trx.id();
       }
@@ -1785,6 +1785,25 @@ class wallet_api
                                            bool approve,
                                            bool broadcast = false);
 
+      /** Update account multi-sig
+       *
+       * @param account account to update
+       * @param type owner / active / all
+       * @param weight_threshold weight_threshold of multi-sig account
+       * @param account_auths account names
+       * @param account_weights account weights
+       * @param fee_symbol fee asset symbol
+       * @param broadcast true if you wish to broadcast the transaction
+       * @return the signed transaction changing your account
+       */
+      signed_transaction update_account_multisig(string account,
+                                                 string type,
+                                                 uint32_t weight_threshold,
+                                                 vector<string> account_auths,
+                                                 vector<weight_type> account_weights,
+                                                 string fee_symbol,
+                                                 bool broadcast);
+
       /** Vote for a given witness.
        *
        * An account can publish a list of all witnesses they approve of.  This 
@@ -2061,6 +2080,8 @@ class wallet_api
        */
       bool verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key);
 
+      bool verify_proxy_transfer_signature(const proxy_transfer_params& param, public_key_type pub_key);
+
       /** get tps
        * @return
        */
@@ -2215,6 +2236,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_vesting_balances)
         (withdraw_vesting)
         (vote_for_committee_member)
+        (update_account_multisig)
         (vote_for_witness)
         (set_voting_proxy)
         (set_desired_witness_and_committee_member_count)
@@ -2269,6 +2291,7 @@ FC_API( graphene::wallet::wallet_api,
         (transfer_test)
         (get_hash)
         (verify_transaction_signature)
+        (verify_proxy_transfer_signature)
         (flood_network)
         (flood_create_account)
         (get_tps)
