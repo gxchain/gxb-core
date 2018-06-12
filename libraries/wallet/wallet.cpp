@@ -2431,6 +2431,42 @@
        } FC_CAPTURE_AND_RETHROW( (witness_name)(amount) )
        }
 
+       signed_transaction update_account_multisig_keys(string account, string type, uint32_t weight_threshold, vector<public_key_type> key_auths, vector<weight_type> key_weights, string fee_symbol, bool broadcast)
+       { try {
+             FC_ASSERT(OWNER == type || ACTIVE == type || ALL == type);
+             FC_ASSERT(key_auths.size() == key_weights.size());
+             account_object updating_account = get_account(account);
+
+             fc::optional<asset_object> asset_obj = get_asset(fee_symbol);
+             FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", fee_symbol));
+
+             auto auth = authority();
+             auth.weight_threshold = weight_threshold;
+             for (uint8_t i = 0; i < key_auths.size(); ++i) {
+                 auth.add_authority(key_auths.at(i), key_weights.at(i));
+             }
+
+             account_update_operation op;
+             op.account = updating_account.id;
+             op.owner = updating_account.owner;
+             op.active = updating_account.active;
+             if (ACTIVE == type) {
+                 op.active = auth;
+             } else if (OWNER == type) {
+                 op.owner = auth;
+             } else if (ALL == type) {
+                 op.active = auth;
+                 op.owner = auth;
+             }
+
+             signed_transaction tx;
+             tx.operations.push_back(op);
+             set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, asset_obj);
+             tx.validate();
+
+             return sign_transaction(tx, broadcast);
+       } FC_CAPTURE_AND_RETHROW((account)(type)(weight_threshold)(key_auths)(key_weights)(fee_symbol)(broadcast)) }
+
        signed_transaction update_account_multisig(string account, string type, uint32_t weight_threshold, vector<string> account_auths, vector<weight_type> account_weights, string fee_symbol, bool broadcast)
        { try {
              FC_ASSERT(OWNER == type || ACTIVE == type || ALL == type);
@@ -4793,6 +4829,17 @@
        bool broadcast /* = false */)
     {
        return my->withdraw_vesting( witness_name, amount, asset_symbol, broadcast );
+    }
+
+    signed_transaction wallet_api::update_account_multisig_keys(string account,
+                                                           string type,
+                                                           uint32_t weight_threshold,
+                                                           vector<public_key_type> key_auths,
+                                                           vector<weight_type> key_weights,
+                                                           string fee_symbol,
+                                                           bool broadcast)
+    {
+      return my->update_account_multisig_keys(account, type, weight_threshold, key_auths, key_weights, fee_symbol, broadcast);
     }
 
     signed_transaction wallet_api::update_account_multisig(string account,
