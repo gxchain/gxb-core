@@ -4,6 +4,7 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/wast_to_wasm.hpp>
+#include <graphene/chain/contract_table_objects.hpp>
 
 #include <boost/container/flat_set.hpp>
 
@@ -53,19 +54,21 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, c
     auto tableid = tab.id;
 
     // assert payer
-
-    const auto &obj = db.create<key_value_object>([&](key_value_object &o) {
+    key_value_object new_obj;
+    /*
+    const auto& new_obj = db.create<key_value_object>([&](key_value_object& o) {
         o.t_id = tableid;
         o.primary_key = id;
         o.value.resize(buffer_size);
         o.payer = payer;
         memcpy(o.value.data(), buffer, buffer_size);
     });
+    */
 
     // update_db_usage
 
     keyval_cache.cache_table(tab);
-    return keyval_cache.add(obj);
+    return keyval_cache.add(new_obj);
 }
 
 void apply_context::db_update_i64(int iterator, account_name payer, const char *buffer, size_t buffer_size)

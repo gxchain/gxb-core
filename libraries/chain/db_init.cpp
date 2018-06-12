@@ -173,6 +173,12 @@ const uint8_t lock_balance_object::type_id;
 const uint8_t signature_object::space_id;
 const uint8_t signature_object::type_id;
 
+const uint8_t table_id_object::space_id;
+const uint8_t table_id_object::type_id;
+
+const uint8_t key_value_object::space_id;
+const uint8_t key_value_object::type_id;
+
 void database::initialize_evaluators()
 {
    _operation_evaluators.resize(255);
