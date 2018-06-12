@@ -54,6 +54,7 @@
 #include <graphene/chain/pocs_object.hpp>
 #include <graphene/chain/second_hand_data_object.hpp>
 #include <graphene/chain/signature_object.hpp>
+#include <graphene/chain/contract_table_objects.hpp>
 
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
@@ -308,6 +309,15 @@ void database::initialize_indexes()
    add_index< primary_index< simple_index< fba_accumulator_object       > > >();
 
    add_index< primary_index<signature_index                            > >();
+
+   // contract object indexes
+   add_index< primary_index< table_id_multi_index> >();
+   add_index< primary_index< key_value_index> >();
+   add_index< primary_index< index64_index> >();
+   add_index< primary_index< index128_index> >();
+   add_index< primary_index< index256_index> >();
+   add_index< primary_index< index_double_index> >();
+   add_index< primary_index< index_long_double_index> >();
 
 }
 

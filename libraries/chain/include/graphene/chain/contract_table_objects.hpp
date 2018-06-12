@@ -1,7 +1,9 @@
 #pragma once
 
-#include <graphene/chain/multi_index_includes.hpp>
 #include <graphene/chain/protocol/types.hpp>
+#include <graphene/chain/multi_index_includes.hpp>
+#include <graphene/db/generic_index.hpp>
+#include <boost/multi_index/composite_key.hpp>
 #include <softfloat.hpp>
 
 #include <array>
@@ -21,16 +23,16 @@ class table_id_object : public graphene::db::abstract_object<table_id_object>
       static const uint8_t space_id = implementation_ids;
       static const uint8_t type_id  = impl_table_id_object_type;
 
-    account_name            code;
-    scope_name              scope;
-    table_name              table;
-    account_name            payer;
-    uint32_t                count = 0; /// the number of elements in the table
+      account_name            code;
+      scope_name              scope;
+      table_name              table;
+      account_name            payer;
+      uint32_t                count = 0; /// the number of elements in the table
 };
 
 struct by_code_scope_table;
 
-using table_id_multi_index = multi_index_container<
+using table_id_object_multi_index_type = multi_index_container<
   table_id_object,
   indexed_by<
       ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
@@ -43,6 +45,8 @@ using table_id_multi_index = multi_index_container<
      >
   >
 >;
+
+typedef generic_index<table_id_object, table_id_object_multi_index_type> table_id_multi_index;
 
 using table_id = table_id_object_id_type;
 
@@ -65,7 +69,7 @@ class key_value_object : public graphene::db::abstract_object<key_value_object>
     bytes                       value;
 };
 
-using key_value_index = multi_index_container<
+using key_value_object_multi_index_type = multi_index_container<
   key_value_object,
   indexed_by<
      ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
@@ -78,6 +82,7 @@ using key_value_index = multi_index_container<
      >
   >
 >;
+typedef generic_index<key_value_object, key_value_object_multi_index_type> key_value_index;
 
 struct by_primary;
 struct by_secondary;
@@ -150,8 +155,8 @@ typedef secondary_index<float128_t,index_long_double_object_type,soft_long_doubl
 
 FC_REFLECT_DERIVED(graphene::chain::table_id_object,
                    (graphene::db::object),
-                   (id)(code)(scope)(table))
+                   ((code)(scope)(table)(payer)(count))
 
 FC_REFLECT_DERIVED(graphene::chain::key_value_object,
                    (graphene::db::object),
-                   (id)(t_id)(primary_key)(value)(payer))
+                   (t_id)(primary_key)(payer)(value))
