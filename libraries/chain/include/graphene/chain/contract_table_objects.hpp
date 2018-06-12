@@ -14,9 +14,6 @@ class database;
 
 typedef __uint128_t uint128_t;
 
-   /**
-    * @brief The table_id_object class tracks the mapping of (scope, code, table) to an opaque identifier
-    */
 class table_id_object : public graphene::db::abstract_object<table_id_object>
 {
   public:
@@ -84,6 +81,7 @@ using key_value_object_multi_index_type = multi_index_container<
 >;
 typedef generic_index<key_value_object, key_value_object_multi_index_type> key_value_index;
 
+/*
 struct by_primary;
 struct by_secondary;
 
@@ -150,12 +148,13 @@ typedef secondary_index<float64_t,index_double_object_type,soft_double_less>::in
 
 typedef secondary_index<float128_t,index_long_double_object_type,soft_long_double_less>::index_object  index_long_double_object;
 typedef secondary_index<float128_t,index_long_double_object_type,soft_long_double_less>::index_index   index_long_double_index;
+*/
 
 } }  // namespace graphene::chain
 
 FC_REFLECT_DERIVED(graphene::chain::table_id_object,
                    (graphene::db::object),
-                   ((code)(scope)(table)(payer)(count))
+                   (code)(scope)(table)(payer)(count))
 
 FC_REFLECT_DERIVED(graphene::chain::key_value_object,
                    (graphene::db::object),
