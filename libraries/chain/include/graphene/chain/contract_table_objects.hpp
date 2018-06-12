@@ -81,7 +81,6 @@ using key_value_object_multi_index_type = multi_index_container<
 >;
 typedef generic_index<key_value_object, key_value_object_multi_index_type> key_value_index;
 
-/*
 struct by_primary;
 struct by_secondary;
 
@@ -89,7 +88,6 @@ template <typename SecondaryKey, uint64_t ObjectTypeId, typename SecondaryKeyLes
 struct secondary_index {
     class index_object : public graphene::db::abstract_object<index_object> {
     public:
-        typedef SecondaryKey secondary_key_type;
 
         table_id            t_id;
         uint64_t            primary_key;
@@ -114,7 +112,9 @@ struct secondary_index {
                composite_key_compare<std::less<table_id>, SecondaryKeyLess, std::less<uint64_t>>
             >
         >
-    > index_index;
+    > index_index_multi_index_type;
+    typedef generic_index<index_object, index_index_multi_index_type> index_index;
+
 };
 
 typedef secondary_index<uint64_t, index64_object_type>::index_object index64_object;
@@ -148,7 +148,6 @@ typedef secondary_index<float64_t,index_double_object_type,soft_double_less>::in
 
 typedef secondary_index<float128_t,index_long_double_object_type,soft_long_double_less>::index_object  index_long_double_object;
 typedef secondary_index<float128_t,index_long_double_object_type,soft_long_double_less>::index_index   index_long_double_index;
-*/
 
 } }  // namespace graphene::chain
 
@@ -158,4 +157,4 @@ FC_REFLECT_DERIVED(graphene::chain::table_id_object,
 
 FC_REFLECT_DERIVED(graphene::chain::key_value_object,
                    (graphene::db::object),
-                   (t_id)(primary_key)(payer)(value))
+                  (t_id)(primary_key)(payer)(value))
