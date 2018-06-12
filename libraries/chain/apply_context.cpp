@@ -49,7 +49,23 @@ int apply_context::db_store_i64(uint64_t scope, uint64_t table, const account_na
 
 int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size)
 {
-    return 0;
+    const auto &tab = find_or_create_table(code, scope, table, payer);
+    auto tableid = tab.id;
+
+    // assert payer
+
+    const auto &obj = db.create<key_value_object>([&](key_value_object &o) {
+        o.t_id = tableid;
+        o.primary_key = id;
+        o.value.resize(buffer_size);
+        o.payer = payer;
+        memcpy(o.value.data(), buffer, buffer_size);
+    });
+
+    // update_db_usage
+
+    keyval_cache.cache_table(tab);
+    return keyval_cache.add(obj);
 }
 
 void apply_context::db_update_i64(int iterator, account_name payer, const char *buffer, size_t buffer_size)
@@ -103,6 +119,40 @@ int apply_context::db_upperbound_i64(uint64_t code, uint64_t scope, uint64_t tab
 int apply_context::db_end_i64(uint64_t code, uint64_t scope, uint64_t table)
 {
     return 0;
+}
+
+const table_id_object *apply_context::find_table(name code, name scope, name table)
+{
+    auto &table_idx = db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
+    const auto *existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
+    if (existing_tid != nullptr) {
+        return *existing_tid;
+   }
+   return nullptr;
+}
+
+const table_id_object &apply_context::find_or_create_table(name code, name scope, name table, const account_name &payer)
+{
+    auto &table_idx = db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
+    const auto *existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
+    if (existing_tid != nullptr) {
+        return *existing_tid;
+   }
+
+   // update_db_usage
+
+   return db.create<table_id_object>([&](table_id_object &t_id){
+      t_id.code = code;
+      t_id.scope = scope;
+      t_id.table = table;
+      t_id.payer = payer;
+   });
+}
+
+void apply_context::remove_table(const table_id_object &tid)
+{
+    // update_db_usage
+    db.remove(tid);
 }
 
 } } /// graphene::chain
