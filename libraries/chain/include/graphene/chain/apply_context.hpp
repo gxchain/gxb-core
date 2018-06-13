@@ -237,5 +237,3 @@ class apply_context {
 };
 
 } } // namespace graphene::chain
-
-//FC_REFLECT(graphene::chain::apply_context::apply_results, (applied_actions)(deferred_transaction_requests)(deferred_transactions_count))

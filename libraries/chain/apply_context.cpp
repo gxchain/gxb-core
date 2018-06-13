@@ -195,7 +195,7 @@ int apply_context::db_upperbound_i64(uint64_t code, uint64_t scope, uint64_t tab
 
     auto table_end_itr = keyval_cache.cache_table(*tab);
 
-    const auto &idx = db.get_index<key_value_index, by_scope_primary>();
+    const auto& idx = _db->get_index_type<key_value_index>().indices().get<by_scope_primary>();
     auto itr = idx.upper_bound(boost::make_tuple(tab->id, id));
     if (itr == idx.end()) return table_end_itr;
     if (itr->t_id != tab->id) return table_end_itr;
