@@ -123,7 +123,10 @@ int apply_context::db_end_i64(uint64_t code, uint64_t scope, uint64_t table)
 
 optional<table_id_object> apply_context::find_table(name code, name scope, name table)
 {
-    auto table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
+    auto &t1 = _db->get_index_type<table_id_multi_index>();
+    auto t2 = t1.indices();
+    auto &table_idx = t2.get<by_code_scope_table>();
+//    auto table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
     auto existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
     if (existing_tid != table_idx.end()) {
         return *existing_tid;
@@ -133,7 +136,10 @@ optional<table_id_object> apply_context::find_table(name code, name scope, name 
 
 const table_id_object &apply_context::find_or_create_table(name code, name scope, name table, const account_name &payer)
 {
-    auto table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
+    auto &t1 = _db->get_index_type<table_id_multi_index>();
+    auto t2 = t1.indices();
+    auto &table_idx = t2.get<by_code_scope_table>();
+//    auto table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
     auto existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
     if (existing_tid != table_idx.end()) {
         return *existing_tid;

@@ -1228,7 +1228,7 @@ class system_api : public context_aware_api
 
     uint64_t current_time()
     {
-        return static_cast<uint64_t>(context.db.head_block_time().sec_since_epoch());
+        return static_cast<uint64_t>(context.db().head_block_time().sec_since_epoch());
     }
 
     /*
