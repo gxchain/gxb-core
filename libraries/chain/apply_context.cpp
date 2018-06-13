@@ -72,9 +72,12 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, c
 void apply_context::db_update_i64(int iterator, account_name payer, const char *buffer, size_t buffer_size)
 {
     const key_value_object &obj = keyval_cache.get(iterator);
-    const auto &table_obj = keyval_cache.get_table(obj.t_id);
 
-    _db->modify(obj, [&](auto &o) {
+    // validate
+    const auto &table_obj = keyval_cache.get_table(obj.t_id);
+    FC_ASSERT(table_obj.code == receiver, "db access violation");
+
+    _db->modify(obj, [&](key_value_object &o) {
         o.value.resize(buffer_size);
         memcpy(o.value.data(), buffer, buffer_size);
         o.payer = payer;
@@ -84,7 +87,9 @@ void apply_context::db_update_i64(int iterator, account_name payer, const char *
 void apply_context::db_remove_i64(int iterator)
 {
     const key_value_object &obj = keyval_cache.get(iterator);
+
     const auto &table_obj = keyval_cache.get_table(obj.t_id);
+    FC_ASSERT(table_obj.code == receiver, "db access violation");
 
     // update_db_usage
 
@@ -117,8 +122,9 @@ int apply_context::db_previous_i64(int iterator, uint64_t &primary)
 
 int apply_context::db_find_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
 {
-    const auto *tab = find_table(code, scope, table);
-    if (!tab) return -1;
+    /*
+    const auto& tab = find_table(code, scope, table);
+    if (!tab.valid()) return -1;
 
     auto table_end_itr = keyval_cache.cache_table(*tab);
 
@@ -127,6 +133,8 @@ int apply_context::db_find_i64(uint64_t code, uint64_t scope, uint64_t table, ui
     if (iter == kv_idx.end()) return table_end_itr;
 
     return keyval_cache.add(*iter);
+    */
+    return 0;
 }
 
 int apply_context::db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
