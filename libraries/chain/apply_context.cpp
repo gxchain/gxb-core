@@ -122,19 +122,16 @@ int apply_context::db_previous_i64(int iterator, uint64_t &primary)
 
 int apply_context::db_find_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
 {
-    /*
     const auto& tab = find_table(code, scope, table);
     if (!tab.valid()) return -1;
 
     auto table_end_itr = keyval_cache.cache_table(*tab);
 
-    const auto& kv_idx = _db->get_index_type<key_value_index>().indeces().get<by_scope_primary>();
+    const auto& kv_idx = _db->get_index_type<key_value_index>().indices().get<by_scope_primary>();
     auto iter = kv_idx.find(boost::make_tuple(tab->id, id));
     if (iter == kv_idx.end()) return table_end_itr;
 
     return keyval_cache.add(*iter);
-    */
-    return 0;
 }
 
 int apply_context::db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)

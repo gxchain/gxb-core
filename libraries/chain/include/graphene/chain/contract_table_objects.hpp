@@ -46,7 +46,7 @@ using table_id_object_multi_index_type = multi_index_container<
 
 typedef generic_index<table_id_object, table_id_object_multi_index_type> table_id_multi_index;
 
-using table_id = object_id_type;
+typedef table_id_object_id_type table_id;
 
 struct by_scope_primary;
 struct by_scope_secondary;
