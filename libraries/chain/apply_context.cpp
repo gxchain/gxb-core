@@ -54,6 +54,7 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, c
     auto tableid = tab.id;
 
     // assert payer
+
     const auto& new_obj = _db->create<key_value_object>([&](key_value_object& o) {
         o.t_id = tableid;
         o.primary_key = id;
@@ -70,12 +71,25 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, c
 
 void apply_context::db_update_i64(int iterator, account_name payer, const char *buffer, size_t buffer_size)
 {
+    const key_value_object &obj = keyval_cache.get(iterator);
+    const auto &table_obj = keyval_cache.get_table(obj.t_id);
 
+    _db->modify(obj, [&](auto &o) {
+        o.value.resize(buffer_size);
+        memcpy(o.value.data(), buffer, buffer_size);
+        o.payer = payer;
+    });
 }
 
 void apply_context::db_remove_i64(int iterator)
 {
+    const key_value_object &obj = keyval_cache.get(iterator);
+    const auto &table_obj = keyval_cache.get_table(obj.t_id);
 
+    // update_db_usage
+
+    _db->remove(obj);
+    keyval_cache.remove(iterator);
 }
 
 int apply_context::db_get_i64(int iterator, char *buffer, size_t buffer_size)
@@ -103,7 +117,16 @@ int apply_context::db_previous_i64(int iterator, uint64_t &primary)
 
 int apply_context::db_find_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
 {
-    return 0;
+    const auto *tab = find_table(code, scope, table);
+    if (!tab) return -1;
+
+    auto table_end_itr = keyval_cache.cache_table(*tab);
+
+    const auto& kv_idx = _db->get_index_type<key_value_index>().indeces().get<by_scope_primary>();
+    auto iter = kv_idx.find(boost::make_tuple(tab->id, id));
+    if (iter == kv_idx.end()) return table_end_itr;
+
+    return keyval_cache.add(*iter);
 }
 
 int apply_context::db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
@@ -123,10 +146,7 @@ int apply_context::db_end_i64(uint64_t code, uint64_t scope, uint64_t table)
 
 optional<table_id_object> apply_context::find_table(name code, name scope, name table)
 {
-    auto &t1 = _db->get_index_type<table_id_multi_index>();
-    auto t2 = t1.indices();
-    auto &table_idx = t2.get<by_code_scope_table>();
-//    auto table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
+    const auto& table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
     auto existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
     if (existing_tid != table_idx.end()) {
         return *existing_tid;
@@ -136,10 +156,7 @@ optional<table_id_object> apply_context::find_table(name code, name scope, name 
 
 const table_id_object &apply_context::find_or_create_table(name code, name scope, name table, const account_name &payer)
 {
-    auto &t1 = _db->get_index_type<table_id_multi_index>();
-    auto t2 = t1.indices();
-    auto &table_idx = t2.get<by_code_scope_table>();
-//    auto table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
+    const auto& table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
     auto existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
     if (existing_tid != table_idx.end()) {
         return *existing_tid;
@@ -158,7 +175,8 @@ const table_id_object &apply_context::find_or_create_table(name code, name scope
 void apply_context::remove_table(const table_id_object &tid)
 {
     // update_db_usage
-    // db.remove(tid);
+
+    _db->remove(tid);
 }
 
 } } /// graphene::chain
