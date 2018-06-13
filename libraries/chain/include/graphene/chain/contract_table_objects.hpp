@@ -2,7 +2,9 @@
 
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/multi_index_includes.hpp>
+#include <graphene/chain/database.hpp>
 #include <graphene/db/generic_index.hpp>
+#include <graphene/db/object.hpp>
 #include <boost/multi_index/composite_key.hpp>
 #include <softfloat.hpp>
 
@@ -10,7 +12,6 @@
 #include <type_traits>
 
 namespace graphene { namespace chain {
-class database;
 
 typedef __uint128_t uint128_t;
 
@@ -151,10 +152,15 @@ typedef secondary_index<float128_t,index_long_double_object_type,soft_long_doubl
 
 } }  // namespace graphene::chain
 
-FC_REFLECT_DERIVED(graphene::chain::table_id_object,
-                   (graphene::db::object),
-                   (code)(scope)(table)(payer)(count))
+FC_REFLECT_DERIVED(graphene::chain::table_id_object, (graphene::db::object),
+                   (code)
+                   (scope)
+                   (table)
+                   (payer)
+                   (count))
 
-FC_REFLECT_DERIVED(graphene::chain::key_value_object,
-                   (graphene::db::object),
-                  (t_id)(primary_key)(payer)(value))
+FC_REFLECT_DERIVED(graphene::chain::key_value_object, (graphene::db::object),
+                  (t_id)
+                  (primary_key)
+                  (payer)
+                  (value))

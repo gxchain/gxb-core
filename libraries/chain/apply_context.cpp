@@ -16,12 +16,12 @@ void apply_context::exec()
 {
    auto start = fc::time_point::now();
    try {
-       auto& acnt_indx = db.get_index_type<account_index>();
+       auto& acnt_indx = _db->get_index_type<account_index>();
        auto account_itr = acnt_indx.indices().get<by_name>().find(receiver.to_string());
        dlog("contract receiver: ${r}", ("r", receiver.to_string()));
        auto wasm_bytes = bytes(account_itr->code.begin(), account_itr->code.end());
        try {
-           wasm_interface &wasm = const_cast<wasm_interface&>(db.wasmif);
+           wasm_interface &wasm = const_cast<wasm_interface&>(_db->wasmif);
            wasm.apply(account_itr->code_version, wasm_bytes, *this);
        } catch (const wasm_exit&) {}
    } FC_CAPTURE_AND_RETHROW((_pending_console_output.str()));
@@ -54,16 +54,13 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, c
     auto tableid = tab.id;
 
     // assert payer
-    key_value_object new_obj;
-    /*
-    const auto& new_obj = db.create<key_value_object>([&](key_value_object& o) {
+    const auto& new_obj = _db->create<key_value_object>([&](key_value_object& o) {
         o.t_id = tableid;
         o.primary_key = id;
         o.value.resize(buffer_size);
         o.payer = payer;
         memcpy(o.value.data(), buffer, buffer_size);
     });
-    */
 
     // update_db_usage
 
@@ -124,27 +121,27 @@ int apply_context::db_end_i64(uint64_t code, uint64_t scope, uint64_t table)
     return 0;
 }
 
-const table_id_object *apply_context::find_table(name code, name scope, name table)
+optional<table_id_object> apply_context::find_table(name code, name scope, name table)
 {
-    auto &table_idx = db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
-    const auto *existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
-    if (existing_tid != nullptr) {
+    auto table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
+    auto existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
+    if (existing_tid != table_idx.end()) {
         return *existing_tid;
    }
-   return nullptr;
+   return {};
 }
 
 const table_id_object &apply_context::find_or_create_table(name code, name scope, name table, const account_name &payer)
 {
-    auto &table_idx = db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
-    const auto *existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
-    if (existing_tid != nullptr) {
+    auto table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
+    auto existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
+    if (existing_tid != table_idx.end()) {
         return *existing_tid;
    }
 
    // update_db_usage
 
-   return db.create<table_id_object>([&](table_id_object &t_id){
+   return _db->create<table_id_object>([&](table_id_object &t_id){
       t_id.code = code;
       t_id.scope = scope;
       t_id.table = table;
@@ -155,7 +152,7 @@ const table_id_object &apply_context::find_or_create_table(name code, name scope
 void apply_context::remove_table(const table_id_object &tid)
 {
     // update_db_usage
-    db.remove(tid);
+    // db.remove(tid);
 }
 
 } } /// graphene::chain
