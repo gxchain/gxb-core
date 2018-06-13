@@ -112,12 +112,51 @@ int apply_context::db_get_i64(int iterator, char *buffer, size_t buffer_size)
 
 int apply_context::db_next_i64(int iterator, uint64_t &primary)
 {
-    return 0;
+    if (iterator < -1) return -1; // cannot increment past end iterator of table
+
+    const auto &obj = keyval_cache.get(iterator); // Check for iterator != -1 happens in this call
+    const auto& kv_idx = _db->get_index_type<key_value_index>().indices().get<by_scope_primary>();
+
+    auto itr = kv_idx.iterator_to(obj);
+    ++itr;
+
+    if (itr == kv_idx.end() || itr->t_id != obj.t_id) return keyval_cache.get_end_iterator_by_table_id(obj.t_id);
+
+    primary = itr->primary_key;
+    return keyval_cache.add(*itr);
 }
 
 int apply_context::db_previous_i64(int iterator, uint64_t &primary)
 {
-    return 0;
+    const auto& idx = _db->get_index_type<key_value_index>().indices().get<by_scope_primary>();
+
+    // is end iterator
+    if (iterator < -1) {
+        auto tab = keyval_cache.find_table_by_end_iterator(iterator);
+        FC_ASSERT(tab, "not a valid end iterator");
+
+        auto itr = idx.upper_bound(tab->id);
+        if (idx.begin() == idx.end() || itr == idx.begin()) return -1; // Empty table
+
+        --itr;
+
+        if (itr->t_id != tab->id) return -1; // Empty table
+
+        primary = itr->primary_key;
+        return keyval_cache.add(*itr);
+    }
+
+    const auto &obj = keyval_cache.get(iterator); // Check for iterator != -1 happens in this call
+
+    auto itr = idx.iterator_to(obj);
+    if (itr == idx.begin()) return -1; // cannot decrement past beginning iterator of table
+
+    --itr;
+
+    if (itr->t_id != obj.t_id) return -1; // cannot decrement past beginning iterator of table
+
+    primary = itr->primary_key;
+    return keyval_cache.add(*itr);
 }
 
 int apply_context::db_find_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
@@ -136,7 +175,17 @@ int apply_context::db_find_i64(uint64_t code, uint64_t scope, uint64_t table, ui
 
 int apply_context::db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
 {
-    return 0;
+    const auto& tab = find_table(code, scope, table);
+    if (!tab.valid()) return -1;
+
+    auto table_end_itr = keyval_cache.cache_table(*tab);
+
+    const auto& idx = _db->get_index_type<key_value_index>().indices().get<by_scope_primary>();
+    auto itr = idx.lower_bound(boost::make_tuple(tab->id, id));
+    if (itr == idx.end()) return table_end_itr;
+    if (itr->t_id != tab->id) return table_end_itr;
+
+    return keyval_cache.add(*itr);
 }
 
 int apply_context::db_upperbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
