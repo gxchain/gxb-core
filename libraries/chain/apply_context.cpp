@@ -175,7 +175,7 @@ int apply_context::db_find_i64(uint64_t code, uint64_t scope, uint64_t table, ui
 
 int apply_context::db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
 {
-    const auto& tab = find_table(code, scope, table);
+    const auto &tab = find_table(code, scope, table);
     if (!tab.valid()) return -1;
 
     auto table_end_itr = keyval_cache.cache_table(*tab);
@@ -190,12 +190,25 @@ int apply_context::db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t tab
 
 int apply_context::db_upperbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
 {
-    return 0;
+    const auto &tab = find_table(code, scope, table);
+    if (!tab.valid()) return -1;
+
+    auto table_end_itr = keyval_cache.cache_table(*tab);
+
+    const auto &idx = db.get_index<key_value_index, by_scope_primary>();
+    auto itr = idx.upper_bound(boost::make_tuple(tab->id, id));
+    if (itr == idx.end()) return table_end_itr;
+    if (itr->t_id != tab->id) return table_end_itr;
+
+    return keyval_cache.add(*itr);
 }
 
 int apply_context::db_end_i64(uint64_t code, uint64_t scope, uint64_t table)
 {
-    return 0;
+    const auto &tab = find_table(code, scope, table);
+    if (!tab.valid()) return -1;
+
+    return keyval_cache.cache_table(*tab);
 }
 
 optional<table_id_object> apply_context::find_table(name code, name scope, name table)
@@ -204,8 +217,9 @@ optional<table_id_object> apply_context::find_table(name code, name scope, name 
     auto existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
     if (existing_tid != table_idx.end()) {
         return *existing_tid;
-   }
-   return {};
+    }
+
+    return {};
 }
 
 const table_id_object &apply_context::find_or_create_table(name code, name scope, name table, const account_name &payer)
