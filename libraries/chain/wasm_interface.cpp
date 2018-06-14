@@ -274,57 +274,46 @@ class context_free_system_api : public context_aware_api
          return context.IDX.previous_secondary(iterator, primary);\
       }
 
-class database_api : public context_aware_api
-{
-  public:
-    using context_aware_api::context_aware_api;
+class database_api : public context_aware_api {
+   public:
+      using context_aware_api::context_aware_api;
 
-    int db_store_i64(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, array_ptr<const char> buffer, size_t buffer_size)
-    {
-        return context.db_store_i64(scope, table, payer, id, buffer, buffer_size);
-    }
-    void db_update_i64(int itr, uint64_t payer, array_ptr<const char> buffer, size_t buffer_size)
-    {
-        context.db_update_i64(itr, payer, buffer, buffer_size);
-    }
-    void db_remove_i64(int itr)
-    {
-        context.db_remove_i64(itr);
-    }
-    int db_get_i64(int itr, array_ptr<char> buffer, size_t buffer_size)
-    {
-        return context.db_get_i64(itr, buffer, buffer_size);
-    }
-    int db_next_i64(int itr, uint64_t &primary)
-    {
-        return context.db_next_i64(itr, primary);
-    }
-    int db_previous_i64(int itr, uint64_t &primary)
-    {
-        return context.db_previous_i64(itr, primary);
-    }
-    int db_find_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
-    {
-        return context.db_find_i64(code, scope, table, id);
-    }
-    int db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
-    {
-        return context.db_lowerbound_i64(code, scope, table, id);
-    }
-    int db_upperbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
-    {
-        return context.db_upperbound_i64(code, scope, table, id);
-    }
-    int db_end_i64(uint64_t code, uint64_t scope, uint64_t table)
-    {
-        return context.db_end_i64(code, scope, table);
-    }
+      int db_store_i64( uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, array_ptr<const char> buffer, size_t buffer_size ) {
+         return context.db_store_i64( scope, table, payer, id, buffer, buffer_size );
+      }
+      void db_update_i64( int itr, uint64_t payer, array_ptr<const char> buffer, size_t buffer_size ) {
+         context.db_update_i64( itr, payer, buffer, buffer_size );
+      }
+      void db_remove_i64( int itr ) {
+         context.db_remove_i64( itr );
+      }
+      int db_get_i64( int itr, array_ptr<char> buffer, size_t buffer_size ) {
+         return context.db_get_i64( itr, buffer, buffer_size );
+      }
+      int db_next_i64( int itr, uint64_t& primary ) {
+         return context.db_next_i64(itr, primary);
+      }
+      int db_previous_i64( int itr, uint64_t& primary ) {
+         return context.db_previous_i64(itr, primary);
+      }
+      int db_find_i64( uint64_t code, uint64_t scope, uint64_t table, uint64_t id ) {
+         return context.db_find_i64( code, scope, table, id );
+      }
+      int db_lowerbound_i64( uint64_t code, uint64_t scope, uint64_t table, uint64_t id ) {
+         return context.db_lowerbound_i64( code, scope, table, id );
+      }
+      int db_upperbound_i64( uint64_t code, uint64_t scope, uint64_t table, uint64_t id ) {
+         return context.db_upperbound_i64( code, scope, table, id );
+      }
+      int db_end_i64( uint64_t code, uint64_t scope, uint64_t table ) {
+         return context.db_end_i64( code, scope, table );
+      }
 
-    // DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx64,  uint64_t)
-    // DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx128, uint128_t)
-    // DB_API_METHOD_WRAPPERS_ARRAY_SECONDARY(idx256, 2, uint128_t)
-    // DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_double, float64_t)
-    // DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_long_double, float128_t)
+      DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx64,  uint64_t)
+      DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx128, uint128_t)
+      DB_API_METHOD_WRAPPERS_ARRAY_SECONDARY(idx256, 2, uint128_t)
+      // DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_double, float64_t)
+      // DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_long_double, float128_t)
 };
 
 class softfloat_api : public context_aware_api {
@@ -1324,8 +1313,8 @@ REGISTER_INTRINSICS( database_api,
    DB_SECONDARY_INDEX_METHODS_SIMPLE(idx64)
    DB_SECONDARY_INDEX_METHODS_SIMPLE(idx128)
    DB_SECONDARY_INDEX_METHODS_ARRAY(idx256)
-   DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_double)
-   DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_long_double)
+   // DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_double)
+   // DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_long_double)
 );
 
 REGISTER_INJECTED_INTRINSICS(transaction_context,

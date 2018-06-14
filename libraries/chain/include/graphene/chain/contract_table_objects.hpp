@@ -151,7 +151,21 @@ typedef secondary_index<float64_t,index_double_object_type,soft_double_less>::in
 typedef secondary_index<float128_t,index_long_double_object_type,soft_long_double_less>::index_object  index_long_double_object;
 typedef secondary_index<float128_t,index_long_double_object_type,soft_long_double_less>::index_index   index_long_double_index;
 
+
+
 } }  // namespace graphene::chain
+
+template<typename T>
+struct get_gph_index_type {};
+
+#define GPH_SET_INDEX_TYPE(OBJECT_TYPE, INDEX_TYPE)  \
+    template<> struct get_gph_index_type<OBJECT_TYPE> { typedef INDEX_TYPE type; };
+
+GPH_SET_INDEX_TYPE(graphene::chain::index64_object, graphene::chain::index64_index)
+GPH_SET_INDEX_TYPE(graphene::chain::index128_object, graphene::chain::index128_index)
+GPH_SET_INDEX_TYPE(graphene::chain::index256_object, graphene::chain::index256_index)
+GPH_SET_INDEX_TYPE(graphene::chain::index_double_object, graphene::chain::index_double_index)
+GPH_SET_INDEX_TYPE(graphene::chain::index_long_double_object, graphene::chain::index_long_double_index)
 
 FC_REFLECT_DERIVED(graphene::chain::table_id_object, (graphene::db::object),
                    (code)
