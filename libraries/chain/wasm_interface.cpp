@@ -320,9 +320,9 @@ class database_api : public context_aware_api
         return context.db_end_i64(code, scope, table);
     }
 
-    // DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx64,  uint64_t)
-    // DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx128, uint128_t)
-    // DB_API_METHOD_WRAPPERS_ARRAY_SECONDARY(idx256, 2, uint128_t)
+    DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx64,  uint64_t)
+    DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx128, uint128_t)
+    DB_API_METHOD_WRAPPERS_ARRAY_SECONDARY(idx256, 2, uint128_t)
     // DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_double, float64_t)
     // DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_long_double, float128_t)
 };
