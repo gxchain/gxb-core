@@ -6,7 +6,7 @@
 #include <boost/fusion/include/std_tuple.hpp>
 
 #include <boost/mp11/tuple.hpp>
-#define N(X) ::graphene::string_to_name(#X)
+#define N(X) ::gxblib::string_to_name(#X)
 namespace graphene {
 
    template<typename T, typename Q, typename... Args>
