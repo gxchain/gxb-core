@@ -246,7 +246,7 @@ class apply_context {
 
             int find_secondary( uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_const_type secondary, uint64_t& primary ) {
                auto tab = context.find_table( code, scope, table );
-               if( !tab ) return -1;
+               if( !tab.valid() ) return -1;
 
                auto table_end_itr = itr_cache.cache_table( *tab );
 
@@ -260,11 +260,11 @@ class apply_context {
 
             int lowerbound_secondary( uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t& primary ) {
                auto tab = context.find_table( code, scope, table );
-               if( !tab ) return -1;
+               if( !tab.valid() ) return -1;
 
                auto table_end_itr = itr_cache.cache_table( *tab );
 
-               const auto& idx = context._db->get_index_type<index_index>().indices().get<by_secondary>();
+               const auto& idx = context._db->get_index_type<typename secondary_index::index_index>().indices().get<by_secondary>();
                auto itr = idx.lower_bound( secondary_key_helper_t::create_tuple( *tab, secondary ) );
                if( itr == idx.end() ) return table_end_itr;
                if( itr->t_id != tab->id ) return table_end_itr;
@@ -277,11 +277,11 @@ class apply_context {
 
             int upperbound_secondary( uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t& primary ) {
                auto tab = context.find_table( code, scope, table );
-               if( !tab ) return -1;
+               if( !tab.valid() ) return -1;
 
                auto table_end_itr = itr_cache.cache_table( *tab );
 
-               const auto& dx = context._db->get_index_type<index_index>().indices().get<by_secondary>();
+               const auto& dx = context._db->get_index_type<typename secondary_index::index_index>().indices().get<by_secondary>();
                auto itr = idx.upper_bound( secondary_key_helper_t::create_tuple( *tab, secondary ) );
                if( itr == idx.end() ) return table_end_itr;
                if( itr->t_id != tab->id ) return table_end_itr;
@@ -294,7 +294,7 @@ class apply_context {
 
             int end_secondary( uint64_t code, uint64_t scope, uint64_t table ) {
                auto tab = context.find_table( code, scope, table );
-               if( !tab ) return -1;
+               if( !tab.valid() ) return -1;
 
                return itr_cache.cache_table( *tab );
             }
@@ -303,7 +303,7 @@ class apply_context {
                if( iterator < -1 ) return -1; // cannot increment past end iterator of index
 
                const auto& obj = itr_cache.get(iterator); // Check for iterator != -1 happens in this call
-               const auto& dx = context._db->get_index_type<index_index>().indices().get<by_secondary>();
+               const auto& dx = context._db->get_index_type<typename secondary_index::index_index>().indices().get<by_secondary>();
 
                auto itr = idx.iterator_to(obj);
                ++itr;
@@ -315,7 +315,7 @@ class apply_context {
             }
 
             int previous_secondary( int iterator, uint64_t& primary ) {
-               const auto& dx = context._db->get_index_type<index_index>().indices().get<by_secondary>();
+               const auto& dx = context._db->get_index_type<typename secondary_index::index_index>().indices().get<by_secondary>();
 
                if( iterator < -1 ) // is end iterator
                {
@@ -348,7 +348,7 @@ class apply_context {
 
             int find_primary( uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t primary ) {
                auto tab = context.find_table( code, scope, table );
-               if( !tab ) return -1;
+               if( !tab.valid() ) return -1;
 
                auto table_end_itr = itr_cache.cache_table( *tab );
 
@@ -361,11 +361,11 @@ class apply_context {
 
             int lowerbound_primary( uint64_t code, uint64_t scope, uint64_t table, uint64_t primary ) {
                auto tab = context.find_table( code, scope, table );
-               if (!tab) return -1;
+               if( !tab.valid() ) return -1;
 
                auto table_end_itr = itr_cache.cache_table( *tab );
 
-               const auto& idx = context._db->get_index_type<index_index>().indices().get<by_primary>();
+               const auto& idx = context._db->get_index_type<typename secondary_index::index_index>().indices().get<by_primary>();
                auto itr = idx.lower_bound(boost::make_tuple(tab->id, primary));
                if (itr == idx.end()) return table_end_itr;
                if (itr->t_id != tab->id) return table_end_itr;
@@ -375,11 +375,11 @@ class apply_context {
 
             int upperbound_primary( uint64_t code, uint64_t scope, uint64_t table, uint64_t primary ) {
                auto tab = context.find_table( code, scope, table );
-               if ( !tab ) return -1;
+               if( !tab.valid() ) return -1;
 
                auto table_end_itr = itr_cache.cache_table( *tab );
 
-               const auto& idx = context._db->get_index_type<index_index>().indices().get<by_primary>();
+               const auto& idx = context._db->get_index_type<typename secondary_index::index_index>().indices().get<by_primary>();
                auto itr = idx.upper_bound(boost::make_tuple(tab->id, primary));
                if (itr == idx.end()) return table_end_itr;
                if (itr->t_id != tab->id) return table_end_itr;
@@ -392,7 +392,7 @@ class apply_context {
                if( iterator < -1 ) return -1; // cannot increment past end iterator of table
 
                const auto& obj = itr_cache.get(iterator); // Check for iterator != -1 happens in this call
-               const auto& idx = context._db->get_index_type<index_index>().indices().get<by_primary>();
+               const auto& idx = context._db->get_index_type<typename secondary_index::index_index>().indices().get<by_primary>();
 
                auto itr = idx.iterator_to(obj);
                ++itr;
@@ -404,7 +404,7 @@ class apply_context {
             }
 
             int previous_primary( int iterator, uint64_t& primary ) {
-               const auto& idx = context._db->get_index_type<index_index>().indices().get<by_primary>();
+               const auto& idx = context._db->get_index_type<typename secondary_index::index_index>().indices().get<by_primary>();
 
                if( iterator < -1 ) // is end iterator
                {
