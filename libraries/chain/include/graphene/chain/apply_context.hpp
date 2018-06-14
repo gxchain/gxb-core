@@ -264,7 +264,7 @@ class apply_context {
 
                auto table_end_itr = itr_cache.cache_table( *tab );
 
-               const auto& dx = context._db->get_index_type<index_index>().indices().get<by_secondary>();
+               const auto& idx = context._db->get_index_type<index_index>().indices().get<by_secondary>();
                auto itr = idx.lower_bound( secondary_key_helper_t::create_tuple( *tab, secondary ) );
                if( itr == idx.end() ) return table_end_itr;
                if( itr->t_id != tab->id ) return table_end_itr;
