@@ -89,11 +89,12 @@ template <typename SecondaryKey, uint64_t ObjectTypeId, typename SecondaryKeyLes
 struct secondary_index {
     class index_object : public graphene::db::abstract_object<index_object> {
     public:
+      typedef SecondaryKey secondary_key_type;
 
-        table_id            t_id;
-        uint64_t            primary_key;
-        account_name        payer = 0;
-        SecondaryKey        secondary_key;
+      table_id t_id;
+      uint64_t primary_key;
+      account_name payer = 0;
+      SecondaryKey secondary_key;
     };
 
     typedef multi_index_container<
