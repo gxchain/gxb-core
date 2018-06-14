@@ -195,9 +195,9 @@ class apply_context {
                   o.payer         = payer;
                });
 
-               context._db->modify( tab, [&]( auto& t ) {
-                 ++t.count;
-               });
+               // context._db->modify( tab, [&]( auto& t ) {
+               //   ++t.count;
+               // });
 
                // context.update_db_usage( payer, config::billable_size_v<ObjectType> );
 
@@ -212,16 +212,14 @@ class apply_context {
                const auto& table_obj = itr_cache.get_table( obj.t_id );
                FC_ASSERT( table_obj.code == context.receiver, "db access violation" );
 
-//               context.require_write_lock( table_obj.scope );
-
-               context._db->modify( table_obj, [&]( auto& t ) {
-                  --t.count;
-               });
+               // context._db->modify( table_obj, [&]( auto& t ) {
+               //    --t.count;
+               // });
                context._db->remove( obj );
 
-               if (table_obj.count == 0) {
-                  context.remove_table(table_obj);
-               }
+               // if (table_obj.count == 0) {
+               //    context.remove_table(table_obj);
+               // }
 
                itr_cache.remove( iterator );
             }
@@ -232,15 +230,13 @@ class apply_context {
                const auto& table_obj = itr_cache.get_table( obj.t_id );
                FC_ASSERT( table_obj.code == context.receiver, "db access violation" );
 
-//               context.require_write_lock( table_obj.scope );
-
                // if( payer == account_name() ) payer = obj.payer;
 
                // context.update_db_usage
 
                context._db->modify( obj, [&]( auto& o ) {
-                 secondary_key_helper_t::set(o.secondary_key, secondary);
-                 o.payer = payer;
+                 // secondary_key_helper_t::set(o.secondary_key, secondary);
+                 // o.payer = payer;
                });
             }
 
@@ -354,7 +350,7 @@ class apply_context {
 
                const auto* obj = context._db->find<ObjectType, by_primary>( boost::make_tuple( tab->id, primary ) );
                if( !obj ) return table_end_itr;
-               secondary_key_helper_t::get(secondary, obj->secondary_key);
+               // secondary_key_helper_t::get(secondary, obj->secondary_key);
 
                return itr_cache.add( *obj );
             }
@@ -438,7 +434,7 @@ class apply_context {
             void get( int iterator, uint64_t& primary, secondary_key_proxy_type secondary ) {
                const auto& obj = itr_cache.get( iterator );
                primary   = obj.primary_key;
-               secondary_key_helper_t::get(secondary, obj.secondary_key);
+               // secondary_key_helper_t::get(secondary, obj.secondary_key);
             }
 
          private:
