@@ -216,9 +216,9 @@ class apply_context {
                 });
                 context._db->remove(obj);
 
-                // if (table_obj.count == 0) {
-                //    context.remove_table(table_obj);
-                // }
+                if (table_obj.count == 0) {
+                   context.remove_table(table_obj);
+                }
 
                 itr_cache.remove(iterator);
             }
@@ -234,9 +234,9 @@ class apply_context {
 
                 // context.update_db_usage
 
-                context._db->modify(obj, [&](auto &o) {
-                    // secondary_key_helper_t::set(o.secondary_key, secondary);
-                    // o.payer = payer;
+                context._db->modify(obj, [&](ObjectType &o) {
+                    secondary_key_helper_t::set(o.secondary_key, secondary);
+                    o.payer = payer;
                 });
             }
 
@@ -359,7 +359,7 @@ class apply_context {
                 const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
                 auto obj = idx.find(boost::make_tuple(tab->id, primary));
                 if (obj != idx.end()) return table_end_itr;
-                // secondary_key_helper_t::get(secondary, obj->secondary_key);
+                secondary_key_helper_t::get(secondary, obj->secondary_key);
 
                 return itr_cache.add(*obj);
             }
@@ -448,7 +448,7 @@ class apply_context {
             {
                 const auto &obj = itr_cache.get(iterator);
                 primary = obj.primary_key;
-                // secondary_key_helper_t::get(secondary, obj.secondary_key);
+                secondary_key_helper_t::get(secondary, obj.secondary_key);
             }
 
          private:
