@@ -930,6 +930,36 @@
           _builder_transactions.erase(handle);
        }
 
+       variant query_contract_tables(string contract)
+       {
+           try {
+               FC_ASSERT(!self.is_locked());
+               FC_ASSERT(is_valid_name(contract));
+    
+               account_object contract_account = this->get_account(contract);
+    
+               fc::variants result;
+               abi_def abi;
+               if (abi_serializer::to_abi(contract_account.abi, abi)) {
+    
+                   auto tables = abi.tables;
+                   result.reserve(tables.size());
+    
+                   std::transform(tables.begin(), tables.end(), std::back_inserter(result),
+                                  [](table_def t_def) -> fc::variant {
+                                      return name(t_def.name).to_string();
+                                  });
+    
+                   return result;
+               } else {
+                   GRAPHENE_ASSERT(false, abi_not_found_exception, "No ABI found for ${contract}", ("contract", contract));
+               }
+           }
+           FC_CAPTURE_AND_LOG((contract))
+           
+           return variant();
+       }
+
        signed_transaction deploy_contract(string name,
                                           string account,
                                           string vm_type,
@@ -4754,18 +4784,23 @@
                                                   string vm_version,
                                                   string contract_dir,
                                                   bool broadcast)
-{
-    return my->deploy_contract(name, account, vm_type, vm_version, contract_dir, broadcast);
-}
+    {
+        return my->deploy_contract(name, account, vm_type, vm_version, contract_dir, broadcast);
+    }
     
     signed_transaction wallet_api::call_contract(string account,
                                       string contract,
                                       string method,
                                       string args,
                                       bool broadcast)
-{
-    return my->call_contract(account, contract, method, args, broadcast);
-}
+    {
+        return my->call_contract(account, contract, method, args, broadcast);
+    }
+    
+    variant wallet_api::query_contract_tables(string contract) const
+    {
+        return my->query_contract_tables(contract);
+    }
 
     signed_transaction wallet_api::register_account(string name,
                                                     public_key_type owner_pubkey,
