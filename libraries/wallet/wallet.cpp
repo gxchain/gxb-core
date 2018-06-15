@@ -930,6 +930,44 @@
           _builder_transactions.erase(handle);
        }
 
+       variant query_contract_objects(string contract, string table) {
+           try {
+               FC_ASSERT(!self.is_locked());
+               FC_ASSERT(is_valid_name(contract));
+               
+               account_object contract_account = this->get_account(contract);
+    
+               fc::variants result;
+               abi_def abi;
+               bool table_exist = false;
+               table_def *table_info = nullptr;
+               if (abi_serializer::to_abi(contract_account.abi, abi)) {
+    
+                   auto &tables = abi.tables;
+                   for(auto &t : tables) {
+                       if(t.name == table) {
+                           table_exist = true;
+                           table_info = &t;
+                           break;
+                       }
+                   }
+                   
+                   if(table_exist) {
+                       uint64_t scope = N(contract);
+                   } else {
+                       //todo throw table not exist exception
+                   }
+    
+                   return result;
+               } else {
+                   GRAPHENE_ASSERT(false, abi_not_found_exception, "No ABI found for ${contract}", ("contract", contract));
+               }
+           }
+           FC_CAPTURE_AND_LOG((contract))
+           
+           return variant();
+       }
+       
        variant query_contract_tables(string contract)
        {
            try {
@@ -4800,6 +4838,11 @@
     variant wallet_api::query_contract_tables(string contract) const
     {
         return my->query_contract_tables(contract);
+    }
+    
+    variant wallet_api::query_contract_objects(string contract, string table) const
+    {
+        return my->query_contract_objects(contract, table);
     }
 
     signed_transaction wallet_api::register_account(string name,
