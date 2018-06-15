@@ -179,262 +179,276 @@ class apply_context {
 
             gph_generic_index( apply_context& c ):context(c){}
 
-            int store( uint64_t scope, uint64_t table, const account_name& payer,
-                       uint64_t id, secondary_key_proxy_const_type value )
+            int store(uint64_t scope, uint64_t table, const account_name &payer,
+                      uint64_t id, secondary_key_proxy_const_type value)
             {
                // FC_ASSERT( payer != account_name(), "must specify a valid account to pay for new record" );
 
-               const auto& tab = context.find_or_create_table( context.receiver, scope, table, payer );
+               auto &tab = const_cast<table_id_object&>(context.find_or_create_table(context.receiver, scope, table, payer));
 
-               const auto& obj = context._db->create<ObjectType>( [&]( auto& o ){
-                  o.t_id          = tab.id;
-                  o.primary_key   = id;
-                  secondary_key_helper_t::set(o.secondary_key, value);
-                  o.payer         = payer;
+               const auto &obj = context._db->create<ObjectType>([&](auto &o) {
+                   o.t_id = tab.id;
+                   o.primary_key = id;
+                   secondary_key_helper_t::set(o.secondary_key, value);
+                   o.payer = payer;
                });
 
-               // context._db->modify( tab, [&]( auto& t ) {
-               //   ++t.count;
-               // });
-
-               // context.update_db_usage
-
-               itr_cache.cache_table( tab );
-               return itr_cache.add( obj );
-            }
-
-            void remove( int iterator ) {
-               const auto& obj = itr_cache.get( iterator );
-               // context.update_db_usage
-
-               const auto& table_obj = itr_cache.get_table( obj.t_id );
-               FC_ASSERT( table_obj.code == context.receiver, "db access violation" );
-
-               // context._db->modify( table_obj, [&]( auto& t ) {
-               //    --t.count;
-               // });
-               context._db->remove( obj );
-
-               // if (table_obj.count == 0) {
-               //    context.remove_table(table_obj);
-               // }
-
-               itr_cache.remove( iterator );
-            }
-
-            void update( int iterator, account_name payer, secondary_key_proxy_const_type secondary ) {
-               const auto& obj = itr_cache.get( iterator );
-
-               const auto& table_obj = itr_cache.get_table( obj.t_id );
-               FC_ASSERT( table_obj.code == context.receiver, "db access violation" );
-
-               // if( payer == account_name() ) payer = obj.payer;
-
-               // context.update_db_usage
-
-               context._db->modify( obj, [&]( auto& o ) {
-                 // secondary_key_helper_t::set(o.secondary_key, secondary);
-                 // o.payer = payer;
+               context._db->modify(tab, [&](table_id_object &t) {
+                   ++t.count;
                });
+
+               // context.update_db_usage
+
+               itr_cache.cache_table(tab);
+               return itr_cache.add(obj);
             }
 
-            int find_secondary( uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_const_type secondary, uint64_t& primary ) {
-               auto tab = context.find_table( code, scope, table );
-               if( !tab.valid() ) return -1;
+            void remove(int iterator)
+            {
+                const auto &obj = itr_cache.get(iterator);
+                // context.update_db_usage
 
-               auto table_end_itr = itr_cache.cache_table( *tab );
+                const auto &table_obj = itr_cache.get_table(obj.t_id);
+                FC_ASSERT(table_obj.code == context.receiver, "db access violation");
 
-               const auto& idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
-               auto obj = idx.find(secondary_key_helper_t::create_tuple(*tab, secondary));
-               if(obj != idx.end()) return table_end_itr;
+                context._db->modify(table_obj, [&](table_id_object &t) {
+                    --t.count;
+                });
+                context._db->remove(obj);
 
-               primary = obj->primary_key;
+                // if (table_obj.count == 0) {
+                //    context.remove_table(table_obj);
+                // }
 
-               return itr_cache.add( *obj );
+                itr_cache.remove(iterator);
             }
 
-            int lowerbound_secondary( uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t& primary ) {
-               auto tab = context.find_table( code, scope, table );
-               if( !tab.valid() ) return -1;
+            void update(int iterator, account_name payer, secondary_key_proxy_const_type secondary)
+            {
+                const auto &obj = itr_cache.get(iterator);
 
-               auto table_end_itr = itr_cache.cache_table( *tab );
+                const auto &table_obj = itr_cache.get_table(obj.t_id);
+                FC_ASSERT(table_obj.code == context.receiver, "db access violation");
 
-               const auto& idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
-               auto itr = idx.lower_bound( secondary_key_helper_t::create_tuple( *tab, secondary ) );
-               if( itr == idx.end() ) return table_end_itr;
-               if( itr->t_id != tab->id ) return table_end_itr;
+                // if( payer == account_name() ) payer = obj.payer;
 
-               primary = itr->primary_key;
-               secondary_key_helper_t::get(secondary, itr->secondary_key);
+                // context.update_db_usage
 
-               return itr_cache.add( *itr );
+                context._db->modify(obj, [&](auto &o) {
+                    // secondary_key_helper_t::set(o.secondary_key, secondary);
+                    // o.payer = payer;
+                });
             }
 
-            int upperbound_secondary( uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t& primary ) {
-               auto tab = context.find_table( code, scope, table );
-               if( !tab.valid() ) return -1;
+            int find_secondary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_const_type secondary, uint64_t &primary)
+            {
+                auto tab = context.find_table(code, scope, table);
+                if (!tab.valid()) return -1;
 
-               auto table_end_itr = itr_cache.cache_table( *tab );
+                auto table_end_itr = itr_cache.cache_table(*tab);
 
-               const auto& idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
-               auto itr = idx.upper_bound( secondary_key_helper_t::create_tuple( *tab, secondary ) );
-               if( itr == idx.end() ) return table_end_itr;
-               if( itr->t_id != tab->id ) return table_end_itr;
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
+                auto obj = idx.find(secondary_key_helper_t::create_tuple(*tab, secondary));
+                if (obj != idx.end()) return table_end_itr;
 
-               primary = itr->primary_key;
-               secondary_key_helper_t::get(secondary, itr->secondary_key);
+                primary = obj->primary_key;
 
-               return itr_cache.add( *itr );
+                return itr_cache.add(*obj);
             }
 
-            int end_secondary( uint64_t code, uint64_t scope, uint64_t table ) {
-               auto tab = context.find_table( code, scope, table );
-               if( !tab.valid() ) return -1;
+            int lowerbound_secondary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t &primary)
+            {
+                auto tab = context.find_table(code, scope, table);
+                if (!tab.valid()) return -1;
 
-               return itr_cache.cache_table( *tab );
+                auto table_end_itr = itr_cache.cache_table(*tab);
+
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
+                auto itr = idx.lower_bound(secondary_key_helper_t::create_tuple(*tab, secondary));
+                if (itr == idx.end()) return table_end_itr;
+                if (itr->t_id != tab->id) return table_end_itr;
+
+                primary = itr->primary_key;
+                secondary_key_helper_t::get(secondary, itr->secondary_key);
+
+                return itr_cache.add(*itr);
             }
 
-            int next_secondary( int iterator, uint64_t& primary ) {
-               if( iterator < -1 ) return -1; // cannot increment past end iterator of index
+            int upperbound_secondary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t &primary)
+            {
+                auto tab = context.find_table(code, scope, table);
+                if (!tab.valid()) return -1;
 
-               const auto& obj = itr_cache.get(iterator); // Check for iterator != -1 happens in this call
-               const auto& idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
+                auto table_end_itr = itr_cache.cache_table(*tab);
 
-               auto itr = idx.iterator_to(obj);
-               ++itr;
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
+                auto itr = idx.upper_bound(secondary_key_helper_t::create_tuple(*tab, secondary));
+                if (itr == idx.end()) return table_end_itr;
+                if (itr->t_id != tab->id) return table_end_itr;
 
-               if( itr == idx.end() || itr->t_id != obj.t_id ) return itr_cache.get_end_iterator_by_table_id(obj.t_id);
+                primary = itr->primary_key;
+                secondary_key_helper_t::get(secondary, itr->secondary_key);
 
-               primary = itr->primary_key;
-               return itr_cache.add(*itr);
+                return itr_cache.add(*itr);
             }
 
-            int previous_secondary( int iterator, uint64_t& primary ) {
-               const auto& idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
+            int end_secondary(uint64_t code, uint64_t scope, uint64_t table)
+            {
+                auto tab = context.find_table(code, scope, table);
+                if (!tab.valid()) return -1;
 
-               if( iterator < -1 ) // is end iterator
-               {
-                  auto tab = itr_cache.find_table_by_end_iterator(iterator);
-                  FC_ASSERT( tab, "not a valid end iterator" );
-
-                  auto itr = idx.upper_bound(tab->id);
-                  if( idx.begin() == idx.end() || itr == idx.begin() ) return -1; // Empty index
-
-                  --itr;
-
-                  if( itr->t_id != tab->id ) return -1; // Empty index
-
-                  primary = itr->primary_key;
-                  return itr_cache.add(*itr);
-               }
-
-               const auto& obj = itr_cache.get(iterator); // Check for iterator != -1 happens in this call
-
-               auto itr = idx.iterator_to(obj);
-               if( itr == idx.begin() ) return -1; // cannot decrement past beginning iterator of index
-
-               --itr;
-
-               if( itr->t_id != obj.t_id ) return -1; // cannot decrement past beginning iterator of index
-
-               primary = itr->primary_key;
-               return itr_cache.add(*itr);
+                return itr_cache.cache_table(*tab);
             }
 
-            int find_primary( uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t primary ) {
-               auto tab = context.find_table( code, scope, table );
-               if( !tab.valid() ) return -1;
+            int next_secondary(int iterator, uint64_t &primary)
+            {
+                if (iterator < -1) return -1; // cannot increment past end iterator of index
 
-               auto table_end_itr = itr_cache.cache_table( *tab );
+                const auto &obj = itr_cache.get(iterator); // Check for iterator != -1 happens in this call
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
 
-               const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
-               auto obj = idx.find(boost::make_tuple(tab->id, primary));
-               if(obj != idx.end()) return table_end_itr;
-               // secondary_key_helper_t::get(secondary, obj->secondary_key);
+                auto itr = idx.iterator_to(obj);
+                ++itr;
 
-               return itr_cache.add( *obj );
+                if (itr == idx.end() || itr->t_id != obj.t_id) return itr_cache.get_end_iterator_by_table_id(obj.t_id);
+
+                primary = itr->primary_key;
+                return itr_cache.add(*itr);
             }
 
-            int lowerbound_primary( uint64_t code, uint64_t scope, uint64_t table, uint64_t primary ) {
-               auto tab = context.find_table( code, scope, table );
-               if( !tab.valid() ) return -1;
+            int previous_secondary(int iterator, uint64_t &primary)
+            {
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
 
-               auto table_end_itr = itr_cache.cache_table( *tab );
+                if (iterator < -1) // is end iterator
+                {
+                    auto tab = itr_cache.find_table_by_end_iterator(iterator);
+                    FC_ASSERT(tab, "not a valid end iterator");
 
-               const auto& idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
-               auto itr = idx.lower_bound(boost::make_tuple(tab->id, primary));
-               if (itr == idx.end()) return table_end_itr;
-               if (itr->t_id != tab->id) return table_end_itr;
+                    auto itr = idx.upper_bound(tab->id);
+                    if (idx.begin() == idx.end() || itr == idx.begin()) return -1; // Empty index
 
-               return itr_cache.add(*itr);
+                    --itr;
+
+                    if (itr->t_id != tab->id) return -1; // Empty index
+
+                    primary = itr->primary_key;
+                    return itr_cache.add(*itr);
+                }
+
+                const auto &obj = itr_cache.get(iterator); // Check for iterator != -1 happens in this call
+
+                auto itr = idx.iterator_to(obj);
+                if (itr == idx.begin()) return -1; // cannot decrement past beginning iterator of index
+
+                --itr;
+
+                if (itr->t_id != obj.t_id) return -1; // cannot decrement past beginning iterator of index
+
+                primary = itr->primary_key;
+                return itr_cache.add(*itr);
             }
 
-            int upperbound_primary( uint64_t code, uint64_t scope, uint64_t table, uint64_t primary ) {
-               auto tab = context.find_table( code, scope, table );
-               if( !tab.valid() ) return -1;
+            int find_primary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t primary)
+            {
+                auto tab = context.find_table(code, scope, table);
+                if (!tab.valid()) return -1;
 
-               auto table_end_itr = itr_cache.cache_table( *tab );
+                auto table_end_itr = itr_cache.cache_table(*tab);
 
-               const auto& idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
-               auto itr = idx.upper_bound(boost::make_tuple(tab->id, primary));
-               if (itr == idx.end()) return table_end_itr;
-               if (itr->t_id != tab->id) return table_end_itr;
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
+                auto obj = idx.find(boost::make_tuple(tab->id, primary));
+                if (obj != idx.end()) return table_end_itr;
+                // secondary_key_helper_t::get(secondary, obj->secondary_key);
 
-               itr_cache.cache_table(*tab);
-               return itr_cache.add(*itr);
+                return itr_cache.add(*obj);
             }
 
-            int next_primary( int iterator, uint64_t& primary ) {
-               if( iterator < -1 ) return -1; // cannot increment past end iterator of table
+            int lowerbound_primary(uint64_t code, uint64_t scope, uint64_t table, uint64_t primary)
+            {
+                auto tab = context.find_table(code, scope, table);
+                if (!tab.valid()) return -1;
 
-               const auto& obj = itr_cache.get(iterator); // Check for iterator != -1 happens in this call
-               const auto& idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
+                auto table_end_itr = itr_cache.cache_table(*tab);
 
-               auto itr = idx.iterator_to(obj);
-               ++itr;
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
+                auto itr = idx.lower_bound(boost::make_tuple(tab->id, primary));
+                if (itr == idx.end()) return table_end_itr;
+                if (itr->t_id != tab->id) return table_end_itr;
 
-               if( itr == idx.end() || itr->t_id != obj.t_id ) return itr_cache.get_end_iterator_by_table_id(obj.t_id);
-
-               primary = itr->primary_key;
-               return itr_cache.add(*itr);
+                return itr_cache.add(*itr);
             }
 
-            int previous_primary( int iterator, uint64_t& primary ) {
-               const auto& idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
+            int upperbound_primary(uint64_t code, uint64_t scope, uint64_t table, uint64_t primary)
+            {
+                auto tab = context.find_table(code, scope, table);
+                if (!tab.valid()) return -1;
 
-               if( iterator < -1 ) // is end iterator
-               {
-                  auto tab = itr_cache.find_table_by_end_iterator(iterator);
-                  FC_ASSERT( tab, "not a valid end iterator" );
+                auto table_end_itr = itr_cache.cache_table(*tab);
 
-                  auto itr = idx.upper_bound(tab->id);
-                  if( idx.begin() == idx.end() || itr == idx.begin() ) return -1; // Empty table
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
+                auto itr = idx.upper_bound(boost::make_tuple(tab->id, primary));
+                if (itr == idx.end()) return table_end_itr;
+                if (itr->t_id != tab->id) return table_end_itr;
 
-                  --itr;
-
-                  if( itr->t_id != tab->id ) return -1; // Empty table
-
-                  primary = itr->primary_key;
-                  return itr_cache.add(*itr);
-               }
-
-               const auto& obj = itr_cache.get(iterator); // Check for iterator != -1 happens in this call
-
-               auto itr = idx.iterator_to(obj);
-               if( itr == idx.begin() ) return -1; // cannot decrement past beginning iterator of table
-
-               --itr;
-
-               if( itr->t_id != obj.t_id ) return -1; // cannot decrement past beginning iterator of index
-
-               primary = itr->primary_key;
-               return itr_cache.add(*itr);
+                itr_cache.cache_table(*tab);
+                return itr_cache.add(*itr);
             }
 
-            void get( int iterator, uint64_t& primary, secondary_key_proxy_type secondary ) {
-               const auto& obj = itr_cache.get( iterator );
-               primary   = obj.primary_key;
-               // secondary_key_helper_t::get(secondary, obj.secondary_key);
+            int next_primary(int iterator, uint64_t &primary)
+            {
+                if (iterator < -1) return -1; // cannot increment past end iterator of table
+
+                const auto &obj = itr_cache.get(iterator); // Check for iterator != -1 happens in this call
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
+
+                auto itr = idx.iterator_to(obj);
+                ++itr;
+
+                if (itr == idx.end() || itr->t_id != obj.t_id) return itr_cache.get_end_iterator_by_table_id(obj.t_id);
+
+                primary = itr->primary_key;
+                return itr_cache.add(*itr);
+            }
+
+            int previous_primary(int iterator, uint64_t &primary)
+            {
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
+
+                if (iterator < -1) // is end iterator
+                {
+                    auto tab = itr_cache.find_table_by_end_iterator(iterator);
+                    FC_ASSERT(tab, "not a valid end iterator");
+
+                    auto itr = idx.upper_bound(tab->id);
+                    if (idx.begin() == idx.end() || itr == idx.begin()) return -1; // Empty table
+
+                    --itr;
+
+                    if (itr->t_id != tab->id) return -1; // Empty table
+
+                    primary = itr->primary_key;
+                    return itr_cache.add(*itr);
+                }
+
+                const auto &obj = itr_cache.get(iterator); // Check for iterator != -1 happens in this call
+
+                auto itr = idx.iterator_to(obj);
+                if (itr == idx.begin()) return -1; // cannot decrement past beginning iterator of table
+
+                --itr;
+
+                if (itr->t_id != obj.t_id) return -1; // cannot decrement past beginning iterator of index
+
+                primary = itr->primary_key;
+                return itr_cache.add(*itr);
+            }
+
+            void get(int iterator, uint64_t &primary, secondary_key_proxy_type secondary)
+            {
+                const auto &obj = itr_cache.get(iterator);
+                primary = obj.primary_key;
+                // secondary_key_helper_t::get(secondary, obj.secondary_key);
             }
 
          private:
