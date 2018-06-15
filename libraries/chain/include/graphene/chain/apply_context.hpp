@@ -184,8 +184,6 @@ class apply_context {
             {
                // FC_ASSERT( payer != account_name(), "must specify a valid account to pay for new record" );
 
-//               context.require_write_lock( scope );
-
                const auto& tab = context.find_or_create_table( context.receiver, scope, table, payer );
 
                const auto& obj = context._db->create<ObjectType>( [&]( auto& o ){
@@ -199,7 +197,7 @@ class apply_context {
                //   ++t.count;
                // });
 
-               // context.update_db_usage( payer, config::billable_size_v<ObjectType> );
+               // context.update_db_usage
 
                itr_cache.cache_table( tab );
                return itr_cache.add( obj );
@@ -207,7 +205,7 @@ class apply_context {
 
             void remove( int iterator ) {
                const auto& obj = itr_cache.get( iterator );
-               // context.update_db_usage( obj.payer, -( config::billable_size_v<ObjectType> ) );
+               // context.update_db_usage
 
                const auto& table_obj = itr_cache.get_table( obj.t_id );
                FC_ASSERT( table_obj.code == context.receiver, "db access violation" );
