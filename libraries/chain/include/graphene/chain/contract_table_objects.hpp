@@ -30,10 +30,12 @@ class table_id_object : public graphene::db::abstract_object<table_id_object>
 
 struct by_code_scope_table;
 
-using table_id_object_multi_index_type = multi_index_container<
+using table_id_multi_index_type = multi_index_container<
   table_id_object,
   indexed_by<
-      ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+      ordered_unique< tag<by_id>,
+        member< object, object_id_type, &object::id >
+      >,
       ordered_unique<tag<by_code_scope_table>,
         composite_key< table_id_object,
            member<table_id_object, account_name, &table_id_object::code>,
@@ -44,14 +46,13 @@ using table_id_object_multi_index_type = multi_index_container<
   >
 >;
 
-typedef generic_index<table_id_object, table_id_object_multi_index_type> table_id_multi_index;
-
-typedef table_id_object_id_type table_id;
+typedef generic_index<table_id_object, table_id_multi_index_type> table_id_multi_index;
 
 struct by_scope_primary;
 struct by_scope_secondary;
 struct by_scope_tertiary;
 
+typedef table_id_object_id_type table_id;
 class key_value_object : public graphene::db::abstract_object<key_value_object>
 {
   public:
@@ -67,7 +68,7 @@ class key_value_object : public graphene::db::abstract_object<key_value_object>
     bytes                       value;
 };
 
-using key_value_object_multi_index_type = multi_index_container<
+using key_value_multi_index_type = multi_index_container<
   key_value_object,
   indexed_by<
      ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
@@ -80,7 +81,7 @@ using key_value_object_multi_index_type = multi_index_container<
      >
   >
 >;
-typedef generic_index<key_value_object, key_value_object_multi_index_type> key_value_index;
+typedef generic_index<key_value_object, key_value_multi_index_type> key_value_index;
 
 struct by_primary;
 struct by_secondary;
@@ -91,13 +92,14 @@ struct secondary_index {
     public:
       typedef SecondaryKey secondary_key_type;
 
-      table_id t_id;
-      uint64_t primary_key;
-      account_name payer = 0;
-      SecondaryKey secondary_key;
+      table_id      t_id;
+      uint64_t      primary_key;
+      account_name  payer = 0;
+      SecondaryKey  secondary_key;
     };
 
-    typedef multi_index_container<
+
+    using index_multi_index_type =  multi_index_container<
         index_object,
         indexed_by<
             ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
@@ -105,17 +107,19 @@ struct secondary_index {
                composite_key<index_object,
                  member<index_object, table_id, &index_object::t_id>,
                  member<index_object, uint64_t, &index_object::primary_key>>,
-               composite_key_compare<std::less<table_id>, std::less<uint64_t>>>,
+               composite_key_compare<std::less<table_id>, std::less<uint64_t>>
+            >,
             ordered_unique<tag<by_secondary>,
                composite_key<index_object,
                  member<index_object, table_id, &index_object::t_id>,
                  member<index_object, SecondaryKey, &index_object::secondary_key>,
-                 member<index_object, uint64_t, &index_object::primary_key>>,
+                 member<index_object, uint64_t, &index_object::primary_key>
+               >,
                composite_key_compare<std::less<table_id>, SecondaryKeyLess, std::less<uint64_t>>
             >
         >
-    > index_index_multi_index_type;
-    typedef generic_index<index_object, index_index_multi_index_type> index_index;
+    >;
+    typedef generic_index<index_object, index_multi_index_type> index_index;
 
 };
 
