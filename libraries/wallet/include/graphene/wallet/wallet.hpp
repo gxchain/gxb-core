@@ -1062,7 +1062,7 @@ class wallet_api
        * @param contract the name of the contract to query
        * @returns the table names/types stored in the blockchain
        */
-      variant query_contract_tables(string contract) const;
+      variant get_contract_tables(string contract) const;
       
       /** Returns table infos about the given contract.
        *
@@ -1070,7 +1070,7 @@ class wallet_api
        * @param table the table of the contract to query
        * @returns the table names/types stored in the blockchain
        */
-      variant query_contract_objects(string contract, string table) const;
+      variant get_table_objects(string contract, string table) const;
 
       /** Registers a third party's account on the blockckain.
        *
@@ -2274,8 +2274,8 @@ FC_API( graphene::wallet::wallet_api,
         (register_account)
         (deploy_contract)
         (call_contract)
-        (query_contract_tables)
-        (query_contract_objects)
+        (get_contract_tables)
+        (get_table_objects)
         (register_account2)
         (upgrade_account)
         (create_account_with_brain_key)

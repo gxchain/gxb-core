@@ -24,6 +24,7 @@
 
 #include <graphene/app/database_api_impl.hpp>
 #include <graphene/chain/get_config.hpp>
+#include <graphene/chain/contract_table_objects.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -116,6 +117,28 @@ fc::variants database_api_impl::get_objects(const vector<object_id_type>& ids)co
    });
 
    return result;
+}
+
+fc::variants database_api_impl::get_table_objects(string code, string scope, string table) const
+{
+    fc::variants result;
+
+    const auto &table_idx = _db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
+    auto existing_tid = table_idx.find(boost::make_tuple(name(code), name(code), name(table)));
+    if (existing_tid != table_idx.end()) {
+        const auto &kv_idx = _db.get_index_type<key_value_index>().indices().get<by_scope_primary>();
+        decltype(existing_tid->id) next_tid(existing_tid->id + 1);
+        auto lower = kv_idx.lower_bound(boost::make_tuple(existing_tid->id));
+        auto upper = kv_idx.lower_bound(boost::make_tuple(next_tid));
+
+        result.reserve(kv_idx.size());
+
+        std::transform(lower, upper, std::back_inserter(result),
+                       [](auto &kv) -> fc::variant {
+                           return kv.to_variant();
+                       });
+    }
+    return result;
 }
 
 void database_api_impl::set_subscribe_callback( std::function<void(const variant&)> cb, bool notify_remove_create )

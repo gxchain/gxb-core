@@ -609,7 +609,7 @@
                return *rec;
            }
        }
-
+       
        account_id_type get_account_id(string account_name_or_id) const
        {
           return get_account(account_name_or_id).get_id();
@@ -930,45 +930,38 @@
           _builder_transactions.erase(handle);
        }
 
-       variant query_contract_objects(string contract, string table) {
+       variants get_table_objects(string contract, string table) {
            try {
                FC_ASSERT(!self.is_locked());
-               FC_ASSERT(is_valid_name(contract));
+               FC_ASSERT(is_valid_name(contract));//todo fixme contract name must [a-z 0-5]
                
                account_object contract_account = this->get_account(contract);
     
-               fc::variants result;
                abi_def abi;
                bool table_exist = false;
-               table_def *table_info = nullptr;
                if (abi_serializer::to_abi(contract_account.abi, abi)) {
-    
-                   auto &tables = abi.tables;
-                   for(auto &t : tables) {
+                   for(auto &t : abi.tables) {
                        if(t.name == table) {
                            table_exist = true;
-                           table_info = &t;
                            break;
                        }
                    }
                    
                    if(table_exist) {
-                       uint64_t scope = N(contract);
+                       return _remote_db->get_table_objects(contract, contract, table);
                    } else {
-                       //todo throw table not exist exception
+                       GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
                    }
-    
-                   return result;
                } else {
                    GRAPHENE_ASSERT(false, abi_not_found_exception, "No ABI found for ${contract}", ("contract", contract));
                }
            }
            FC_CAPTURE_AND_LOG((contract))
            
-           return variant();
+           return variants();
        }
        
-       variant query_contract_tables(string contract)
+       variant get_contract_tables(string contract)
        {
            try {
                FC_ASSERT(!self.is_locked());
@@ -4835,14 +4828,14 @@
         return my->call_contract(account, contract, method, args, broadcast);
     }
     
-    variant wallet_api::query_contract_tables(string contract) const
+    variant wallet_api::get_contract_tables(string contract) const
     {
-        return my->query_contract_tables(contract);
+        return my->get_contract_tables(contract);
     }
     
-    variant wallet_api::query_contract_objects(string contract, string table) const
+    variant wallet_api::get_table_objects(string contract, string table) const
     {
-        return my->query_contract_objects(contract, table);
+        return my->get_table_objects(contract, table);
     }
 
     signed_transaction wallet_api::register_account(string name,
