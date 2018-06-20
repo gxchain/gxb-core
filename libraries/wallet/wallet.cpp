@@ -930,24 +930,25 @@
           _builder_transactions.erase(handle);
        }
 
-       variants get_table_objects(string contract, string table) {
+       variants get_table_objects(string contract, string table)
+       {
            try {
                FC_ASSERT(!self.is_locked());
-               FC_ASSERT(is_valid_name(contract));//todo fixme contract name must [a-z 0-5]
-               
+               FC_ASSERT(is_valid_name(contract)); //todo fixme contract name must [a-z 0-5] and max 12 chars
+
                account_object contract_account = this->get_account(contract);
-    
+
                abi_def abi;
                bool table_exist = false;
                if (abi_serializer::to_abi(contract_account.abi, abi)) {
-                   for(auto &t : abi.tables) {
-                       if(t.name == table) {
+                   for (auto &t : abi.tables) {
+                       if (t.name == table) {
                            table_exist = true;
                            break;
                        }
                    }
-                   
-                   if(table_exist) {
+
+                   if (table_exist) {
                        return _remote_db->get_table_objects(contract, contract, table);
                    } else {
                        GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
@@ -957,10 +958,10 @@
                }
            }
            FC_CAPTURE_AND_LOG((contract))
-           
+
            return variants();
        }
-       
+
        variant get_contract_tables(string contract)
        {
            try {
