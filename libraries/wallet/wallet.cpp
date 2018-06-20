@@ -936,6 +936,9 @@
                FC_ASSERT(is_valid_name(contract));//todo fixme contract name must [a-z 0-5]
                
                account_object contract_account = this->get_account(contract);
+               if(contract_account == nullptr) {
+                   GRAPHENE_ASSERT(false, contract_not_found_exception, "No contract found for ${contract}", ("contract", contract));
+               }
     
                abi_def abi;
                bool table_exist = false;
@@ -3227,7 +3230,7 @@
              }
              return ss.str();
           };
-          m["get_order_book"] = [this](variant result, const fc::variants& a)
+          m["get_order_book"] = [](variant result, const fc::variants& a)
           {
              auto orders = result.as<order_book>();
              auto bids = orders.bids;

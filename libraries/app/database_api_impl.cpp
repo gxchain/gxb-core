@@ -126,17 +126,17 @@ fc::variants database_api_impl::get_table_objects(string code, string scope, str
     const auto &table_idx = _db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
     auto existing_tid = table_idx.find(boost::make_tuple(name(code), name(code), name(table)));
     if (existing_tid != table_idx.end()) {
-        const auto &kv_idx = _db.get_index_type<key_value_index>().indices().get<by_scope_primary>();
         decltype(existing_tid->id) next_tid(existing_tid->id + 1);
+        const auto &kv_idx = _db.get_index_type<key_value_index>().indices().get<by_scope_primary>();
+        
         auto lower = kv_idx.lower_bound(boost::make_tuple(existing_tid->id));
         auto upper = kv_idx.lower_bound(boost::make_tuple(next_tid));
 
-        result.reserve(kv_idx.size());
-
-        std::transform(lower, upper, std::back_inserter(result),
-                       [](auto &kv) -> fc::variant {
-                           return kv.to_variant();
-                       });
+        auto end = fc::time_point::now() + fc::microseconds(1000 * 10);
+        for(auto it = lower; it != upper; ++it) {
+            if(fc::time_point::now() > end) break;
+            result.emplace_back(*it);
+        }
     }
     return result;
 }

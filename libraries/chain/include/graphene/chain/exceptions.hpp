@@ -131,6 +131,7 @@ namespace graphene { namespace chain {
    FC_DECLARE_DERIVED_EXCEPTION( deadline_exception, resource_exhausted_exception, 3080006, "transaction took too long" )
    FC_DECLARE_DERIVED_EXCEPTION( abi_not_found_exception, chain_type_exception, 3010008, "No ABI found" )
    FC_DECLARE_DERIVED_EXCEPTION( table_not_found_exception, chain_type_exception, 3010009, "No table found" )
+   FC_DECLARE_DERIVED_EXCEPTION( contract_not_found_exception, chain_type_exception, 3010010, "No contract found" )
    FC_DECLARE_DERIVED_EXCEPTION( leeway_deadline_exception, deadline_exception, 3081001, "transaction reached the deadline set due to leeway on account CPU limits" )
 
    GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( transfer );
