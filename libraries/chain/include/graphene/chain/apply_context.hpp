@@ -12,6 +12,23 @@
 
 namespace graphene { namespace chain {
 
+namespace config {
+    const static uint64_t   billable_alignment = 16;
+    const static uint32_t   overhead_per_row_per_index_ram_bytes = 32;
+    
+    template<typename T>
+    struct billable_size;
+    
+    template<typename T>
+    constexpr uint64_t billable_size_v = ((billable_size<T>::value + billable_alignment - 1) / billable_alignment) * billable_alignment;
+    
+    template<>
+    struct billable_size<key_value_object> {
+       static const uint64_t overhead = overhead_per_row_per_index_ram_bytes * 2;  ///< overhead for potentially single-row table, 2x indices internal-key and primary key
+       static const uint64_t value = 32 + 8 + 4 + overhead; ///< 32 bytes for our constant size fields, 8 for pointer to vector data, 4 bytes for a size of vector + overhead
+    };
+}
+
 class database;
 class transaction_context;
 class apply_context {
@@ -534,9 +551,14 @@ class apply_context {
       inline void console_append_formatted(const string& fmt, const variant_object& vo) {
           console_append(fc::format_string(fmt, vo));
       }
+   public:
+      uint64_t get_ram_usage() const {
+          return ram_usage;
+      }
 
    private:
      std::ostringstream _pending_console_output;
+     uint64_t           ram_usage;
 };
 
 } } // namespace graphene::chain

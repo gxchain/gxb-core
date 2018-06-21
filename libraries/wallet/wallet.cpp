@@ -609,7 +609,7 @@
                return *rec;
            }
        }
-
+       
        account_id_type get_account_id(string account_name_or_id) const
        {
           return get_account(account_name_or_id).get_id();
@@ -928,6 +928,68 @@
        void remove_builder_transaction(transaction_handle_type handle)
        {
           _builder_transactions.erase(handle);
+       }
+
+       variants get_table_objects(string contract, string table)
+       {
+           try {
+               FC_ASSERT(!self.is_locked());
+               FC_ASSERT(is_valid_name(contract)); //todo fixme contract name must [a-z 0-5] and max 12 chars
+
+               account_object contract_account = this->get_account(contract);
+
+               abi_def abi;
+               bool table_exist = false;
+               if (abi_serializer::to_abi(contract_account.abi, abi)) {
+                   for (auto &t : abi.tables) {
+                       if (t.name == table) {
+                           table_exist = true;
+                           break;
+                       }
+                   }
+
+                   if (table_exist) {
+                       return _remote_db->get_table_objects(contract, contract, table);
+                   } else {
+                       GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
+                   }
+               } else {
+                   GRAPHENE_ASSERT(false, abi_not_found_exception, "No ABI found for ${contract}", ("contract", contract));
+               }
+           }
+           FC_CAPTURE_AND_LOG((contract))
+
+           return variants();
+       }
+
+       variant get_contract_tables(string contract)
+       {
+           try {
+               FC_ASSERT(!self.is_locked());
+               FC_ASSERT(is_valid_name(contract));
+    
+               account_object contract_account = this->get_account(contract);
+    
+               fc::variants result;
+               abi_def abi;
+               if (abi_serializer::to_abi(contract_account.abi, abi)) {
+    
+                   auto tables = abi.tables;
+                   result.reserve(tables.size());
+    
+                   std::transform(tables.begin(), tables.end(), std::back_inserter(result),
+                                  [](table_def t_def) -> fc::variant {
+                                      return name(t_def.name).to_string();
+                                  });
+    
+                   return result;
+               } else {
+                   GRAPHENE_ASSERT(false, abi_not_found_exception, "No ABI found for ${contract}", ("contract", contract));
+               }
+           }
+           FC_CAPTURE_AND_LOG((contract))
+           
+           return variant();
        }
 
        signed_transaction deploy_contract(string name,
@@ -3166,7 +3228,7 @@
              }
              return ss.str();
           };
-          m["get_order_book"] = [this](variant result, const fc::variants& a)
+          m["get_order_book"] = [](variant result, const fc::variants& a)
           {
              auto orders = result.as<order_book>();
              auto bids = orders.bids;
@@ -4778,18 +4840,28 @@
                                                   string vm_version,
                                                   string contract_dir,
                                                   bool broadcast)
-{
-    return my->deploy_contract(name, account, vm_type, vm_version, contract_dir, broadcast);
-}
+    {
+        return my->deploy_contract(name, account, vm_type, vm_version, contract_dir, broadcast);
+    }
     
     signed_transaction wallet_api::call_contract(string account,
                                       string contract,
                                       string method,
                                       string args,
                                       bool broadcast)
-{
-    return my->call_contract(account, contract, method, args, broadcast);
-}
+    {
+        return my->call_contract(account, contract, method, args, broadcast);
+    }
+    
+    variant wallet_api::get_contract_tables(string contract) const
+    {
+        return my->get_contract_tables(contract);
+    }
+    
+    variant wallet_api::get_table_objects(string contract, string table) const
+    {
+        return my->get_table_objects(contract, table);
+    }
 
     signed_transaction wallet_api::register_account(string name,
                                                     public_key_type owner_pubkey,

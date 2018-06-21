@@ -1033,12 +1033,12 @@ class wallet_api
        * @param broadcast broadcast
        * @returns signed_transaction
        */
-    signed_transaction deploy_contract(string name,
-                                      string account,
-                                      string vm_type,
-                                      string vm_version,
-                                      string contract_dir,
-                                      bool broadcast = false);
+      signed_transaction deploy_contract(string name,
+                                         string account,
+                                         string vm_type,
+                                         string vm_version,
+                                         string contract_dir,
+                                         bool broadcast = false);
     
     
     /** Call contract
@@ -1051,11 +1051,26 @@ class wallet_api
      * @param broadcast broadcast
      * @returns signed_transaction
      */
-  signed_transaction call_contract(string account,
-                                    string contract,
-                                    string method,
-                                    string args,
-                                    bool broadcast = false);
+    signed_transaction call_contract(string account,
+                                     string contract,
+                                     string method,
+                                     string args,
+                                     bool broadcast = false);
+  
+      /** Returns table infos about the given contract.
+       *
+       * @param contract the name of the contract to query
+       * @returns the table names/types stored in the blockchain
+       */
+      variant get_contract_tables(string contract) const;
+      
+      /** Returns table infos about the given contract.
+       *
+       * @param contract the name of the contract to query
+       * @param table the table of the contract to query
+       * @returns the table names/types stored in the blockchain
+       */
+      variant get_table_objects(string contract, string table) const;
 
       /** Registers a third party's account on the blockckain.
        *
@@ -2261,6 +2276,8 @@ FC_API( graphene::wallet::wallet_api,
         (register_account)
         (deploy_contract)
         (call_contract)
+        (get_contract_tables)
+        (get_table_objects)
         (register_account2)
         (upgrade_account)
         (create_account_with_brain_key)
