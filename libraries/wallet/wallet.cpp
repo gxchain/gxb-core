@@ -3757,8 +3757,8 @@
                std::copy(data.begin(), data.end(), std::back_inserter(op.data));
            }
 
-           string str(op.data.begin(), op.data.end());
-           idump((str));
+           string raw_data(op.data.begin(), op.data.end());
+           idump((raw_data));
 
            signed_transaction tx;
            tx.operations.push_back(op);
