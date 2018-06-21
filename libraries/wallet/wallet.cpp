@@ -3744,6 +3744,27 @@
            return param.verify_proxy_transfer_signature(pub_key);
        }
 
+       signed_transaction custom(string account, uint16_t id, string data, string fee_symbol, bool broadcast)
+       { try {
+           FC_ASSERT(!self.is_locked());
+           account_object payer = get_account(account);
+           fc::optional<asset_object> fee_asset_obj = get_asset(fee_symbol);
+
+           custom_operation op;
+           op.payer = payer.id;
+           op.id = id;
+           if (data.size()) {
+               std::copy(data.begin(), data.end(), std::back_inserter(op.data));
+           }
+
+           signed_transaction tx;
+           tx.operations.push_back(op);
+           set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+           tx.validate();
+
+           return sign_transaction(tx, broadcast);
+       } FC_CAPTURE_AND_RETHROW((account)(id)(data)(fee_symbol)(broadcast)) }
+
        void transfer_test(account_id_type from_account, account_id_type to_account, uint32_t times)
        {
             FC_ASSERT( !self.is_locked() );
@@ -5110,6 +5131,11 @@
     bool wallet_api::verify_proxy_transfer_signature(const proxy_transfer_params& param, public_key_type pub_key)
     {
         return my->verify_proxy_transfer_signature(param, pub_key);
+    }
+
+    signed_transaction wallet_api::custom(string account, uint16_t id, string data, string fee_symbol, bool broadcast)
+    {
+        return my->custom(account, id, data, fee_symbol, broadcast);
     }
 
     void wallet_api::flood_network(string account_prefix, uint32_t number_of_transactions)

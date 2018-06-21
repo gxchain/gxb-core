@@ -2135,6 +2135,8 @@ class wallet_api
 
       bool verify_proxy_transfer_signature(const proxy_transfer_params& param, public_key_type pub_key);
 
+      signed_transaction custom(string account, uint16_t id, string data, string fee_symbol, bool broadcast);
+
       /** get tps
        * @return
        */
@@ -2347,6 +2349,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_hash)
         (verify_transaction_signature)
         (verify_proxy_transfer_signature)
+        (custom)
         (flood_network)
         (flood_create_account)
         (get_tps)
