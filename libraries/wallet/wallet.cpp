@@ -3757,6 +3757,9 @@
                std::copy(data.begin(), data.end(), std::back_inserter(op.data));
            }
 
+           string str(op.data.begin(), op.data.end());
+           idump((str));
+
            signed_transaction tx;
            tx.operations.push_back(op);
            set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
