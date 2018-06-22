@@ -1287,6 +1287,23 @@ class system_api : public context_aware_api
 
 };
 
+class asset_api : public context_aware_api
+{
+public:
+    bool transfer_asset(string from, string to, string symbol, uint64_t amount)
+    {
+        // TODO
+        auto &d = context.db();
+        // adjust balance
+        return false;
+    }
+
+};
+
+REGISTER_INJECTED_INTRINSICS(call_depth_api,
+(transfer_asset,                 bool(string, string, string, uint64_t))
+);
+
 REGISTER_INJECTED_INTRINSICS(call_depth_api,
    (call_depth_assert,  void()               )
 );

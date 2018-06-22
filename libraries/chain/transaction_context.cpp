@@ -21,10 +21,6 @@ namespace graphene { namespace chain {
    {
    }
 
-   void transaction_context::init_for_deferred_trx()
-   {
-   }
-
    void transaction_context::exec()
    {
    }
@@ -46,10 +42,6 @@ namespace graphene { namespace chain {
    }
 
    void transaction_context::resume_billing_timer()
-   {
-   }
-
-   void transaction_context::validate_cpu_usage_to_bill() const
    {
    }
 

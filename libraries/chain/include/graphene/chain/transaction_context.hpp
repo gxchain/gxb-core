@@ -13,8 +13,6 @@ namespace graphene { namespace chain {
 
         void init_for_input_trx();
 
-        void init_for_deferred_trx();
-
         void exec();
         void finalize();
         void squash();
@@ -27,13 +25,10 @@ namespace graphene { namespace chain {
         void add_ram_usage();
 
       private:
+        friend class apply_context;
 
-         friend class apply_context;
-
-         void validate_cpu_usage_to_bill() const;
-
-       private:
-         bool                          is_initialized = false;
+      private:
+        bool is_initialized = false;
    };
 
 } }
