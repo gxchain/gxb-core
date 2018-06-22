@@ -31,6 +31,14 @@ class contract_storage_demo : public graphene::contract
     }
 
     /// @abi action
+    void remove(uint64_t id)
+    {
+        const auto &it = cpus.find(id);
+        if(it != cpus.end())
+            cpus.erase(it);
+    }
+    
+    /// @abi action
     void find(uint64_t id)
     {
         auto cpu_itr = cpus.find(id);
@@ -38,6 +46,20 @@ class contract_storage_demo : public graphene::contract
             print("can not find this cpu");
         } else {
             print("cpu.name = ${name}", ("name", cpu_itr->name));
+        }
+    }
+    
+    /// @abi action
+    void updatefreq(uint64_t id, uint64_t freq)
+    {
+        auto it = cpus.find(id);
+        if (it != cpus.end()) {
+            cpus.modify(it, _self, [&freq](auto &the_cpu){
+                the_cpu.frequency = freq;
+            });
+            print("cpu.name = ${name}", ("name", it->name));
+        } else {
+            print("cpu not found");
         }
     }
 
@@ -59,4 +81,4 @@ class contract_storage_demo : public graphene::contract
     cpu_index cpus;
 };
 
-GXB_ABI(contract_storage_demo, (store)(find))
+GXB_ABI(contract_storage_demo, (store)(remove)(find)(updatefreq))
