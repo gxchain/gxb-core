@@ -1297,6 +1297,8 @@ class asset_api : public context_aware_api
     void transfer_asset(int64_t from, int64_t to, int64_t symbol, int64_t amount)
     {
         // TODO
+        FC_ASSERT(amount> 0, "amount must > 0");
+        FC_ASSERT(from != to, "cannot transfer to self");
         auto &d = context.db();
         // adjust balance
     }
