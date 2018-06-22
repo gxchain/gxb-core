@@ -1289,20 +1289,19 @@ class system_api : public context_aware_api
 
 class asset_api : public context_aware_api
 {
-public:
-    bool transfer_asset(string from, string to, string symbol, uint64_t amount)
+  public:
+    asset_api(apply_context &ctx)
+        : context_aware_api(ctx, true)
+    {}
+
+    void transfer_asset(int64_t from, int64_t to, int64_t symbol, int64_t amount)
     {
         // TODO
         auto &d = context.db();
         // adjust balance
-        return false;
     }
 
 };
-
-REGISTER_INJECTED_INTRINSICS(call_depth_api,
-(transfer_asset,                 bool(string, string, string, uint64_t))
-);
 
 REGISTER_INJECTED_INTRINSICS(call_depth_api,
    (call_depth_assert,  void()               )
@@ -1347,6 +1346,10 @@ REGISTER_INTRINSICS(action_api,
 (read_action_data,       int(int, int)  )
 (action_data_size,       int()          )
 (current_receiver,       int64_t()      )
+);
+
+REGISTER_INTRINSICS(asset_api,
+(transfer_asset,                 void(int64_t, int64_t, int64_t, int64_t))
 );
 
 #define DB_SECONDARY_INDEX_METHODS_SIMPLE(IDX) \
