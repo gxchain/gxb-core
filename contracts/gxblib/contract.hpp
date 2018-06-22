@@ -24,6 +24,7 @@ class contract
 
     typedef gxblib::multi_index<N(accounts), account> accounts;
 
+  protected:
     void sub_balance(account_name owner, asset value)
     {
         accounts from_acnts(_self, owner);
@@ -54,6 +55,13 @@ class contract
             });
         }
     }
+
+   asset token::get_balance( account_name owner, symbol_name sym )const
+   {
+       accounts accountstable(_self, owner);
+       const auto &ac = accountstable.get(sym);
+       return ac.balance;
+   }
 };
 
 } /// namespace graphene
