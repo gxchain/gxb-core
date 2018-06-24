@@ -100,4 +100,31 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
+void_result contract_deposit_evaluator::do_evaluate(const contract_deposit_operation &op)
+{ try {
+    idump((op));
+
+    database& d = db();
+    const account_object &from_account = op.from(d);
+    const account_object &to_account = op.to(d);
+    const asset_object &asset_type = op.amount.asset_id(d);
+
+    FC_ASSERT(to_account.code.size() > 0, "contract has no code");
+    FC_ASSERT(to_account.abi.size() > 0, "contract has no abi");
+
+    bool insufficient_balance = d.get_balance(from_account, asset_type).amount >= op.amount.amount;
+    FC_ASSERT(insufficient_balance,
+              "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
+              ("a", from_account.name)("t", to_account.name)("total_transfer", d.to_pretty_string(op.amount))("balance", d.to_pretty_string(d.get_balance(from_account, asset_type))));
+
+    return void_result();
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result contract_deposit_evaluator::do_apply(const contract_deposit_operation &op)
+{ try {
+    dlog("contract_deposit_evaluator do_apply");
+
+    return void_result();
+} FC_CAPTURE_AND_RETHROW((op)) }
+
 } } // graphene::chain

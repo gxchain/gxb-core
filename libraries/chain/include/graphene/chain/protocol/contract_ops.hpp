@@ -80,7 +80,34 @@ struct contract_call_operation : public base_operation {
     {
         return k.fee;
     }
+};
+
+struct contract_deposit_operation : public base_operation {
+    struct fee_parameters_type {
+        uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
     };
+
+    asset               fee;
+    account_id_type     from;
+    account_id_type     to;
+    asset               amount;
+    extensions_type     extensions;
+
+    account_id_type fee_payer() const { return from; }
+
+    void validate() const
+    {
+        FC_ASSERT(fee.amount >= 0);
+        FC_ASSERT(from != to);
+        FC_ASSERT(amount.amount > 0);
+    }
+
+    share_type calculate_fee(const fee_parameters_type &k) const
+    {
+        return k.fee;
+    }
+};
+
 } } // graphene::chain
 
 FC_REFLECT(graphene::chain::contract_deploy_operation::fee_parameters_type,
@@ -96,11 +123,11 @@ FC_REFLECT(graphene::chain::contract_deploy_operation,
             (abi))
 
 FC_REFLECT(graphene::chain::contract_call_operation::fee_parameters_type, (fee))
-
 FC_REFLECT(graphene::chain::contract_call_operation,
             (account)
             (fee)
             (act)
             (extensions))
 
-
+FC_REFLECT(graphene::chain::contract_deposit_operation::fee_parameters_type, (fee))
+FC_REFLECT(graphene::chain::contract_deposit_operation, (fee)(from)(to)(amount)(extensions))
