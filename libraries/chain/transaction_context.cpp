@@ -7,7 +7,7 @@ namespace graphene { namespace chain {
 
    transaction_context::transaction_context() :
         start(fc::time_point::now()),
-        _deadline(fc::time_point::now() + config::cpu_duration_limit),
+        _deadline(start + config::cpu_duration_limit),
         transaction_cpu_usage_us(0)
    {
    }
