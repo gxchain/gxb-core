@@ -14,7 +14,7 @@ namespace graphene {
 
       static constexpr int64_t max_amount    = (1LL << 62) - 1;
 
-      explicit asset( int64_t a = 0, contract_symbol_type s = CORE_SYMBOL )
+      explicit asset( int64_t a = 0, contract_symbol_type s = 0 )
       :amount(a),symbol{s}
       {
          gxb_assert( is_amount_within_range(), "magnitude of asset amount must be less than 2^62" );
@@ -38,16 +38,16 @@ namespace graphene {
       asset& operator-=( const asset& a ) {
          gxb_assert( a.symbol == symbol, "attempt to subtract asset with different symbol" );
          amount -= a.amount;
-         gxb_asser( -max_amount <= amount, "subtraction underflow" );
-         gxb_asser( amount <= max_amount,  "subtraction overflow" );
+         gxb_assert( -max_amount <= amount, "subtraction underflow" );
+         gxb_assert( amount <= max_amount,  "subtraction overflow" );
          return *this;
       }
 
       asset& operator+=( const asset& a ) {
-         gxb_asser( a.symbol == symbol, "attempt to add asset with different symbol" );
+         gxb_assert( a.symbol == symbol, "attempt to add asset with different symbol" );
          amount += a.amount;
-         gxb_asser( -max_amount <= amount, "addition underflow" );
-         gxb_asser( amount <= max_amount,  "addition overflow" );
+         gxb_assert( -max_amount <= amount, "addition underflow" );
+         gxb_assert( amount <= max_amount,  "addition overflow" );
          return *this;
       }
 
@@ -64,9 +64,9 @@ namespace graphene {
       }
 
       asset& operator*=( int64_t a ) {
-         gxb_asser( a == 0 || (amount * a) / a == amount, "multiplication overflow or underflow" );
-         gxb_asser( -max_amount <= amount, "multiplication underflow" );
-         gxb_asser( amount <= max_amount,  "multiplication overflow" );
+         gxb_assert( a == 0 || (amount * a) / a == amount, "multiplication overflow or underflow" );
+         gxb_assert( -max_amount <= amount, "multiplication underflow" );
+         gxb_assert( amount <= max_amount,  "multiplication overflow" );
          amount *= a;
          return *this;
       }
@@ -95,12 +95,12 @@ namespace graphene {
       }
 
       friend int64_t operator/( const asset& a, const asset& b ) {
-         gxb_asser( a.symbol == b.symbol, "comparison of assets with different symbols is not allowed" );
+         gxb_assert( a.symbol == b.symbol, "comparison of assets with different symbols is not allowed" );
          return a.amount / b.amount;
       }
 
       friend bool operator==( const asset& a, const asset& b ) {
-         gxb_asser( a.symbol == b.symbol, "comparison of assets with different symbols is not allowed" );
+         gxb_assert( a.symbol == b.symbol, "comparison of assets with different symbols is not allowed" );
          return a.amount == b.amount;
       }
 
@@ -109,22 +109,22 @@ namespace graphene {
       }
 
       friend bool operator<( const asset& a, const asset& b ) {
-         gxb_asser( a.symbol == b.symbol, "comparison of assets with different symbols is not allowed" );
+         gxb_assert( a.symbol == b.symbol, "comparison of assets with different symbols is not allowed" );
          return a.amount < b.amount;
       }
 
       friend bool operator<=( const asset& a, const asset& b ) {
-         gxb_asser( a.symbol == b.symbol, "comparison of assets with different symbols is not allowed" );
+         gxb_assert( a.symbol == b.symbol, "comparison of assets with different symbols is not allowed" );
          return a.amount <= b.amount;
       }
 
       friend bool operator>( const asset& a, const asset& b ) {
-         gxb_asser( a.symbol == b.symbol, "comparison of assets with different symbols is not allowed" );
+         gxb_assert( a.symbol == b.symbol, "comparison of assets with different symbols is not allowed" );
          return a.amount > b.amount;
       }
 
       friend bool operator>=( const asset& a, const asset& b ) {
-         gxb_asser( a.symbol == b.symbol, "comparison of assets with different symbols is not allowed" );
+         gxb_assert( a.symbol == b.symbol, "comparison of assets with different symbols is not allowed" );
          return a.amount >= b.amount;
       }
 

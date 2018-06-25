@@ -1,5 +1,4 @@
 #pragma once
-#include <gxblib/core_symbol.hpp>
 #include <gxblib/serialize.hpp>
 #include <gxblib/print.hpp>
 #include <gxblib/system.h>

@@ -1,4 +1,7 @@
 #pragma once
+#include <gxblib/gxb.hpp>
+#include <gxblib/asset.hpp>
+#include <gxblib/multi_index.hpp>
 
 namespace graphene {
 
@@ -22,7 +25,7 @@ class contract
         uint64_t primary_key() const { return balance.symbol.name(); }
     };
 
-    typedef gxblib::multi_index<N(accounts), account> accounts;
+    typedef graphene::multi_index<N(accounts), account> accounts;
 
   protected:
     void sub_balance(account_name owner, asset value)
