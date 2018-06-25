@@ -9,17 +9,15 @@ class hello : public graphene::contract {
 
       /// @abi action
       void hi(account_name user) {
-          print("Hello, ", name{user}, "\n");
-          name n = name{string_to_name("dan")};
-          std::string s = n.to_string();
+          print("Hello, ", user, "\n");
           for (int i = 0; i < 3; ++i) {
-              print("loop ", i, " name, ", s, "\n");
+              print("loop ", i, " name, ", user, "\n");
           }
       }
 
       /// @abi action
       void bye(account_name user) {
-          print("Bye, ", name{user});
+          print("Bye, ", user, "\n");
       }
 };
 

@@ -75,7 +75,8 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     idump((op.act));
 
     database& d = db();
-    account_id_type contract_id = (account_id_type)op.act.account;
+    account_id_type contract_id = (account_id_type)(op.act.account & GRAPHENE_DB_MAX_INSTANCE_ID);
+    idump((contract_id));
     const account_object& contract_obj = contract_id(d);
 
     FC_ASSERT(contract_obj.code.size() > 0, "contract has no code, contract_id ${n}", ("n", contract_id));
@@ -89,7 +90,7 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 { try {
     dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.act.account)("m", op.act.name.to_string())("d", op.act.data));
-    action a{object_id_type(op.account).number, op.act.name, {}};
+    action a{static_cast<uint64_t>(op.account) & GRAPHENE_DB_MAX_INSTANCE_ID, op.act.name, {}};
     transaction_context trx_context;
     apply_context ctx{db(), trx_context, op.act};
     ctx.exec();
