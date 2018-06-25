@@ -33,7 +33,7 @@ class contract
         accounts from_acnts(_self, owner);
 
         const auto &from = from_acnts.get(value.symbol.name(), "no balance object found");
-        eosio_assert(from.balance.amount >= value.amount, "overdrawn balance");
+        // eosio_assert(from.balance.amount >= value.amount, "overdrawn balance");
 
         if (from.balance.amount == value.amount) {
             from_acnts.erase(from);
@@ -59,7 +59,7 @@ class contract
         }
     }
 
-   asset token::get_balance( account_name owner, symbol_name sym )const
+   asset get_balance( account_name owner, symbol_name sym )const
    {
        accounts accountstable(_self, owner);
        const auto &ac = accountstable.get(sym);
