@@ -1301,6 +1301,8 @@ class asset_api : public context_aware_api
         FC_ASSERT(from != to, "cannot transfer to self");
         auto &d = context.db();
         // adjust balance
+        // d.adjust_balance(op.from, -op.amount);
+        // d.adjust_balance(op.to, op.amount);
     }
 
 };

@@ -24,6 +24,7 @@
 #include <graphene/chain/transaction_context.hpp>
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/wast_to_wasm.hpp>
+#include <graphene/chain/protocol/name.hpp>
 
 
 namespace graphene { namespace chain {
@@ -123,6 +124,23 @@ void_result contract_deposit_evaluator::do_evaluate(const contract_deposit_opera
 void_result contract_deposit_evaluator::do_apply(const contract_deposit_operation &op)
 { try {
     dlog("contract_deposit_evaluator do_apply");
+    database& d = db();
+    // adjust balance
+    d.adjust_balance(op.from, -op.amount);
+    d.adjust_balance(op.to, op.amount);
+
+    // call contract
+    // TODO: use inline message
+    transaction_evaluation_state deposit_context(&d);
+    contract_call_operation o;
+    o.account = op.from;
+    name dan = N(dan);
+    string s = dan.to_string();
+    action act {N(account), N(add_balance), bytes(s.begin(), s.end())};
+    o.act = act;
+    o.fee = d.current_fee_schedule().calculate_fee(o);
+    deposit_context.skip_fee_schedule_check = true;
+    d.apply_operation(deposit_context, o);
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
