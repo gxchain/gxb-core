@@ -130,8 +130,7 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     transaction_evaluation_state deposit_context(&d);
     contract_call_operation o;
     o.account = op.from;
-    name dan = N(dan);
-    string s = dan.to_string();
+    string s = "123";
     action act {(uint64_t)op.from & GRAPHENE_DB_MAX_INSTANCE_ID, N(add_balance), bytes(s.begin(), s.end())};
     o.act = act;
     o.fee = d.current_fee_schedule().calculate_fee(o);
