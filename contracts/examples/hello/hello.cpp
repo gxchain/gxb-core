@@ -1,7 +1,7 @@
 #include <gxblib/gxb.hpp>
 
-using namespace graphene;
 using namespace gxblib;
+using namespace graphene;
 
 class hello : public graphene::contract {
   public:
@@ -9,15 +9,14 @@ class hello : public graphene::contract {
 
       /// @abi action
       void hi(account_name user) {
-          print("Hello, ", user, "\n");
-          for (int i = 0; i < 3; ++i) {
-              print("loop ", i, " name, ", user, "\n");
-          }
+          print("Hello, ", user);
       }
 
       /// @abi action
       void bye(account_name user) {
-          print("Bye, ", user, "\n");
+          for (int i =0; i < 2; ++i) {
+              print("Bye, ", user);
+          }
       }
 };
 

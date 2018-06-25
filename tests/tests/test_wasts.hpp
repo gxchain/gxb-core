@@ -13,19 +13,15 @@ static const char contract_test_wast_code[] = R"=====(
  (import "env" "action_data_size" (func $action_data_size (result i32)))
  (import "env" "current_time" (func $current_time (result i64)))
  (import "env" "memcpy" (func $memcpy (param i32 i32 i32) (result i32)))
- (import "env" "printi" (func $printi (param i64)))
  (import "env" "prints" (func $prints (param i32)))
  (import "env" "printui" (func $printui (param i64)))
  (import "env" "read_action_data" (func $read_action_data (param i32 i32) (result i32)))
  (table 3 3 anyfunc)
  (elem (i32.const 0) $__wasm_nullptr $_ZN5hello2hiEy $_ZN5hello3byeEy)
  (memory $0 1)
- (data (i32.const 4) "0a\00\00")
+ (data (i32.const 4) "\00a\00\00")
  (data (i32.const 16) "Bye, \00")
- (data (i32.const 32) "\n\00")
- (data (i32.const 48) "Hello, \00")
- (data (i32.const 64) "loop \00")
- (data (i32.const 80) " name, \00")
+ (data (i32.const 32) "Hello, \00")
  (export "memory" (memory $0))
  (export "_ZeqRK11checksum256S1_" (func $_ZeqRK11checksum256S1_))
  (export "_ZeqRK11checksum160S1_" (func $_ZeqRK11checksum160S1_))
@@ -173,58 +169,10 @@ static const char contract_test_wast_code[] = R"=====(
  )
  (func $_ZN5hello2hiEy (type $FUNCSIG$vij) (param $0 i32) (param $1 i64)
   (call $prints
-   (i32.const 48)
+   (i32.const 32)
   )
   (call $printui
    (get_local $1)
-  )
-  (call $prints
-   (i32.const 32)
-  )
-  (call $prints
-   (i32.const 64)
-  )
-  (call $printi
-   (i64.const 0)
-  )
-  (call $prints
-   (i32.const 80)
-  )
-  (call $printui
-   (get_local $1)
-  )
-  (call $prints
-   (i32.const 32)
-  )
-  (call $prints
-   (i32.const 64)
-  )
-  (call $printi
-   (i64.const 1)
-  )
-  (call $prints
-   (i32.const 80)
-  )
-  (call $printui
-   (get_local $1)
-  )
-  (call $prints
-   (i32.const 32)
-  )
-  (call $prints
-   (i32.const 64)
-  )
-  (call $printi
-   (i64.const 2)
-  )
-  (call $prints
-   (i32.const 80)
-  )
-  (call $printui
-   (get_local $1)
-  )
-  (call $prints
-   (i32.const 32)
   )
  )
  (func $_ZN8graphene14execute_actionI5helloS1_JyEEEbPT_MT0_FvDpT1_E (param $0 i32) (param $1 i32) (result i32)
@@ -390,12 +338,15 @@ static const char contract_test_wast_code[] = R"=====(
    (get_local $1)
   )
   (call $prints
-   (i32.const 32)
+   (i32.const 16)
+  )
+  (call $printui
+   (get_local $1)
   )
  )
  (func $malloc (param $0 i32) (result i32)
   (call $_ZN8graphene14memory_manager6mallocEm
-   (i32.const 88)
+   (i32.const 40)
    (get_local $0)
   )
  )
@@ -851,13 +802,13 @@ static const char contract_test_wast_code[] = R"=====(
    (block $label$1
     (br_if $label$1
      (i32.eqz
-      (i32.load8_u offset=8484
+      (i32.load8_u offset=8436
        (i32.const 0)
       )
      )
     )
     (set_local $7
-     (i32.load offset=8488
+     (i32.load offset=8440
       (i32.const 0)
      )
     )
@@ -866,11 +817,11 @@ static const char contract_test_wast_code[] = R"=====(
    (set_local $7
     (current_memory)
    )
-   (i32.store8 offset=8484
+   (i32.store8 offset=8436
     (i32.const 0)
     (i32.const 1)
    )
-   (i32.store offset=8488
+   (i32.store offset=8440
     (i32.const 0)
     (tee_local $7
      (i32.shl
@@ -921,7 +872,7 @@ static const char contract_test_wast_code[] = R"=====(
        )
       )
       (set_local $3
-       (i32.load offset=8488
+       (i32.load offset=8440
         (i32.const 0)
        )
       )
@@ -929,7 +880,7 @@ static const char contract_test_wast_code[] = R"=====(
      (set_local $8
       (i32.const 0)
      )
-     (i32.store offset=8488
+     (i32.store offset=8440
       (i32.const 0)
       (get_local $3)
      )
@@ -983,18 +934,18 @@ static const char contract_test_wast_code[] = R"=====(
      )
      (block $label$6
       (br_if $label$6
-       (i32.load8_u offset=8484
+       (i32.load8_u offset=8436
         (i32.const 0)
        )
       )
       (set_local $3
        (current_memory)
       )
-      (i32.store8 offset=8484
+      (i32.store8 offset=8436
        (i32.const 0)
        (i32.const 1)
       )
-      (i32.store offset=8488
+      (i32.store offset=8440
        (i32.const 0)
        (tee_local $3
         (i32.shl
@@ -1062,12 +1013,12 @@ static const char contract_test_wast_code[] = R"=====(
        )
       )
       (set_local $6
-       (i32.load offset=8488
+       (i32.load offset=8440
         (i32.const 0)
        )
       )
      )
-     (i32.store offset=8488
+     (i32.store offset=8440
       (i32.const 0)
       (i32.add
        (get_local $6)
@@ -1327,7 +1278,7 @@ static const char contract_test_wast_code[] = R"=====(
     (br_if $label$1
      (i32.lt_s
       (tee_local $2
-       (i32.load offset=8472
+       (i32.load offset=8424
         (i32.const 0)
        )
       )
@@ -1335,7 +1286,7 @@ static const char contract_test_wast_code[] = R"=====(
      )
     )
     (set_local $3
-     (i32.const 8280)
+     (i32.const 8232)
     )
     (set_local $1
      (i32.add
@@ -1343,7 +1294,7 @@ static const char contract_test_wast_code[] = R"=====(
        (get_local $2)
        (i32.const 12)
       )
-      (i32.const 8280)
+      (i32.const 8232)
      )
     )
     (loop $label$2

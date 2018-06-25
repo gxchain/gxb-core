@@ -9,12 +9,14 @@ class hello : public graphene::contract {
 
       /// @abi action
       void hi(account_name user) {
-          print("Hello, ", name{user});
+          print("Hello, ", user);
       }
 
       /// @abi action
       void bye(account_name user) {
-          print("Bye, ", name{user});
+          for (int i =0; i < 2; ++i) {
+              print("Bye, ", user);
+          }
       }
 };
 

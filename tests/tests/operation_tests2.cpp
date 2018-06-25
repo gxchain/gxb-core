@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(deposit_contract_test)
    auto& contract_obj = get_account("bob");
 
    // call contract, action hi
-   BOOST_TEST_MESSAGE("contract call test, bye");
+   BOOST_TEST_MESSAGE("contract deposit test, bye");
    contract_deposit_operation call_op;
    call_op.from = alice_id;
    call_op.to = contract_obj.id;;
