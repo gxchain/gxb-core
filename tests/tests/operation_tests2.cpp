@@ -165,8 +165,7 @@ BOOST_AUTO_TEST_CASE(contract_test)
 
    contract_call_operation op;
    op.account = alice_id;
-   name dan = N(dan);
-   string s = dan.to_string();
+   string s = "123";
    action act {contract_id, N(hi), bytes(s.begin(), s.end())};
    op.act = act;
    op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(op);
