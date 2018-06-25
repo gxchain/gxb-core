@@ -159,11 +159,14 @@ BOOST_AUTO_TEST_CASE(contract_test)
 
    // call contract, action hi
    BOOST_TEST_MESSAGE("contract call test, hi");
+   auto& contract_obj = get_account("bob");
+   idump((object_id_type(contract_obj.id).number));
+
    contract_call_operation op;
    op.account = alice_id;
    name dan = N(dan);
    string s = dan.to_string();
-   action act {N(bob), N(hi), bytes(s.begin(), s.end())};
+   action act {object_id_type(contract_obj.id).number, N(hi), bytes(s.begin(), s.end())};
    op.act = act;
    op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(op);
    trx.operations.push_back(op);
@@ -177,7 +180,7 @@ BOOST_AUTO_TEST_CASE(contract_test)
    BOOST_TEST_MESSAGE("contract call test, bye");
    contract_call_operation call_op;
    call_op.account = alice_id;
-   action act2 {N(bob), N(bye), bytes(s.begin(), s.end())};
+   action act2 {object_id_type(contract_obj.id).number, N(bye), bytes(s.begin(), s.end())};
    call_op.act = act2;
    call_op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(call_op);
    trx.operations.push_back(call_op);

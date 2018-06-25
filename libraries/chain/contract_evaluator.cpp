@@ -73,27 +73,23 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
 void_result contract_call_evaluator::do_evaluate(const contract_call_operation &op)
 { try {
     idump((op.act));
-    // FC_ASSERT(op.act.name.size() > 0);
-    // FC_ASSERT(op.act.method.size() > 0);
 
     database& d = db();
-    string act_name = op.act.account.to_string();
-    auto& acnt_indx = d.get_index_type<account_index>();
-    auto current_account_itr = acnt_indx.indices().get<by_name>().find(act_name);
-    FC_ASSERT(current_account_itr != acnt_indx.indices().get<by_name>().end(), "contract not found, name ${n}", ("n", act_name));
-    FC_ASSERT(current_account_itr->code.size() > 0, "contract has no code, name ${n}", ("n", act_name));
-    FC_ASSERT(current_account_itr->abi.size() > 0, "contract has no abi, name ${n}", ("n", act_name));
+    account_id_type contract_id = (account_id_type)op.act.account;
+    const account_object& contract_obj = contract_id(d);
 
-    // contract object
-    acnt = &(*current_account_itr);
+    FC_ASSERT(contract_obj.code.size() > 0, "contract has no code, contract_id ${n}", ("n", contract_id));
+    FC_ASSERT(contract_obj.abi.size() > 0, "contract has no abi, contract_id ${n}", ("n", contract_id));
+
+    acnt = &(contract_obj);
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
 void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 { try {
-    dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.act.account.to_string())("m", op.act.name.to_string())("d", op.act.data));
-    action a{op.account, op.act.name, {}};
+    dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.act.account)("m", op.act.name.to_string())("d", op.act.data));
+    action a{object_id_type(op.account).number, op.act.name, {}};
     transaction_context trx_context;
     apply_context ctx{db(), trx_context, op.act};
     ctx.exec();
