@@ -1297,12 +1297,14 @@ class asset_api : public context_aware_api
     void transfer_asset(int64_t from, int64_t to, int64_t symbol, int64_t amount)
     {
         // TODO
+        // check more
         FC_ASSERT(amount> 0, "amount must > 0");
         FC_ASSERT(from != to, "cannot transfer to self");
         auto &d = context.db();
+        asset a{amount, asset_id_type(symbol & GRAPHENE_DB_MAX_INSTANCE_ID)};
         // adjust balance
-        // d.adjust_balance(op.from, -op.amount);
-        // d.adjust_balance(op.to, op.amount);
+        d.adjust_balance(account_id_type(from & GRAPHENE_DB_MAX_INSTANCE_ID), -a);
+        d.adjust_balance(account_id_type(to & GRAPHENE_DB_MAX_INSTANCE_ID), a);
     }
 
 };
