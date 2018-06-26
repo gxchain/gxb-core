@@ -217,7 +217,7 @@ int apply_context::db_end_i64(uint64_t code, uint64_t scope, uint64_t table)
     return keyval_cache.cache_table(*tab);
 }
 
-optional<table_id_object> apply_context::find_table(uint64_t code, uint64_t scope, uint64_t table)
+optional<table_id_object> apply_context::find_table(uint64_t code, name scope, name table)
 {
     const auto& table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
     auto existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
@@ -228,7 +228,7 @@ optional<table_id_object> apply_context::find_table(uint64_t code, uint64_t scop
     return {};
 }
 
-const table_id_object &apply_context::find_or_create_table(uint64_t code, uint64_t scope, uint64_t table, const account_name &payer)
+const table_id_object &apply_context::find_or_create_table(uint64_t code, name scope, name table, const account_name &payer)
 {
     const auto& table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
     auto existing_tid = table_idx.find(boost::make_tuple(code, scope, table));

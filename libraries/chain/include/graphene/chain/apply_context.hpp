@@ -525,8 +525,8 @@ class apply_context {
      int db_end_i64(uint64_t code, uint64_t scope, uint64_t table);
 
    private:
-     optional<table_id_object> find_table(uint64_t code, uint64_t scope, uint64_t table);
-     const table_id_object &find_or_create_table(uint64_t code, uint64_t scope, uint64_t table, const account_name &payer);
+     optional<table_id_object> find_table(uint64_t code, name scope, name table);
+     const table_id_object &find_or_create_table(uint64_t code, name scope, name table, const account_name &payer);
      void remove_table(const table_id_object &tid);
      int db_store_i64(uint64_t code, uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size);
 
