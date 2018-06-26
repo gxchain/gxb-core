@@ -103,6 +103,7 @@ BOOST_AUTO_TEST_CASE( db_store_i64_undo )
       auto t = ctx.db_get_i64(i, p, 2);
 
       BOOST_CHECK_EQUAL( t, 0 );
+      delete p;
    } catch ( const fc::exception& e )
    {
       edump( (e.to_detail_string()) );
@@ -129,6 +130,7 @@ BOOST_AUTO_TEST_CASE( db_store_i64_commit )
       auto t = ctx.db_get_i64(i, p, 3);
 
       BOOST_CHECK_EQUAL( t, 3 );
+      delete p;
    } catch ( const fc::exception& e )
    {
       edump( (e.to_detail_string()) );
