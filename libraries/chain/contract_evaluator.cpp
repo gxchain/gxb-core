@@ -89,7 +89,7 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 
 void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 { try {
-    dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.act.account)("m", op.act.name.to_string())("d", op.act.data));
+    dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.act.account)("m", op.act.name)("d", op.act.data));
     transaction_context trx_context;
     apply_context ctx{db(), trx_context, op.act};
     ctx.exec();
@@ -132,7 +132,7 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     contract_call_operation o;
     o.account = op.from;
     string s = "123";
-    action act {(uint64_t)op.to & GRAPHENE_DB_MAX_INSTANCE_ID, N(add_balance), bytes(s.begin(), s.end())};
+    action act {(uint64_t)op.to & GRAPHENE_DB_MAX_INSTANCE_ID, N(addbalance), bytes(s.begin(), s.end())};
     o.act = act;
     o.fee = d.current_fee_schedule().calculate_fee(o);
     deposit_context.skip_fee_schedule_check = true;

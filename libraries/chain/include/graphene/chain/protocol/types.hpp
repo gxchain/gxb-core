@@ -93,10 +93,10 @@ namespace graphene { namespace chain {
    struct void_t{};
    
    using action_name      = name;
-   using scope_name       = name;
-   using account_name     = name;
-   using permission_name  = name;
-   using table_name       = name;
+   using scope_name       = uint64_t;
+   using account_name     = uint64_t;
+   using permission_name  = uint64_t;
+   using table_name       = uint64_t;
    
 //   using int128_t            = boost::multiprecision::int128_t;
    using int128_t            = __int128;

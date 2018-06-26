@@ -8,7 +8,6 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/contract_table_objects.hpp>
-#include <graphene/chain/protocol/name.hpp>
 
 namespace graphene { namespace chain {
 
@@ -496,7 +495,7 @@ class apply_context {
       const action&                 act; ///< message being applied
       transaction_context&          trx_context; ///< transaction context in which the action is running
       database*                     _db;
-      account_name                  receiver;
+      uint64_t                      receiver;
 
       gph_generic_index<index64_object>                                  idx64;
       gph_generic_index<index128_object>                                 idx128;
@@ -526,8 +525,8 @@ class apply_context {
      int db_end_i64(uint64_t code, uint64_t scope, uint64_t table);
 
    private:
-     optional<table_id_object> find_table(name code, name scope, name table);
-     const table_id_object &find_or_create_table(name code, name scope, name table, const account_name &payer);
+     optional<table_id_object> find_table(uint64_t code, uint64_t scope, uint64_t table);
+     const table_id_object &find_or_create_table(uint64_t code, uint64_t scope, uint64_t table, const account_name &payer);
      void remove_table(const table_id_object &tid);
      int db_store_i64(uint64_t code, uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size);
 

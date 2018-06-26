@@ -20,4 +20,4 @@ class hello : public graphene::contract {
       }
 };
 
-GXB_ABI(hello, (hi)(bye))
+GXB_ABI(hello, (subbalance)(addbalance)(hi)(bye))

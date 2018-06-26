@@ -16,13 +16,13 @@ void apply_context::exec()
 {
    auto start = fc::time_point::now();
    try {
-       auto& acnt_indx = _db->get_index_type<account_index>();
-       auto account_itr = acnt_indx.indices().get<by_name>().find(receiver.to_string());
-       dlog("contract receiver: ${r}", ("r", receiver.to_string()));
-       auto wasm_bytes = bytes(account_itr->code.begin(), account_itr->code.end());
+       account_id_type contract_id = (account_id_type)(receiver & GRAPHENE_DB_MAX_INSTANCE_ID);
+       auto& contract_obj = contract_id(*_db);
+       dlog("contract receiver: ${r}", ("r", receiver));
+       auto wasm_bytes = bytes(contract_obj.code.begin(), contract_obj.code.end());
        try {
            wasm_interface &wasm = const_cast<wasm_interface&>(_db->wasmif);
-           wasm.apply(account_itr->code_version, wasm_bytes, *this);
+           wasm.apply(contract_obj.code_version, wasm_bytes, *this);
        } catch (const wasm_exit&) {}
    } FC_CAPTURE_AND_RETHROW((_pending_console_output.str()));
 
@@ -81,7 +81,7 @@ void apply_context::db_update_i64(int iterator, account_name payer, const char *
 
     ram_usage += (int64_t)(buffer_size - obj.value.size());
     dlog("db_update_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", (buffer_size - obj.value.size()))("n", ram_usage));
-    
+
     _db->modify(obj, [&](key_value_object &o) {
         o.value.resize(buffer_size);
         memcpy(o.value.data(), buffer, buffer_size);
@@ -98,7 +98,7 @@ void apply_context::db_remove_i64(int iterator)
 
     ram_usage += -(obj.value.size() + config::billable_size_v<key_value_object>);
     dlog("db_remove_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", -(obj.value.size() + config::billable_size_v<key_value_object>))("n", ram_usage));
-    
+
     _db->remove(obj);
     keyval_cache.remove(iterator);
 }
@@ -217,7 +217,7 @@ int apply_context::db_end_i64(uint64_t code, uint64_t scope, uint64_t table)
     return keyval_cache.cache_table(*tab);
 }
 
-optional<table_id_object> apply_context::find_table(name code, name scope, name table)
+optional<table_id_object> apply_context::find_table(uint64_t code, uint64_t scope, uint64_t table)
 {
     const auto& table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
     auto existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
@@ -228,7 +228,7 @@ optional<table_id_object> apply_context::find_table(name code, name scope, name 
     return {};
 }
 
-const table_id_object &apply_context::find_or_create_table(name code, name scope, name table, const account_name &payer)
+const table_id_object &apply_context::find_or_create_table(uint64_t code, uint64_t scope, uint64_t table, const account_name &payer)
 {
     const auto& table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
     auto existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
