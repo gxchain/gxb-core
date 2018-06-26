@@ -32,6 +32,9 @@
 
 #include "../common/database_fixture.hpp"
 
+#include <graphene/chain/apply_context.hpp>
+#include <graphene/chain/transaction_context.hpp>
+
 using namespace graphene::chain;
 
 BOOST_FIXTURE_TEST_SUITE( database_tests, database_fixture )
@@ -74,6 +77,60 @@ BOOST_AUTO_TEST_CASE( merge_test )
 
       auto balance = db.get_balance( account_id_type(), asset_id_type() );
       BOOST_CHECK_EQUAL( 42, balance.amount.value );
+   } catch ( const fc::exception& e )
+   {
+      edump( (e.to_detail_string()) );
+      throw;
+   }
+}
+
+BOOST_AUTO_TEST_CASE( db_store_i64_undo )
+{
+   try {
+      database db;
+      auto ses = db._undo_db.start_undo_session();
+      
+      const contract_call_operation op;
+      action a{op.account, op.act.name, {}};
+      transaction_context trx_context;
+      apply_context ctx{db, trx_context, op.act};
+      auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
+      
+      ses.undo();
+      
+      char *p = new char[10];
+      
+      auto t = ctx.db_get_i64(i, p, 2);
+
+      BOOST_CHECK_EQUAL( t, 0 );
+      delete p;
+   } catch ( const fc::exception& e )
+   {
+      edump( (e.to_detail_string()) );
+      throw;
+   }
+}
+
+BOOST_AUTO_TEST_CASE( db_store_i64_commit )
+{
+   try {
+      database db;
+      auto ses = db._undo_db.start_undo_session();
+      
+      const contract_call_operation op;
+      action a{op.account, op.act.name, {}};
+      transaction_context trx_context;
+      apply_context ctx{db, trx_context, op.act};
+      auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
+      
+      ses.commit();
+      
+      char *p = new char[10];
+      
+      auto t = ctx.db_get_i64(i, p, 3);
+
+      BOOST_CHECK_EQUAL( t, 3 );
+      delete p;
    } catch ( const fc::exception& e )
    {
       edump( (e.to_detail_string()) );
