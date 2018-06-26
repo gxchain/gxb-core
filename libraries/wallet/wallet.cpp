@@ -1069,13 +1069,12 @@
        { try {
              FC_ASSERT(!self.is_locked());
 
-             account_object caller_account = this->get_account(account);
-             account_object contract_account = this->get_account(contract);
-             account_id_type account_id = caller_account.id;
+             account_object caller = get_account(account);
+             account_object contract_account = get_account(contract);
 
              contract_call_operation contract_call_op;
-             contract_call_op.account = account_id;
-             contract_call_op.act.account = string_to_name(contract.c_str());
+             contract_call_op.account = caller.id;
+             contract_call_op.act.account = uint64_t(contract_account.id) & GRAPHENE_DB_MAX_INSTANCE_ID;
              contract_call_op.act.name = string_to_name(method.c_str());
              fc::variant action_args_var = fc::json::from_string(args, fc::json::relaxed_parser);
              abi_def abi;
