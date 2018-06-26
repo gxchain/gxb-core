@@ -609,7 +609,7 @@
                return *rec;
            }
        }
-       
+
        account_id_type get_account_id(string account_name_or_id) const
        {
           return get_account(account_name_or_id).get_id();
@@ -967,28 +967,28 @@
            try {
                FC_ASSERT(!self.is_locked());
                FC_ASSERT(is_valid_name(contract));
-    
+
                account_object contract_account = this->get_account(contract);
-    
+
                fc::variants result;
                abi_def abi;
                if (abi_serializer::to_abi(contract_account.abi, abi)) {
-    
+
                    auto tables = abi.tables;
                    result.reserve(tables.size());
-    
+
                    std::transform(tables.begin(), tables.end(), std::back_inserter(result),
                                   [](table_def t_def) -> fc::variant {
                                       return name(t_def.name).to_string();
                                   });
-    
+
                    return result;
                } else {
                    GRAPHENE_ASSERT(false, abi_not_found_exception, "No ABI found for ${contract}", ("contract", contract));
                }
            }
            FC_CAPTURE_AND_LOG((contract))
-           
+
            return variant();
        }
 
@@ -3405,9 +3405,9 @@
        }
 
        signed_transaction propose_gpo_extensions_change(
-          const string& proposing_account, 
-          fc::time_point_sec expiration_time, 
-          const variant_object& changed_extensions, 
+          const string& proposing_account,
+          fc::time_point_sec expiration_time,
+          const variant_object& changed_extensions,
           bool broadcast = false)
        {
            FC_ASSERT( !changed_extensions.contains("current_fees") );
@@ -3836,7 +3836,7 @@
                 tx.operations.push_back(xfer_op);
                 set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, asset_obj);
                 tx.validate();
-                
+
                 vector<public_key_type> paying_keys = from_account_obj->active.get_keys();
                 auto dyn_props = get_dynamic_global_properties();
                 tx.set_expiration( dyn_props.time + fc::seconds(300 + i) );
@@ -4828,7 +4828,7 @@
     {
         return my->deploy_contract(name, account, vm_type, vm_version, contract_dir, broadcast);
     }
-    
+
     signed_transaction wallet_api::call_contract(string account,
                                       string contract,
                                       string method,
@@ -4837,12 +4837,12 @@
     {
         return my->call_contract(account, contract, method, args, broadcast);
     }
-    
+
     variant wallet_api::get_contract_tables(string contract) const
     {
         return my->get_contract_tables(contract);
     }
-    
+
     variant wallet_api::get_table_objects(string contract, string table) const
     {
         return my->get_table_objects(contract, table);
@@ -5236,9 +5236,9 @@
     }
 
     signed_transaction wallet_api::propose_gpo_extensions_change(
-        const string& proposing_account, 
-        fc::time_point_sec expiration_time, 
-        const variant_object& changed_extensions, 
+        const string& proposing_account,
+        fc::time_point_sec expiration_time,
+        const variant_object& changed_extensions,
         bool broadcast /*= false*/
         )
     {
