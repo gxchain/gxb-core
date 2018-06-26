@@ -52,6 +52,7 @@ class contract
         auto to = to_acnts.find(value.symbol);
         if (to == to_acnts.end()) {
             to_acnts.emplace(ram_payer, [&](auto &a) {
+                print("addbalance, ", owner, value);
                 a.balance = value;
             });
         } else {
