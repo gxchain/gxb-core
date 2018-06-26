@@ -25,6 +25,7 @@
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/wast_to_wasm.hpp>
 #include <graphene/chain/protocol/name.hpp>
+#include <graphene/chain/abi_serializer.hpp>
 
 
 namespace graphene { namespace chain {
@@ -106,6 +107,8 @@ void_result contract_deposit_evaluator::do_evaluate(const contract_deposit_opera
     const account_object &to_account = op.to(d);
     const asset_object &asset_type = op.amount.asset_id(d);
 
+    acnt = &(to_account);
+
     FC_ASSERT(to_account.code.size() > 0, "contract has no code");
     FC_ASSERT(to_account.abi.size() > 0, "contract has no abi");
 
@@ -125,6 +128,7 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     d.adjust_balance(op.from, -op.amount);
     d.adjust_balance(op.to, op.amount);
 
+
     // call contract
     // TODO: use inline message
     dlog("call contract transfer");
@@ -136,6 +140,17 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     o.act = act;
     o.fee = d.current_fee_schedule().calculate_fee(o);
     deposit_context.skip_fee_schedule_check = true;
+
+    std::string args = "{\"owner\":72620543991349265, \"asset\":{\"amount\":1000, \"symbol\":0}, \"ram_payer\": 72620543991349265}";
+    fc::variant action_args_var = fc::json::from_string(args, fc::json::relaxed_parser);
+    abi_def abi;
+    if (abi_serializer::to_abi(acnt->abi, abi)) {
+        abi_serializer abis(abi);
+        auto action_type = abis.get_action_type("addbalance");
+        GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action addbalance in contract ${contract}", ("contract", acnt->name));
+        bytes s = abis.variant_to_binary(action_type, action_args_var);
+        o.act.data = s;
+    }
     d.apply_operation(deposit_context, o);
 
     return void_result();
