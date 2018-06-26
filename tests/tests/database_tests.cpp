@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE( db_store_i64_undo )
       auto ses = db._undo_db.start_undo_session();
       
       const contract_call_operation op;
-      action a{op.account, op.act.name, {}};
+      action a{uint64_t(object_id_type(op.account)), op.act.name, {}};
       transaction_context trx_context;
       apply_context ctx{db, trx_context, op.act};
       auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE( db_store_i64_undo )
       auto t = ctx.db_get_i64(i, p, 2);
 
       BOOST_CHECK_EQUAL( t, 0 );
-      delete p;
+      delete []p;
    } catch ( const fc::exception& e )
    {
       edump( (e.to_detail_string()) );
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE( db_store_i64_commit )
       auto ses = db._undo_db.start_undo_session();
       
       const contract_call_operation op;
-      action a{op.account, op.act.name, {}};
+      action a{uint64_t(object_id_type(op.account)), op.act.name, {}};
       transaction_context trx_context;
       apply_context ctx{db, trx_context, op.act};
       auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE( db_store_i64_commit )
       auto t = ctx.db_get_i64(i, p, 3);
 
       BOOST_CHECK_EQUAL( t, 3 );
-      delete p;
+      delete []p;
    } catch ( const fc::exception& e )
    {
       edump( (e.to_detail_string()) );
