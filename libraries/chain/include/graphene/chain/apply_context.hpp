@@ -557,7 +557,7 @@ class apply_context {
 
    private:
      std::ostringstream _pending_console_output;
-     uint64_t           ram_usage;
+     uint64_t           ram_usage = 0;
 };
 
 } } // namespace graphene::chain
