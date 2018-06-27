@@ -23,11 +23,6 @@ namespace graphene { namespace chain {
 
         void checktime() const;
 
-        void pause_billing_timer();
-        void resume_billing_timer();
-
-        void add_ram_usage();
-
         uint64_t get_cpu_usage() const
         {
             return transaction_cpu_usage_us;
@@ -51,7 +46,6 @@ namespace graphene { namespace chain {
 
       private:
         database                *_db;
-        bool                    is_initialized = false;
         fc::time_point          start;
         fc::time_point          _deadline;
         mutable uint64_t        transaction_cpu_usage_us;

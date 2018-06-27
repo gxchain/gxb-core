@@ -48,14 +48,6 @@ namespace graphene { namespace chain {
        }
    }
 
-   void transaction_context::pause_billing_timer()
-   {
-   }
-
-   void transaction_context::resume_billing_timer()
-   {
-   }
-
    void transaction_context::dispatch_action(const action &a, account_name receiver)
    {
        apply_context acontext(db(), *this, a);
@@ -66,10 +58,6 @@ namespace graphene { namespace chain {
        } catch (...) {
            throw;
        }
-   }
-
-   void transaction_context::add_ram_usage()
-   {
    }
 
 } } /// graphene::chain
