@@ -106,7 +106,7 @@ function print_help {
     echo "      Generate the wast output file based on input cpp files"
     echo "      The wasm output will also be created as output.wasm"
     echo "   OR"
-    echo "   -g | --genabi contract.abi types.hpp"
+    echo "   -g | --genabi contract.abi input.cpp"
     echo "      Generate the ABI specification file [EXPERIMENTAL]"
 }
 
