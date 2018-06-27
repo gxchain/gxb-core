@@ -320,7 +320,7 @@ namespace graphene { namespace chain {
           * @return
           */
          bool is_merchant_member()const{
-             dlog("merchant_expiration_date ${merchant_expiration_date}, max time ${m}", ("merchant_expiration_date", merchant_expiration_date)("m", time_point_sec::maximum()));
+             // dlog("merchant_expiration_date ${merchant_expiration_date}, max time ${m}", ("merchant_expiration_date", merchant_expiration_date)("m", time_point_sec::maximum()));
              return merchant_expiration_date == time_point_sec::maximum();
          }
          /**
