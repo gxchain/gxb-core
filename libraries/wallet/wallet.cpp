@@ -1070,16 +1070,16 @@
              FC_ASSERT(!self.is_locked());
 
              account_object caller = get_account(account);
-             account_object contract_account = get_account(contract);
+             account_object contract_obj = get_account(contract);
 
              contract_call_operation contract_call_op;
              contract_call_op.account = caller.id;
-             contract_call_op.act.account = uint64_t(contract_account.id) & GRAPHENE_DB_MAX_INSTANCE_ID;
+             contract_call_op.act.account = uint64_t(contract_obj.id) & GRAPHENE_DB_MAX_INSTANCE_ID;
              contract_call_op.act.name = string_to_name(method.c_str());
              fc::variant action_args_var = fc::json::from_string(args, fc::json::relaxed_parser);
              abi_def abi;
 
-             if (abi_serializer::to_abi(contract_account.abi, abi)) {
+             if (abi_serializer::to_abi(contract_obj.abi, abi)) {
                  abi_serializer abis(abi);
                  auto action_type = abis.get_action_type(method);
                  GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));

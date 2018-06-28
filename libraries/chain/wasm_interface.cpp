@@ -885,6 +885,19 @@ class memory_api : public context_aware_api
     }
 };
 
+class transaction_api : public context_aware_api {
+   public:
+      using context_aware_api::context_aware_api;
+
+      void send_inline( array_ptr<char> data, size_t data_len ) {
+         //TODO
+
+         action act;
+         fc::raw::unpack<action>(data, data_len, act);
+         context.execute_inline(std::move(act));
+      }
+};
+
 class compiler_builtins : public context_aware_api {
    public:
       compiler_builtins( apply_context& ctx )
@@ -1318,6 +1331,10 @@ REGISTER_INTRINSICS(memory_api,
 (memmove,                int(int, int, int))
 (memcmp,                 int(int, int, int))
 (memset,                 int(int, int, int))
+);
+
+REGISTER_INTRINSICS(transaction_api,
+(send_inline,               void(int, int))
 );
 
 REGISTER_INTRINSICS(console_api,

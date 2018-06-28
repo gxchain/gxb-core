@@ -14,13 +14,13 @@ namespace graphene { namespace chain {
 namespace config {
     const static uint64_t   billable_alignment = 16;
     const static uint32_t   overhead_per_row_per_index_ram_bytes = 32;
-    
+
     template<typename T>
     struct billable_size;
-    
+
     template<typename T>
     constexpr uint64_t billable_size_v = ((billable_size<T>::value + billable_alignment - 1) / billable_alignment) * billable_alignment;
-    
+
     template<>
     struct billable_size<key_value_object> {
        static const uint64_t overhead = overhead_per_row_per_index_ram_bytes * 2;  ///< overhead for potentially single-row table, 2x indices internal-key and primary key
@@ -505,33 +505,36 @@ class apply_context {
 
    private:
       iterator_cache<key_value_object>    keyval_cache;
+      vector<action>                      _inline_actions; ///< queued inline messages
 
    /// Execution methods:
    public:
       void exec();
+      void exec_one();
+      void execute_inline(action &&a);
 
-   /// Database methods:
-   public:
-     void update_db_usage(const account_name &payer, int64_t delta);
-     int db_store_i64(uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size);
-     void db_update_i64(int iterator, account_name payer, const char *buffer, size_t buffer_size);
-     void db_remove_i64(int iterator);
-     int db_get_i64(int iterator, char *buffer, size_t buffer_size);
-     int db_next_i64(int iterator, uint64_t &primary);
-     int db_previous_i64(int iterator, uint64_t &primary);
-     int db_find_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
-     int db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
-     int db_upperbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
-     int db_end_i64(uint64_t code, uint64_t scope, uint64_t table);
+      /// Database methods:
+    public:
+      void update_db_usage(const account_name &payer, int64_t delta);
+      int db_store_i64(uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size);
+      void db_update_i64(int iterator, account_name payer, const char *buffer, size_t buffer_size);
+      void db_remove_i64(int iterator);
+      int db_get_i64(int iterator, char *buffer, size_t buffer_size);
+      int db_next_i64(int iterator, uint64_t &primary);
+      int db_previous_i64(int iterator, uint64_t &primary);
+      int db_find_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
+      int db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
+      int db_upperbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
+      int db_end_i64(uint64_t code, uint64_t scope, uint64_t table);
 
-   private:
-     optional<table_id_object> find_table(uint64_t code, name scope, name table);
-     const table_id_object &find_or_create_table(uint64_t code, name scope, name table, const account_name &payer);
-     void remove_table(const table_id_object &tid);
-     int db_store_i64(uint64_t code, uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size);
+    private:
+      optional<table_id_object> find_table(uint64_t code, name scope, name table);
+      const table_id_object &find_or_create_table(uint64_t code, name scope, name table, const account_name &payer);
+      void remove_table(const table_id_object &tid);
+      int db_store_i64(uint64_t code, uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size);
 
-     /// Console methods:
-   public:
+      /// Console methods:
+    public:
       void reset_console();
       std::ostringstream &get_console_stream() { return _pending_console_output; }
       const std::ostringstream &get_console_stream() const { return _pending_console_output; }

@@ -5,7 +5,8 @@
 
 namespace graphene { namespace chain {
 
-   transaction_context::transaction_context() :
+   transaction_context::transaction_context(database &d) :
+        _db(&d),
         start(fc::time_point::now()),
         _deadline(start + config::cpu_duration_limit),
         transaction_cpu_usage_us(0)
@@ -47,16 +48,16 @@ namespace graphene { namespace chain {
        }
    }
 
-   void transaction_context::pause_billing_timer()
+   void transaction_context::dispatch_action(const action &a, account_name receiver)
    {
-   }
+       apply_context acontext(db(), *this, a);
+       acontext.receiver = receiver;
 
-   void transaction_context::resume_billing_timer()
-   {
-   }
-
-   void transaction_context::add_ram_usage()
-   {
+       try {
+           acontext.exec();
+       } catch (...) {
+           throw;
+       }
    }
 
 } } /// graphene::chain

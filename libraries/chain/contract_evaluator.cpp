@@ -91,7 +91,7 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 { try {
     dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.act.account)("m", op.act.name)("d", op.act.data));
-    transaction_context trx_context;
+    transaction_context trx_context(db());
     apply_context ctx{db(), trx_context, op.act};
     ctx.exec();
 

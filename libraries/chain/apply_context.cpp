@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <graphene/chain/apply_context.hpp>
+#include <graphene/chain/transaction_context.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/wasm_interface.hpp>
@@ -12,18 +13,19 @@ using boost::container::flat_set;
 
 namespace graphene { namespace chain {
 
-void apply_context::exec()
+void apply_context::exec_one()
 {
-   auto start = fc::time_point::now();
-   try {
-       account_id_type contract_id = (account_id_type)(receiver & GRAPHENE_DB_MAX_INSTANCE_ID);
-       auto& contract_obj = contract_id(*_db);
-       dlog("contract receiver: ${r}", ("r", receiver));
-       auto wasm_bytes = bytes(contract_obj.code.begin(), contract_obj.code.end());
-       try {
-           wasm_interface &wasm = const_cast<wasm_interface&>(_db->wasmif);
-           wasm.apply(contract_obj.code_version, wasm_bytes, *this);
-       } catch (const wasm_exit&) {}
+    auto start = fc::time_point::now();
+    try {
+        account_id_type contract_id = (account_id_type)(receiver & GRAPHENE_DB_MAX_INSTANCE_ID);
+        auto &contract_obj = contract_id(*_db);
+        dlog("contract receiver: ${r}", ("r", receiver));
+        auto wasm_bytes = bytes(contract_obj.code.begin(), contract_obj.code.end());
+        try {
+            wasm_interface &wasm = const_cast<wasm_interface &>(_db->wasmif);
+            wasm.apply(contract_obj.code_version, wasm_bytes, *this);
+        } catch (const wasm_exit &) {
+        }
    } FC_CAPTURE_AND_RETHROW((_pending_console_output.str()));
 
 
@@ -37,10 +39,29 @@ void apply_context::exec()
    dlog("elapsed ${n}", ("n", end - start));
 }
 
+void apply_context::exec()
+{
+    exec_one();
+
+    for (const auto &inline_action : _inline_actions) {
+        trx_context.dispatch_action(inline_action, inline_action.account);
+    }
+}
+
 void apply_context::reset_console()
 {
     _pending_console_output = std::ostringstream();
     _pending_console_output.setf(std::ios::scientific, std::ios::floatfield);
+}
+
+void apply_context::execute_inline(action &&a)
+{
+    account_id_type contract_id = (account_id_type)(a.account & GRAPHENE_DB_MAX_INSTANCE_ID);
+    const account_object& contract_obj = contract_id(db());
+
+    FC_ASSERT(contract_obj.code.size() > 0, "inline action's code account ${account} does not exist", ("account", a.account));
+
+    _inline_actions.emplace_back(move(a));
 }
 
 int apply_context::db_store_i64(uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size)
