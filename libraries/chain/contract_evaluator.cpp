@@ -141,7 +141,7 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     o.fee = d.current_fee_schedule().calculate_fee(o);
     deposit_context.skip_fee_schedule_check = true;
 
-    std::string args = "{\"owner\":72620543991349265, \"asset\":{\"amount\":1000, \"symbol\":0}, \"ram_payer\": 72620543991349265}";
+    std::string args = "{\"owner\":72620543991349265, \"value\":{\"amount\":1000, \"asset_id\":\"1.3.0\"}, \"ram_payer\": 72620543991349265}";
     fc::variant action_args_var = fc::json::from_string(args, fc::json::relaxed_parser);
     abi_def abi;
     if (abi_serializer::to_abi(acnt->abi, abi)) {

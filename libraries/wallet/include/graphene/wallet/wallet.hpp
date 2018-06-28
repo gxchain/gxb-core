@@ -1051,11 +1051,27 @@ class wallet_api
      * @param broadcast broadcast
      * @returns signed_transaction
      */
-    signed_transaction call_contract(string account,
+    signed_transaction call_contract(string from,
                                      string contract,
-                                     string method,
-                                     string args,
+                                     string amount,
+                                     string asset_symbol,
                                      bool broadcast = false);
+    
+    /** Call contract
+     *
+     * call contract
+     * @param from the account name which asset being to be deposited
+     * @param contract the contract which keep the asset
+     * @param amount the amount of asset to be deposited
+     * @param asset_symbol asset symbol
+     * @param broadcast broadcast
+     * @returns signed_transaction
+     */
+    signed_transaction deposit_asset_to_contract(string from,
+                                          string contract,
+                                          string amount,
+                                          string asset_symbol,
+                                          bool broadcast);
   
       /** Returns table infos about the given contract.
        *
@@ -2276,6 +2292,7 @@ FC_API( graphene::wallet::wallet_api,
         (register_account)
         (deploy_contract)
         (call_contract)
+        (deposit_asset_to_contract)
         (get_contract_tables)
         (get_table_objects)
         (register_account2)
