@@ -18,7 +18,7 @@ namespace graphene {
       :amount(a),symbol{s}
       {
          gxb_assert( is_amount_within_range(), "magnitude of asset amount must be less than 2^62" );
-         gxb_assert( symbol.is_valid(),        "invalid symbol name" );
+//         gxb_assert( symbol.is_valid(),        "invalid symbol name" );
       }
 
       bool is_amount_within_range()const { return -max_amount <= amount && amount <= max_amount; }
