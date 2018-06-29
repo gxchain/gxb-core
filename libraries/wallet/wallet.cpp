@@ -3953,7 +3953,7 @@
        static_variant_map _operation_which_map = create_static_variant_map< operation >();
 
     #ifdef __unix__
-       mode_t                  _old_umask;
+       unsigned int _old_umask;
     #endif
        const string _wallet_filename_extension = ".wallet";
     };
