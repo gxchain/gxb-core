@@ -64,9 +64,9 @@ class account_history_plugin_impl
 
       account_history_plugin& _self;
       flat_set<account_id_type> _tracked_accounts;
-      bool _partial_operations = false;
+      bool _partial_operations = true;
       primary_index< simple_index< operation_history_object > >* _oho_index;
-      uint32_t _max_ops_per_account = -1;
+      uint32_t _max_ops_per_account = 0;
    private:
       /** add one history record, then check and remove the earliest history record */
       void add_account_history( const account_id_type account_id, const operation_history_id_type op_id );

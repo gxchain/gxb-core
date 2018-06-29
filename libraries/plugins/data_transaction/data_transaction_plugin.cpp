@@ -48,18 +48,24 @@ void data_transaction_plugin::plugin_initialize(const boost::program_options::va
 { try {
     ilog("data_transaction plugin: plugin_initialize() begin");
 
-    if (options.count(OPT_DATA_TRANSACTION_LIFETIME))
+    if (options.count(OPT_DATA_TRANSACTION_LIFETIME)) {
         data_transaction_lifetime = options[OPT_DATA_TRANSACTION_LIFETIME].as<uint32_t>();
+    } else {
+        // 1 hour by default
+        data_transaction_lifetime = 1;
+    }
     database().applied_block.connect([&](const graphene::chain::signed_block &b) { check_data_transaction(b); });
     ilog("data_transaction plugin: plugin_initialize() end");
 } FC_LOG_AND_RETHROW() }
 
 void data_transaction_plugin::plugin_startup()
 {
+    ilog("data transaction plugin startup");
 }
 
 void data_transaction_plugin::plugin_shutdown()
 {
+    ilog("data transaction plugin shutdown");
 }
 
 void data_transaction_plugin::check_data_transaction( const graphene::chain::signed_block& b )
