@@ -105,15 +105,12 @@ add_library( graphene_chain
              block_database.cpp
 
              is_authorized_asset.cpp
-             
+
              abi_serializer.cpp
 
              ${HEADERS}
              ${PROTOCOL_HEADERS}
-             "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain/hardfork.hpp"
            )
-
-add_dependencies( graphene_chain build_hardfork_hpp )
 
 target_link_libraries( graphene_chain fc graphene_db Logging IR WAST WASM Runtime wasm
     asmjs passes ast emscripten-optimizer support softfloat builtins)
