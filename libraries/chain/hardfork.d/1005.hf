@@ -1,5 +1,0 @@
-// hardfork 1005
-// create asset fee
-#ifndef HARDFORK_1005_TIME
-#define HARDFORK_1005_TIME (fc::time_point_sec( 1524153600 ))
-#endif

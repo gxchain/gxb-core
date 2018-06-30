@@ -1,4 +1,0 @@
-// hardfork 1004 disable limit order
-#ifndef HARDFORK_1004_TIME
-#define HARDFORK_1004_TIME (fc::time_point_sec( 1524153600 ))
-#endif
