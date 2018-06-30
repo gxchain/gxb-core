@@ -83,6 +83,7 @@ extern "C" {
     */
    uint32_t action_data_size();
 
+   void send_inline(char *serialized_action, size_t size);
 
    bool is_account( account_name name );
 

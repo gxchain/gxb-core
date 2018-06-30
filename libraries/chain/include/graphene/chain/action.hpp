@@ -25,7 +25,7 @@ namespace graphene { namespace chain {
     *  were properly declared when it executes.
     */
    struct action {
-      account_name             account;
+      uint64_t                 account;
       action_name              name;
       bytes                    data;
 
@@ -45,7 +45,7 @@ namespace graphene { namespace chain {
          data        = fc::raw::pack(value);
       }
 
-      action(account_name account, action_name name, const bytes& data )
+      action(uint64_t account, action_name name, const bytes& data )
             : account(account), name(name), data(data) {
       }
 
@@ -58,7 +58,7 @@ namespace graphene { namespace chain {
    };
 
    struct action_notice : public action {
-      account_name receiver;
+      uint64_t  receiver;
    };
 
 } } /// namespace graphene::chain

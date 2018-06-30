@@ -81,6 +81,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Objects
       fc::variants get_objects(const vector<object_id_type>& ids)const;
+      fc::variants get_table_objects(string code, string scope, string table) const;
 
       // Subscriptions
       void set_subscribe_callback( std::function<void(const variant&)> cb, bool notify_remove_create );
@@ -335,7 +336,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       boost::signals2::scoped_connection                                                                                           _applied_block_connection;
       boost::signals2::scoped_connection                                                                                           _pending_trx_connection;
       map< pair<asset_id_type,asset_id_type>, std::function<void(const variant&)> >      _market_subscriptions;
-      graphene::chain::database&                                                                                                            _db;
+      graphene::chain::database&                                                                                                   _db;
 
 
 

@@ -42,4 +42,14 @@ class contract_call_evaluator : public evaluator<contract_call_evaluator>
     const account_object* acnt;
 };
 
+class contract_deposit_evaluator: public evaluator<contract_deposit_evaluator>
+{
+  public:
+    typedef contract_deposit_operation operation_type;
+
+    void_result do_evaluate(const contract_deposit_operation &op);
+    void_result do_apply(const contract_deposit_operation &op);
+
+    const account_object* acnt;
+};
 } }

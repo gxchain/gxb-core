@@ -297,8 +297,6 @@ void_result data_transaction_datasource_upload_evaluator::do_apply(const data_tr
             });
             dlog("datasource_copyright_object id ${id}", ("id", new_object.id));
         }
-    } else {
-        dlog("datasource has no copyright hash");
     }
 
     return void_result();

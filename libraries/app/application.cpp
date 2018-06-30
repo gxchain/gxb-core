@@ -163,12 +163,12 @@ namespace detail {
             vector<string> seeds = {
                 "node1.gxb.io:6789",  // node1 (east)
                 "node5.gxb.io:6789",  // node5 (south)
-                "47.92.117.128:6789", // node8 (north)
+                "node8.gxb.io:6789", // node8 (north)
                 "47.254.18.74:6789",  // node15 (us)
                 "47.74.22.124:6789",  // node16 (jp)
                 "47.88.158.101:6789", // node17 (singapore)
+                "172.25.111.27:6789", // node23 (germany)
                 "47.52.114.135:6789"  // node11 (hk)
-
             };
             for( const string& endpoint_string : seeds )
             {
@@ -980,7 +980,6 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
    {
       wanted.push_back("witness");
       wanted.push_back("account_history");
-      wanted.push_back("market_history");
       wanted.push_back("data_transaction");
    }
    for (auto& it : wanted)

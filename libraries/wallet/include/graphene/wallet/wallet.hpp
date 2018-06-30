@@ -1033,12 +1033,12 @@ class wallet_api
        * @param broadcast broadcast
        * @returns signed_transaction
        */
-    signed_transaction deploy_contract(string name,
-                                      string account,
-                                      string vm_type,
-                                      string vm_version,
-                                      string contract_dir,
-                                      bool broadcast = false);
+      signed_transaction deploy_contract(string name,
+                                         string account,
+                                         string vm_type,
+                                         string vm_version,
+                                         string contract_dir,
+                                         bool broadcast = false);
     
     
     /** Call contract
@@ -1051,11 +1051,42 @@ class wallet_api
      * @param broadcast broadcast
      * @returns signed_transaction
      */
-  signed_transaction call_contract(string account,
-                                    string contract,
-                                    string method,
-                                    string args,
-                                    bool broadcast = false);
+    signed_transaction call_contract(string from,
+                                     string contract,
+                                     string amount,
+                                     string asset_symbol,
+                                     bool broadcast = false);
+    
+    /** Call contract
+     *
+     * call contract
+     * @param from the account name which asset being to be deposited
+     * @param contract the contract which keep the asset
+     * @param amount the amount of asset to be deposited
+     * @param asset_symbol asset symbol
+     * @param broadcast broadcast
+     * @returns signed_transaction
+     */
+    signed_transaction deposit_asset_to_contract(string from,
+                                          string contract,
+                                          string amount,
+                                          string asset_symbol,
+                                          bool broadcast);
+  
+      /** Returns table infos about the given contract.
+       *
+       * @param contract the name of the contract to query
+       * @returns the table names/types stored in the blockchain
+       */
+      variant get_contract_tables(string contract) const;
+      
+      /** Returns table infos about the given contract.
+       *
+       * @param contract the name of the contract to query
+       * @param table the table of the contract to query
+       * @returns the table names/types stored in the blockchain
+       */
+      variant get_table_objects(string contract, string table) const;
 
       /** Registers a third party's account on the blockckain.
        *
@@ -2138,6 +2169,8 @@ class wallet_api
 
       bool verify_proxy_transfer_signature(const proxy_transfer_params& param, public_key_type pub_key);
 
+      signed_transaction custom(string account, uint16_t id, string data, string fee_symbol, bool broadcast);
+
       /** get tps
        * @return
        */
@@ -2262,6 +2295,9 @@ FC_API( graphene::wallet::wallet_api,
         (register_account)
         (deploy_contract)
         (call_contract)
+        (deposit_asset_to_contract)
+        (get_contract_tables)
+        (get_table_objects)
         (register_account2)
         (upgrade_account)
         (create_account_with_brain_key)
@@ -2351,6 +2387,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_hash)
         (verify_transaction_signature)
         (verify_proxy_transfer_signature)
+        (custom)
         (flood_network)
         (flood_create_account)
         (get_tps)

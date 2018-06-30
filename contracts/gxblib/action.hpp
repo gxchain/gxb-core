@@ -53,7 +53,7 @@ namespace graphene {
     * meta-data about the authorization levels.
     */
    struct action {
-      account_name               account;
+      uint64_t                   account;
       action_name                name;
       bytes                      data;
 
@@ -78,10 +78,16 @@ namespace graphene {
        *  @param value - will be serialized via pack into data
        */
       template<typename T>
-      action( account_name a, action_name n, T&& value )
+      action( uint64_t a, action_name n, T&& value )
       :account(a), name(n), data(pack(std::forward<T>(value))) {}
 
       GXBLIB_SERIALIZE( action, (account)(name)(data) )
+
+      void send() const
+      {
+          auto serialize = pack(*this);
+          ::send_inline(serialize.data(), serialize.size());
+      }
 
       /**
        * Retrieve the unpacked data as T

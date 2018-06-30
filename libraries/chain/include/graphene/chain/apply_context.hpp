@@ -8,9 +8,25 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/contract_table_objects.hpp>
-#include <graphene/chain/protocol/name.hpp>
 
 namespace graphene { namespace chain {
+
+namespace config {
+    const static uint64_t   billable_alignment = 16;
+    const static uint32_t   overhead_per_row_per_index_ram_bytes = 32;
+
+    template<typename T>
+    struct billable_size;
+
+    template<typename T>
+    constexpr uint64_t billable_size_v = ((billable_size<T>::value + billable_alignment - 1) / billable_alignment) * billable_alignment;
+
+    template<>
+    struct billable_size<key_value_object> {
+       static const uint64_t overhead = overhead_per_row_per_index_ram_bytes * 2;  ///< overhead for potentially single-row table, 2x indices internal-key and primary key
+       static const uint64_t value = 32 + 8 + 4 + overhead; ///< 32 bytes for our constant size fields, 8 for pointer to vector data, 4 bytes for a size of vector + overhead
+    };
+}
 
 class database;
 class transaction_context;
@@ -163,53 +179,362 @@ class apply_context {
             }
       };
 
+   public:
+      template<typename ObjectType,
+               typename SecondaryKeyProxy = typename std::add_lvalue_reference<typename ObjectType::secondary_key_type>::type,
+               typename SecondaryKeyProxyConst = typename std::add_lvalue_reference<
+                                                   typename std::add_const<typename ObjectType::secondary_key_type>::type>::type >
+      class gph_generic_index
+      {
+         public:
+            typedef typename ObjectType::secondary_key_type secondary_key_type;
+            typedef SecondaryKeyProxy      secondary_key_proxy_type;
+            typedef SecondaryKeyProxyConst secondary_key_proxy_const_type;
+
+            using secondary_key_helper_t = secondary_key_helper<secondary_key_type, secondary_key_proxy_type, secondary_key_proxy_const_type>;
+
+            gph_generic_index( apply_context& c ):context(c){}
+
+            int store(uint64_t scope, uint64_t table, const account_name &payer,
+                      uint64_t id, secondary_key_proxy_const_type value)
+            {
+               // FC_ASSERT( payer != account_name(), "must specify a valid account to pay for new record" );
+
+               auto &tab = const_cast<table_id_object&>(context.find_or_create_table(context.receiver, scope, table, payer));
+
+               const auto &obj = context._db->create<ObjectType>([&](auto &o) {
+                   o.t_id = tab.id;
+                   o.primary_key = id;
+                   secondary_key_helper_t::set(o.secondary_key, value);
+                   o.payer = payer;
+               });
+
+               context._db->modify(tab, [&](table_id_object &t) {
+                   ++t.count;
+               });
+
+               // context.update_db_usage
+
+               itr_cache.cache_table(tab);
+               return itr_cache.add(obj);
+            }
+
+            void remove(int iterator)
+            {
+                const auto &obj = itr_cache.get(iterator);
+                // context.update_db_usage
+
+                const auto &table_obj = itr_cache.get_table(obj.t_id);
+                FC_ASSERT(table_obj.code == context.receiver, "db access violation");
+
+                context._db->modify(table_obj, [&](table_id_object &t) {
+                    --t.count;
+                });
+                context._db->remove(obj);
+
+                if (table_obj.count == 0) {
+                   context.remove_table(table_obj);
+                }
+
+                itr_cache.remove(iterator);
+            }
+
+            void update(int iterator, account_name payer, secondary_key_proxy_const_type secondary)
+            {
+                const auto &obj = itr_cache.get(iterator);
+
+                const auto &table_obj = itr_cache.get_table(obj.t_id);
+                FC_ASSERT(table_obj.code == context.receiver, "db access violation");
+
+                // if( payer == account_name() ) payer = obj.payer;
+
+                // context.update_db_usage
+
+                context._db->modify(obj, [&](ObjectType &o) {
+                    secondary_key_helper_t::set(o.secondary_key, secondary);
+                    o.payer = payer;
+                });
+            }
+
+            int find_secondary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_const_type secondary, uint64_t &primary)
+            {
+                auto tab = context.find_table(code, scope, table);
+                if (!tab.valid()) return -1;
+
+                auto table_end_itr = itr_cache.cache_table(*tab);
+
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
+                auto obj = idx.find(secondary_key_helper_t::create_tuple(*tab, secondary));
+                if (obj != idx.end()) return table_end_itr;
+
+                primary = obj->primary_key;
+
+                return itr_cache.add(*obj);
+            }
+
+            int lowerbound_secondary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t &primary)
+            {
+                auto tab = context.find_table(code, scope, table);
+                if (!tab.valid()) return -1;
+
+                auto table_end_itr = itr_cache.cache_table(*tab);
+
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
+                auto itr = idx.lower_bound(secondary_key_helper_t::create_tuple(*tab, secondary));
+                if (itr == idx.end()) return table_end_itr;
+                if (itr->t_id != tab->id) return table_end_itr;
+
+                primary = itr->primary_key;
+                secondary_key_helper_t::get(secondary, itr->secondary_key);
+
+                return itr_cache.add(*itr);
+            }
+
+            int upperbound_secondary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t &primary)
+            {
+                auto tab = context.find_table(code, scope, table);
+                if (!tab.valid()) return -1;
+
+                auto table_end_itr = itr_cache.cache_table(*tab);
+
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
+                auto itr = idx.upper_bound(secondary_key_helper_t::create_tuple(*tab, secondary));
+                if (itr == idx.end()) return table_end_itr;
+                if (itr->t_id != tab->id) return table_end_itr;
+
+                primary = itr->primary_key;
+                secondary_key_helper_t::get(secondary, itr->secondary_key);
+
+                return itr_cache.add(*itr);
+            }
+
+            int end_secondary(uint64_t code, uint64_t scope, uint64_t table)
+            {
+                auto tab = context.find_table(code, scope, table);
+                if (!tab.valid()) return -1;
+
+                return itr_cache.cache_table(*tab);
+            }
+
+            int next_secondary(int iterator, uint64_t &primary)
+            {
+                if (iterator < -1) return -1; // cannot increment past end iterator of index
+
+                const auto &obj = itr_cache.get(iterator); // Check for iterator != -1 happens in this call
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
+
+                auto itr = idx.iterator_to(obj);
+                ++itr;
+
+                if (itr == idx.end() || itr->t_id != obj.t_id) return itr_cache.get_end_iterator_by_table_id(obj.t_id);
+
+                primary = itr->primary_key;
+                return itr_cache.add(*itr);
+            }
+
+            int previous_secondary(int iterator, uint64_t &primary)
+            {
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
+
+                if (iterator < -1) // is end iterator
+                {
+                    auto tab = itr_cache.find_table_by_end_iterator(iterator);
+                    FC_ASSERT(tab, "not a valid end iterator");
+
+                    auto itr = idx.upper_bound(tab->id);
+                    if (idx.begin() == idx.end() || itr == idx.begin()) return -1; // Empty index
+
+                    --itr;
+
+                    if (itr->t_id != tab->id) return -1; // Empty index
+
+                    primary = itr->primary_key;
+                    return itr_cache.add(*itr);
+                }
+
+                const auto &obj = itr_cache.get(iterator); // Check for iterator != -1 happens in this call
+
+                auto itr = idx.iterator_to(obj);
+                if (itr == idx.begin()) return -1; // cannot decrement past beginning iterator of index
+
+                --itr;
+
+                if (itr->t_id != obj.t_id) return -1; // cannot decrement past beginning iterator of index
+
+                primary = itr->primary_key;
+                return itr_cache.add(*itr);
+            }
+
+            int find_primary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t primary)
+            {
+                auto tab = context.find_table(code, scope, table);
+                if (!tab.valid()) return -1;
+
+                auto table_end_itr = itr_cache.cache_table(*tab);
+
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
+                auto obj = idx.find(boost::make_tuple(tab->id, primary));
+                if (obj != idx.end()) return table_end_itr;
+                secondary_key_helper_t::get(secondary, obj->secondary_key);
+
+                return itr_cache.add(*obj);
+            }
+
+            int lowerbound_primary(uint64_t code, uint64_t scope, uint64_t table, uint64_t primary)
+            {
+                auto tab = context.find_table(code, scope, table);
+                if (!tab.valid()) return -1;
+
+                auto table_end_itr = itr_cache.cache_table(*tab);
+
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
+                auto itr = idx.lower_bound(boost::make_tuple(tab->id, primary));
+                if (itr == idx.end()) return table_end_itr;
+                if (itr->t_id != tab->id) return table_end_itr;
+
+                return itr_cache.add(*itr);
+            }
+
+            int upperbound_primary(uint64_t code, uint64_t scope, uint64_t table, uint64_t primary)
+            {
+                auto tab = context.find_table(code, scope, table);
+                if (!tab.valid()) return -1;
+
+                auto table_end_itr = itr_cache.cache_table(*tab);
+
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
+                auto itr = idx.upper_bound(boost::make_tuple(tab->id, primary));
+                if (itr == idx.end()) return table_end_itr;
+                if (itr->t_id != tab->id) return table_end_itr;
+
+                itr_cache.cache_table(*tab);
+                return itr_cache.add(*itr);
+            }
+
+            int next_primary(int iterator, uint64_t &primary)
+            {
+                if (iterator < -1) return -1; // cannot increment past end iterator of table
+
+                const auto &obj = itr_cache.get(iterator); // Check for iterator != -1 happens in this call
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
+
+                auto itr = idx.iterator_to(obj);
+                ++itr;
+
+                if (itr == idx.end() || itr->t_id != obj.t_id) return itr_cache.get_end_iterator_by_table_id(obj.t_id);
+
+                primary = itr->primary_key;
+                return itr_cache.add(*itr);
+            }
+
+            int previous_primary(int iterator, uint64_t &primary)
+            {
+                const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
+
+                if (iterator < -1) // is end iterator
+                {
+                    auto tab = itr_cache.find_table_by_end_iterator(iterator);
+                    FC_ASSERT(tab, "not a valid end iterator");
+
+                    auto itr = idx.upper_bound(tab->id);
+                    if (idx.begin() == idx.end() || itr == idx.begin()) return -1; // Empty table
+
+                    --itr;
+
+                    if (itr->t_id != tab->id) return -1; // Empty table
+
+                    primary = itr->primary_key;
+                    return itr_cache.add(*itr);
+                }
+
+                const auto &obj = itr_cache.get(iterator); // Check for iterator != -1 happens in this call
+
+                auto itr = idx.iterator_to(obj);
+                if (itr == idx.begin()) return -1; // cannot decrement past beginning iterator of table
+
+                --itr;
+
+                if (itr->t_id != obj.t_id) return -1; // cannot decrement past beginning iterator of index
+
+                primary = itr->primary_key;
+                return itr_cache.add(*itr);
+            }
+
+            void get(int iterator, uint64_t &primary, secondary_key_proxy_type secondary)
+            {
+                const auto &obj = itr_cache.get(iterator);
+                primary = obj.primary_key;
+                secondary_key_helper_t::get(secondary, obj.secondary_key);
+            }
+
+         private:
+            apply_context&              context;
+            iterator_cache<ObjectType>  itr_cache;
+      }; /// class gph_generic_index
+
    /// Constructor
    public:
-     apply_context(const database &d, transaction_context &trx_ctx, const action &a)
+     apply_context(database &d, transaction_context &trx_ctx, const action &a)
          : act(a)
          , trx_context(trx_ctx)
-         , db(d)
+         , _db(&d)
          , receiver(a.account)
-      {
+         , idx64(*this)
+         , idx128(*this)
+         , idx256(*this)
+         , idx_double(*this)
+         , idx_long_double(*this)
+     {
          reset_console();
       }
 
    public:
+      database &db() const { assert(_db); return *_db; }
+
+   public:
       const action&                 act; ///< message being applied
       transaction_context&          trx_context; ///< transaction context in which the action is running
-      const database&               db;
-      account_name                  receiver;
+      database*                     _db;
+      uint64_t                      receiver;
 
+      gph_generic_index<index64_object>                                  idx64;
+      gph_generic_index<index128_object>                                 idx128;
+      gph_generic_index<index256_object, uint128_t*, const uint128_t*>   idx256;
+      gph_generic_index<index_double_object>                             idx_double;
+      gph_generic_index<index_long_double_object>                        idx_long_double;
 
    private:
       iterator_cache<key_value_object>    keyval_cache;
+      vector<action>                      _inline_actions; ///< queued inline messages
 
    /// Execution methods:
    public:
       void exec();
+      void exec_one();
+      void execute_inline(action &&a);
 
-   /// Database methods:
-   public:
-     void update_db_usage(const account_name &payer, int64_t delta);
-     int db_store_i64(uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size);
-     void db_update_i64(int iterator, account_name payer, const char *buffer, size_t buffer_size);
-     void db_remove_i64(int iterator);
-     int db_get_i64(int iterator, char *buffer, size_t buffer_size);
-     int db_next_i64(int iterator, uint64_t &primary);
-     int db_previous_i64(int iterator, uint64_t &primary);
-     int db_find_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
-     int db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
-     int db_upperbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
-     int db_end_i64(uint64_t code, uint64_t scope, uint64_t table);
+      /// Database methods:
+    public:
+      void update_db_usage(const account_name &payer, int64_t delta);
+      int db_store_i64(uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size);
+      void db_update_i64(int iterator, account_name payer, const char *buffer, size_t buffer_size);
+      void db_remove_i64(int iterator);
+      int db_get_i64(int iterator, char *buffer, size_t buffer_size);
+      int db_next_i64(int iterator, uint64_t &primary);
+      int db_previous_i64(int iterator, uint64_t &primary);
+      int db_find_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
+      int db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
+      int db_upperbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
+      int db_end_i64(uint64_t code, uint64_t scope, uint64_t table);
 
-   private:
-     const table_id_object *find_table(name code, name scope, name table);
-     const table_id_object &find_or_create_table(name code, name scope, name table, const account_name &payer);
-     void remove_table(const table_id_object &tid);
-     int db_store_i64(uint64_t code, uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size);
+    private:
+      optional<table_id_object> find_table(uint64_t code, name scope, name table);
+      const table_id_object &find_or_create_table(uint64_t code, name scope, name table, const account_name &payer);
+      void remove_table(const table_id_object &tid);
+      int db_store_i64(uint64_t code, uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size);
 
-     /// Console methods:
-   public:
+      /// Console methods:
+    public:
       void reset_console();
       std::ostringstream &get_console_stream() { return _pending_console_output; }
       const std::ostringstream &get_console_stream() const { return _pending_console_output; }
@@ -228,11 +553,14 @@ class apply_context {
       inline void console_append_formatted(const string& fmt, const variant_object& vo) {
           console_append(fc::format_string(fmt, vo));
       }
+   public:
+      uint64_t get_ram_usage() const {
+          return ram_usage;
+      }
 
    private:
      std::ostringstream _pending_console_output;
+     uint64_t           ram_usage = 0;
 };
 
 } } // namespace graphene::chain
-
-//FC_REFLECT(graphene::chain::apply_context::apply_results, (applied_actions)(deferred_transaction_requests)(deferred_transactions_count))

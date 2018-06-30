@@ -94,7 +94,7 @@ namespace graphene { namespace chain {
    
    using action_name      = name;
    using scope_name       = name;
-   using account_name     = name;
+   using account_name     = uint64_t;
    using permission_name  = name;
    using table_name       = name;
    

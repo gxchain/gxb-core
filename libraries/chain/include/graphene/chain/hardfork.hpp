@@ -32,11 +32,6 @@
 #ifndef HARDFORK_1005_TIME
 #define HARDFORK_1005_TIME (fc::time_point_sec( 1524153600 ))
 #endif
-// hardfork 1006
-// create asset, disable GXC and GXS
-#ifndef HARDFORK_1006_TIME
-#define HARDFORK_1006_TIME (fc::time_point_sec( 1522512000 ))
-#endif
 // #357 Disallow publishing certain malformed price feeds
 #ifndef HARDFORK_357_TIME
 #define HARDFORK_357_TIME (fc::time_point_sec( 1444416300 ))

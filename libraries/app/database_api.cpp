@@ -65,6 +65,11 @@ fc::variants database_api::get_objects(const vector<object_id_type>& ids)const
    return my->get_objects( ids );
 }
 
+fc::variants database_api::get_table_objects(string code, string scope, string table) const
+{
+    return my->get_table_objects(code, scope, table);
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Subscriptions                                                    //

@@ -147,8 +147,7 @@ BOOST_AUTO_TEST_CASE(contract_test)
    auto wasm = graphene::chain::wast_to_wasm(contract_test_wast_code);
    deploy_op.code = bytes(wasm.begin(), wasm.end());
    deploy_op.code_version = fc::sha256::hash(deploy_op.code);
-   const char *abi = "abi";
-   deploy_op.abi = bytes(abi, abi+strlen(abi));
+   deploy_op.abi = bytes(contract_abi, contract_abi+strlen(contract_abi));
    deploy_op.fee = asset(2000);
    trx.operations.push_back(deploy_op);
    set_expiration(db, trx);
@@ -159,11 +158,14 @@ BOOST_AUTO_TEST_CASE(contract_test)
 
    // call contract, action hi
    BOOST_TEST_MESSAGE("contract call test, hi");
+   auto& contract_obj = get_account("bob");
+   auto contract_id = static_cast<uint64_t>(contract_obj.id);
+   idump((contract_id));
+
    contract_call_operation op;
    op.account = alice_id;
-   name dan = N(dan);
-   string s = dan.to_string();
-   action act {N(bob), N(hi), bytes(s.begin(), s.end())};
+   string s = "123";
+   action act {contract_id, N(hi), bytes(s.begin(), s.end())};
    op.act = act;
    op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(op);
    trx.operations.push_back(op);
@@ -177,8 +179,52 @@ BOOST_AUTO_TEST_CASE(contract_test)
    BOOST_TEST_MESSAGE("contract call test, bye");
    contract_call_operation call_op;
    call_op.account = alice_id;
-   action act2 {N(bob), N(bye), bytes(s.begin(), s.end())};
+   action act2 {contract_id, N(bye), bytes(s.begin(), s.end())};
    call_op.act = act2;
+   call_op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(call_op);
+   trx.operations.push_back(call_op);
+   set_expiration(db, trx);
+   sign(trx, alice_private_key);
+   idump((trx));
+   PUSH_TX(db, trx);
+   trx.clear();
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE(deposit_contract_test)
+{ try {
+   ACTOR(alice);
+
+   transfer(account_id_type(), alice_id, asset(10000));
+   generate_block();
+
+   // create contract
+   BOOST_TEST_MESSAGE("contract deploy test");
+   contract_deploy_operation deploy_op;
+   deploy_op.account = alice_id;
+   deploy_op.name = "bob";
+   deploy_op.vm_type = "0";
+   deploy_op.vm_version = "0";
+   auto wasm = graphene::chain::wast_to_wasm(contract_test_wast_code);
+   deploy_op.code = bytes(wasm.begin(), wasm.end());
+   deploy_op.code_version = fc::sha256::hash(deploy_op.code);
+   deploy_op.abi = bytes(contract_abi, contract_abi+strlen(contract_abi));
+   deploy_op.fee = asset(2000);
+   trx.operations.push_back(deploy_op);
+   set_expiration(db, trx);
+   sign(trx, alice_private_key);
+   idump((trx));
+   PUSH_TX(db, trx);
+   trx.clear();
+
+   auto& contract_obj = get_account("bob");
+
+   // call contract, action hi
+   BOOST_TEST_MESSAGE("contract deposit test");
+   contract_deposit_operation call_op;
+   call_op.from = alice_id;
+   call_op.to = contract_obj.id;;
+   call_op.amount = asset(2000);
    call_op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(call_op);
    trx.operations.push_back(call_op);
    set_expiration(db, trx);

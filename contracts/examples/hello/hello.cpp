@@ -3,7 +3,7 @@
 using namespace gxblib;
 using namespace graphene;
 
-class skeleton : public graphene::contract {
+class hello : public graphene::contract {
   public:
       using contract::contract;
 
@@ -20,4 +20,4 @@ class skeleton : public graphene::contract {
       }
 };
 
-GXB_ABI(skeleton, (subbalance)(addbalance)(hi)(bye))
+GXB_ABI(hello, (subbalance)(addbalance)(hi)(bye))

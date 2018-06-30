@@ -8,7 +8,7 @@ import urllib
 WITNESS_URL = "http://127.0.0.1:28090"
 POST_DATA = '{"jsonrpc": "2.0", "method": "call", "params": [0, "get_witness_participation_rate", []], "id": 1}'
 
-WECHAT_NOTIFY_URL = "http://172.19.19.49:8091/notify/wechat/send?message=%s&agent=EXCHANGE"
+WECHAT_NOTIFY_URL = "http://172.19.19.49:8091/notify/wechat/send?message=%s&agent=GXCHAIN"
 NO_RESULT_MSG = "见证人监控程序，无法获取参与率, 错误信息:"
 WARNING_MSG = "见证人参与率预期为100%，当前参与率:"
 

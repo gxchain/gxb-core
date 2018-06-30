@@ -173,6 +173,12 @@ const uint8_t lock_balance_object::type_id;
 const uint8_t signature_object::space_id;
 const uint8_t signature_object::type_id;
 
+const uint8_t table_id_object::space_id;
+const uint8_t table_id_object::type_id;
+
+const uint8_t key_value_object::space_id;
+const uint8_t key_value_object::type_id;
+
 void database::initialize_evaluators()
 {
    _operation_evaluators.resize(255);
@@ -251,6 +257,7 @@ void database::initialize_evaluators()
    register_evaluator<proxy_transfer_evaluator>();
    register_evaluator<contract_deploy_evaluator>();
    register_evaluator<contract_call_evaluator>();
+   register_evaluator<contract_deposit_evaluator>();
 
 }
 

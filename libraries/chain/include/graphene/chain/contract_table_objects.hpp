@@ -2,7 +2,9 @@
 
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/multi_index_includes.hpp>
+#include <graphene/chain/database.hpp>
 #include <graphene/db/generic_index.hpp>
+#include <graphene/db/object.hpp>
 #include <boost/multi_index/composite_key.hpp>
 #include <softfloat.hpp>
 
@@ -10,7 +12,6 @@
 #include <type_traits>
 
 namespace graphene { namespace chain {
-class database;
 
 typedef __uint128_t uint128_t;
 
@@ -29,10 +30,12 @@ class table_id_object : public graphene::db::abstract_object<table_id_object>
 
 struct by_code_scope_table;
 
-using table_id_object_multi_index_type = multi_index_container<
+using table_id_multi_index_type = multi_index_container<
   table_id_object,
   indexed_by<
-      ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+      ordered_unique< tag<by_id>,
+        member< object, object_id_type, &object::id >
+      >,
       ordered_unique<tag<by_code_scope_table>,
         composite_key< table_id_object,
            member<table_id_object, account_name, &table_id_object::code>,
@@ -43,14 +46,13 @@ using table_id_object_multi_index_type = multi_index_container<
   >
 >;
 
-typedef generic_index<table_id_object, table_id_object_multi_index_type> table_id_multi_index;
-
-using table_id = table_id_object_id_type;
+typedef generic_index<table_id_object, table_id_multi_index_type> table_id_multi_index;
 
 struct by_scope_primary;
 struct by_scope_secondary;
 struct by_scope_tertiary;
 
+typedef table_id_object_id_type table_id;
 class key_value_object : public graphene::db::abstract_object<key_value_object>
 {
   public:
@@ -66,7 +68,7 @@ class key_value_object : public graphene::db::abstract_object<key_value_object>
     bytes                       value;
 };
 
-using key_value_object_multi_index_type = multi_index_container<
+using key_value_multi_index_type = multi_index_container<
   key_value_object,
   indexed_by<
      ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
@@ -79,9 +81,8 @@ using key_value_object_multi_index_type = multi_index_container<
      >
   >
 >;
-typedef generic_index<key_value_object, key_value_object_multi_index_type> key_value_index;
+typedef generic_index<key_value_object, key_value_multi_index_type> key_value_index;
 
-/*
 struct by_primary;
 struct by_secondary;
 
@@ -89,15 +90,16 @@ template <typename SecondaryKey, uint64_t ObjectTypeId, typename SecondaryKeyLes
 struct secondary_index {
     class index_object : public graphene::db::abstract_object<index_object> {
     public:
-        typedef SecondaryKey secondary_key_type;
+      typedef SecondaryKey secondary_key_type;
 
-        table_id            t_id;
-        uint64_t            primary_key;
-        account_name        payer = 0;
-        SecondaryKey        secondary_key;
+      table_id      t_id;
+      uint64_t      primary_key;
+      account_name  payer = 0;
+      SecondaryKey  secondary_key;
     };
 
-    typedef multi_index_container<
+
+    using index_multi_index_type =  multi_index_container<
         index_object,
         indexed_by<
             ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
@@ -105,16 +107,20 @@ struct secondary_index {
                composite_key<index_object,
                  member<index_object, table_id, &index_object::t_id>,
                  member<index_object, uint64_t, &index_object::primary_key>>,
-               composite_key_compare<std::less<table_id>, std::less<uint64_t>>>,
+               composite_key_compare<std::less<table_id>, std::less<uint64_t>>
+            >,
             ordered_unique<tag<by_secondary>,
                composite_key<index_object,
                  member<index_object, table_id, &index_object::t_id>,
                  member<index_object, SecondaryKey, &index_object::secondary_key>,
-                 member<index_object, uint64_t, &index_object::primary_key>>,
+                 member<index_object, uint64_t, &index_object::primary_key>
+               >,
                composite_key_compare<std::less<table_id>, SecondaryKeyLess, std::less<uint64_t>>
             >
         >
-    > index_index;
+    >;
+    typedef generic_index<index_object, index_multi_index_type> index_index;
+
 };
 
 typedef secondary_index<uint64_t, index64_object_type>::index_object index64_object;
@@ -148,14 +154,32 @@ typedef secondary_index<float64_t,index_double_object_type,soft_double_less>::in
 
 typedef secondary_index<float128_t,index_long_double_object_type,soft_long_double_less>::index_object  index_long_double_object;
 typedef secondary_index<float128_t,index_long_double_object_type,soft_long_double_less>::index_index   index_long_double_index;
-*/
+
+
 
 } }  // namespace graphene::chain
 
-FC_REFLECT_DERIVED(graphene::chain::table_id_object,
-                   (graphene::db::object),
-                   (code)(scope)(table)(payer)(count))
+template<typename T>
+struct get_gph_index_type {};
 
-FC_REFLECT_DERIVED(graphene::chain::key_value_object,
-                   (graphene::db::object),
-                   (t_id)(primary_key)(payer)(value))
+#define GPH_SET_INDEX_TYPE(OBJECT_TYPE, INDEX_TYPE)  \
+    template<> struct get_gph_index_type<OBJECT_TYPE> { typedef INDEX_TYPE type; };
+
+GPH_SET_INDEX_TYPE(graphene::chain::index64_object, graphene::chain::index64_index)
+GPH_SET_INDEX_TYPE(graphene::chain::index128_object, graphene::chain::index128_index)
+GPH_SET_INDEX_TYPE(graphene::chain::index256_object, graphene::chain::index256_index)
+GPH_SET_INDEX_TYPE(graphene::chain::index_double_object, graphene::chain::index_double_index)
+GPH_SET_INDEX_TYPE(graphene::chain::index_long_double_object, graphene::chain::index_long_double_index)
+
+FC_REFLECT_DERIVED(graphene::chain::table_id_object, (graphene::db::object),
+                   (code)
+                   (scope)
+                   (table)
+                   (payer)
+                   (count))
+
+FC_REFLECT_DERIVED(graphene::chain::key_value_object, (graphene::db::object),
+                  (t_id)
+                  (primary_key)
+                  (payer)
+                  (value))

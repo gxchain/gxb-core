@@ -9,6 +9,7 @@
 #include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
+#include <graphene/chain/impacted.hpp>
 
 using namespace fc;
 using namespace graphene::chain;
@@ -198,7 +199,7 @@ struct get_impacted_account_visitor
    void operator()( const stale_league_data_product_update_operation& op ) { }
    void operator()( const stale_league_create_operation& op ) { }
    void operator()( const stale_league_update_operation& op ) { }
-   
+
 
    /**
     *
@@ -273,20 +274,24 @@ struct get_impacted_account_visitor
    void operator() (const contract_deploy_operation& op) {
        _impacted.insert(op.account);
    }
-   
+
    void operator() (const contract_call_operation& op) {
        _impacted.insert(op.account);
    }
 
+   void operator() (const contract_deposit_operation& op) {
+       _impacted.insert(op.from);
+   }
+
 };
 
-void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
+void graphene::chain::operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
 {
   get_impacted_account_visitor vtor = get_impacted_account_visitor( result );
   op.visit( vtor );
 }
 
-void transaction_get_impacted_accounts( const transaction& tx, flat_set<account_id_type>& result )
+void graphene::chain::transaction_get_impacted_accounts( const transaction& tx, flat_set<account_id_type>& result )
 {
   for( const auto& op : tx.operations )
     operation_get_impacted_accounts( op, result );
@@ -376,44 +381,47 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
             break;
         }  case data_transaction_object_type:{
             break;
-        }
-           case pocs_object_type:{
+        } case pocs_object_type:{
+            break;
+        } case datasource_copyright_object_type: {
+            break;
+        } case second_hand_data_object_type: {
+            break;
+        } case data_transaction_complain_object_type: {
+            break;
+        } case lock_balance_object_type: {
+            break;
+        } case index64_object_type: {
+            break;
+        } case index128_object_type: {
+            break;
+        } case index256_object_type: {
+            break;
+        } case index_double_object_type: {
+            break;
+        } case index_long_double_object_type: {
             break;
         }
-           case datasource_copyright_object_type:{
-            break;
-           }
-           case second_hand_data_object_type:{
-            break;
-           }
-           case data_transaction_complain_object_type:{
-               break;
-           }
-           case lock_balance_object_type:{
-               break;
-       }
-
       }
    }
    else if( obj->id.space() == implementation_ids )
    {
-      switch( (impl_object_type)obj->id.type() )
-      {
-             case impl_global_property_object_type:
-              break;
-             case impl_dynamic_global_property_object_type:
-              break;
-             case impl_reserved0_object_type:
-              break;
-             case impl_asset_dynamic_data_type:
-              break;
-             case impl_asset_bitasset_data_type:
-              break;
-             case impl_account_balance_object_type:{
-              const auto& aobj = dynamic_cast<const account_balance_object*>(obj);
-              assert( aobj != nullptr );
-              accounts.insert( aobj->owner );
-              break;
+       switch ((impl_object_type) obj->id.type()) {
+           case impl_global_property_object_type:
+               break;
+           case impl_dynamic_global_property_object_type:
+               break;
+           case impl_reserved0_object_type:
+               break;
+           case impl_asset_dynamic_data_type:
+               break;
+           case impl_asset_bitasset_data_type:
+               break;
+           case impl_account_balance_object_type: {
+               const auto &aobj = dynamic_cast<const account_balance_object *>(obj);
+               assert(aobj != nullptr);
+               accounts.insert(aobj->owner);
+               break;
            } case impl_account_statistics_object_type:{
               const auto& aobj = dynamic_cast<const account_statistics_object*>(obj);
               assert( aobj != nullptr );
@@ -471,7 +479,7 @@ namespace graphene { namespace chain {
 
 void database::notify_changed_objects()
 { try {
-   if( _undo_db.enabled() ) 
+   if( _undo_db.enabled() )
    {
       const auto& head_undo = _undo_db.head();
 

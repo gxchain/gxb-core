@@ -24,6 +24,8 @@
 #include <graphene/chain/transaction_context.hpp>
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/wast_to_wasm.hpp>
+#include <graphene/chain/protocol/name.hpp>
+#include <graphene/chain/abi_serializer.hpp>
 
 
 namespace graphene { namespace chain {
@@ -72,30 +74,95 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
 void_result contract_call_evaluator::do_evaluate(const contract_call_operation &op)
 { try {
     idump((op.act));
-    // FC_ASSERT(op.act.name.size() > 0);
-    // FC_ASSERT(op.act.method.size() > 0);
 
     database& d = db();
-    string act_name = op.act.account.to_string();
-    auto& acnt_indx = d.get_index_type<account_index>();
-    auto current_account_itr = acnt_indx.indices().get<by_name>().find(act_name);
-    FC_ASSERT(current_account_itr != acnt_indx.indices().get<by_name>().end(), "contract not found, name ${n}", ("n", act_name));
-    FC_ASSERT(current_account_itr->code.size() > 0, "contract has no code, name ${n}", ("n", act_name));
-    FC_ASSERT(current_account_itr->abi.size() > 0, "contract has no abi, name ${n}", ("n", act_name));
+    account_id_type contract_id = (account_id_type)(op.act.account & GRAPHENE_DB_MAX_INSTANCE_ID);
+    idump((contract_id));
+    const account_object& contract_obj = contract_id(d);
 
-    // contract object
-    acnt = &(*current_account_itr);
+    FC_ASSERT(contract_obj.code.size() > 0, "contract has no code, contract_id ${n}", ("n", contract_id));
+    FC_ASSERT(contract_obj.abi.size() > 0, "contract has no abi, contract_id ${n}", ("n", contract_id));
+
+    acnt = &(contract_obj);
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
 void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 { try {
-    dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.act.account.to_string())("m", op.act.name.to_string())("d", op.act.data));
-    action a{op.account, op.act.name, {}};
-    transaction_context trx_context;
+    dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.act.account)("m", op.act.name)("d", op.act.data));
+    transaction_context trx_context(db());
     apply_context ctx{db(), trx_context, op.act};
     ctx.exec();
+
+    return void_result();
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result contract_deposit_evaluator::do_evaluate(const contract_deposit_operation &op)
+{ try {
+    idump((op));
+
+    database& d = db();
+    const account_object &from_account = op.from(d);
+    const account_object &to_account = op.to(d);
+    const asset_object &asset_type = op.amount.asset_id(d);
+
+    acnt = &(to_account);
+
+    FC_ASSERT(to_account.code.size() > 0, "contract has no code");
+    FC_ASSERT(to_account.abi.size() > 0, "contract has no abi");
+
+    bool insufficient_balance = d.get_balance(from_account, asset_type).amount >= op.amount.amount;
+    FC_ASSERT(insufficient_balance,
+              "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
+              ("a", from_account.name)("t", to_account.name)("total_transfer", d.to_pretty_string(op.amount))("balance", d.to_pretty_string(d.get_balance(from_account, asset_type))));
+
+    return void_result();
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result contract_deposit_evaluator::do_apply(const contract_deposit_operation &op)
+{ try {
+    dlog("contract_deposit_evaluator do_apply");
+    database& d = db();
+    // adjust balance
+    d.adjust_balance(op.from, -op.amount);
+    d.adjust_balance(op.to, op.amount);
+
+
+    // call contract
+    // TODO: use inline message
+    dlog("call contract transfer");
+    transaction_evaluation_state deposit_context(&d);
+    contract_call_operation o;
+    o.account = op.from;
+    string s = "123";
+    action act {(uint64_t)op.to & GRAPHENE_DB_MAX_INSTANCE_ID, N(addbalance), bytes(s.begin(), s.end())};
+    o.act = act;
+    o.fee = d.current_fee_schedule().calculate_fee(o);
+    deposit_context.skip_fee_schedule_check = true;
+
+    std::string args;
+    args.append("{");
+    args.append("\"owner\":");
+    args.append(std::to_string((uint64_t)op.to & GRAPHENE_DB_MAX_INSTANCE_ID));
+    args.append(",\"value\":{\"amount\":");
+    args.append(std::to_string(op.amount.amount.value));
+    args.append(",\"asset_id\":");
+    args.append("\"1.3.0\"");
+    args.append("},\"ram_payer\":");
+    args.append(std::to_string((uint64_t)op.to & GRAPHENE_DB_MAX_INSTANCE_ID));
+    args.append("}");
+    idump((args));
+    fc::variant action_args_var = fc::json::from_string(args, fc::json::relaxed_parser);
+    abi_def abi;
+    if (abi_serializer::to_abi(acnt->abi, abi)) {
+        abi_serializer abis(abi);
+        auto action_type = abis.get_action_type("addbalance");
+        GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action addbalance in contract ${contract}", ("contract", acnt->name));
+        bytes s = abis.variant_to_binary(action_type, action_args_var);
+        o.act.data = s;
+    }
+    d.apply_operation(deposit_context, o);
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
