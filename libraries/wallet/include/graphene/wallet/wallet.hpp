@@ -2300,6 +2300,7 @@ FC_API( graphene::wallet::wallet_api,
         (create_account_with_brain_key)
         (transfer)
         (transfer2)
+        (transfer3)
         (get_transaction_id)
         (issue_asset)
         (create_asset)
