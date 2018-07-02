@@ -35,6 +35,7 @@
 #include <boost/rational.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/algorithm/string.hpp>
+#include <graphene/chain/abi_serializer.hpp>
 
 #include <cctype>
 
@@ -139,6 +140,27 @@ fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope,
         }
     }
     return result;
+}
+
+bytes database_api_impl::serialize_contract_call_args(string contract, string method, string json_args) const
+{
+    auto contract_obj = get_account_by_name(contract);
+    if(!contract_obj) {
+        return bytes();
+    }
+    
+    fc::variant action_args_var = fc::json::from_string(json_args, fc::json::relaxed_parser);
+    abi_def abi;
+
+    if (abi_serializer::to_abi(contract_obj->abi, abi)) {
+        abi_serializer abis(abi);
+        auto action_type = abis.get_action_type(method);
+        GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
+        bytes x = abis.variant_to_binary(action_type, action_args_var);
+        return x;
+    } else {
+        GRAPHENE_ASSERT(false, abi_not_found_exception, "No ABI found for ${contract}", ("contract", contract));
+    }
 }
 
 void database_api_impl::set_subscribe_callback( std::function<void(const variant&)> cb, bool notify_remove_create )

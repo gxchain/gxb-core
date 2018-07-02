@@ -70,6 +70,11 @@ fc::variants database_api::get_table_objects(uint64_t code, uint64_t scope, uint
     return my->get_table_objects(code, scope, table);
 }
 
+bytes database_api::serialize_contract_call_args(string contract, string method, string json_args) const 
+{
+    return my->serialize_contract_call_args(contract, method, json_args);
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Subscriptions                                                    //
