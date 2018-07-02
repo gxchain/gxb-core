@@ -109,6 +109,61 @@ class action_api : public context_aware_api {
       }
 };
 
+class crypto_api : public context_aware_api {
+   public:
+      explicit crypto_api( apply_context& ctx )
+      :context_aware_api(ctx,true){}
+
+      template<class Encoder> auto encode(char* data, size_t datalen) {
+         Encoder e;
+         const size_t bs = 10*1024;
+         while ( datalen > bs ) {
+            e.write( data, bs );
+            data += bs;
+            datalen -= bs;
+            context.trx_context.checktime();
+         }
+         e.write( data, datalen );
+         return e.result();
+      }
+
+      void assert_sha256(array_ptr<char> data, size_t datalen, const fc::sha256& hash_val) {
+         auto result = encode<fc::sha256::encoder>( data, datalen );
+         FC_ASSERT( result == hash_val, "hash mismatch" );
+      }
+
+      void assert_sha1(array_ptr<char> data, size_t datalen, const fc::sha1& hash_val) {
+         auto result = encode<fc::sha1::encoder>( data, datalen );
+         FC_ASSERT( result == hash_val, "hash mismatch" );
+      }
+
+      void assert_sha512(array_ptr<char> data, size_t datalen, const fc::sha512& hash_val) {
+         auto result = encode<fc::sha512::encoder>( data, datalen );
+         FC_ASSERT( result == hash_val, "hash mismatch" );
+      }
+
+      void assert_ripemd160(array_ptr<char> data, size_t datalen, const fc::ripemd160& hash_val) {
+         auto result = encode<fc::ripemd160::encoder>( data, datalen );
+         FC_ASSERT( result == hash_val, "hash mismatch" );
+      }
+
+      void sha1(array_ptr<char> data, size_t datalen, fc::sha1& hash_val) {
+         hash_val = encode<fc::sha1::encoder>( data, datalen );
+      }
+
+      void sha256(array_ptr<char> data, size_t datalen, fc::sha256& hash_val) {
+         hash_val = encode<fc::sha256::encoder>( data, datalen );
+      }
+
+      void sha512(array_ptr<char> data, size_t datalen, fc::sha512& hash_val) {
+         hash_val = encode<fc::sha512::encoder>( data, datalen );
+      }
+
+      void ripemd160(array_ptr<char> data, size_t datalen, fc::ripemd160& hash_val) {
+         hash_val = encode<fc::ripemd160::encoder>( data, datalen );
+      }
+};
+
 class context_free_system_api : public context_aware_api
 {
   public:
@@ -1364,6 +1419,16 @@ REGISTER_INTRINSICS(context_free_system_api,
 (gxb_exit,             void(int)           )
 );
 
+REGISTER_INTRINSICS(crypto_api,
+(assert_sha256,          void(int, int, int)           )
+(assert_sha1,            void(int, int, int)           )
+(assert_sha512,          void(int, int, int)           )
+(assert_ripemd160,       void(int, int, int)           )
+(sha1,                   void(int, int, int)           )
+(sha256,                 void(int, int, int)           )
+(sha512,                 void(int, int, int)           )
+(ripemd160,              void(int, int, int)           )
+);
 
 REGISTER_INTRINSICS(action_api,
 (read_action_data,       int(int, int)  )
