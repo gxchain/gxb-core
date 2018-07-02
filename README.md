@@ -39,38 +39,10 @@ $ curl -d '{"jsonrpc": "2.0", "method": "get_irreversible_account_historys", "pa
 ## Getting Started
 ---------------
 
-### Dependencies
-A decent C++11 compiler (GNU GCC 4.8.4+ on ubuntu, or Apple LLVM version 8.1.0 (clang-802.0.42) on MacOS). CMake version 2.8+. Boost version 1.57.0.
-The repository contains the install scripts for boost 1.57.0, see [here](https://github.com/gxchain/gxb-core/tree/master/script).
-```
-# dependencies for OS X, macOS Sierra 10.12.6 recommended
-brew install wget cmake git openssl autoconf automake doxygen libtool
-
-# dependencies for ubuntu 14.04 LTS
-sudo apt-get install wget cmake make python-dev libbz2-dev libdb++-dev libdb-dev libssl-dev openssl libreadline-dev autoconf libtool git ntp doxygen
-
-```
-**NOTE**: GXB-Core requires an OpenSSL version in the 1.0.x series. If your system OpenSSL version is newer, then you will need to manually provide an older version of OpenSSL and specify it to CMake using -DOPENSSL_INCLUDE_DIR, -DOPENSSL_SSL_LIBRARY, and -DOPENSSL_CRYPTO_LIBRARY.
-```
-cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib -DCMAKE_BUILD_TYPE=Release ..
-```
-
 #### Building
 
-To build after all dependencies are installed:
-
-    git lfs clone https://github.com/gxchain/gxb-core.git
-    cd gxb-core
-    git submodule update --init --recursive
-    git checkout master
-    mkdir build && cd build
-    cmake -DCMAKE_BUILD_TYPE=Release ..
-    # for ubuntu
-    cmake -DOPENSSL_ROOT_DIR=/usr/bin -DOPENSSL_INCLUDE_DIR=/usr/include/openssl -DOPENSSL_LIBRARIES=/usr/lib/openssh -DCMAKE_BUILD_TYPE=Release .. && make -j4
-    # for OS X
-    cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib -DCMAKE_BUILD_TYPE=Release .. && make -j4
-
-Alternate Boost versions can be specified using the `DBOOST_ROOT` CMake argument.
+ 1. [Build on Ubuntu](https://github.com/gxchain/gxb-core/wiki/BUILD_UBUNTU)
+ 2. [Build on OS X](https://github.com/gxchain/gxb-core/wiki/BUILD_OS_X)
 
 ### Running
 After building, the witness node can be launched with:
