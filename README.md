@@ -1,7 +1,7 @@
 # GXB-Core
 ---------------
 
-GXB-Core is the GXB blockchain implementation and command-line interface.
+GXB-Core is the GXChain implementation and command-line interface.
 Current binary version of the GXB-Core software for ubuntu 14.04 LTS, see [here](https://github.com/gxchain/gxb-core/releases).
 Visit [gxb.io](https://gxs.gxb.io/en/) to learn about GXB.
 
@@ -10,15 +10,15 @@ APIs are separated into two categories, namely
  * the Blockchain API which is used to query blockchain data (account, assets, trading history, etc.) and
  * the Wallet API which has your private keys loaded and is required when interacting with the blockchain with new transactions.
 
-[Wallet API](https://github.com/gxchain/gxb-core/wiki/wallet_api).
+1. [Wallet API](https://github.com/gxchain/gxb-core/wiki/wallet_api).
 
-[Blockchain API](https://github.com/gxchain/gxb-core/wiki/witness_node_api_json_rpc).
+2. [Blockchain API](https://github.com/gxchain/gxb-core/wiki/witness_node_api_json_rpc).
 
 
 #### Document For Exchange
-[Document For Exchange(中文)](https://github.com/gxchain/gxb-core/wiki/for_exchanges_cn)
+1. [Document For Exchange(中文)](https://github.com/gxchain/gxb-core/wiki/for_exchanges_cn)
 
-[Document For Exchange(en)](https://github.com/gxchain/gxb-core/wiki/Instruction-for-exchanges)
+2. [Document For Exchange(en)](https://github.com/gxchain/gxb-core/wiki/Instruction-for-exchanges)
 
 
 #### Get Account History With Wallet API
