@@ -949,7 +949,7 @@
                    }
 
                    if (table_exist) {
-                       return _remote_db->get_table_objects(contract, contract, table);
+                       return _remote_db->get_table_objects(contract_account.id.instance(), contract_account.id.instance(), name(table));
                    } else {
                        GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
                    }

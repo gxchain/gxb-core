@@ -119,12 +119,12 @@ fc::variants database_api_impl::get_objects(const vector<object_id_type>& ids)co
    return result;
 }
 
-fc::variants database_api_impl::get_table_objects(string code, string scope, string table) const
+fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope, uint64_t table) const
 {
     fc::variants result;
 
     const auto &table_idx = _db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
-    auto existing_tid = table_idx.find(boost::make_tuple(name(code), name(code), name(table)));
+    auto existing_tid = table_idx.find(boost::make_tuple(code, name(scope), name(table)));
     if (existing_tid != table_idx.end()) {
         decltype(existing_tid->id) next_tid(existing_tid->id + 1);
         const auto &kv_idx = _db.get_index_type<key_value_index>().indices().get<by_scope_primary>();

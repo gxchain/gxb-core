@@ -86,7 +86,7 @@ class database_api
        * If any of the provided IDs does not map to an object, a null variant is returned in its position.
        */
       fc::variants get_objects(const vector<object_id_type>& ids)const;
-      fc::variants get_table_objects(string code, string scope, string table) const;
+      fc::variants get_table_objects(uint64_t code, uint64_t scope, uint64_t table) const;
 
       ///////////////////
       // Subscriptions //
