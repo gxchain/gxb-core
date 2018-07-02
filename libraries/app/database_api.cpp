@@ -65,9 +65,14 @@ fc::variants database_api::get_objects(const vector<object_id_type>& ids)const
    return my->get_objects( ids );
 }
 
-fc::variants database_api::get_table_objects(string code, string scope, string table) const
+fc::variants database_api::get_table_objects(uint64_t code, uint64_t scope, uint64_t table) const
 {
     return my->get_table_objects(code, scope, table);
+}
+
+bytes database_api::serialize_contract_call_args(string contract, string method, string json_args) const 
+{
+    return my->serialize_contract_call_args(contract, method, json_args);
 }
 
 //////////////////////////////////////////////////////////////////////

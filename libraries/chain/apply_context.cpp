@@ -264,6 +264,7 @@ const table_id_object &apply_context::find_or_create_table(uint64_t code, name s
       t_id.scope = scope;
       t_id.table = table;
       t_id.payer = payer;
+      dlog("when store code=${code}", ("code", t_id.code));
    });
 }
 

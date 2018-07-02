@@ -86,7 +86,8 @@ class database_api
        * If any of the provided IDs does not map to an object, a null variant is returned in its position.
        */
       fc::variants get_objects(const vector<object_id_type>& ids)const;
-      fc::variants get_table_objects(string code, string scope, string table) const;
+      fc::variants get_table_objects(uint64_t code, uint64_t scope, uint64_t table) const;
+      bytes serialize_contract_call_args(string contract, string method, string json_args) const;
 
       ///////////////////
       // Subscriptions //
@@ -803,6 +804,7 @@ FC_API(graphene::app::database_api,
    // Objects
    (get_objects)
    (get_table_objects)
+   (serialize_contract_call_args)
    // Subscriptions
    (set_subscribe_callback)
    (set_data_transaction_subscribe_callback)
