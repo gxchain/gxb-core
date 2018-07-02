@@ -1051,10 +1051,10 @@ class wallet_api
      * @param broadcast broadcast
      * @returns signed_transaction
      */
-    signed_transaction call_contract(string from,
+    signed_transaction call_contract(string account,
                                      string contract,
-                                     string amount,
-                                     string asset_symbol,
+                                     string method,
+                                     string arg,
                                      bool broadcast = false);
     
     /** Call contract

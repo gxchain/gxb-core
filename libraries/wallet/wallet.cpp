@@ -947,8 +947,7 @@
                            break;
                        }
                    }
-
-                   if (table_exist) {
+                   if (table_exist || table == "accounts") {//TODO accounts是gxblib/contract.hpp中定义的，但是生成abi的时候不会在abi的tables列表中
                        return _remote_db->get_table_objects(contract_account.id.instance(), contract_account.id.instance(), name(table));
                    } else {
                        GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
@@ -975,7 +974,8 @@
                if (abi_serializer::to_abi(contract_account.abi, abi)) {
 
                    auto tables = abi.tables;
-                   result.reserve(tables.size());
+                   result.reserve(tables.size() + 1);
+                   result.push_back(variant("accounts"));
 
                    std::transform(tables.begin(), tables.end(), std::back_inserter(result),
                                   [](table_def t_def) -> fc::variant {
