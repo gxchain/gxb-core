@@ -19,6 +19,7 @@ class contract
     account_name _self;
 
   public:
+    //@abi table account i64
     struct account {
         asset balance;
 
