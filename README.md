@@ -44,7 +44,7 @@ $ curl -d '{"jsonrpc": "2.0", "method": "get_irreversible_account_historys", "pa
  1. [Build on Ubuntu](https://github.com/gxchain/gxb-core/wiki/BUILD_UBUNTU)
  2. [Build on OS X](https://github.com/gxchain/gxb-core/wiki/BUILD_OS_X)
 
-### Running
+#### Running
 After building, the witness node can be launched with:
 ```
     ./programs/witness_node/witness_node --rpc-endpoint="127.0.0.1:8090" --max-ops-per-account=0 --partial-operations=true --data-transaction-lifetime=1
