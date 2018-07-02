@@ -15,13 +15,13 @@ APIs are separated into two categories, namely
 [Blockchain API](https://github.com/gxchain/gxb-core/wiki/witness_node_api_json_rpc).
 
 
-### Document For Exchange
+#### Document For Exchange
 [Document For Exchange(中文)](https://github.com/gxchain/gxb-core/wiki/for_exchanges_cn)
 
 [Document For Exchange(en)](https://github.com/gxchain/gxb-core/wiki/Instruction-for-exchanges)
 
 
-### Get Account History With Wallet API
+#### Get Account History With Wallet API
 The method ```get_irreversible_account_historys``` returns irreversible account history with txID.
 In order to interface with the wallet, you need to run the CLI Wallet.
 Use cli_wallet command:
