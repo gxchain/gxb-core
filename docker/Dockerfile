@@ -3,12 +3,11 @@ MAINTAINER GXS
 
 RUN git clone https://github.com/gxchain/gxb-core.git
 RUN cd gxb-core \
-#RUN git clone https://github.com/gxchain/gxb-core.git \
-#&& cd gxb-core \
     && git checkout master \
     && git submodule update --init --recursive \
     && mkdir build && cd build \
-    && cmake -DOPENSSL_ROOT_DIR=/usr/bin -DOPENSSL_INCLUDE_DIR=/usr/include/openssl -DOPENSSL_LIBRARIES=/usr/lib/openssh -DCMAKE_BUILD_TYPE=Release .. \ 
+    && export C_COMPILER=clang && export CXX_COMPILER=clang++ \
+    && cmake -G "Unix Makefiles" -DWASM_ROOT=~/opt/wasm -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DLLVM_TARGETS_TO_BUILD= -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release .. \
     && make witness_node cli_wallet \
     && cp -rf programs /usr/local/
 
