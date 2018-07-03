@@ -47,7 +47,7 @@ database::~database()
    clear_pending();
 }
 
-void database::reindex(fc::path data_dir)
+void database::reindex(fc::path data_dir, bool fast_replay)
 { try {
    auto last_block = _block_id_to_block.last();
    if( !last_block ) {
@@ -145,7 +145,8 @@ void database::wipe(const fc::path& data_dir, bool include_blocks)
 void database::open(
    const fc::path& data_dir,
    std::function<genesis_state_type()> genesis_loader,
-   const std::string& db_version)
+   const std::string& db_version,
+   bool fast_replay)
 {
    try
    {
