@@ -37,6 +37,7 @@ struct contract_deploy_operation : public base_operation {
     bytes                           code;
     digest_type                     code_version;
     bytes                           abi;
+    extensions_type                 extensions;
 
     account_id_type fee_payer() const
     {
@@ -120,7 +121,8 @@ FC_REFLECT(graphene::chain::contract_deploy_operation,
             (vm_version)
             (code)
             (code_version)
-            (abi))
+            (abi)
+            (extensions))
 
 FC_REFLECT(graphene::chain::contract_call_operation::fee_parameters_type, (fee))
 FC_REFLECT(graphene::chain::contract_call_operation,
