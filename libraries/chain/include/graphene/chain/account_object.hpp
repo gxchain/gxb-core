@@ -204,7 +204,7 @@ namespace graphene { namespace chain {
          string                 vm_type;
          string                 vm_version;
          bytes                  code;
-         digest_type            code_version;
+         string                 code_version;
          bytes                  abi;
 
          /**

@@ -1051,7 +1051,7 @@
            contract_deploy_op.vm_version = vm_version;
            contract_deploy_op.code = bytes(wasm.begin(), wasm.end());
            contract_deploy_op.abi = bytes(abi.begin(), abi.end());
-           contract_deploy_op.code_version = fc::sha256::hash(contract_deploy_op.code);
+           contract_deploy_op.code_version = static_cast<string>(fc::sha256::hash(contract_deploy_op.code));
 
            signed_transaction tx;
            tx.operations.push_back(contract_deploy_op);

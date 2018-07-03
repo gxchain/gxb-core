@@ -35,7 +35,7 @@ struct contract_deploy_operation : public base_operation {
     fc::string                      vm_type;
     fc::string                      vm_version;
     bytes                           code;
-    digest_type                     code_version;
+    string                          code_version;
     bytes                           abi;
     extensions_type                 extensions;
 
@@ -64,8 +64,8 @@ struct contract_call_operation : public base_operation {
         uint64_t fee = 0 * GRAPHENE_BLOCKCHAIN_PRECISION;
     };
 
-    account_id_type                         account;
     asset                                   fee;
+    account_id_type                         account;
     action                                  act;
     extensions_type                         extensions;
 
@@ -125,11 +125,7 @@ FC_REFLECT(graphene::chain::contract_deploy_operation,
             (extensions))
 
 FC_REFLECT(graphene::chain::contract_call_operation::fee_parameters_type, (fee))
-FC_REFLECT(graphene::chain::contract_call_operation,
-            (account)
-            (fee)
-            (act)
-            (extensions))
+FC_REFLECT(graphene::chain::contract_call_operation, (fee)(account)(act)(extensions))
 
 FC_REFLECT(graphene::chain::contract_deposit_operation::fee_parameters_type, (fee))
 FC_REFLECT(graphene::chain::contract_deposit_operation, (fee)(from)(to)(amount)(extensions))
