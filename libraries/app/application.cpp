@@ -378,36 +378,34 @@ namespace detail {
          if( _options->count("replay-blockchain") )
             _chain_db->wipe( _data_dir / "blockchain", false );
 
-         try
-         {
-            _chain_db->open( _data_dir / "blockchain", initial_state, GRAPHENE_CURRENT_DB_VERSION );
-         }
-         catch( const fc::exception& e )
-         {
-            elog( "Caught exception ${e} in open(), you might want to force a replay", ("e", e.to_detail_string()) );
-            throw;
+         bool fast_replay = false;
+         if (_options->count("fast-replay")) {
+             fast_replay = true;
          }
 
-         if( _options->count("force-validate") )
-         {
-            ilog( "All transaction signatures will be validated" );
-            _force_validate = true;
+         try {
+             _chain_db->open(_data_dir / "blockchain", initial_state, GRAPHENE_CURRENT_DB_VERSION, fast_replay);
+         } catch (const fc::exception &e) {
+             elog("Caught exception ${e} in open(), you might want to force a replay", ("e", e.to_detail_string()));
+             throw;
          }
 
-         if( _options->count("api-access") ) {
+         if (_options->count("force-validate")) {
+             ilog("All transaction signatures will be validated");
+             _force_validate = true;
+         }
 
-            if(fc::exists(_options->at("api-access").as<boost::filesystem::path>()))
-            {
-               _apiaccess = fc::json::from_file( _options->at("api-access").as<boost::filesystem::path>() ).as<api_access>();
-               ilog( "Using api access file from ${path}",
-                     ("path", _options->at("api-access").as<boost::filesystem::path>().string()) );
-            }
-            else
-            {
-               elog("Failed to load file from ${path}",
-                  ("path", _options->at("api-access").as<boost::filesystem::path>().string()));
-               std::exit(EXIT_FAILURE);
-            }
+         if (_options->count("api-access")) {
+
+             if (fc::exists(_options->at("api-access").as<boost::filesystem::path>())) {
+                 _apiaccess = fc::json::from_file(_options->at("api-access").as<boost::filesystem::path>()).as<api_access>();
+                 ilog("Using api access file from ${path}",
+                      ("path", _options->at("api-access").as<boost::filesystem::path>().string()));
+             } else {
+                 elog("Failed to load file from ${path}",
+                      ("path", _options->at("api-access").as<boost::filesystem::path>().string()));
+                 std::exit(EXIT_FAILURE);
+             }
          }
 
          else
@@ -931,6 +929,7 @@ void application::set_program_options(boost::program_options::options_descriptio
           "missing fields in a Genesis State will be added, and any unknown fields will be removed. If no file or an "
           "invalid file is found, it will be replaced with an example Genesis State.")
          ("replay-blockchain", "Rebuild object graph by replaying all blocks")
+         ("fast-replay", "no sleep while replaying block blocks")
          ("resync-blockchain", "Delete all blocks and re-sync with network from scratch")
          ("force-validate", "Force validation of all transactions")
          ("log-file", "Output result to log file, not console, only works when config.ini not exists")

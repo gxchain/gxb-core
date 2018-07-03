@@ -95,7 +95,8 @@ namespace graphene { namespace chain {
           void open(
              const fc::path& data_dir,
              std::function<genesis_state_type()> genesis_loader,
-             const std::string& db_version );
+             const std::string& db_version,
+             bool fast_replay = false);
 
          /**
           * @brief Rebuild object graph from block history and open detabase
@@ -103,7 +104,7 @@ namespace graphene { namespace chain {
           * This method may be called after or instead of @ref database::open, and will rebuild the object graph by
           * replaying blockchain history. When this method exits successfully, the database will be open.
           */
-         void reindex(fc::path data_dir);
+         void reindex(fc::path data_dir, bool fast_replay = false);
 
          /**
           * @brief wipe Delete database from disk, and potentially the raw chain as well.
