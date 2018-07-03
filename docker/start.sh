@@ -10,7 +10,7 @@ if [[ "$bool_wallet" == "true" ]] || [[ -z "$bool_wallet" ]]; then
     if [[ ! -z "$ws_server" ]]; then
         ARGS+=" -s${ws_server}"
     fi
-    
+
     if [[ ! -z "$rpc_endpoint" ]]; then
         ARGS+=" -r${rpc_endpoint}"
     fi
@@ -32,7 +32,7 @@ elif [[ "$bool_wallet" == "false" ]]
     if [[ ! -z "$rpc_endpoint" ]]; then
         ARGS+=" --rpc-endpoint=${rpc_endpoint}"
     fi
-    
+
     if [[ ! -z "$witness_id" ]]; then
         ARGS+=" --witness-id=${witness_id}"
     fi
