@@ -1,4 +1,4 @@
-FROM gxchain/builder
+FROM gxchain/builder2
 MAINTAINER GXS
 
 RUN git clone https://github.com/gxchain/gxb-core.git
