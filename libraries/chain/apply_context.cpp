@@ -23,7 +23,8 @@ void apply_context::exec_one()
         auto wasm_bytes = bytes(contract_obj.code.begin(), contract_obj.code.end());
         try {
             wasm_interface &wasm = const_cast<wasm_interface &>(_db->wasmif);
-            wasm.apply(contract_obj.code_version, wasm_bytes, *this);
+            digest_type code_version{contract_obj.code_version};
+            wasm.apply(code_version, wasm_bytes, *this);
         } catch (const wasm_exit &) {
         }
    } FC_CAPTURE_AND_RETHROW((_pending_console_output.str()));
