@@ -258,8 +258,8 @@ class apply_context {
 
             int find_secondary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_const_type secondary, uint64_t &primary)
             {
-                auto tab = context.find_table(code, scope, table);
-                if (!tab.valid()) return -1;
+                auto *tab = context.find_table(code, scope, table);
+                if (!tab) return -1;
 
                 auto table_end_itr = itr_cache.cache_table(*tab);
 
@@ -275,7 +275,7 @@ class apply_context {
             int lowerbound_secondary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t &primary)
             {
                 auto tab = context.find_table(code, scope, table);
-                if (!tab.valid()) return -1;
+                if (!tab) return -1;
 
                 auto table_end_itr = itr_cache.cache_table(*tab);
 
@@ -292,8 +292,8 @@ class apply_context {
 
             int upperbound_secondary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t &primary)
             {
-                auto tab = context.find_table(code, scope, table);
-                if (!tab.valid()) return -1;
+                auto *tab = context.find_table(code, scope, table);
+                if (!tab) return -1;
 
                 auto table_end_itr = itr_cache.cache_table(*tab);
 
@@ -310,8 +310,8 @@ class apply_context {
 
             int end_secondary(uint64_t code, uint64_t scope, uint64_t table)
             {
-                auto tab = context.find_table(code, scope, table);
-                if (!tab.valid()) return -1;
+                auto *tab = context.find_table(code, scope, table);
+                if (!tab) return -1;
 
                 return itr_cache.cache_table(*tab);
             }
@@ -368,7 +368,7 @@ class apply_context {
             int find_primary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t primary)
             {
                 auto tab = context.find_table(code, scope, table);
-                if (!tab.valid()) return -1;
+                if (!tab) return -1;
 
                 auto table_end_itr = itr_cache.cache_table(*tab);
 
@@ -382,8 +382,8 @@ class apply_context {
 
             int lowerbound_primary(uint64_t code, uint64_t scope, uint64_t table, uint64_t primary)
             {
-                auto tab = context.find_table(code, scope, table);
-                if (!tab.valid()) return -1;
+                auto *tab = context.find_table(code, scope, table);
+                if (!tab) return -1;
 
                 auto table_end_itr = itr_cache.cache_table(*tab);
 
@@ -398,9 +398,9 @@ class apply_context {
             int upperbound_primary(uint64_t code, uint64_t scope, uint64_t table, uint64_t primary)
             {
                 auto tab = context.find_table(code, scope, table);
-                if (!tab.valid()) return -1;
+                if (!tab) return -1;
 
-                auto table_end_itr = itr_cache.cache_table(*tab);
+                auto table_end_itr = itr_cache.cache_table(**tab);
 
                 const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
                 auto itr = idx.upper_bound(boost::make_tuple(tab->id, primary));
@@ -528,7 +528,7 @@ class apply_context {
       int db_end_i64(uint64_t code, uint64_t scope, uint64_t table);
 
     private:
-      optional<table_id_object> find_table(uint64_t code, name scope, name table);
+      const table_id_object* find_table(uint64_t code, name scope, name table);
       const table_id_object &find_or_create_table(uint64_t code, name scope, name table, const account_name &payer);
       void remove_table(const table_id_object &tid);
       int db_store_i64(uint64_t code, uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size);
