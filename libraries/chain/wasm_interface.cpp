@@ -109,6 +109,35 @@ class action_api : public context_aware_api {
       }
 };
 
+class global_api : public context_aware_api
+{
+  public:
+    explicit global_api(apply_context &ctx)
+        : context_aware_api(ctx, true)
+    {
+    }
+
+    // get head block header
+    int64_t get_head_block_num()
+    {
+        const auto& dpo = context.db().get_dynamic_global_properties();
+        return dpo.head_block_number;
+    }
+
+    /*
+    string get_head_block_id()
+    {
+        const auto& dpo = context.db().get_dynamic_global_properties();
+        return static_cast<string>(dpo.head_block_id);
+    }
+    */
+
+    int64_t get_head_block_time()
+    {
+        return static_cast<uint64_t>(context.db().head_block_time().sec_since_epoch());
+    }
+};
+
 class crypto_api : public context_aware_api {
    public:
       explicit crypto_api( apply_context& ctx )
@@ -1417,6 +1446,12 @@ REGISTER_INTRINSICS(context_free_system_api,
 (gxb_assert_message,   void(int, int, int) )
 (gxb_assert_code,      void(int, int64_t)  )
 (gxb_exit,             void(int)           )
+);
+
+REGISTER_INTRINSICS(global_api,
+(get_head_block_num,    int64_t())
+// (get_head_block_id,     string())
+(get_head_block_time,   int64_t())
 );
 
 REGISTER_INTRINSICS(crypto_api,
