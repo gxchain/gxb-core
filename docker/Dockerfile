@@ -1,6 +1,13 @@
 FROM gxchain/builder2
 MAINTAINER GXS
 
+
+RUN export LANGUAGE=en_US.UTF-8 && \
+    export LANG=en_US.UTF-8 && \
+    export LC_ALL=en_US.UTF-8
+
+RUN git config --global http.postBuffer 1048576000
+
 RUN git clone https://github.com/gxchain/gxb-core.git
 RUN cd gxb-core \
     && git checkout master \
