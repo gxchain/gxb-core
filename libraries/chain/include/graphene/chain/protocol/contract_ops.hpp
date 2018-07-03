@@ -24,7 +24,7 @@
 namespace graphene { namespace chain {
 struct contract_deploy_operation : public base_operation {
     struct fee_parameters_type {
-        uint64_t fee = 1000 * GRAPHENE_BLOCKCHAIN_PRECISION;
+        uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
         uint64_t price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
     };
 
