@@ -88,6 +88,7 @@ int main( int argc, char** argv )
          ("enable-rpc-log", "enable rpc log production, in data-dir/logs/rpc/rpc.log")
          ("wallet-file,w", bpo::value<string>()->implicit_value("wallet.json"), "wallet to load")
          ("chain-id", bpo::value<string>(), "chain ID to connect to")
+         ("suggest-brain-key", "Suggest a safe brain key to use for creating your account")
          ("version,v", "Display version information");
 
       bpo::variables_map options;
@@ -108,6 +109,14 @@ int main( int argc, char** argv )
          std::cout << "SSL: " << OPENSSL_VERSION_TEXT << "\n";
          std::cout << "Boost: " << boost::replace_all_copy(std::string(BOOST_LIB_VERSION), "_", ".") << "\n";
          std::cout << "Websocket++: " << websocketpp::major_version << "." << websocketpp::minor_version << "." << websocketpp::patch_version << "\n";
+         return 0;
+      }
+
+      if( options.count("suggest-brain-key") )
+      {
+         auto keyinfo = graphene::wallet::utility::suggest_brain_key();
+         string data = fc::json::to_pretty_string( keyinfo );
+         std::cout << data.c_str() << std::endl;
          return 0;
       }
 
