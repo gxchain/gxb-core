@@ -71,7 +71,7 @@ class contract_storage_demo : public graphene::contract
         string      name;
         uint64_t    frequency;
         
-        uint64_t primary_key() { return id; }
+        uint64_t primary_key() const { return id; }
 
         GXBLIB_SERIALIZE(cpu, (id)(manufactor)(name)(frequency));
     };
@@ -81,4 +81,4 @@ class contract_storage_demo : public graphene::contract
     cpu_index cpus;
 };
 
-GXB_ABI(contract_storage_demo, (store)(remove)(find)(updatefreq))
+GXB_ABI(contract_storage_demo, (subbalance)(addbalance)(store)(remove)(find)(updatefreq))

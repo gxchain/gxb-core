@@ -122,7 +122,7 @@ void_result contract_deposit_evaluator::do_evaluate(const contract_deposit_opera
 
 void_result contract_deposit_evaluator::do_apply(const contract_deposit_operation &op)
 { try {
-    dlog("contract_deposit_evaluator do_apply");
+    dlog("contract_deposit_evaluator do_apply, op=${op}", ("op", op));
     database& d = db();
     // adjust balance
     d.adjust_balance(op.from, -op.amount);
@@ -148,7 +148,7 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     args.append(",\"value\":{\"amount\":");
     args.append(std::to_string(op.amount.amount.value));
     args.append(",\"asset_id\":");
-    args.append("\"1.3.0\"");
+    args.append(std::string(object_id_type(op.amount.asset_id)));
     args.append("},\"ram_payer\":");
     args.append(std::to_string((uint64_t)op.from & GRAPHENE_DB_MAX_INSTANCE_ID));
     args.append("}");

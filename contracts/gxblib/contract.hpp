@@ -52,7 +52,7 @@ class contract
     }
 
     /// @abi action
-    void addbalance(account_name owner, asset value, account_name ram_payer)
+    void addbalance(account_name owner, asset value)
     {
         auto it = accounts.find(owner);
         if (it == accounts.end()) {
