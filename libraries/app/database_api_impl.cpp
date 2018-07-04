@@ -120,9 +120,22 @@ fc::variants database_api_impl::get_objects(const vector<object_id_type>& ids)co
    return result;
 }
 
+static void copy_inline_row(const key_value_object& obj, vector<char>& data) {
+   data.resize( obj.value.size() );
+   memcpy( data.data(), obj.value.data(), obj.value.size() );
+}
+
 fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope, uint64_t table) const
 {
     fc::variants result;
+    
+    const auto &account_obj = get_account_by_contract_code(code);
+    if(!account_obj.valid())
+        return result;
+    
+    abi_def abi;
+    abi_serializer::to_abi(account_obj->abi, abi);
+    abi_serializer abis(abi);
 
     const auto &table_idx = _db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
     auto existing_tid = table_idx.find(boost::make_tuple(code, name(scope), name(table)));
@@ -134,9 +147,15 @@ fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope,
         auto upper = kv_idx.lower_bound(boost::make_tuple(next_tid));
 
         auto end = fc::time_point::now() + fc::microseconds(1000 * 10);
+        vector<char> data;
+        name tname(table);
         for(auto it = lower; it != upper; ++it) {
             if(fc::time_point::now() > end) break;
-            result.emplace_back(*it);
+            copy_inline_row(*it, data);
+            if(tname.to_string() == "accounts")
+                result.emplace_back(abis.binary_to_variant("addbalance", data));
+            else
+                result.emplace_back(abis.binary_to_variant(tname.to_string(), data));
         }
     }
     return result;
@@ -502,6 +521,16 @@ optional<account_object> database_api_impl::get_account_by_name( string name )co
 {
    const auto& idx = _db.get_index_type<account_index>().indices().get<by_name>();
    auto itr = idx.find(name);
+   if (itr != idx.end())
+      return *itr;
+   return optional<account_object>();
+}
+
+optional<account_object> database_api_impl::get_account_by_contract_code(uint64_t code)const
+{
+   object_id_type oid(1, 2, code);
+   const auto& idx = _db.get_index_type<account_index>().indices().get<by_id>();
+   auto itr = idx.find(oid);
    if (itr != idx.end())
       return *itr;
    return optional<account_object>();

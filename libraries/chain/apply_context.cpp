@@ -189,8 +189,8 @@ int apply_context::db_previous_i64(int iterator, uint64_t &primary)
 
 int apply_context::db_find_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
 {
-    const auto& tab = find_table(code, scope, table);
-    if (!tab.valid()) return -1;
+    const auto *tab = find_table(code, scope, table);
+    if (!tab) return -1;
 
     auto table_end_itr = keyval_cache.cache_table(*tab);
 
@@ -203,8 +203,8 @@ int apply_context::db_find_i64(uint64_t code, uint64_t scope, uint64_t table, ui
 
 int apply_context::db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
 {
-    const auto &tab = find_table(code, scope, table);
-    if (!tab.valid()) return -1;
+    const auto *tab = find_table(code, scope, table);
+    if (!tab) return -1;
 
     auto table_end_itr = keyval_cache.cache_table(*tab);
 
@@ -218,8 +218,8 @@ int apply_context::db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t tab
 
 int apply_context::db_upperbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id)
 {
-    const auto &tab = find_table(code, scope, table);
-    if (!tab.valid()) return -1;
+    const auto *tab = find_table(code, scope, table);
+    if (!tab) return -1;
 
     auto table_end_itr = keyval_cache.cache_table(*tab);
 
@@ -233,21 +233,21 @@ int apply_context::db_upperbound_i64(uint64_t code, uint64_t scope, uint64_t tab
 
 int apply_context::db_end_i64(uint64_t code, uint64_t scope, uint64_t table)
 {
-    const auto &tab = find_table(code, scope, table);
-    if (!tab.valid()) return -1;
+    const auto *tab = find_table(code, scope, table);
+    if (!tab) return -1;
 
     return keyval_cache.cache_table(*tab);
 }
 
-optional<table_id_object> apply_context::find_table(uint64_t code, name scope, name table)
+const table_id_object* apply_context::find_table(uint64_t code, name scope, name table)
 {
     const auto& table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
     auto existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
     if (existing_tid != table_idx.end()) {
-        return *existing_tid;
+        return &(*existing_tid);
     }
 
-    return {};
+    return nullptr;
 }
 
 const table_id_object &apply_context::find_or_create_table(uint64_t code, name scope, name table, const account_name &payer)
