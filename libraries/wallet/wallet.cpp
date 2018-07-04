@@ -1108,16 +1108,16 @@
 
              fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
              FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
-             
+
              account_object from_account_obj = get_account(from);
              account_object contract_obj = get_account(contract);
-             
+
              contract_deposit_operation deposit_op;
              deposit_op.from = from_account_obj.id;
              deposit_op.to = contract_obj.id;
              deposit_op.amount = asset_obj->amount_from_string(amount);
 //             deposit_op.fee = 0;//TODO
-             
+
              signed_transaction tx;
              tx.operations.push_back(deposit_op);
              auto current_fees = _remote_db->get_global_properties().parameters.current_fees;
@@ -1126,7 +1126,7 @@
              return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW( (from)(contract)(amount)(asset_symbol)(broadcast)) }
 
-       
+
        signed_transaction register_account(string name,
                                            public_key_type owner,
                                            public_key_type active,
@@ -4869,7 +4869,7 @@
     {
         return my->call_contract(account, contract, method, args, broadcast);
     }
-    
+
     signed_transaction wallet_api::deposit_asset_to_contract(string from,
                                       string contract,
                                       string amount,
