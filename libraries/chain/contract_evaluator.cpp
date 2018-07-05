@@ -33,13 +33,10 @@ namespace graphene { namespace chain {
 void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operation &op)
 { try {
     dlog("contract_deploy_evaluator do_evaluator");
-    string code(op.code.begin(), op.code.end());
-    auto verify_code_version = static_cast<string>(fc::sha256::hash(code));
-    idump((fc::sha256::hash(op.code)));
-    idump((verify_code_version));
-    FC_ASSERT(verify_code_version == op.code_version,
-            "code_version verify failed, target code_version=${t}, actual code_version=${a}",
-            ("t", op.code_version)("a", verify_code_version));
+    // auto verify_code_version = (fc::sha256::hash(op.code)).str();
+    // FC_ASSERT(verify_code_version == op.code_version,
+    //         "code_version verify failed, target code_version=${t}, actual code_version=${a}",
+    //         ("t", op.code_version)("a", verify_code_version));
 
     database &d = db();
     auto &acnt_indx = d.get_index_type<account_index>();

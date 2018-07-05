@@ -1054,7 +1054,7 @@
            op.code = bytes(wasm.begin(), wasm.end());
            op.abi = bytes(abi.begin(), abi.end());
            string code(op.code.begin(), op.code.end());
-           op.code_version = static_cast<string>(fc::sha256::hash(code));
+           op.code_version = (fc::sha256::hash(code)).str();
 
            signed_transaction tx;
            tx.operations.push_back(op);
