@@ -29,7 +29,7 @@ class contract
     };
 
     typedef graphene::multi_index<N(accounts), account> account_index;
-    
+
     account_index accounts;
 
   public:
@@ -60,7 +60,7 @@ class contract
                 print("addbalance, ", owner, value);
                 a.owner = owner;
                 a.balance = value;
-                
+
             });
         } else {
             print("owner exist, to modify");
@@ -78,7 +78,7 @@ class contract
             print("account not found");
             return asset();
         }
-        
+
         return it->balance;
     }
 };

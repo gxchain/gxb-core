@@ -129,18 +129,6 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     d.adjust_balance(op.to, op.amount);
 
 
-    // call contract
-    // TODO: use inline message
-    dlog("call contract transfer");
-    transaction_evaluation_state deposit_context(&d);
-    contract_call_operation o;
-    o.account = op.from;
-    string s = "123";
-    action act {(uint64_t)op.to & GRAPHENE_DB_MAX_INSTANCE_ID, N(addbalance), bytes(s.begin(), s.end())};
-    o.act = act;
-    o.fee = d.current_fee_schedule().calculate_fee(o);
-    deposit_context.skip_fee_schedule_check = true;
-
     std::string args;
     args.append("{");
     args.append("\"owner\":");
@@ -148,20 +136,28 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     args.append(",\"value\":{\"amount\":");
     args.append(std::to_string(op.amount.amount.value));
     args.append(",\"asset_id\":");
-    args.append(std::string(object_id_type(op.amount.asset_id)));
+    args.append(std::to_string((uint64_t)op.amount.asset_id & GRAPHENE_DB_MAX_INSTANCE_ID));
     args.append("},\"ram_payer\":");
     args.append(std::to_string((uint64_t)op.from & GRAPHENE_DB_MAX_INSTANCE_ID));
     args.append("}");
     idump((args));
     fc::variant action_args_var = fc::json::from_string(args, fc::json::relaxed_parser);
     abi_def abi;
-    if (abi_serializer::to_abi(acnt->abi, abi)) {
-        abi_serializer abis(abi);
-        auto action_type = abis.get_action_type("addbalance");
-        GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action addbalance in contract ${contract}", ("contract", acnt->name));
-        bytes s = abis.variant_to_binary(action_type, action_args_var);
-        o.act.data = s;
-    }
+    FC_ASSERT(abi_serializer::to_abi(acnt->abi, abi), "serialize abi failed");
+    abi_serializer abis(abi);
+    auto action_type = abis.get_action_type("addbalance");
+    GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action addbalance in contract ${contract}", ("contract", acnt->name));
+    action act {(uint64_t)op.to & GRAPHENE_DB_MAX_INSTANCE_ID, N(addbalance), abis.variant_to_binary(action_type, action_args_var)};
+
+    // call contract
+    // TODO: use inline message
+    dlog("call contract transfer");
+    transaction_evaluation_state deposit_context(&d);
+    deposit_context.skip_fee_schedule_check = true;
+    contract_call_operation o;
+    o.account = op.from;
+    o.act = act;
+    o.fee = d.current_fee_schedule().calculate_fee(o);
     d.apply_operation(deposit_context, o);
 
     return void_result();
