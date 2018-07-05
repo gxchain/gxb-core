@@ -1045,18 +1045,19 @@
            account_object creator_account_object = this->get_account(account);
            account_id_type creator_account_id = creator_account_object.id;
 
-           contract_deploy_operation contract_deploy_op;
+           contract_deploy_operation op;
 
-           contract_deploy_op.name = name;
-           contract_deploy_op.account = creator_account_id;
-           contract_deploy_op.vm_type = vm_type;
-           contract_deploy_op.vm_version = vm_version;
-           contract_deploy_op.code = bytes(wasm.begin(), wasm.end());
-           contract_deploy_op.abi = bytes(abi.begin(), abi.end());
-           contract_deploy_op.code_version = static_cast<string>(fc::sha256::hash(contract_deploy_op.code));
+           op.name = name;
+           op.account = creator_account_id;
+           op.vm_type = vm_type;
+           op.vm_version = vm_version;
+           op.code = bytes(wasm.begin(), wasm.end());
+           op.abi = bytes(abi.begin(), abi.end());
+           string code(op.code.begin(), op.code.end());
+           op.code_version = static_cast<string>(fc::sha256::hash(code));
 
            signed_transaction tx;
-           tx.operations.push_back(contract_deploy_op);
+           tx.operations.push_back(op);
            set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
            tx.validate();
 
