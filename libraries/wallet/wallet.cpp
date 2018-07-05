@@ -997,10 +997,12 @@
                                           string vm_type,
                                           string vm_version,
                                           string contract_dir,
+                                          string fee_asset_symbol,
                                           bool broadcast = false)
        { try {
            FC_ASSERT(!self.is_locked());
            FC_ASSERT(is_valid_name(name));
+           fc::optional<asset_object> fee_asset_obj = get_asset(fee_asset_symbol);
 
            vector<char> abi;
            std::vector<uint8_t> wasm;
@@ -1055,8 +1057,8 @@
 
            signed_transaction tx;
            tx.operations.push_back(contract_deploy_op);
-           auto current_fees = _remote_db->get_global_properties().parameters.current_fees;
-           set_operation_fees(tx, current_fees);
+           set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+           tx.validate();
 
            return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW( (name)(account)(vm_type)(vm_version)(contract_dir)(broadcast)) }
@@ -1065,9 +1067,11 @@
                                         string contract,
                                         string method,
                                         string args,
+                                        string fee_asset_symbol,
                                         bool broadcast = false)
        { try {
              FC_ASSERT(!self.is_locked());
+             fc::optional<asset_object> fee_asset_obj = get_asset(fee_asset_symbol);
 
              account_object caller = get_account(account);
              account_object contract_obj = get_account(contract);
@@ -1092,8 +1096,8 @@
 
              signed_transaction tx;
              tx.operations.push_back(contract_call_op);
-             auto current_fees = _remote_db->get_global_properties().parameters.current_fees;
-             set_operation_fees(tx, current_fees);
+             set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+             tx.validate();
 
              return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW( (account)(contract)(method)(args)(broadcast)) }
@@ -1102,9 +1106,11 @@
                                         string contract,
                                         string amount,
                                         string asset_symbol,
+                                        string fee_asset_symbol,
                                         bool broadcast = false)
        { try {
              FC_ASSERT(!self.is_locked());
+             fc::optional<asset_object> fee_asset_obj = get_asset(fee_asset_symbol);
 
              fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
              FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
@@ -1116,12 +1122,11 @@
              deposit_op.from = from_account_obj.id;
              deposit_op.to = contract_obj.id;
              deposit_op.amount = asset_obj->amount_from_string(amount);
-//             deposit_op.fee = 0;//TODO
 
              signed_transaction tx;
              tx.operations.push_back(deposit_op);
-             auto current_fees = _remote_db->get_global_properties().parameters.current_fees;
-             set_operation_fees(tx, current_fees);
+             set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+             tx.validate();
 
              return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW( (from)(contract)(amount)(asset_symbol)(broadcast)) }
@@ -4856,27 +4861,30 @@
                                                   string vm_type,
                                                   string vm_version,
                                                   string contract_dir,
+                                                  string fee_asset_symbol,
                                                   bool broadcast)
     {
-        return my->deploy_contract(name, account, vm_type, vm_version, contract_dir, broadcast);
+        return my->deploy_contract(name, account, vm_type, vm_version, contract_dir, fee_asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::call_contract(string account,
                                       string contract,
                                       string method,
                                       string args,
+                                      string fee_asset_symbol,
                                       bool broadcast)
     {
-        return my->call_contract(account, contract, method, args, broadcast);
+        return my->call_contract(account, contract, method, args, fee_asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::deposit_asset_to_contract(string from,
                                       string contract,
                                       string amount,
                                       string asset_symbol,
+                                      string fee_asset_symbol,
                                       bool broadcast)
     {
-        return my->deposit_asset_to_contract(from, contract, amount, asset_symbol, broadcast);
+        return my->deposit_asset_to_contract(from, contract, amount, asset_symbol, fee_asset_symbol, broadcast);
     }
 
     variant wallet_api::get_contract_tables(string contract) const

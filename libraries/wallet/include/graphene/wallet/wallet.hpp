@@ -1039,6 +1039,7 @@ class wallet_api
        * @param vm_type vm_type
        * @param vm_version vm_version
        * @param contract_dir contract_dir
+       * @param fee_asset_symbol the symbol of the fee asset.
        * @param broadcast broadcast
        * @returns signed_transaction
        */
@@ -1047,6 +1048,7 @@ class wallet_api
                                          string vm_type,
                                          string vm_version,
                                          string contract_dir,
+                                         string fee_asset_symbol,
                                          bool broadcast = false);
 
 
@@ -1057,6 +1059,7 @@ class wallet_api
      * @param contract contract
      * @param method method
      * @param arg arg
+     * @param fee_asset_symbol the symbol of the fee asset.
      * @param broadcast broadcast
      * @returns signed_transaction
      */
@@ -1064,6 +1067,7 @@ class wallet_api
                                      string contract,
                                      string method,
                                      string arg,
+                                     string fee_asset_symbol,
                                      bool broadcast = false);
 
     /** Call contract
@@ -1073,6 +1077,7 @@ class wallet_api
      * @param contract the contract which keep the asset
      * @param amount the amount of asset to be deposited
      * @param asset_symbol asset symbol
+     * @param fee_asset_symbol the symbol of the fee asset.
      * @param broadcast broadcast
      * @returns signed_transaction
      */
@@ -1080,6 +1085,7 @@ class wallet_api
                                           string contract,
                                           string amount,
                                           string asset_symbol,
+                                          string fee_asset_symbol,
                                           bool broadcast);
 
       /** Returns table infos about the given contract.
