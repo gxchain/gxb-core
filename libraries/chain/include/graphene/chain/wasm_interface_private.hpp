@@ -54,10 +54,10 @@ namespace graphene { namespace chain {
       {
          auto it = instantiation_cache.find(code_id);
          if(it == instantiation_cache.end()) {
-//            auto timer_pause = fc::make_scoped_exit([&](){
-//                trx_context.resume_billing_timer();
-//            });
-//            trx_context.pause_billing_timer();
+            auto timer_pause = fc::make_scoped_exit([&](){
+                trx_context.resume_billing_timer();
+            });
+            trx_context.pause_billing_timer();
             IR::Module module;
             try {
                Serialization::MemoryInputStream stream((const U8*)code.data(), code.size());
