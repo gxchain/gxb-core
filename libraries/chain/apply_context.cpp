@@ -85,7 +85,7 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, c
     });
 
     // update_db_usage
-    ram_usage += (int64_t)(buffer_size + config::billable_size_v<key_value_object>);
+    update_ram_usage((int64_t)(buffer_size + config::billable_size_v<key_value_object>));
     dlog("db_store_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", buffer_size + config::billable_size_v<key_value_object>)("n", ram_usage));
 
     keyval_cache.cache_table(tab);
@@ -100,7 +100,7 @@ void apply_context::db_update_i64(int iterator, account_name payer, const char *
     const auto &table_obj = keyval_cache.get_table(obj.t_id);
     FC_ASSERT(table_obj.code == receiver, "db access violation");
 
-    ram_usage += (int64_t)(buffer_size - obj.value.size());
+    update_ram_usage((int64_t)(buffer_size - obj.value.size()));
     dlog("db_update_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", (buffer_size - obj.value.size()))("n", ram_usage));
 
     _db->modify(obj, [&](key_value_object &o) {
@@ -117,7 +117,7 @@ void apply_context::db_remove_i64(int iterator)
     const auto &table_obj = keyval_cache.get_table(obj.t_id);
     FC_ASSERT(table_obj.code == receiver, "db access violation");
 
-    ram_usage += -(obj.value.size() + config::billable_size_v<key_value_object>);
+    update_ram_usage(-(obj.value.size() + config::billable_size_v<key_value_object>));
     dlog("db_remove_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", -(obj.value.size() + config::billable_size_v<key_value_object>))("n", ram_usage));
 
     _db->remove(obj);
