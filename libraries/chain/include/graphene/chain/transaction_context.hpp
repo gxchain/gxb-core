@@ -20,6 +20,10 @@ namespace graphene { namespace chain {
         void exec();
         void finalize();
         void squash();
+        
+        void pause_billing_timer();
+
+        void resume_billing_timer();
 
         void checktime() const;
 
@@ -45,9 +49,11 @@ namespace graphene { namespace chain {
         database &db() const { assert(_db); return *_db; }
 
       private:
-        database                *_db;
-        fc::time_point          start;
-        fc::time_point          _deadline;
-        mutable uint64_t        transaction_cpu_usage_us;
+        database                    *_db;
+        mutable fc::time_point      start;
+        mutable fc::time_point      _deadline;
+        mutable fc::time_point      pause_time;
+        mutable int64_t             pause_cpu_usage_us = 0;
+        mutable int64_t             transaction_cpu_usage_us = 0;
    };
 } }
