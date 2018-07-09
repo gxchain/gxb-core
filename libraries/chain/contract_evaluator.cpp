@@ -128,20 +128,19 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     d.adjust_balance(op.from, -op.amount);
     d.adjust_balance(op.to, op.amount);
 
+    stringstream ss;
+    ss << "{\"owner\":";
+    ss << std::to_string((uint64_t)op.from & GRAPHENE_DB_MAX_INSTANCE_ID);
+    ss << ",\"value\":{\"amount\":";
+    ss << std::to_string(op.amount.amount.value);
+    ss << ",\"asset_id\":";
+    ss << std::to_string((uint64_t)op.amount.asset_id & GRAPHENE_DB_MAX_INSTANCE_ID);
+    ss << "},\"ram_payer\":";
+    ss << std::to_string((uint64_t)op.from & GRAPHENE_DB_MAX_INSTANCE_ID);
+    ss << "}";
+    idump((ss.str()));
 
-    std::string args;
-    args.append("{");
-    args.append("\"owner\":");
-    args.append(std::to_string((uint64_t)op.from & GRAPHENE_DB_MAX_INSTANCE_ID));
-    args.append(",\"value\":{\"amount\":");
-    args.append(std::to_string(op.amount.amount.value));
-    args.append(",\"asset_id\":");
-    args.append(std::to_string((uint64_t)op.amount.asset_id & GRAPHENE_DB_MAX_INSTANCE_ID));
-    args.append("},\"ram_payer\":");
-    args.append(std::to_string((uint64_t)op.from & GRAPHENE_DB_MAX_INSTANCE_ID));
-    args.append("}");
-    idump((args));
-    fc::variant action_args_var = fc::json::from_string(args, fc::json::relaxed_parser);
+    fc::variant action_args_var = fc::json::from_string(ss.str(), fc::json::relaxed_parser);
     abi_def abi;
     FC_ASSERT(abi_serializer::to_abi(acnt->abi, abi), "serialize abi failed");
     abi_serializer abis(abi);
