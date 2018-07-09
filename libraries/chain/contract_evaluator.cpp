@@ -133,11 +133,9 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     ss << std::to_string((uint64_t)op.from & GRAPHENE_DB_MAX_INSTANCE_ID);
     ss << ",\"value\":{\"amount\":";
     ss << std::to_string(op.amount.amount.value);
-    ss << ",\"asset_id\":";
+    ss << ",\"symbol\":";
     ss << std::to_string((uint64_t)op.amount.asset_id & GRAPHENE_DB_MAX_INSTANCE_ID);
-    ss << "},\"ram_payer\":";
-    ss << std::to_string((uint64_t)op.from & GRAPHENE_DB_MAX_INSTANCE_ID);
-    ss << "}";
+    ss << "}}";
     idump((ss.str()));
 
     fc::variant action_args_var = fc::json::from_string(ss.str(), fc::json::relaxed_parser);
