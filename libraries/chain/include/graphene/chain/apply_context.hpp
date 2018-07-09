@@ -557,6 +557,24 @@ class apply_context {
       uint64_t get_ram_usage() const {
           return ram_usage;
       }
+      
+      void update_ram_usage(int64_t ram_delta) {
+         if (ram_delta == 0) {
+            return;
+         }
+
+         if(!(ram_delta <= 0 || UINT64_MAX - ram_usage >= (uint64_t)ram_delta)) {
+             dlog("Ram usage delta would overflow UINT64_MAX");
+             ram_delta = 0;
+         }
+         
+        if(!(ram_delta >= 0 || ram_usage >= (uint64_t)(-ram_delta))) {
+            dlog("Ram usage delta would underflow UINT64_MAX");
+            ram_delta = 0;
+        }
+
+         ram_usage += ram_delta;
+      }
 
    private:
      std::ostringstream _pending_console_output;
