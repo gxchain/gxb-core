@@ -18,52 +18,6 @@ extern "C" {
     * @ingroup actionapi
     * @brief Define API for querying action properties
     *
-    *
-    * A GXB action has the following abstract structure:
-    *
-    * ```
-    *   struct action {
-    *     scope_name scope; // the contract defining the primary code to execute for code/type
-    *     action_name name; // the action to be taken
-    *     permission_level[] authorization; // the accounts and permission levels provided
-    *     bytes data; // opaque data processed by code
-    *   };
-    * ```
-    *
-    * This API enables your contract to inspect the fields on the current action and act accordingly.
-    *
-    * Example:
-    * @code
-    * // Assume this action is used for the following examples:
-    * // {
-    * //  "code": "gxb",
-    * //  "type": "transfer",
-    * //  "authorization": [{ "account": "inita", "permission": "active" }],
-    * //  "data": {
-    * //    "from": "inita",
-    * //    "to": "initb",
-    * //    "amount": 1000
-    * //  }
-    * // }
-    *
-    * char buffer[128];
-    * uint32_t total = read_action(buffer, 5); // buffer contains the content of the action up to 5 bytes
-    * print(total); // Output: 5
-    *
-    * uint32_t msgsize = action_size();
-    * print(msgsize); // Output: size of the above action's data field
-    *
-    * require_recipient(N(initc)); // initc account will be notified for this action
-    *
-    * require_auth(N(inita)); // Do nothing since inita exists in the auth list
-    * require_auth(N(initb)); // Throws an exception
-    *
-    * print(current_time()); // Output: timestamp (in microseconds since 1970) of current block
-    *
-    * @endcode
-    *
-    *
-    * @{
     */
 
    /**
@@ -83,9 +37,6 @@ extern "C" {
     */
    uint32_t action_data_size();
 
-   void send_inline(char *serialized_action, size_t size);
-
-   bool is_account( account_name name );
 
    /**
     *  Send an inline action in the context of this action's parent transaction
