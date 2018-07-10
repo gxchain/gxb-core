@@ -147,10 +147,10 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     action act {(uint64_t)op.to & GRAPHENE_DB_MAX_INSTANCE_ID, N(addbalance), abis.variant_to_binary(action_type, action_args_var)};
 
     // call contract
-    // TODO: use inline message
     dlog("call contract transfer");
     transaction_evaluation_state deposit_context(&d);
     deposit_context.skip_fee_schedule_check = true;
+    deposit_context.skip_fee = true;
     contract_call_operation o;
     o.account = op.from;
     o.act = act;
