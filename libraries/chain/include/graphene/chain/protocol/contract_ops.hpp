@@ -127,7 +127,7 @@ FC_REFLECT(graphene::chain::contract_deploy_operation,
             (abi)
             (extensions))
 
-FC_REFLECT(graphene::chain::contract_call_operation::fee_parameters_type, (fee))
+FC_REFLECT(graphene::chain::contract_call_operation::fee_parameters_type, (fee)(price_per_kbyte_ram)(price_per_ms_cpu))
 FC_REFLECT(graphene::chain::contract_call_operation, (fee)(account)(act)(extensions))
 
 FC_REFLECT(graphene::chain::contract_deposit_operation::fee_parameters_type, (fee))
