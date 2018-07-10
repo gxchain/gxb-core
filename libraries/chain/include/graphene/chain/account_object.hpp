@@ -23,6 +23,7 @@
  */
 #pragma once
 #include <graphene/chain/protocol/operations.hpp>
+#include <graphene/chain/abi_def.hpp>
 #include <graphene/db/generic_index.hpp>
 #include <boost/multi_index/composite_key.hpp>
 
@@ -205,7 +206,7 @@ namespace graphene { namespace chain {
          string                 vm_version;
          bytes                  code;
          digest_type            code_version;
-         bytes                  abi;
+         abi_def                abi;
 
          /**
           * The owner authority represents absolute control over the account. Usually the keys in this authority will

@@ -81,7 +81,6 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     const account_object& contract_obj = contract_id(d);
 
     FC_ASSERT(contract_obj.code.size() > 0, "contract has no code, contract_id ${n}", ("n", contract_id));
-    FC_ASSERT(contract_obj.abi.size() > 0, "contract has no abi, contract_id ${n}", ("n", contract_id));
 
     acnt = &(contract_obj);
 
@@ -119,7 +118,7 @@ void_result contract_deposit_evaluator::do_evaluate(const contract_deposit_opera
     acnt = &(to_account);
 
     FC_ASSERT(to_account.code.size() > 0, "contract has no code");
-    FC_ASSERT(to_account.abi.size() > 0, "contract has no abi");
+    FC_ASSERT(to_account.abi.actions.size() > 0, "contract has no code");
 
     bool insufficient_balance = d.get_balance(from_account, asset_type).amount >= op.amount.amount;
     FC_ASSERT(insufficient_balance,
@@ -163,14 +162,11 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     args.append("}");
     idump((args));
     fc::variant action_args_var = fc::json::from_string(args, fc::json::relaxed_parser);
-    abi_def abi;
-    if (abi_serializer::to_abi(acnt->abi, abi)) {
-        abi_serializer abis(abi);
-        auto action_type = abis.get_action_type("addbalance");
-        GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action addbalance in contract ${contract}", ("contract", acnt->name));
-        bytes s = abis.variant_to_binary(action_type, action_args_var);
-        o.act.data = s;
-    }
+    abi_serializer abis(acnt->abi);
+    auto action_type = abis.get_action_type("addbalance");
+    GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action addbalance in contract ${contract}", ("contract", acnt->name));
+    bytes args_binary = abis.variant_to_binary(action_type, action_args_var);
+    o.act.data = args_binary;
     d.apply_operation(deposit_context, o);
 
     return void_result();

@@ -20,6 +20,7 @@
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/ext.hpp>
 #include <graphene/chain/action.hpp>
+#include <graphene/chain/abi_def.hpp>
 
 namespace graphene { namespace chain {
 struct contract_deploy_operation : public base_operation {
@@ -36,7 +37,7 @@ struct contract_deploy_operation : public base_operation {
     fc::string                      vm_version;
     bytes                           code;
     digest_type                     code_version;
-    bytes                           abi;
+    abi_def                         abi;
 
     account_id_type fee_payer() const
     {
