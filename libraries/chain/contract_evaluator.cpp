@@ -81,7 +81,6 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     const account_object& contract_obj = contract_id(d);
 
     FC_ASSERT(contract_obj.code.size() > 0, "contract has no code, contract_id ${n}", ("n", contract_id));
-    FC_ASSERT(contract_obj.abi.size() > 0, "contract has no abi, contract_id ${n}", ("n", contract_id));
 
     acnt = &(contract_obj);
 
@@ -94,7 +93,16 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     transaction_context trx_context(db());
     apply_context ctx{db(), trx_context, op.act};
     ctx.exec();
-
+    
+    dlog("before fee_from_account=${b}", ("b", fee_from_account));
+    if(trx_state->skip_fee == false) {
+        uint64_t ram_fee = ctx.get_ram_usage() * contract_call_operation::price_per_kbyte_ram;
+        uint64_t cpu_fee = trx_context.get_cpu_usage() * contract_call_operation::price_per_ms_cpu;
+        asset fee = asset(ram_fee + cpu_fee, asset_id_type(0));
+        fee_from_account += fee;
+    }
+    dlog("after fee_from_account=${b}", ("b", fee_from_account));
+    
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
@@ -110,7 +118,7 @@ void_result contract_deposit_evaluator::do_evaluate(const contract_deposit_opera
     acnt = &(to_account);
 
     FC_ASSERT(to_account.code.size() > 0, "contract has no code");
-    FC_ASSERT(to_account.abi.size() > 0, "contract has no abi");
+    FC_ASSERT(to_account.abi.actions.size() > 0, "contract has no code");
 
     bool insufficient_balance = d.get_balance(from_account, asset_type).amount >= op.amount.amount;
     FC_ASSERT(insufficient_balance,
@@ -155,6 +163,7 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     o.account = op.from;
     o.act = act;
     o.fee = d.current_fee_schedule().calculate_fee(o);
+    deposit_context.skip_fee = true;
     d.apply_operation(deposit_context, o);
 
     return void_result();

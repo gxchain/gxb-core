@@ -938,22 +938,17 @@
 
                account_object contract_account = this->get_account(contract);
 
-               abi_def abi;
                bool table_exist = false;
-               if (abi_serializer::to_abi(contract_account.abi, abi)) {
-                   for (auto &t : abi.tables) {
-                       if (t.name == table) {
-                           table_exist = true;
-                           break;
-                       }
+               for (auto &t : contract_account.abi.tables) {
+                   if (t.name == table) {
+                       table_exist = true;
+                       break;
                    }
-                   if (table_exist || table == "accounts") {//TODO accounts是gxblib/contract.hpp中定义的，但是生成abi的时候不会在abi的tables列表中
-                       return _remote_db->get_table_objects(contract_account.id.instance(), contract_account.id.instance(), name(table));
-                   } else {
-                       GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
-                   }
+               }
+               if (table_exist || table == "accounts") {//TODO accounts是gxblib/contract.hpp中定义的，但是生成abi的时候不会在abi的tables列表中
+                   return _remote_db->get_table_objects(contract_account.id.instance(), contract_account.id.instance(), name(table));
                } else {
-                   GRAPHENE_ASSERT(false, abi_not_found_exception, "No ABI found for ${contract}", ("contract", contract));
+                   GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
                }
            }
            FC_CAPTURE_AND_LOG((contract))
@@ -970,22 +965,16 @@
                account_object contract_account = this->get_account(contract);
 
                fc::variants result;
-               abi_def abi;
-               if (abi_serializer::to_abi(contract_account.abi, abi)) {
+               auto tables = contract_account.abi.tables;
+               result.reserve(tables.size() + 1);
+               result.push_back(variant("accounts"));
 
-                   auto tables = abi.tables;
-                   result.reserve(tables.size() + 1);
-                   result.push_back(variant("accounts"));
+               std::transform(tables.begin(), tables.end(), std::back_inserter(result),
+                              [](table_def t_def) -> fc::variant {
+                                  return name(t_def.name).to_string();
+                              });
 
-                   std::transform(tables.begin(), tables.end(), std::back_inserter(result),
-                                  [](table_def t_def) -> fc::variant {
-                                      return name(t_def.name).to_string();
-                                  });
-
-                   return result;
-               } else {
-                   GRAPHENE_ASSERT(false, abi_not_found_exception, "No ABI found for ${contract}", ("contract", contract));
-               }
+               return result;
            }
            FC_CAPTURE_AND_LOG((contract))
 
@@ -1004,8 +993,8 @@
            FC_ASSERT(is_valid_name(name));
            fc::optional<asset_object> fee_asset_obj = get_asset(fee_asset_symbol);
 
-           vector<char> abi;
            std::vector<uint8_t> wasm;
+           variant abi_def_data;
 
            auto load_contract = [&]() {
                fc::path cpath(contract_dir);
@@ -1021,9 +1010,7 @@
 
                FC_ASSERT(abi_exist && (wast_exist || wasm_exist), "need abi and wast/wasm file");
 
-               abi_def abi_def_object = fc::json::from_file(abi_path).as<abi_def>();
-               abi = fc::raw::pack(abi_def_object);
-               FC_ASSERT(!abi.empty(), "abi file empty"); //TODO verify abi content
+               abi_def_data = fc::json::from_file(abi_path);
 
                std::string wast;
                std::string wasm_string;
@@ -1046,15 +1033,13 @@
            account_id_type creator_account_id = creator_account_object.id;
 
            contract_deploy_operation op;
-
            op.name = name;
            op.account = creator_account_id;
            op.vm_type = vm_type;
            op.vm_version = vm_version;
            op.code = bytes(wasm.begin(), wasm.end());
-           op.abi = bytes(abi.begin(), abi.end());
-           string code(op.code.begin(), op.code.end());
-           op.code_version = (fc::sha256::hash(code)).str();
+           op.abi = abi_def_data.as<abi_def>();
+           op.code_version = fc::sha256::hash(op.code);
 
            signed_transaction tx;
            tx.operations.push_back(op);
@@ -1082,17 +1067,12 @@
              contract_call_op.act.account = uint64_t(contract_obj.id) & GRAPHENE_DB_MAX_INSTANCE_ID;
              contract_call_op.act.name = string_to_name(method.c_str());
              fc::variant action_args_var = fc::json::from_string(args, fc::json::relaxed_parser);
-             abi_def abi;
 
-             if (abi_serializer::to_abi(contract_obj.abi, abi)) {
-                 abi_serializer abis(abi);
-                 auto action_type = abis.get_action_type(method);
-                 GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
-                 bytes x = abis.variant_to_binary(action_type, action_args_var);
-                 contract_call_op.act.data = x;
-             } else {
-                 GRAPHENE_ASSERT(false, abi_not_found_exception, "No ABI found for ${contract}", ("contract", contract));
-             }
+             abi_serializer abis(contract_obj.abi);
+             auto action_type = abis.get_action_type(method);
+             GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
+             bytes x = abis.variant_to_binary(action_type, action_args_var);
+             contract_call_op.act.data = x;
              dlog("contract_call_op.act.data=${d}", ("d", contract_call_op.act.data));
 
              signed_transaction tx;

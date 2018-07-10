@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(contract_test)
    deploy_op.code_version = (fc::sha256::hash(code)).str();
    deploy_op.abi = bytes(contract_abi, contract_abi+strlen(contract_abi));
    deploy_op.code_version = fc::sha256::hash(deploy_op.code);
-   deploy_op.abi = fc::raw::pack(fc::json::from_string(contract_abi).as<abi_def>());
+   deploy_op.abi = fc::json::from_string(contract_abi).as<abi_def>();
    deploy_op.fee = asset(2000);
    trx.operations.push_back(deploy_op);
    set_expiration(db, trx);
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(deposit_contract_test)
    auto wasm = graphene::chain::wast_to_wasm(contract_test_wast_code);
    deploy_op.code = bytes(wasm.begin(), wasm.end());
    deploy_op.code_version = fc::sha256::hash(deploy_op.code);
-   deploy_op.abi = fc::raw::pack(fc::json::from_string(contract_abi).as<abi_def>());
+   deploy_op.abi = fc::json::from_string(contract_abi).as<abi_def>();
 
    deploy_op.fee = asset(2000);
    trx.operations.push_back(deploy_op);
