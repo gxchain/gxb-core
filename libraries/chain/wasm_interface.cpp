@@ -135,8 +135,14 @@ class global_api : public context_aware_api
     int64_t get_trx_sender()
     {
         // get op payer
-        int64_t sender = account_id_type().instance;
-        return sender & GRAPHENE_DB_MAX_INSTANCE_ID;
+        return context.trx_context.get_trx_origin();
+    }
+
+    // get origin of trx
+    int64_t get_trx_origin()
+    {
+        // get op payer
+        return context.trx_context.get_trx_origin();
     }
 
     // get head block time
@@ -1438,6 +1444,7 @@ REGISTER_INTRINSICS(global_api,
 (get_head_block_id,     void(int))
 (get_head_block_time,   int64_t())
 (get_trx_sender,        int64_t())
+(get_trx_origin,        int64_t())
 );
 
 REGISTER_INTRINSICS(crypto_api,

@@ -15,7 +15,7 @@ namespace graphene { namespace chain {
         void init_for_implicit_trx();
 
         void init_for_input_trx();
-        transaction_context(database &d);
+        transaction_context(database &d, int64_t origin);
 
         void exec();
         void finalize();
@@ -47,9 +47,11 @@ namespace graphene { namespace chain {
 
       public:
         database &db() const { assert(_db); return *_db; }
+        int64_t get_trx_origin() const { return trx_origin;  }
 
       private:
         database                    *_db;
+        int64_t                     trx_origin;
         mutable fc::time_point      start;
         mutable fc::time_point      _deadline;
         mutable fc::time_point      pause_time;
