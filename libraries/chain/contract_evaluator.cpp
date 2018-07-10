@@ -89,20 +89,29 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 
 void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 { try {
+    database& d = db();
     dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.act.account)("m", op.act.name)("d", op.act.data));
-    transaction_context trx_context(db(), (uint64_t)op.fee_payer() & GRAPHENE_DB_MAX_INSTANCE_ID);
-    apply_context ctx{db(), trx_context, op.act};
+
+    transaction_context trx_context(d, (uint64_t)op.fee_payer() & GRAPHENE_DB_MAX_INSTANCE_ID);
+    apply_context ctx{d, trx_context, op.act};
     ctx.exec();
-    
+
+    // dynamic trx fee
     dlog("before fee_from_account=${b}", ("b", fee_from_account));
     if(trx_state->skip_fee == false) {
-        uint64_t ram_fee = ctx.get_ram_usage() * contract_call_operation::price_per_kbyte_ram;
-        uint64_t cpu_fee = trx_context.get_cpu_usage() * contract_call_operation::price_per_ms_cpu;
+        // get global fee params
+        const auto& fees = d.get_global_properties().parameters.current_fees;
+        const auto& op_fee = fees->get<contract_call_operation>();
+
+        uint64_t ram_fee = ctx.get_ram_usage() * op_fee.price_per_kbyte_ram;
+        uint64_t cpu_fee = trx_context.get_cpu_usage() * op_fee.price_per_ms_cpu;
+
+        // TODO: support all asset for fee
         asset fee = asset(ram_fee + cpu_fee, asset_id_type(0));
         fee_from_account += fee;
     }
     dlog("after fee_from_account=${b}", ("b", fee_from_account));
-    
+
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 

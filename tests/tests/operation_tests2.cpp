@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(contract_test)
 { try {
    ACTOR(alice);
 
-   transfer(account_id_type(), alice_id, asset(10000));
+   transfer(account_id_type(), alice_id, asset(1000000));
    generate_block();
 
    // create contract
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(deposit_contract_test)
 { try {
    ACTOR(alice);
 
-   transfer(account_id_type(), alice_id, asset(10000));
+   transfer(account_id_type(), alice_id, asset(100000));
    generate_block();
 
    // create contract
