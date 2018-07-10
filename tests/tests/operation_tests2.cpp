@@ -150,6 +150,8 @@ BOOST_AUTO_TEST_CASE(contract_test)
    string code(deploy_op.code.begin(), deploy_op.code.end());
    deploy_op.code_version = (fc::sha256::hash(code)).str();
    deploy_op.abi = bytes(contract_abi, contract_abi+strlen(contract_abi));
+   deploy_op.code_version = fc::sha256::hash(deploy_op.code);
+   deploy_op.abi = fc::raw::pack(fc::json::from_string(contract_abi).as<abi_def>());
    deploy_op.fee = asset(2000);
    trx.operations.push_back(deploy_op);
    set_expiration(db, trx);
