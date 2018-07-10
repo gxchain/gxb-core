@@ -147,9 +147,7 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     idump((ss.str()));
 
     fc::variant action_args_var = fc::json::from_string(ss.str(), fc::json::relaxed_parser);
-    abi_def abi;
-    FC_ASSERT(abi_serializer::to_abi(acnt->abi, abi), "serialize abi failed");
-    abi_serializer abis(abi);
+    abi_serializer abis(acnt->abi);
     auto action_type = abis.get_action_type("addbalance");
     GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action addbalance in contract ${contract}", ("contract", acnt->name));
     action act {(uint64_t)op.to & GRAPHENE_DB_MAX_INSTANCE_ID, N(addbalance), abis.variant_to_binary(action_type, action_args_var)};
