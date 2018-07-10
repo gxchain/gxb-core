@@ -5,8 +5,9 @@
 
 namespace graphene { namespace chain {
 
-   transaction_context::transaction_context(database &d) :
+   transaction_context::transaction_context(database &d, int64_t origin) :
         _db(&d),
+        trx_origin(origin),
         start(fc::time_point::now()),
         _deadline(start + config::cpu_duration_limit),
         transaction_cpu_usage_us(0)
@@ -36,7 +37,7 @@ namespace graphene { namespace chain {
    void transaction_context::squash()
    {
    }
-   
+
    void transaction_context::pause_billing_timer() {
        pause_time = fc::time_point::now();
    }
@@ -53,14 +54,14 @@ namespace graphene { namespace chain {
    {
        if(pause_time > fc::time_point())
            return;
-       
+
        if(pause_cpu_usage_us > 0) {
            const fc::microseconds mss(pause_cpu_usage_us);
            _deadline += mss;
            start += mss;
            pause_cpu_usage_us = 0;
        }
-       
+
        auto now = fc::time_point::now();
        transaction_cpu_usage_us = (now - start).count();//TODO
        if (BOOST_UNLIKELY(now > _deadline)) {
