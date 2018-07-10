@@ -94,7 +94,16 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     transaction_context trx_context(db());
     apply_context ctx{db(), trx_context, op.act};
     ctx.exec();
-
+    
+    dlog("before fee_from_account=${b}", ("b", fee_from_account));
+    if(trx_state->skip_fee == false) {
+        uint64_t ram_fee = ctx.get_ram_usage() * contract_call_operation::price_per_kbyte_ram;
+        uint64_t cpu_fee = trx_context.get_cpu_usage() * contract_call_operation::price_per_ms_cpu;
+        asset fee = asset(ram_fee + cpu_fee, asset_id_type(0));
+        fee_from_account += fee;
+    }
+    dlog("after fee_from_account=${b}", ("b", fee_from_account));
+    
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
@@ -139,7 +148,7 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     action act {(uint64_t)op.to & GRAPHENE_DB_MAX_INSTANCE_ID, N(addbalance), bytes(s.begin(), s.end())};
     o.act = act;
     o.fee = d.current_fee_schedule().calculate_fee(o);
-    deposit_context.skip_fee_schedule_check = true;
+    deposit_context.skip_fee = true;
 
     std::string args;
     args.append("{");
