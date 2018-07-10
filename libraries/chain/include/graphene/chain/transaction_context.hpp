@@ -20,7 +20,7 @@ namespace graphene { namespace chain {
         void exec();
         void finalize();
         void squash();
-        
+
         void pause_billing_timer();
 
         void resume_billing_timer();

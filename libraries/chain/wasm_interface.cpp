@@ -124,14 +124,22 @@ class global_api : public context_aware_api
         return dpo.head_block_number;
     }
 
-    /*
-    string get_head_block_id()
+    // get head block hash
+    void get_head_block_id(block_id_type& block_id)
     {
         const auto& dpo = context.db().get_dynamic_global_properties();
-        return static_cast<string>(dpo.head_block_id);
+        block_id = dpo.head_block_id;
     }
-    */
 
+    // get sender of trx
+    int64_t get_trx_sender()
+    {
+        // get op payer
+        int64_t sender = account_id_type().instance;
+        return sender & GRAPHENE_DB_MAX_INSTANCE_ID;
+    }
+
+    // get head block time
     int64_t get_head_block_time()
     {
         return static_cast<uint64_t>(context.db().head_block_time().sec_since_epoch());
@@ -1427,8 +1435,9 @@ REGISTER_INTRINSICS(context_free_system_api,
 
 REGISTER_INTRINSICS(global_api,
 (get_head_block_num,    int64_t())
-// (get_head_block_id,     string())
+(get_head_block_id,     void(int))
 (get_head_block_time,   int64_t())
+(get_trx_sender,        int64_t())
 );
 
 REGISTER_INTRINSICS(crypto_api,
