@@ -103,7 +103,8 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     if(!trx_state->skip_fee) {
         // get global fee params
         const auto& gpo = d.get_global_properties();
-        auto fee_param = gpo.parameters.current_fees->get<contract_call_operation>();
+        // auto fee_param = gpo.parameters.current_fees->get<contract_call_operation>();
+        auto fee_param = contract_call_operation::fee_parameters_type();
         idump((fee_param));
 
         uint64_t ram_fee = ctx.get_ram_usage() * fee_param.price_per_kbyte_ram;
