@@ -43,8 +43,6 @@ void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operati
         FC_ASSERT(current_account_itr == acnt_indx.indices().get<by_name>().end(), "Contract Name Existed, please change your contract name.");
     }
 
-    // check abi
-
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -77,7 +75,7 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     idump((op.act));
 
     database& d = db();
-    account_id_type contract_id = (account_id_type)(op.act.account & GRAPHENE_DB_MAX_INSTANCE_ID);
+    account_id_type contract_id = static_cast<account_id_type>(op.act.account);
     idump((contract_id));
     const account_object& contract_obj = contract_id(d);
 
@@ -149,11 +147,11 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
 
     stringstream ss;
     ss << "{\"owner\":";
-    ss << std::to_string((int64_t)op.from.instance);
+    ss << std::to_string((uint64_t)op.from);
     ss << ",\"value\":{\"amount\":";
     ss << std::to_string(op.amount.amount.value);
     ss << ",\"symbol\":";
-    ss << std::to_string((int64_t)op.amount.asset_id.instance);
+    ss << std::to_string((uint64_t)op.amount.asset_id);
     ss << "}}";
     idump((ss.str()));
 
