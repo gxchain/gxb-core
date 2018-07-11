@@ -1047,7 +1047,7 @@
            tx.validate();
 
            return sign_transaction(tx, broadcast);
-       } FC_CAPTURE_AND_RETHROW( (name)(account)(vm_type)(vm_version)(contract_dir)(broadcast)) }
+       } FC_CAPTURE_AND_RETHROW( (name)(account)(vm_type)(vm_version)(contract_dir)(fee_asset_symbol)(broadcast)) }
 
        signed_transaction call_contract(string account,
                                         string contract,
@@ -1064,15 +1064,14 @@
 
              contract_call_operation contract_call_op;
              contract_call_op.account = caller.id;
-             contract_call_op.act.account = uint64_t(contract_obj.id) & GRAPHENE_DB_MAX_INSTANCE_ID;
+             contract_call_op.act.account = uint64_t(contract_obj.id);
              contract_call_op.act.name = string_to_name(method.c_str());
              fc::variant action_args_var = fc::json::from_string(args, fc::json::relaxed_parser);
 
              abi_serializer abis(contract_obj.abi);
              auto action_type = abis.get_action_type(method);
              GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
-             bytes x = abis.variant_to_binary(action_type, action_args_var);
-             contract_call_op.act.data = x;
+             contract_call_op.act.data = abis.variant_to_binary(action_type, action_args_var);
              dlog("contract_call_op.act.data=${d}", ("d", contract_call_op.act.data));
 
              signed_transaction tx;
@@ -1081,7 +1080,7 @@
              tx.validate();
 
              return sign_transaction(tx, broadcast);
-       } FC_CAPTURE_AND_RETHROW( (account)(contract)(method)(args)(broadcast)) }
+       } FC_CAPTURE_AND_RETHROW( (account)(contract)(method)(args)(fee_asset_symbol)(broadcast)) }
 
        signed_transaction deposit_asset_to_contract(string from,
                                         string contract,
@@ -1110,7 +1109,7 @@
              tx.validate();
 
              return sign_transaction(tx, broadcast);
-       } FC_CAPTURE_AND_RETHROW( (from)(contract)(amount)(asset_symbol)(broadcast)) }
+       } FC_CAPTURE_AND_RETHROW( (from)(contract)(amount)(asset_symbol)(fee_asset_symbol)(broadcast)) }
 
 
        signed_transaction register_account(string name,

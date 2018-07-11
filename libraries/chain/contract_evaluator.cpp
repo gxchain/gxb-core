@@ -99,12 +99,16 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     dlog("before fee_from_account=${b}", ("b", fee_from_account));
     if(trx_state->skip_fee == false) {
         // get global fee params
-        const auto& fees = d.get_global_properties().parameters.current_fees;
-        const auto& op_fee = fees->get<contract_call_operation>();
-        idump((op_fee));
+        fee_parameters params;
+        params.set_which(operation::tag<contract_call_operation>::value);
+        const auto& fees = d.get_global_properties().parameters.current_fees->parameters;
+        auto itr = fees.find(params);
+        if (itr != fees.end()) params = *itr;
+        auto fee_param = params.get<contract_call_operation::fee_parameters_type>();
+        idump((params)(fee_param));
 
-        uint64_t ram_fee = ctx.get_ram_usage() * op_fee.price_per_kbyte_ram;
-        uint64_t cpu_fee = trx_context.get_cpu_usage() * op_fee.price_per_ms_cpu;
+        uint64_t ram_fee = ctx.get_ram_usage() * fee_param.price_per_kbyte_ram;
+        uint64_t cpu_fee = trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu;
 
         // TODO: support all asset for fee
         asset fee = asset(ram_fee + cpu_fee, asset_id_type(0));
@@ -159,7 +163,7 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     abi_serializer abis(acnt->abi);
     auto action_type = abis.get_action_type("addbalance");
     GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action addbalance in contract ${contract}", ("contract", acnt->name));
-    action act {(uint64_t)op.to.instance, N(addbalance), abis.variant_to_binary(action_type, action_args_var)};
+    action act {op.to, N(addbalance), abis.variant_to_binary(action_type, action_args_var)};
 
     // call contract
     dlog("call contract transfer");
