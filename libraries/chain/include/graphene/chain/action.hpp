@@ -49,11 +49,16 @@ namespace graphene { namespace chain {
             : account(account), name(name), data(data) {
       }
 
-      template<typename T>
-      T data_as()const {
-         FC_ASSERT( account == T::get_account() );
-         FC_ASSERT( name == T::get_name()  );
-         return fc::raw::unpack<T>(data);
+      action(account_id_type account, action_name name, const bytes& data )
+            : account((uint64_t)account), name(name), data(data) {
+      }
+
+      template <typename T>
+      T data_as() const
+      {
+          FC_ASSERT(account == T::get_account());
+          FC_ASSERT(name == T::get_name());
+          return fc::raw::unpack<T>(data);
       }
    };
 

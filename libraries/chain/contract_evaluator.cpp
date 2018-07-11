@@ -33,17 +33,18 @@ namespace graphene { namespace chain {
 void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operation &op)
 { try {
     dlog("contract_deploy_evaluator do_evaluator");
-    // auto verify_code_version = (fc::sha256::hash(op.code)).str();
-    // FC_ASSERT(verify_code_version == op.code_version,
-    //         "code_version verify failed, target code_version=${t}, actual code_version=${a}",
-    //         ("t", op.code_version)("a", verify_code_version));
 
     database &d = db();
+
+    // check contract name
     auto &acnt_indx = d.get_index_type<account_index>();
     if (op.name.size()) {
         auto current_account_itr = acnt_indx.indices().get<by_name>().find(op.name);
         FC_ASSERT(current_account_itr == acnt_indx.indices().get<by_name>().end(), "Contract Name Existed, please change your contract name.");
     }
+
+    // check abi
+
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -64,7 +65,7 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
             obj.vm_type = o.vm_type;
             obj.vm_version = o.vm_version;
             obj.code = o.code;
-            obj.code_version = o.code_version;
+            obj.code_version = (fc::sha256::hash(o.code)).str();
             obj.abi = o.abi;
             });
 
@@ -92,7 +93,7 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     database& d = db();
     dlog("call contract, name ${n}, method ${m}, data ${d}", ("n", op.act.account)("m", op.act.name)("d", op.act.data));
 
-    transaction_context trx_context(d, (uint64_t)op.fee_payer() & GRAPHENE_DB_MAX_INSTANCE_ID);
+    transaction_context trx_context(d, op.fee_payer().instance);
     apply_context ctx{d, trx_context, op.act};
     ctx.exec();
 
@@ -102,6 +103,7 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
         // get global fee params
         const auto& fees = d.get_global_properties().parameters.current_fees;
         const auto& op_fee = fees->get<contract_call_operation>();
+        idump((op_fee));
 
         uint64_t ram_fee = ctx.get_ram_usage() * op_fee.price_per_kbyte_ram;
         uint64_t cpu_fee = trx_context.get_cpu_usage() * op_fee.price_per_ms_cpu;
@@ -147,11 +149,11 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
 
     stringstream ss;
     ss << "{\"owner\":";
-    ss << std::to_string((uint64_t)op.from & GRAPHENE_DB_MAX_INSTANCE_ID);
+    ss << std::to_string((int64_t)op.from.instance);
     ss << ",\"value\":{\"amount\":";
     ss << std::to_string(op.amount.amount.value);
     ss << ",\"symbol\":";
-    ss << std::to_string((uint64_t)op.amount.asset_id & GRAPHENE_DB_MAX_INSTANCE_ID);
+    ss << std::to_string((int64_t)op.amount.asset_id.instance);
     ss << "}}";
     idump((ss.str()));
 
@@ -159,7 +161,7 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     abi_serializer abis(acnt->abi);
     auto action_type = abis.get_action_type("addbalance");
     GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action addbalance in contract ${contract}", ("contract", acnt->name));
-    action act {(uint64_t)op.to & GRAPHENE_DB_MAX_INSTANCE_ID, N(addbalance), abis.variant_to_binary(action_type, action_args_var)};
+    action act {(uint64_t)op.to.instance, N(addbalance), abis.variant_to_binary(action_type, action_args_var)};
 
     // call contract
     dlog("call contract transfer");

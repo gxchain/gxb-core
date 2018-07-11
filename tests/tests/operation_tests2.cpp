@@ -147,8 +147,6 @@ BOOST_AUTO_TEST_CASE(contract_test)
    deploy_op.vm_version = "0";
    auto wasm = graphene::chain::wast_to_wasm(contract_test_wast_code);
    deploy_op.code = bytes(wasm.begin(), wasm.end());
-   string code(deploy_op.code.begin(), deploy_op.code.end());
-   deploy_op.code_version = (fc::sha256::hash(code)).str();
    deploy_op.code_version = fc::sha256::hash(deploy_op.code);
    deploy_op.abi = fc::json::from_string(contract_abi).as<abi_def>();
    deploy_op.fee = asset(2000);
@@ -162,13 +160,11 @@ BOOST_AUTO_TEST_CASE(contract_test)
    // call contract, action hi
    BOOST_TEST_MESSAGE("contract call test, hi");
    auto& contract_obj = get_account("bob");
-   auto contract_id = static_cast<uint64_t>(contract_obj.id);
-   idump((contract_id));
 
    contract_call_operation op;
    op.account = alice_id;
    string s = "123";
-   action act {contract_id, N(hi), bytes(s.begin(), s.end())};
+   action act {contract_obj.id, N(hi), bytes(s.begin(), s.end())};
    op.act = act;
    op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(op);
    trx.operations.push_back(op);
@@ -182,7 +178,7 @@ BOOST_AUTO_TEST_CASE(contract_test)
    BOOST_TEST_MESSAGE("contract call test, bye");
    contract_call_operation call_op;
    call_op.account = alice_id;
-   action act2 {contract_id, N(bye), bytes(s.begin(), s.end())};
+   action act2 {contract_obj.id, N(bye), bytes(s.begin(), s.end())};
    call_op.act = act2;
    call_op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(call_op);
    trx.operations.push_back(call_op);
@@ -212,7 +208,6 @@ BOOST_AUTO_TEST_CASE(deposit_contract_test)
    deploy_op.code = bytes(wasm.begin(), wasm.end());
    deploy_op.code_version = fc::sha256::hash(deploy_op.code);
    deploy_op.abi = fc::json::from_string(contract_abi).as<abi_def>();
-
    deploy_op.fee = asset(2000);
    trx.operations.push_back(deploy_op);
    set_expiration(db, trx);
