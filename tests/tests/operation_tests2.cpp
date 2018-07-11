@@ -231,6 +231,9 @@ BOOST_AUTO_TEST_CASE(deposit_contract_test)
    idump((trx));
    PUSH_TX(db, trx);
    trx.clear();
+   idump((N(abc)));
+   idump((N(abc123)));
+   idump((N(abcdefg.h345)));
 
 } FC_LOG_AND_RETHROW() }
 
