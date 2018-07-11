@@ -62,8 +62,8 @@ struct contract_deploy_operation : public base_operation {
 struct contract_call_operation : public base_operation {
     struct fee_parameters_type {
         uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION / 100;
-        uint64_t price_per_kbyte_ram = 50 * GRAPHENE_BLOCKCHAIN_PRECISION;
-        uint64_t price_per_ms_cpu = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
+        uint64_t price_per_kbyte_ram = 100 * GRAPHENE_BLOCKCHAIN_PRECISION;
+        uint64_t price_per_ms_cpu = GRAPHENE_BLOCKCHAIN_PRECISION / 10000;
     };
 
     asset                                   fee;
