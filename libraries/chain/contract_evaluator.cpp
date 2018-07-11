@@ -75,7 +75,7 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     idump((op.act));
 
     database& d = db();
-    account_id_type contract_id = static_cast<account_id_type>(op.act.account);
+    account_id_type contract_id = static_cast<account_id_type>(op.act.account & GRAPHENE_DB_MAX_INSTANCE_ID);
     idump((contract_id));
     const account_object& contract_obj = contract_id(d);
 
