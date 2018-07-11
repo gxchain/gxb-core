@@ -19,12 +19,14 @@
 
 #include <graphene/chain/contract_evaluator.hpp>
 #include <graphene/chain/database.hpp>
+#include <graphene/chain/protocol/operations.hpp>
+#include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/protocol/name.hpp>
 
 #include <graphene/chain/apply_context.hpp>
 #include <graphene/chain/transaction_context.hpp>
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/wast_to_wasm.hpp>
-#include <graphene/chain/protocol/name.hpp>
 #include <graphene/chain/abi_serializer.hpp>
 
 
@@ -99,13 +101,9 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     dlog("before fee_from_account=${b}", ("b", fee_from_account));
     if(trx_state->skip_fee == false) {
         // get global fee params
-        fee_parameters params;
-        params.set_which(operation::tag<contract_call_operation>::value);
-        const auto& fees = d.get_global_properties().parameters.current_fees->parameters;
-        auto itr = fees.find(params);
-        if (itr != fees.end()) params = *itr;
-        auto fee_param = params.get<contract_call_operation::fee_parameters_type>();
-        idump((params)(fee_param));
+        const fee_schedule& current_fees = d.get_global_properties().parameters.current_fees;
+        auto fee_param = current_fees.get<contract_call_operation>();
+        idump((fee_param));
 
         uint64_t ram_fee = ctx.get_ram_usage() * fee_param.price_per_kbyte_ram;
         uint64_t cpu_fee = trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu;
