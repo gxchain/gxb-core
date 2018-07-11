@@ -17,6 +17,7 @@
     along with gxb-core.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <fc/smart_ref_impl.hpp>
 #include <graphene/chain/contract_evaluator.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/protocol/operations.hpp>
@@ -99,10 +100,10 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 
     // dynamic trx fee
     dlog("before fee_from_account=${b}", ("b", fee_from_account));
-    if(trx_state->skip_fee == false) {
+    if(!trx_state->skip_fee) {
         // get global fee params
-        const fee_schedule& current_fees = d.get_global_properties().parameters.current_fees;
-        auto fee_param = current_fees.get<contract_call_operation>();
+        const auto& gpo = d.get_global_properties();
+        auto fee_param = gpo.parameters.current_fees->get<contract_call_operation>();
         idump((fee_param));
 
         uint64_t ram_fee = ctx.get_ram_usage() * fee_param.price_per_kbyte_ram;
