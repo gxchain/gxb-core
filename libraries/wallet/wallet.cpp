@@ -946,7 +946,7 @@
                    }
                }
                if (table_exist || table == "accounts") {//TODO accounts是gxblib/contract.hpp中定义的，但是生成abi的时候不会在abi的tables列表中
-                   return _remote_db->get_table_objects(contract_account.id.instance(), contract_account.id.instance(), name(table));
+                   return _remote_db->get_table_objects(contract_account.id.number, contract_account.id.number, name(table));
                } else {
                    GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
                }
