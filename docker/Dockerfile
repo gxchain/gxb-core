@@ -13,7 +13,9 @@ RUN cd gxb-core \
     && git checkout master \
     && git submodule update --init --recursive \
     && mkdir build && cd build \
-    && export C_COMPILER=clang && export CXX_COMPILER=clang++ \
+    && export WASM_ROOT=~/opt/wasm \
+    && export C_COMPILER=clang-4.0 \
+    && export CXX_COMPILER=clang++-4.0 \
     && cmake -G "Unix Makefiles" -DWASM_ROOT=~/opt/wasm -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DLLVM_TARGETS_TO_BUILD= -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release .. \
     && make witness_node cli_wallet \
     && cp -rf programs /usr/local/
