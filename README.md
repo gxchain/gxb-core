@@ -79,9 +79,13 @@ If you send private keys over this connection, `rpc-endpoint` should be bound to
 Use `help` to see all available wallet commands.
 
 
-## Need Help ?
+## Support
 ---------------
 Report bugs, issues using [GitHub issues](https://github.com/gxchain/gxb-core/issues/new).
+
+Technical support is also available in the [GXS forum](https://forum.gxb.io/category/3/for-developers-%E5%BC%80%E5%8F%91%E8%80%85%E4%B8%93%E5%8C%BA)
+
+
 
 ## License
 ---------------
