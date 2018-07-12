@@ -42,12 +42,13 @@ class contract
         // from must be msg.sender
         print("deposit trx origin: ", get_trx_origin());
         print("deposit trx from: ",  from);
-        gxb_assert(get_trx_origin() == from, "no deposit permission");
+        // gxb_assert(get_trx_origin() == from, "no deposit permission");
         // check amount
         // gxb_assert(get_trx_value() == value.amount);
 
         transfer_asset(from, _self, value.asset_id, value.amount);
         addbalance(from, value);
+        print("balance: ", getbalance(from, value.asset_id));
     }
 
     /// @abi action
@@ -56,7 +57,7 @@ class contract
         // from must be msg.sender
         print("withdraw trx origin: ", get_trx_origin());
         print("withdraw trx from: ",  from);
-        gxb_assert(get_trx_origin() == from, "no withdraw permission");
+        // gxb_assert(get_trx_origin() == from, "no withdraw permission");
         // check amount
         // gxb_assert(get_balance(from, value.symbol) >= value.amount);
 
@@ -100,16 +101,15 @@ class contract
         }
     }
 
-    /// @abi action
-    asset getbalance(account_name owner, asset_id_type asset_id) const
+    uint64_t getbalance(account_name owner, uint64_t asset_id)
     {
         auto it = accounts.find(owner);
         if(it == accounts.end()) {
             print("account not found");
-            return asset();
+            return 0;
         }
 
-        return it->balance;
+        return it->balance.amount;
     }
 };
 

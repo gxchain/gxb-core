@@ -154,11 +154,11 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
 
     stringstream ss;
     ss << "{\"from\":";
-    ss << std::to_string((uint64_t)op.from);
+    ss << std::to_string((uint64_t)op.from.instance);
     ss << ",\"value\":{\"amount\":";
     ss << std::to_string(op.amount.amount.value);
-    ss << ",\"symbol\":";
-    ss << std::to_string((uint64_t)op.amount.asset_id);
+    ss << ",\"asset_id\":";
+    ss << std::to_string(op.amount.asset_id);
     ss << "}}";
     idump((ss.str()));
 
