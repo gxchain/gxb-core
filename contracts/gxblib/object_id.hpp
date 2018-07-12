@@ -99,8 +99,8 @@ struct object_id {
     {
     }
 
-    friend object_id operator+(const object_id a, int64_t delta) { return object_id(uint64_t(a.instance.value + delta)); }
-    friend object_id operator+(const object_id a, int delta) { return object_id(uint64_t(a.instance.value + delta)); }
+    friend object_id operator+(const object_id a, int64_t delta) { return object_id(uint64_t(a.instance + delta)); }
+    friend object_id operator+(const object_id a, int delta) { return object_id(uint64_t(a.instance + delta)); }
 
     //    operator object_id_type() const { return object_id_type(SpaceID, TypeID, instance.value); }
     explicit operator uint64_t() const { return object_id_type(*this).number; }
@@ -118,10 +118,10 @@ struct object_id {
     friend bool operator==(const object_id &b, const object_id_type &a) { return a == object_id_type(b); }
     friend bool operator!=(const object_id &b, const object_id_type &a) { return a != object_id_type(b); }
 
-    friend bool operator<(const object_id &a, const object_id &b) { return a.instance.value < b.instance.value; }
-    friend bool operator>(const object_id &a, const object_id &b) { return a.instance.value > b.instance.value; }
+    friend bool operator<(const object_id &a, const object_id &b) { return a.instance < b.instance; }
+    friend bool operator>(const object_id &a, const object_id &b) { return a.instance > b.instance; }
 
-    friend size_t hash_value(object_id v) { return std::hash<uint64_t>()(v.instance.value); }
+    friend size_t hash_value(object_id v) { return std::hash<uint64_t>()(v.instance); }
 
     uint32_t instance;
 
