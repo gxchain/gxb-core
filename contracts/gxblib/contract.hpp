@@ -1,6 +1,7 @@
 #pragma once
 #include <gxblib/gxb.hpp>
 #include <gxblib/asset.hpp>
+#include <gxblib/global.h>
 #include <gxblib/multi_index.hpp>
 
 namespace graphene {
