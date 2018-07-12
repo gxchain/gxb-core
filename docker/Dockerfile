@@ -1,4 +1,4 @@
-FROM gxchain/builder2
+FROM gxchain/builder:lastest
 MAINTAINER GXS
 
 
