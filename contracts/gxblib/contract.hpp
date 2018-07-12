@@ -71,7 +71,7 @@ class contract
     }
 
     /// @abi action
-    asset getbalance(account_name owner, symbol_name sym) const
+    asset getbalance(account_name owner, asset_id_type asset_id) const
     {
         auto it = accounts.find(owner);
         if(it == accounts.end()) {
