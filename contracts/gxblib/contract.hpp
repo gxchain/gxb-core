@@ -34,6 +34,30 @@ class contract
 
   public:
     /// @abi action
+    void deposit(account_name from, asset value)
+    {
+        // from must be msg.sender
+        gxb_assert(get_trx_origin() == from);
+        // check amount
+        // gxb_assert(get_trx_value() == value.amount);
+
+        transfer_asset(from, _self, value.symbol, value.amount);
+        addbalance(from, value);
+    }
+
+    /// @abi action
+    void withdraw(account_name from, account_name to, asset value)
+    {
+        // from must be msg.sender
+        gxb_assert(get_trx_origin() == from);
+        // check amount
+        gxb_assert(get_balance(from, value.symbol) >= value.amount);
+
+        subbalance(from, value);
+        transfer_asset(_self, to, value.symbol, value.amount);
+    }
+
+  private:
     void subbalance(account_name owner, asset value)
     {
         auto it = accounts.find(owner);
@@ -51,7 +75,6 @@ class contract
         }
     }
 
-    /// @abi action
     void addbalance(account_name owner, asset value)
     {
         auto it = accounts.find(owner);
