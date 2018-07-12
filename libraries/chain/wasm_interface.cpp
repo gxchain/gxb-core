@@ -1404,8 +1404,8 @@ class asset_api : public context_aware_api
     {
         auto &d = context.db();
         auto account_id = account_id_type(account & GRAPHENE_DB_MAX_INSTANCE_ID);
-        auto asset_id = asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID);
-        return d.get_balance(account_id, asset_id).amount.value;
+        auto aid = asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID);
+        return d.get_balance(account_id, aid).amount.value;
     }
 
 };
