@@ -43,4 +43,4 @@ class test : public graphene::contract {
       test_table_index       table_idx;
 };
 
-GXB_ABI(test, (subbalance)(addbalance)(hi)(bye))
+GXB_ABI(test, (deposit)(withdraw)(hi)(bye))
