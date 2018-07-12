@@ -7,19 +7,17 @@
 namespace graphene
 {
 
-using gxblib::asset_id_type;
-
 extern const int64_t scaled_precision_lut[];
 
 struct asset {
-    asset(uint64_t a = 0, asset_id_type id = asset_id_type())
+    asset(uint64_t a = 0, uint64_t id = 0)
         : amount(a)
         , asset_id(id)
     {
     }
 
     uint64_t amount;
-    asset_id_type asset_id;
+    uint64_t asset_id;
 
     asset &operator+=(const asset &o)
     {

@@ -1388,23 +1388,23 @@ class asset_api : public context_aware_api
         : context_aware_api(ctx, true)
     {}
 
-    void transfer_asset(int64_t from, int64_t to, int64_t symbol, int64_t amount)
+    void transfer_asset(int64_t from, int64_t to, int64_t asset_id, int64_t amount)
     {
         // check more
         FC_ASSERT(amount> 0, "amount must > 0");
         FC_ASSERT(from != to, "cannot transfer to self");
         auto &d = context.db();
-        asset a{amount, asset_id_type(symbol & GRAPHENE_DB_MAX_INSTANCE_ID)};
+        asset a{amount, asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID)};
         // adjust balance
         d.adjust_balance(account_id_type(from & GRAPHENE_DB_MAX_INSTANCE_ID), -a);
         d.adjust_balance(account_id_type(to & GRAPHENE_DB_MAX_INSTANCE_ID), a);
     }
 
-    int64_t get_balance(int64_t account, int64_t symbol)
+    int64_t get_balance(int64_t account, int64_t asset_id)
     {
         auto &d = context.db();
         auto account_id = account_id_type(account & GRAPHENE_DB_MAX_INSTANCE_ID);
-        auto asset_id = asset_id_type(symbol & GRAPHENE_DB_MAX_INSTANCE_ID);
+        auto asset_id = asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID);
         return d.get_balance(account_id, asset_id).amount.value;
     }
 
