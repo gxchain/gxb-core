@@ -146,7 +146,6 @@ void_result contract_deposit_evaluator::do_evaluate(const contract_deposit_opera
 
 void_result contract_deposit_evaluator::do_apply(const contract_deposit_operation &op)
 { try {
-    dlog("contract_deposit_evaluator do_apply, op=${op}", ("op", op));
     database& d = db();
     // adjust balance
     // d.adjust_balance(op.from, -op.amount);
@@ -158,7 +157,7 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     ss << ",\"value\":{\"amount\":";
     ss << std::to_string(op.amount.amount.value);
     ss << ",\"asset_id\":";
-    ss << std::to_string(op.amount.asset_id);
+    ss << std::string(object_id_type(op.amount.asset_id));
     ss << "}}";
     idump((ss.str()));
 
@@ -169,9 +168,7 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     action act {op.to, N(deposit), abis.variant_to_binary(action_type, action_args_var)};
 
     // call contract
-    dlog("call contract transfer");
     transaction_evaluation_state deposit_context(&d);
-    deposit_context.skip_fee_schedule_check = true;
     deposit_context.skip_fee = true;
     contract_call_operation o;
     o.account = op.from;
