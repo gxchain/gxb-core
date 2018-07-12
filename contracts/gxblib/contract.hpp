@@ -3,6 +3,7 @@
 #include <gxblib/asset.hpp>
 #include <gxblib/global.h>
 #include <gxblib/system.h>
+#include <gxblib/asset.h>
 #include <gxblib/multi_index.hpp>
 
 namespace graphene {
@@ -39,7 +40,9 @@ class contract
     void deposit(account_name from, asset value)
     {
         // from must be msg.sender
-        gxb_assert(get_trx_origin() == from);
+        print("deposit trx origin: ", get_trx_origin());
+        print("deposit trx from: ",  from);
+        gxb_assert(get_trx_origin() == from, "no deposit permission");
         // check amount
         // gxb_assert(get_trx_value() == value.amount);
 
@@ -51,9 +54,11 @@ class contract
     void withdraw(account_name from, account_name to, asset value)
     {
         // from must be msg.sender
-        gxb_assert(get_trx_origin() == from);
+        print("withdraw trx origin: ", get_trx_origin());
+        print("withdraw trx from: ",  from);
+        gxb_assert(get_trx_origin() == from, "no withdraw permission");
         // check amount
-        gxb_assert(get_balance(from, value.symbol) >= value.amount);
+        // gxb_assert(get_balance(from, value.symbol) >= value.amount);
 
         subbalance(from, value);
         transfer_asset(_self, to, value.symbol, value.amount);
