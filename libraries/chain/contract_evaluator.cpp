@@ -149,11 +149,11 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     dlog("contract_deposit_evaluator do_apply, op=${op}", ("op", op));
     database& d = db();
     // adjust balance
-    d.adjust_balance(op.from, -op.amount);
-    d.adjust_balance(op.to, op.amount);
+    // d.adjust_balance(op.from, -op.amount);
+    // d.adjust_balance(op.to, op.amount);
 
     stringstream ss;
-    ss << "{\"owner\":";
+    ss << "{\"from\":";
     ss << std::to_string((uint64_t)op.from);
     ss << ",\"value\":{\"amount\":";
     ss << std::to_string(op.amount.amount.value);
@@ -164,9 +164,9 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
 
     fc::variant action_args_var = fc::json::from_string(ss.str(), fc::json::relaxed_parser);
     abi_serializer abis(acnt->abi);
-    auto action_type = abis.get_action_type("addbalance");
-    GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action addbalance in contract ${contract}", ("contract", acnt->name));
-    action act {op.to, N(addbalance), abis.variant_to_binary(action_type, action_args_var)};
+    auto action_type = abis.get_action_type("deposit");
+    GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action in contract ${contract}", ("contract", acnt->name));
+    action act {op.to, N(deposit), abis.variant_to_binary(action_type, action_args_var)};
 
     // call contract
     dlog("call contract transfer");

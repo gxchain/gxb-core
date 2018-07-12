@@ -128,11 +128,11 @@ static void copy_inline_row(const key_value_object& obj, vector<char>& data) {
 fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope, uint64_t table) const
 {
     fc::variants result;
-    
+
     const auto &account_obj = get_account_by_contract_code(code);
     if(!account_obj.valid())
         return result;
-    
+
     abi_serializer abis(account_obj->abi);
 
     const auto &table_idx = _db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
@@ -140,7 +140,7 @@ fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope,
     if (existing_tid != table_idx.end()) {
         decltype(existing_tid->id) next_tid(existing_tid->id + 1);
         const auto &kv_idx = _db.get_index_type<key_value_index>().indices().get<by_scope_primary>();
-        
+
         auto lower = kv_idx.lower_bound(boost::make_tuple(existing_tid->id));
         auto upper = kv_idx.lower_bound(boost::make_tuple(next_tid));
 
@@ -165,7 +165,7 @@ bytes database_api_impl::serialize_contract_call_args(string contract, string me
     if(!contract_obj) {
         return bytes();
     }
-    
+
     fc::variant action_args_var = fc::json::from_string(json_args, fc::json::relaxed_parser);
 
     abi_serializer abis(contract_obj->abi);
@@ -463,7 +463,7 @@ std::map<std::string, full_account> database_api_impl::get_full_accounts( const 
                     [&acnt](const account_balance_object& balance) {
                        acnt.balances.emplace_back(balance);
                     });
-    
+
       auto balance_locked_range = _db.get_index_type<account_balance_locked_index>().indices().get<by_account_asset>().equal_range(boost::make_tuple(account->id));
       //vector<account_balance_locked_object> locked_balances;
       std::for_each(balance_locked_range.first, balance_locked_range.second,
@@ -612,7 +612,7 @@ vector<asset> database_api_impl::get_account_lock_balances(account_id_type acnt,
 
     if (assets.empty())
     {
-       // if the caller passes in an empty list of assets, return lock balances for all assets the account 
+       // if the caller passes in an empty list of assets, return lock balances for all assets the account
        const account_balance_index& balance_index = _db.get_index_type<account_balance_index>();
        auto balance_range = balance_index.indices().get<by_account_asset>().equal_range(boost::make_tuple(acnt));
 

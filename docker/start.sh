@@ -6,7 +6,7 @@ ARGS=""
 # Translate environmental variables
 if [[ "$bool_wallet" == "true" ]] || [[ -z "$bool_wallet" ]]; then
     APPPATH+="/cli_wallet/cli_wallet"
-    ARGS+=" --enable-rpc-log"
+    ARGS+=""
     if [[ ! -z "$ws_server" ]]; then
         ARGS+=" -s${ws_server}"
     fi
@@ -53,10 +53,6 @@ elif [[ "$bool_wallet" == "false" ]]
         ARGS+=" --replay-blockchain"
     elif [[ "$replay" == "false" ]]; then
         ARGS+=" --resync-blockchain"
-    fi
-
-    if [[ "$log_file" == "true" ]]; then
-        ARGS+=" --log-file"
     fi
 fi
 

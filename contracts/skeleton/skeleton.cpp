@@ -20,4 +20,4 @@ class skeleton : public graphene::contract {
       }
 };
 
-GXB_ABI(skeleton, (subbalance)(addbalance)(hi)(bye))
+GXB_ABI(skeleton, (deposit)(withdraw)(hi)(bye))

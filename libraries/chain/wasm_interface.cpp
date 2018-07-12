@@ -131,6 +131,12 @@ class global_api : public context_aware_api
         block_id = dpo.head_block_id;
     }
 
+    // get head block time
+    int64_t get_head_block_time()
+    {
+        return static_cast<uint64_t>(context.db().head_block_time().sec_since_epoch());
+    }
+
     // get sender of trx
     int64_t get_trx_sender()
     {
@@ -145,11 +151,6 @@ class global_api : public context_aware_api
         return context.trx_context.get_trx_origin();
     }
 
-    // get head block time
-    int64_t get_head_block_time()
-    {
-        return static_cast<uint64_t>(context.db().head_block_time().sec_since_epoch());
-    }
 };
 
 class crypto_api : public context_aware_api {
@@ -1389,7 +1390,6 @@ class asset_api : public context_aware_api
 
     void transfer_asset(int64_t from, int64_t to, int64_t symbol, int64_t amount)
     {
-        // TODO
         // check more
         FC_ASSERT(amount> 0, "amount must > 0");
         FC_ASSERT(from != to, "cannot transfer to self");
@@ -1398,6 +1398,14 @@ class asset_api : public context_aware_api
         // adjust balance
         d.adjust_balance(account_id_type(from & GRAPHENE_DB_MAX_INSTANCE_ID), -a);
         d.adjust_balance(account_id_type(to & GRAPHENE_DB_MAX_INSTANCE_ID), a);
+    }
+
+    int64_t get_balance(int64_t account, int64_t symbol)
+    {
+        auto &d = context.db();
+        auto account_id = account_id_type(account & GRAPHENE_DB_MAX_INSTANCE_ID);
+        auto asset_id = asset_id_type(symbol & GRAPHENE_DB_MAX_INSTANCE_ID);
+        return d.get_balance(account_id, asset_id).amount.value;
     }
 
 };
@@ -1466,6 +1474,7 @@ REGISTER_INTRINSICS(action_api,
 
 REGISTER_INTRINSICS(asset_api,
 (transfer_asset,                 void(int64_t, int64_t, int64_t, int64_t))
+(get_balance,                    int64_t(int64_t, int64_t))
 );
 
 #define DB_SECONDARY_INDEX_METHODS_SIMPLE(IDX) \

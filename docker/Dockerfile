@@ -1,10 +1,8 @@
-FROM gxchain/builder:lastest
-MAINTAINER GXS
+FROM gxchain/builder
+MAINTAINER GXChain
 
 
-RUN export LANGUAGE=en_US.UTF-8 && \
-    export LANG=en_US.UTF-8 && \
-    export LC_ALL=en_US.UTF-8
+RUN export LC_ALL=C
 
 RUN git config --global http.postBuffer 1048576000
 
