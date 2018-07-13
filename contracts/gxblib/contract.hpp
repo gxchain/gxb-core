@@ -40,15 +40,16 @@ class contract
     void deposit(account_name from, asset value)
     {
         // from must be msg.sender
-        print("deposit trx origin: ", get_trx_origin());
-        print("deposit trx from: ",  from);
-        // gxb_assert(get_trx_origin() == from, "no deposit permission");
+        print("deposit trx origin: ", get_trx_origin(), "\n");
+        print("deposit trx from: ",  from, "\n");
+        print("deposit asset_id: ",  value.asset_id, ", amount:", value.amount, "\n");
+        gxb_assert(get_trx_origin() == from, "no deposit permission");
         // check amount
         // gxb_assert(get_trx_value() == value.amount);
 
         transfer_asset(from, _self, value.asset_id, value.amount);
         addbalance(from, value);
-        print("balance: ", getbalance(from, value.asset_id));
+        print("balance: ", getbalance(from, value.asset_id), "\n");
     }
 
     /// @abi action
@@ -57,6 +58,7 @@ class contract
         // from must be msg.sender
         print("withdraw trx origin: ", get_trx_origin());
         print("withdraw trx from: ",  from);
+        print("withdraw asset_id: ",  value.asset_id, ", amount:", value.amount, "\n");
         // gxb_assert(get_trx_origin() == from, "no withdraw permission");
         // check amount
         // gxb_assert(get_balance(from, value.symbol) >= value.amount);
@@ -88,7 +90,7 @@ class contract
         auto it = accounts.find(owner);
         if (it == accounts.end()) {
             accounts.emplace(owner, [&](auto &a) {
-                print("addbalance, ", owner, value);
+                print("addbalance, owner: ", owner, ", asset_id: ", value.asset_id, ", amount: ", value.amount, "\n");
                 a.owner = owner;
                 a.balance = value;
 
