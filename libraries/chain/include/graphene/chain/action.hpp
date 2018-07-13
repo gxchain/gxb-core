@@ -50,7 +50,7 @@ namespace graphene { namespace chain {
       }
 
       action(account_id_type account, action_name name, const bytes& data )
-            : contract_id((uint64_t)account), method_name(name), data(data) {
+            : contract_id(account), method_name(name), data(data) {
       }
 
       template <typename T>
