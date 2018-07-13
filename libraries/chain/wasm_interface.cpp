@@ -1400,6 +1400,7 @@ class asset_api : public context_aware_api
         d.adjust_balance(account_id_type(to & GRAPHENE_DB_MAX_INSTANCE_ID), a);
     }
 
+    // get account balance by asset_id
     int64_t get_balance(int64_t account, int64_t asset_id)
     {
         auto &d = context.db();
