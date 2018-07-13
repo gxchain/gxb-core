@@ -1,16 +1,11 @@
 #pragma once
 #include <functional>
-#include <gxblib/asset_object.hpp>
-#include <gxblib/object_id.hpp>
 #include <gxblib/types.h>
 #include <string>
 #include <tuple>
 
 namespace gxblib
 {
-
-typedef object_id<1, 3, asset_object> asset_id_type;
-typedef std::vector<std::tuple<uint16_t, std::vector<char>>> extensions_type;
 
 /**
     *  @brief Converts a base32 symbol into its binary representation, used by string_to_name()
