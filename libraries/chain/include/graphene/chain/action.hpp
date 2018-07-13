@@ -46,7 +46,7 @@ namespace graphene { namespace chain {
       }
 
       action(uint64_t account, action_name name, const bytes& data )
-            : contract_id(account), method_name(name), data(data) {
+            : contract_id(account_id_type(account & GRAPHENE_DB_MAX_INSTANCE_ID)), method_name(name), data(data) {
       }
 
       action(account_id_type account, action_name name, const bytes& data )
