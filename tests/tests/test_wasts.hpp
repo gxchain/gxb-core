@@ -13,9 +13,9 @@ static const char contract_test_wast_code[] = R"=====(
  (type $FUNCSIG$i (func (result i32)))
  (type $FUNCSIG$iii (func (param i32 i32) (result i32)))
  (type $FUNCSIG$j (func (result i64)))
+ (type $FUNCSIG$vii (func (param i32 i32)))
  (type $FUNCSIG$vjjjj (func (param i64 i64 i64 i64)))
  (type $FUNCSIG$ijjjj (func (param i64 i64 i64 i64) (result i32)))
- (type $FUNCSIG$vii (func (param i32 i32)))
  (type $FUNCSIG$vijii (func (param i32 i64 i32 i32)))
  (type $FUNCSIG$ijjjjii (func (param i64 i64 i64 i64 i32 i32) (result i32)))
  (type $FUNCSIG$vijjjj (func (param i32 i64 i64 i64 i64)))
@@ -55,57 +55,58 @@ static const char contract_test_wast_code[] = R"=====(
  (table 9 9 anyfunc)
  (elem (i32.const 0) $__wasm_nullptr $_ZN5hello3byeEy $_ZN8graphene8contract7depositEyNS_5assetE $_ZN8graphene8contract8withdrawEyyNS_5assetE $_ZN5hello2hiEy $__stdio_close $__stdout_write $__stdio_seek $__stdio_write)
  (memory $0 1)
- (data (i32.const 4) "\f0t\00\00")
+ (data (i32.const 4) "\10u\00\00")
  (data (i32.const 16) "Bye, \00")
  (data (i32.const 32) "Hello, \00")
  (data (i32.const 48) "withdraw trx origin: \00")
- (data (i32.const 80) "withdraw trx from: \00")
- (data (i32.const 112) "withdraw asset_id: \00")
- (data (i32.const 144) ", amount:\00")
- (data (i32.const 160) "\n\00")
- (data (i32.const 176) "object passed to iterator_to is not in multi_index\00")
- (data (i32.const 240) "account not found\00")
- (data (i32.const 272) "cannot pass end iterator to erase\00")
- (data (i32.const 320) "cannot increment end iterator\00")
- (data (i32.const 352) "cannot pass end iterator to modify\00")
- (data (i32.const 400) "object passed to modify is not in multi_index\00")
- (data (i32.const 448) "cannot modify objects in table of another contract\00")
- (data (i32.const 512) "asset_id == o.asset_id\00")
- (data (i32.const 544) "/usr/local/include/gxblib/asset.hpp\00")
- (data (i32.const 592) "operator-=\00")
- (data (i32.const 608) "updater cannot change primary key when modifying an object\00")
- (data (i32.const 672) "object passed to erase is not in multi_index\00")
- (data (i32.const 720) "cannot erase objects in table of another contract\00")
- (data (i32.const 784) "attempt to remove object that was not in multi_index\00")
- (data (i32.const 848) "error reading iterator\00")
- (data (i32.const 880) "deposit trx origin: \00")
- (data (i32.const 912) "deposit trx from: \00")
- (data (i32.const 944) "deposit asset_id: \00")
- (data (i32.const 976) "no deposit permission\00")
- (data (i32.const 1008) "balance: \00")
- (data (i32.const 1024) "owner exist, to modify\00")
- (data (i32.const 1056) "operator+=\00")
- (data (i32.const 1072) "cannot create objects in table of another contract\00")
- (data (i32.const 1136) "addbalance, owner: \00")
- (data (i32.const 1168) ", asset_id: \00")
- (data (i32.const 1184) ", amount: \00")
- (data (i32.const 9604) "X4\00\00")
- (data (i32.const 9616) "Assertion failed: %s (%s: %s: %d)\n\00")
- (data (i32.const 9652) "\c8%\00\00")
- (data (i32.const 9672) "\05\00\00\00\00\00\00\00\00\00\00\00\05\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\06\00\00\00\07\00\00\00h&\00\00\00\04\00\00\00\00\00\00\00\00\00\00\01\00\00\00\00\00\00\00\00\00\00\00\00\00\00\n\ff\ff\ff\ff\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00")
- (data (i32.const 10864) "\19\00\n\00\19\19\19\00\00\00\00\05\00\00\00\00\00\00\t\00\00\00\00\0b\00\00\00\00\00\00\00\00\19\00\11\n\19\19\19\03\n\07\00\01\1b\t\0b\18\00\00\t\06\0b\00\00\0b\00\06\19\00\00\00\19\19\19\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\0e\00\00\00\00\00\00\00\00\19\00\n\0d\19\19\19\00\0d\00\00\02\00\t\0e\00\00\00\t\00\0e\00\00\0e\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\0c\00\00\00\00\00\00\00\00\00\00\00\13\00\00\00\00\13\00\00\00\00\t\0c\00\00\00\00\00\0c\00\00\0c\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\10\00\00\00\00\00\00\00\00\00\00\00\0f\00\00\00\04\0f\00\00\00\00\t\10\00\00\00\00\00\10\00\00\10\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\12\00\00\00\00\00\00\00\00\00\00\00\11\00\00\00\00\11\00\00\00\00\t\12\00\00\00\00\00\12\00\00\12\00\00\1a\00\00\00\1a\1a\1a\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\1a\00\00\00\1a\1a\1a\00\00\00\00\00\00\t\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\14\00\00\00\00\00\00\00\00\00\00\00\17\00\00\00\00\17\00\00\00\00\t\14\00\00\00\00\00\14\00\00\14\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\16\00\00\00\00\00\00\00\00\00\00\00\15\00\00\00\00\15\00\00\00\00\t\16\00\00\00\00\00\16\00\00\16\00\00")
- (data (i32.const 11328) "0123456789ABCDEF")
- (data (i32.const 11344) "-+   0X0x\00")
- (data (i32.const 11360) "(null)\00")
- (data (i32.const 11376) "-0X+0X 0X-0x+0x 0x\00")
- (data (i32.const 11408) "inf\00")
- (data (i32.const 11424) "INF\00")
- (data (i32.const 11440) "nan\00")
- (data (i32.const 11456) "NAN\00")
- (data (i32.const 11472) ".\00")
- (data (i32.const 11488) "T!\"\19\0d\01\02\03\11K\1c\0c\10\04\0b\1d\12\1e\'hnopqb \05\06\0f\13\14\15\1a\08\16\07($\17\18\t\n\0e\1b\1f%#\83\82}&*+<=>?CGJMXYZ[\\]^_`acdefgijklrstyz{|\00")
- (data (i32.const 11584) "Illegal byte sequence\00Domain error\00Result not representable\00Not a tty\00Permission denied\00Operation not permitted\00No such file or directory\00No such process\00File exists\00Value too large for data type\00No space left on device\00Out of memory\00Resource busy\00Interrupted system call\00Resource temporarily unavailable\00Invalid seek\00Cross-device link\00Read-only file system\00Directory not empty\00Connection reset by peer\00Operation timed out\00Connection refused\00Host is down\00Host is unreachable\00Address in use\00Broken pipe\00I/O error\00No such device or address\00Block device required\00No such device\00Not a directory\00Is a directory\00Text file busy\00Exec format error\00Invalid argument\00Argument list too long\00Symbolic link loop\00Filename too long\00Too many open files in system\00No file descriptors available\00Bad file descriptor\00No child process\00Bad address\00File too large\00Too many links\00No locks available\00Resource deadlock would occur\00State not recoverable\00Previous owner died\00Operation canceled\00Function not implemented\00No message of desired type\00Identifier removed\00Device not a stream\00No data available\00Device timeout\00Out of streams resources\00Link has been severed\00Protocol error\00Bad message\00File descriptor in bad state\00Not a socket\00Destination address required\00Message too large\00Protocol wrong type for socket\00Protocol not available\00Protocol not supported\00Socket type not supported\00Not supported\00Protocol family not supported\00Address family not supported by protocol\00Address not available\00Network is down\00Network unreachable\00Connection reset by network\00Connection aborted\00No buffer space available\00Socket is connected\00Socket not connected\00Cannot send after socket shutdown\00Operation already in progress\00Operation in progress\00Stale file handle\00Remote I/O error\00Quota exceeded\00No medium found\00Wrong medium type\00No error information\00\00")
- (data (i32.const 13400) "\05\00\00\00\00\00\00\00\00\00\00\00\05\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\08\00\00\00\07\00\00\00\f04\00\00\00\00\00\00\00\00\00\00\00\00\00\00\02\00\00\00\00\00\00\00\00\00\00\00\00\00\00\ff\ff\ff\ff\ff\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00")
+ (data (i32.const 80) "\n\00")
+ (data (i32.const 96) "withdraw trx from: \00")
+ (data (i32.const 128) "withdraw asset_id: \00")
+ (data (i32.const 160) ", amount:\00")
+ (data (i32.const 176) "no withdraw permission\00")
+ (data (i32.const 208) "object passed to iterator_to is not in multi_index\00")
+ (data (i32.const 272) "account not found\00")
+ (data (i32.const 304) "cannot pass end iterator to erase\00")
+ (data (i32.const 352) "cannot increment end iterator\00")
+ (data (i32.const 384) "cannot pass end iterator to modify\00")
+ (data (i32.const 432) "object passed to modify is not in multi_index\00")
+ (data (i32.const 480) "cannot modify objects in table of another contract\00")
+ (data (i32.const 544) "asset_id == o.asset_id\00")
+ (data (i32.const 576) "/usr/local/include/gxblib/asset.hpp\00")
+ (data (i32.const 624) "operator-=\00")
+ (data (i32.const 640) "updater cannot change primary key when modifying an object\00")
+ (data (i32.const 704) "object passed to erase is not in multi_index\00")
+ (data (i32.const 752) "cannot erase objects in table of another contract\00")
+ (data (i32.const 816) "attempt to remove object that was not in multi_index\00")
+ (data (i32.const 880) "error reading iterator\00")
+ (data (i32.const 912) "deposit trx origin: \00")
+ (data (i32.const 944) "deposit trx from: \00")
+ (data (i32.const 976) "deposit asset_id: \00")
+ (data (i32.const 1008) "no deposit permission\00")
+ (data (i32.const 1040) "balance: \00")
+ (data (i32.const 1056) "owner exist, to modify\00")
+ (data (i32.const 1088) "operator+=\00")
+ (data (i32.const 1104) "cannot create objects in table of another contract\00")
+ (data (i32.const 1168) "addbalance, owner: \00")
+ (data (i32.const 1200) ", asset_id: \00")
+ (data (i32.const 1216) ", amount: \00")
+ (data (i32.const 9636) "x4\00\00")
+ (data (i32.const 9648) "Assertion failed: %s (%s: %s: %d)\n\00")
+ (data (i32.const 9684) "\e8%\00\00")
+ (data (i32.const 9704) "\05\00\00\00\00\00\00\00\00\00\00\00\05\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\06\00\00\00\07\00\00\00\88&\00\00\00\04\00\00\00\00\00\00\00\00\00\00\01\00\00\00\00\00\00\00\00\00\00\00\00\00\00\n\ff\ff\ff\ff\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00")
+ (data (i32.const 10896) "\19\00\n\00\19\19\19\00\00\00\00\05\00\00\00\00\00\00\t\00\00\00\00\0b\00\00\00\00\00\00\00\00\19\00\11\n\19\19\19\03\n\07\00\01\1b\t\0b\18\00\00\t\06\0b\00\00\0b\00\06\19\00\00\00\19\19\19\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\0e\00\00\00\00\00\00\00\00\19\00\n\0d\19\19\19\00\0d\00\00\02\00\t\0e\00\00\00\t\00\0e\00\00\0e\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\0c\00\00\00\00\00\00\00\00\00\00\00\13\00\00\00\00\13\00\00\00\00\t\0c\00\00\00\00\00\0c\00\00\0c\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\10\00\00\00\00\00\00\00\00\00\00\00\0f\00\00\00\04\0f\00\00\00\00\t\10\00\00\00\00\00\10\00\00\10\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\12\00\00\00\00\00\00\00\00\00\00\00\11\00\00\00\00\11\00\00\00\00\t\12\00\00\00\00\00\12\00\00\12\00\00\1a\00\00\00\1a\1a\1a\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\1a\00\00\00\1a\1a\1a\00\00\00\00\00\00\t\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\14\00\00\00\00\00\00\00\00\00\00\00\17\00\00\00\00\17\00\00\00\00\t\14\00\00\00\00\00\14\00\00\14\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\16\00\00\00\00\00\00\00\00\00\00\00\15\00\00\00\00\15\00\00\00\00\t\16\00\00\00\00\00\16\00\00\16\00\00")
+ (data (i32.const 11360) "0123456789ABCDEF")
+ (data (i32.const 11376) "-+   0X0x\00")
+ (data (i32.const 11392) "(null)\00")
+ (data (i32.const 11408) "-0X+0X 0X-0x+0x 0x\00")
+ (data (i32.const 11440) "inf\00")
+ (data (i32.const 11456) "INF\00")
+ (data (i32.const 11472) "nan\00")
+ (data (i32.const 11488) "NAN\00")
+ (data (i32.const 11504) ".\00")
+ (data (i32.const 11520) "T!\"\19\0d\01\02\03\11K\1c\0c\10\04\0b\1d\12\1e\'hnopqb \05\06\0f\13\14\15\1a\08\16\07($\17\18\t\n\0e\1b\1f%#\83\82}&*+<=>?CGJMXYZ[\\]^_`acdefgijklrstyz{|\00")
+ (data (i32.const 11616) "Illegal byte sequence\00Domain error\00Result not representable\00Not a tty\00Permission denied\00Operation not permitted\00No such file or directory\00No such process\00File exists\00Value too large for data type\00No space left on device\00Out of memory\00Resource busy\00Interrupted system call\00Resource temporarily unavailable\00Invalid seek\00Cross-device link\00Read-only file system\00Directory not empty\00Connection reset by peer\00Operation timed out\00Connection refused\00Host is down\00Host is unreachable\00Address in use\00Broken pipe\00I/O error\00No such device or address\00Block device required\00No such device\00Not a directory\00Is a directory\00Text file busy\00Exec format error\00Invalid argument\00Argument list too long\00Symbolic link loop\00Filename too long\00Too many open files in system\00No file descriptors available\00Bad file descriptor\00No child process\00Bad address\00File too large\00Too many links\00No locks available\00Resource deadlock would occur\00State not recoverable\00Previous owner died\00Operation canceled\00Function not implemented\00No message of desired type\00Identifier removed\00Device not a stream\00No data available\00Device timeout\00Out of streams resources\00Link has been severed\00Protocol error\00Bad message\00File descriptor in bad state\00Not a socket\00Destination address required\00Message too large\00Protocol wrong type for socket\00Protocol not available\00Protocol not supported\00Socket type not supported\00Not supported\00Protocol family not supported\00Address family not supported by protocol\00Address not available\00Network is down\00Network unreachable\00Connection reset by network\00Connection aborted\00No buffer space available\00Socket is connected\00Socket not connected\00Cannot send after socket shutdown\00Operation already in progress\00Operation in progress\00Stale file handle\00Remote I/O error\00Quota exceeded\00No medium found\00Wrong medium type\00No error information\00\00")
+ (data (i32.const 13432) "\05\00\00\00\00\00\00\00\00\00\00\00\05\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\08\00\00\00\07\00\00\00\105\00\00\00\00\00\00\00\00\00\00\00\00\00\00\02\00\00\00\00\00\00\00\00\00\00\00\00\00\00\ff\ff\ff\ff\ff\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00")
  (export "memory" (memory $0))
  (export "_ZeqRK11checksum256S1_" (func $_ZeqRK11checksum256S1_))
  (export "_ZeqRK11checksum160S1_" (func $_ZeqRK11checksum160S1_))
@@ -487,25 +488,25 @@ static const char contract_test_wast_code[] = R"=====(
    (call $get_trx_origin)
   )
   (call $prints
-   (i32.const 880)
+   (i32.const 912)
   )
   (call $printi
    (get_local $6)
   )
   (call $prints
-   (i32.const 160)
+   (i32.const 80)
   )
   (call $prints
-   (i32.const 912)
+   (i32.const 944)
   )
   (call $printui
    (get_local $1)
   )
   (call $prints
-   (i32.const 160)
+   (i32.const 80)
   )
   (call $prints
-   (i32.const 944)
+   (i32.const 976)
   )
   (call $printui
    (tee_local $6
@@ -515,7 +516,7 @@ static const char contract_test_wast_code[] = R"=====(
    )
   )
   (call $prints
-   (i32.const 144)
+   (i32.const 160)
   )
   (call $printui
    (tee_local $7
@@ -525,14 +526,14 @@ static const char contract_test_wast_code[] = R"=====(
    )
   )
   (call $prints
-   (i32.const 160)
+   (i32.const 80)
   )
   (call $gxb_assert
    (i64.eq
     (call $get_trx_origin)
     (get_local $1)
    )
-   (i32.const 976)
+   (i32.const 1008)
   )
   (call $transfer_asset
    (get_local $1)
@@ -702,7 +703,7 @@ static const char contract_test_wast_code[] = R"=====(
         )
         (get_local $2)
        )
-       (i32.const 176)
+       (i32.const 208)
       )
       (br_if $label$4
        (get_local $5)
@@ -744,7 +745,7 @@ static const char contract_test_wast_code[] = R"=====(
        )
        (get_local $2)
       )
-      (i32.const 176)
+      (i32.const 208)
      )
     )
     (set_local $1
@@ -755,20 +756,20 @@ static const char contract_test_wast_code[] = R"=====(
     (br $label$2)
    )
    (call $prints
-    (i32.const 240)
+    (i32.const 272)
    )
    (set_local $1
     (i64.const 0)
    )
   )
   (call $prints
-   (i32.const 1008)
+   (i32.const 1040)
   )
   (call $printui
    (get_local $1)
   )
   (call $prints
-   (i32.const 160)
+   (i32.const 80)
   )
   (i32.store offset=4
    (i32.const 0)
@@ -1096,11 +1097,17 @@ static const char contract_test_wast_code[] = R"=====(
   (call $prints
    (i32.const 80)
   )
+  (call $prints
+   (i32.const 96)
+  )
   (call $printui
    (get_local $1)
   )
   (call $prints
-   (i32.const 112)
+   (i32.const 80)
+  )
+  (call $prints
+   (i32.const 128)
   )
   (call $printui
    (tee_local $4
@@ -1110,7 +1117,7 @@ static const char contract_test_wast_code[] = R"=====(
    )
   )
   (call $prints
-   (i32.const 144)
+   (i32.const 160)
   )
   (call $printui
    (tee_local $5
@@ -1120,7 +1127,14 @@ static const char contract_test_wast_code[] = R"=====(
    )
   )
   (call $prints
-   (i32.const 160)
+   (i32.const 80)
+  )
+  (call $gxb_assert
+   (i64.eq
+    (call $get_trx_origin)
+    (get_local $1)
+   )
+   (i32.const 176)
   )
   (i64.store
    (tee_local $6
@@ -1831,7 +1845,7 @@ static const char contract_test_wast_code[] = R"=====(
          )
          (get_local $5)
         )
-        (i32.const 176)
+        (i32.const 208)
        )
        (br_if $label$5
         (get_local $6)
@@ -1873,7 +1887,7 @@ static const char contract_test_wast_code[] = R"=====(
         )
         (get_local $5)
        )
-       (i32.const 176)
+       (i32.const 208)
       )
      )
      (br_if $label$3
@@ -1888,11 +1902,11 @@ static const char contract_test_wast_code[] = R"=====(
      )
      (call $gxb_assert
       (i32.const 1)
-      (i32.const 272)
+      (i32.const 304)
      )
      (call $gxb_assert
       (i32.const 1)
-      (i32.const 320)
+      (i32.const 352)
      )
      (block $label$7
       (br_if $label$7
@@ -1925,7 +1939,7 @@ static const char contract_test_wast_code[] = R"=====(
      (br $label$2)
     )
     (call $prints
-     (i32.const 240)
+     (i32.const 272)
     )
     (br $label$2)
    )
@@ -1935,7 +1949,7 @@ static const char contract_test_wast_code[] = R"=====(
    )
    (call $gxb_assert
     (i32.const 1)
-    (i32.const 352)
+    (i32.const 384)
    )
    (call $_ZN8graphene11multi_indexILy3607749779137757184ENS_8contract7accountEJEE6modifyIZNS1_10subbalanceEyNS_5assetEEUlRT_E_EEvRKS2_yOS6_
     (get_local $5)
@@ -2071,7 +2085,7 @@ static const char contract_test_wast_code[] = R"=====(
      )
      (i32.const 1)
     )
-    (i32.const 848)
+    (i32.const 880)
    )
    (block $label$4
     (block $label$5
@@ -2301,7 +2315,7 @@ static const char contract_test_wast_code[] = R"=====(
     )
     (get_local $0)
    )
-   (i32.const 672)
+   (i32.const 704)
   )
   (call $gxb_assert
    (i64.eq
@@ -2310,7 +2324,7 @@ static const char contract_test_wast_code[] = R"=====(
     )
     (call $current_receiver)
    )
-   (i32.const 720)
+   (i32.const 752)
   )
   (block $label$0
    (br_if $label$0
@@ -2387,7 +2401,7 @@ static const char contract_test_wast_code[] = R"=====(
     (get_local $7)
     (get_local $3)
    )
-   (i32.const 784)
+   (i32.const 816)
   )
   (set_local $8
    (i32.add
@@ -2566,7 +2580,7 @@ static const char contract_test_wast_code[] = R"=====(
     )
     (get_local $0)
    )
-   (i32.const 400)
+   (i32.const 432)
   )
   (call $gxb_assert
    (i64.eq
@@ -2575,7 +2589,7 @@ static const char contract_test_wast_code[] = R"=====(
     )
     (call $current_receiver)
    )
-   (i32.const 448)
+   (i32.const 480)
   )
   (block $label$0
    (br_if $label$0
@@ -2615,7 +2629,7 @@ static const char contract_test_wast_code[] = R"=====(
    )
    (call $gxb_assert
     (i32.const 1)
-    (i32.const 608)
+    (i32.const 640)
    )
    (i32.store offset=4
     (i32.const 0)
@@ -2700,10 +2714,10 @@ static const char contract_test_wast_code[] = R"=====(
    (return)
   )
   (call $__assert_fail
-   (i32.const 512)
    (i32.const 544)
+   (i32.const 576)
    (i32.const 30)
-   (i32.const 592)
+   (i32.const 624)
   )
   (unreachable)
  )
@@ -3150,7 +3164,7 @@ static const char contract_test_wast_code[] = R"=====(
         )
         (get_local $6)
        )
-       (i32.const 176)
+       (i32.const 208)
       )
       (br_if $label$4
        (get_local $5)
@@ -3192,11 +3206,11 @@ static const char contract_test_wast_code[] = R"=====(
        )
        (get_local $6)
       )
-      (i32.const 176)
+      (i32.const 208)
      )
     )
     (call $prints
-     (i32.const 1024)
+     (i32.const 1056)
     )
     (i32.store offset=16
      (get_local $8)
@@ -3204,7 +3218,7 @@ static const char contract_test_wast_code[] = R"=====(
     )
     (call $gxb_assert
      (i32.const 1)
-     (i32.const 352)
+     (i32.const 384)
     )
     (call $_ZN8graphene11multi_indexILy3607749779137757184ENS_8contract7accountEJEE6modifyIZNS1_10addbalanceEyNS_5assetEEUlRT_E0_EEvRKS2_yOS6_
      (get_local $6)
@@ -3276,7 +3290,7 @@ static const char contract_test_wast_code[] = R"=====(
     )
     (call $current_receiver)
    )
-   (i32.const 1072)
+   (i32.const 1104)
   )
   (i32.store offset=20
    (get_local $7)
@@ -3456,7 +3470,7 @@ static const char contract_test_wast_code[] = R"=====(
     )
     (get_local $0)
    )
-   (i32.const 400)
+   (i32.const 432)
   )
   (call $gxb_assert
    (i64.eq
@@ -3465,7 +3479,7 @@ static const char contract_test_wast_code[] = R"=====(
     )
     (call $current_receiver)
    )
-   (i32.const 448)
+   (i32.const 480)
   )
   (block $label$0
    (br_if $label$0
@@ -3505,7 +3519,7 @@ static const char contract_test_wast_code[] = R"=====(
    )
    (call $gxb_assert
     (i32.const 1)
-    (i32.const 608)
+    (i32.const 640)
    )
    (i32.store offset=4
     (i32.const 0)
@@ -3590,10 +3604,10 @@ static const char contract_test_wast_code[] = R"=====(
    (return)
   )
   (call $__assert_fail
-   (i32.const 512)
    (i32.const 544)
+   (i32.const 576)
    (i32.const 24)
-   (i32.const 1056)
+   (i32.const 1088)
   )
   (unreachable)
  )
@@ -3635,7 +3649,7 @@ static const char contract_test_wast_code[] = R"=====(
    )
   )
   (call $prints
-   (i32.const 1136)
+   (i32.const 1168)
   )
   (call $printui
    (i64.load
@@ -3643,7 +3657,7 @@ static const char contract_test_wast_code[] = R"=====(
    )
   )
   (call $prints
-   (i32.const 1168)
+   (i32.const 1200)
   )
   (call $printui
    (i64.load offset=8
@@ -3651,7 +3665,7 @@ static const char contract_test_wast_code[] = R"=====(
    )
   )
   (call $prints
-   (i32.const 1184)
+   (i32.const 1216)
   )
   (call $printui
    (i64.load
@@ -3659,7 +3673,7 @@ static const char contract_test_wast_code[] = R"=====(
    )
   )
   (call $prints
-   (i32.const 160)
+   (i32.const 80)
   )
   (i64.store
    (get_local $1)
@@ -3781,7 +3795,7 @@ static const char contract_test_wast_code[] = R"=====(
  )
  (func $malloc (param $0 i32) (result i32)
   (call $_ZN8graphene14memory_manager6mallocEm
-   (i32.const 1196)
+   (i32.const 1228)
    (get_local $0)
   )
  )
@@ -4237,13 +4251,13 @@ static const char contract_test_wast_code[] = R"=====(
    (block $label$1
     (br_if $label$1
      (i32.eqz
-      (i32.load8_u offset=9592
+      (i32.load8_u offset=9624
        (i32.const 0)
       )
      )
     )
     (set_local $7
-     (i32.load offset=9596
+     (i32.load offset=9628
       (i32.const 0)
      )
     )
@@ -4252,11 +4266,11 @@ static const char contract_test_wast_code[] = R"=====(
    (set_local $7
     (current_memory)
    )
-   (i32.store8 offset=9592
+   (i32.store8 offset=9624
     (i32.const 0)
     (i32.const 1)
    )
-   (i32.store offset=9596
+   (i32.store offset=9628
     (i32.const 0)
     (tee_local $7
      (i32.shl
@@ -4307,7 +4321,7 @@ static const char contract_test_wast_code[] = R"=====(
        )
       )
       (set_local $3
-       (i32.load offset=9596
+       (i32.load offset=9628
         (i32.const 0)
        )
       )
@@ -4315,7 +4329,7 @@ static const char contract_test_wast_code[] = R"=====(
      (set_local $8
       (i32.const 0)
      )
-     (i32.store offset=9596
+     (i32.store offset=9628
       (i32.const 0)
       (get_local $3)
      )
@@ -4369,18 +4383,18 @@ static const char contract_test_wast_code[] = R"=====(
      )
      (block $label$6
       (br_if $label$6
-       (i32.load8_u offset=9592
+       (i32.load8_u offset=9624
         (i32.const 0)
        )
       )
       (set_local $3
        (current_memory)
       )
-      (i32.store8 offset=9592
+      (i32.store8 offset=9624
        (i32.const 0)
        (i32.const 1)
       )
-      (i32.store offset=9596
+      (i32.store offset=9628
        (i32.const 0)
        (tee_local $3
         (i32.shl
@@ -4448,12 +4462,12 @@ static const char contract_test_wast_code[] = R"=====(
        )
       )
       (set_local $6
-       (i32.load offset=9596
+       (i32.load offset=9628
         (i32.const 0)
        )
       )
      )
-     (i32.store offset=9596
+     (i32.store offset=9628
       (i32.const 0)
       (i32.add
        (get_local $6)
@@ -4713,7 +4727,7 @@ static const char contract_test_wast_code[] = R"=====(
     (br_if $label$1
      (i32.lt_s
       (tee_local $2
-       (i32.load offset=9580
+       (i32.load offset=9612
         (i32.const 0)
        )
       )
@@ -4721,7 +4735,7 @@ static const char contract_test_wast_code[] = R"=====(
      )
     )
     (set_local $3
-     (i32.const 9388)
+     (i32.const 9420)
     )
     (set_local $1
      (i32.add
@@ -4729,7 +4743,7 @@ static const char contract_test_wast_code[] = R"=====(
        (get_local $2)
        (i32.const 12)
       )
-      (i32.const 9388)
+      (i32.const 9420)
      )
     )
     (loop $label$2
@@ -4820,7 +4834,7 @@ static const char contract_test_wast_code[] = R"=====(
     )
     (i32.store8
      (tee_local $0
-      (i32.load offset=9600
+      (i32.load offset=9632
        (i32.const 0)
       )
      )
@@ -4894,10 +4908,10 @@ static const char contract_test_wast_code[] = R"=====(
   )
   (drop
    (call $fprintf
-    (i32.load offset=9604
+    (i32.load offset=9636
      (i32.const 0)
     )
-    (i32.const 9616)
+    (i32.const 9648)
     (get_local $4)
    )
   )
@@ -5072,14 +5086,14 @@ static const char contract_test_wast_code[] = R"=====(
      (block $label$7
       (br_if $label$7
        (i32.eqz
-        (i32.load offset=9652
+        (i32.load offset=9684
          (i32.const 0)
         )
        )
       )
       (set_local $5
        (call $fflush
-        (i32.load offset=9652
+        (i32.load offset=9684
          (i32.const 0)
         )
        )
@@ -5311,9 +5325,9 @@ static const char contract_test_wast_code[] = R"=====(
  )
  (func $__ofl_lock (result i32)
   (call $__lock
-   (i32.const 9656)
+   (i32.const 9688)
   )
-  (i32.const 9664)
+  (i32.const 9696)
  )
  (func $__lockfile (param $0 i32) (result i32)
   (local $1 i32)
@@ -5323,7 +5337,7 @@ static const char contract_test_wast_code[] = R"=====(
  )
  (func $__ofl_unlock
   (call $__unlock
-   (i32.const 9656)
+   (i32.const 9688)
   )
  )
  (func $__unlock (param $0 i32)
@@ -6597,7 +6611,7 @@ static const char contract_test_wast_code[] = R"=====(
                             )
                             (get_local $30)
                            )
-                           (i32.const 10864)
+                           (i32.const 10896)
                           )
                          )
                         )
@@ -6729,7 +6743,7 @@ static const char contract_test_wast_code[] = R"=====(
                      (i32.const 0)
                     )
                     (set_local $24
-                     (i32.const 11344)
+                     (i32.const 11376)
                     )
                     (block $label$49
                      (block $label$50
@@ -6881,7 +6895,7 @@ static const char contract_test_wast_code[] = R"=====(
                                                                                    (i32.const 1)
                                                                                   )
                                                                                   (set_local $19
-                                                                                   (i32.const 11376)
+                                                                                   (i32.const 11408)
                                                                                   )
                                                                                   (br $label$107)
                                                                                  )
@@ -6893,8 +6907,8 @@ static const char contract_test_wast_code[] = R"=====(
                                                                                  )
                                                                                  (set_local $19
                                                                                   (select
-                                                                                   (i32.const 11382)
-                                                                                   (i32.const 11377)
+                                                                                   (i32.const 11414)
+                                                                                   (i32.const 11409)
                                                                                    (tee_local $20
                                                                                     (i32.and
                                                                                      (get_local $18)
@@ -6923,8 +6937,8 @@ static const char contract_test_wast_code[] = R"=====(
                                                                                 )
                                                                                 (set_local $24
                                                                                  (select
-                                                                                  (i32.const 11346)
-                                                                                  (i32.const 11344)
+                                                                                  (i32.const 11378)
+                                                                                  (i32.const 11376)
                                                                                   (tee_local $26
                                                                                    (i32.and
                                                                                     (get_local $18)
@@ -6945,7 +6959,7 @@ static const char contract_test_wast_code[] = R"=====(
                                                                                 (i32.const 1)
                                                                                )
                                                                                (set_local $19
-                                                                                (i32.const 11379)
+                                                                                (i32.const 11411)
                                                                                )
                                                                               )
                                                                               (block $label$113
@@ -7608,7 +7622,7 @@ static const char contract_test_wast_code[] = R"=====(
                                                                         (i32.const 0)
                                                                        )
                                                                        (set_local $24
-                                                                        (i32.const 11344)
+                                                                        (i32.const 11376)
                                                                        )
                                                                        (br_if $label$81
                                                                         (get_local $16)
@@ -7639,7 +7653,7 @@ static const char contract_test_wast_code[] = R"=====(
                                                                       (i32.const 0)
                                                                      )
                                                                      (set_local $24
-                                                                      (i32.const 11344)
+                                                                      (i32.const 11376)
                                                                      )
                                                                      (block $label$124
                                                                       (br_if $label$124
@@ -7677,7 +7691,7 @@ static const char contract_test_wast_code[] = R"=====(
                                                                             )
                                                                             (i32.const 15)
                                                                            )
-                                                                           (i32.const 11328)
+                                                                           (i32.const 11360)
                                                                           )
                                                                          )
                                                                          (get_local $30)
@@ -7716,7 +7730,7 @@ static const char contract_test_wast_code[] = R"=====(
                                                                          (get_local $29)
                                                                          (i32.const 4)
                                                                         )
-                                                                        (i32.const 11344)
+                                                                        (i32.const 11376)
                                                                        )
                                                                       )
                                                                       (set_local $26
@@ -7742,7 +7756,7 @@ static const char contract_test_wast_code[] = R"=====(
                                                                         (get_local $39)
                                                                        )
                                                                       )
-                                                                      (i32.const 11360)
+                                                                      (i32.const 11392)
                                                                       (get_local $30)
                                                                      )
                                                                     )
@@ -7786,7 +7800,7 @@ static const char contract_test_wast_code[] = R"=====(
                                                                    (i32.const 0)
                                                                   )
                                                                   (set_local $24
-                                                                   (i32.const 11344)
+                                                                   (i32.const 11376)
                                                                   )
                                                                   (br_if $label$86
                                                                    (i64.ge_u
@@ -7850,8 +7864,8 @@ static const char contract_test_wast_code[] = R"=====(
                                                                  (call $__fwritex
                                                                   (select
                                                                    (select
-                                                                    (i32.const 11440)
-                                                                    (i32.const 11456)
+                                                                    (i32.const 11472)
+                                                                    (i32.const 11488)
                                                                     (tee_local $30
                                                                      (i32.shr_u
                                                                       (i32.and
@@ -7863,8 +7877,8 @@ static const char contract_test_wast_code[] = R"=====(
                                                                     )
                                                                    )
                                                                    (select
-                                                                    (i32.const 11408)
-                                                                    (i32.const 11424)
+                                                                    (i32.const 11440)
+                                                                    (i32.const 11456)
                                                                     (get_local $30)
                                                                    )
                                                                    (get_local $16)
@@ -8036,7 +8050,7 @@ static const char contract_test_wast_code[] = R"=====(
                                                                (i32.const 1)
                                                               )
                                                               (set_local $24
-                                                               (i32.const 11344)
+                                                               (i32.const 11376)
                                                               )
                                                               (br_if $label$86
                                                                (i64.ge_u
@@ -9274,7 +9288,7 @@ static const char contract_test_wast_code[] = R"=====(
                                                            (i32.const 1)
                                                           )
                                                           (set_local $24
-                                                           (i32.const 11345)
+                                                           (i32.const 11377)
                                                           )
                                                           (br_if $label$85
                                                            (i64.lt_u
@@ -9374,8 +9388,8 @@ static const char contract_test_wast_code[] = R"=====(
                                                       )
                                                       (set_local $24
                                                        (select
-                                                        (i32.const 11344)
-                                                        (i32.const 11349)
+                                                        (i32.const 11376)
+                                                        (i32.const 11381)
                                                         (i32.gt_s
                                                          (get_local $36)
                                                          (tee_local $30
@@ -10397,7 +10411,7 @@ static const char contract_test_wast_code[] = R"=====(
                                                    (i32.load8_u
                                                     (i32.add
                                                      (get_local $17)
-                                                     (i32.const 11328)
+                                                     (i32.const 11360)
                                                     )
                                                    )
                                                    (get_local $37)
@@ -10530,7 +10544,7 @@ static const char contract_test_wast_code[] = R"=====(
                                                   (i32.load8_u
                                                    (i32.add
                                                     (get_local $17)
-                                                    (i32.const 11328)
+                                                    (i32.const 11360)
                                                    )
                                                   )
                                                   (get_local $37)
@@ -11151,7 +11165,7 @@ static const char contract_test_wast_code[] = R"=====(
                                             (i32.load8_u
                                              (i32.add
                                               (get_local $14)
-                                              (i32.const 11328)
+                                              (i32.const 11360)
                                              )
                                             )
                                             (get_local $37)
@@ -12745,7 +12759,7 @@ static const char contract_test_wast_code[] = R"=====(
                                  )
                                  (drop
                                   (call $__fwritex
-                                   (i32.const 11472)
+                                   (i32.const 11504)
                                    (i32.const 1)
                                    (get_local $0)
                                   )
@@ -13084,7 +13098,7 @@ static const char contract_test_wast_code[] = R"=====(
                                  )
                                  (drop
                                   (call $__fwritex
-                                   (i32.const 11472)
+                                   (i32.const 11504)
                                    (i32.const 1)
                                    (get_local $0)
                                   )
@@ -13457,7 +13471,7 @@ static const char contract_test_wast_code[] = R"=====(
                             )
                             (drop
                              (call $__fwritex
-                              (i32.const 11472)
+                              (i32.const 11504)
                               (i32.const 1)
                               (get_local $0)
                              )
@@ -14758,7 +14772,7 @@ static const char contract_test_wast_code[] = R"=====(
   )
  )
  (func $__errno_location (result i32)
-  (i32.const 13388)
+  (i32.const 13420)
  )
  (func $strerror (param $0 i32) (result i32)
   (local $1 i32)
@@ -14777,7 +14791,7 @@ static const char contract_test_wast_code[] = R"=====(
          (i32.load8_u
           (i32.add
            (get_local $2)
-           (i32.const 11488)
+           (i32.const 11520)
           )
          )
          (get_local $0)
@@ -14810,7 +14824,7 @@ static const char contract_test_wast_code[] = R"=====(
      )
     )
     (set_local $2
-     (i32.const 11584)
+     (i32.const 11616)
     )
     (loop $label$5
      (set_local $0
@@ -14844,7 +14858,7 @@ static const char contract_test_wast_code[] = R"=====(
     )
    )
    (set_local $3
-    (i32.const 11584)
+    (i32.const 11616)
    )
   )
   (call $__lctrans
@@ -16631,7 +16645,7 @@ static const char contract_test_wast_code[] = R"=====(
 
 static const char contract_abi [] = R"=====(
 {
-  "____comment": "This file was generated by gxb-abigen. DO NOT EDIT - 2018-07-13T03:24:34",
+  "____comment": "This file was generated by gxb-abigen. DO NOT EDIT - 2018-07-13T13:13:01",
   "version": "gxb::abi/1.0",
   "types": [{
       "new_type_name": "account_name",
