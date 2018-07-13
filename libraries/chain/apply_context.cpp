@@ -45,7 +45,7 @@ void apply_context::exec()
     exec_one();
 
     for (const auto &inline_action : _inline_actions) {
-        trx_context.dispatch_action(inline_action, inline_action.account);
+        trx_context.dispatch_action(inline_action, inline_action.contract_id.instance);
     }
 }
 
@@ -57,10 +57,8 @@ void apply_context::reset_console()
 
 void apply_context::execute_inline(action &&a)
 {
-    account_id_type contract_id = (account_id_type)(a.account & GRAPHENE_DB_MAX_INSTANCE_ID);
-    const account_object& contract_obj = contract_id(db());
-
-    FC_ASSERT(contract_obj.code.size() > 0, "inline action's code account ${account} does not exist", ("account", a.account));
+    const account_object& contract_obj = a.contract_id(db());
+    FC_ASSERT(contract_obj.code.size() > 0, "inline action's code account ${account} does not exist", ("account", a.contract_id));
 
     _inline_actions.emplace_back(move(a));
 }

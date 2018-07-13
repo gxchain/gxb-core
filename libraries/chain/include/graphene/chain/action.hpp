@@ -25,47 +25,43 @@ namespace graphene { namespace chain {
     *  were properly declared when it executes.
     */
    struct action {
-      uint64_t                 account;
-      action_name              name;
+      account_id_type          contract_id;
+      action_name              method_name;
       bytes                    data;
 
       action(){}
 
       template<typename T, std::enable_if_t<std::is_base_of<bytes, T>::value, int> = 1>
       action(const T& value ) {
-         account     = T::get_account();
-         name        = T::get_name();
+         contract_id     = T::get_account();
+         method_name     = T::get_name();
          data.assign(value.data(), value.data() + value.size());
       }
 
       template<typename T, std::enable_if_t<!std::is_base_of<bytes, T>::value, int> = 1>
       action(const T& value ) {
-         account     = T::get_account();
-         name        = T::get_name();
-         data        = fc::raw::pack(value);
+         contract_id     = T::get_account();
+         method_name     = T::get_name();
+         data            = fc::raw::pack(value);
       }
 
       action(uint64_t account, action_name name, const bytes& data )
-            : account(account), name(name), data(data) {
+            : contract_id(account), method_name(name), data(data) {
       }
 
       action(account_id_type account, action_name name, const bytes& data )
-            : account((uint64_t)account), name(name), data(data) {
+            : contract_id((uint64_t)account), method_name(name), data(data) {
       }
 
       template <typename T>
       T data_as() const
       {
-          FC_ASSERT(account == T::get_account());
-          FC_ASSERT(name == T::get_name());
+          FC_ASSERT(contract_id == T::get_account());
+          FC_ASSERT(method_name == T::get_name());
           return fc::raw::unpack<T>(data);
       }
    };
 
-   struct action_notice : public action {
-      uint64_t  receiver;
-   };
-
 } } /// namespace graphene::chain
 
-FC_REFLECT( graphene::chain::action, (account)(name)(data) )
+FC_REFLECT( graphene::chain::action, (contract_id)(method_name)(data) )

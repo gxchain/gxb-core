@@ -221,13 +221,13 @@ namespace impl {
       template<typename Resolver>
       static void add(mutable_variant_object &out, const char* name, const action& act, Resolver resolver) {
          mutable_variant_object mvo;
-         mvo("account", act.account);
-         mvo("name", act.name);
+         mvo("account", act.contract_id);
+         mvo("name", act.method_name);
 //         mvo("authorization", act.authorization);
 
-         auto abi = resolver(act.account);
+         auto abi = resolver(act.contract_id);
          if (abi.valid()) {
-            auto type = abi->get_action_type(act.name);
+            auto type = abi->get_action_type(act.method_name);
             if (!type.empty()) {
                mvo("data", abi->binary_to_variant(type, act.data));
                mvo("hex_data", act.data);
@@ -376,10 +376,10 @@ namespace impl {
       static void extract( const variant& v, action& act, Resolver resolver )
       {
          const variant_object& vo = v.get_object();
-         FC_ASSERT(vo.contains("account"), "Missing account");
-         FC_ASSERT(vo.contains("name"), "Missing name");
-         from_variant(vo["account"], act.account);
-         from_variant(vo["name"], act.name);
+         FC_ASSERT(vo.contains("contract_id"), "Missing account");
+         FC_ASSERT(vo.contains("method_name"), "Missing name");
+         from_variant(vo["contract_id"], act.contract_id);
+         from_variant(vo["method_name"], act.method_name);
 
 //         if (vo.contains("authorization")) {
 //            from_variant(vo["authorization"], act.authorization);
@@ -390,9 +390,9 @@ namespace impl {
             if( data.is_string() ) {
                from_variant(data, act.data);
             } else if ( data.is_object() ) {
-               auto abi = resolver(act.account);
+               auto abi = resolver(act.contract_id);
                if (abi.valid()) {
-                  auto type = abi->get_action_type(act.name);
+                  auto type = abi->get_action_type(act.method_name);
                   if (!type.empty()) {
                      act.data = std::move( abi->variant_to_binary( type, data ));
                   }
@@ -410,7 +410,7 @@ namespace impl {
          }
 
          FC_ASSERT(!act.data.empty(),
-                    "Failed to deserialize data for ${account}:${name}", ("account", act.account)("name", act.name));
+                    "Failed to deserialize data for ${contract_id}:${method_name}", ("contract_id", act.contract_id)("method_name", act.method_name));
       }
 
 //      template<typename Resolver>

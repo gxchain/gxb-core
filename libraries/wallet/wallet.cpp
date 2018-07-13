@@ -1064,8 +1064,8 @@
 
              contract_call_operation contract_call_op;
              contract_call_op.account = caller.id;
-             contract_call_op.act.account = uint64_t(contract_obj.id);
-             contract_call_op.act.name = string_to_name(method.c_str());
+             contract_call_op.act.contract_id = contract_obj.id;
+             contract_call_op.act.method_name = string_to_name(method.c_str());
              fc::variant action_args_var = fc::json::from_string(args, fc::json::relaxed_parser);
 
              abi_serializer abis(contract_obj.abi);
