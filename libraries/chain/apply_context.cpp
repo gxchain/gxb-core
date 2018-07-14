@@ -24,6 +24,7 @@ void apply_context::exec_one()
         try {
             wasm_interface &wasm = const_cast<wasm_interface &>(_db->wasmif);
             digest_type code_version{contract_obj.code_version};
+            dlog("call wasm runtime");
             wasm.apply(code_version, wasm_bytes, *this);
         } catch (const wasm_exit &) {
         }
