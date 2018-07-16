@@ -28,7 +28,7 @@ class skeleton
     /// @abi action
     void hi(account_name user)
     {
-        print("Hello, ", user);
+        print("Hello, ", user, "\n");
     }
 
     /// @abi action
@@ -75,23 +75,23 @@ class skeleton
     {
         auto it = accounts.find(owner);
         if (it == accounts.end()) {
-            print("account not found");
+            print("account not found\n");
             return;
         }
         
         
         int asset_index = 0;
         for(auto asset_it = it->assets.begin(); asset_it != it->assets.end(); ++asset_it) {
-            print("asset.id=", asset_it->asset_id, ", asset.amount=", asset_it->amount);
+            print("asset.id=", asset_it->asset_id, ", asset.amount=", asset_it->amount, "\n");
             if(asset_it->asset_id == value.asset_id) {
                 if(asset_it->amount == value.amount) {
-                    
                     accounts.modify(it, owner, [&](auto &a) {
                         a.assets.erase(asset_it);
-                        if(a.assets.size() == 0) {
-                            accounts.erase(it);
-                        }
                     });
+                    
+                    if(it->assets.size() == 0) {
+                        accounts.erase(it);
+                    }
                 } else if(asset_it->amount > value.amount) {
                     accounts.modify(it, owner, [&](auto &a) {
                         a.assets[asset_index] -= value;
@@ -99,6 +99,8 @@ class skeleton
                 } else {
                     gxb_assert(false, "asset_it->amount < value.amount");
                 }
+                
+                break;
             }
             
             asset_index++;
@@ -109,14 +111,14 @@ class skeleton
     {
         auto it = accounts.find(owner);
         if (it == accounts.end()) {
-            print("owner not exist, to add owner");
+            print("owner not exist, to add owner\n");
             accounts.emplace(owner, [&](auto &a) {
                 print("addbalance, owner: ", owner, ", asset_id: ", value.asset_id, ", amount: ", value.amount, "\n");
                 a.owner = owner;
                 a.assets.emplace_back(value);
             });
         } else {
-            print("owner exist, to modify");
+            print("owner exist, to modify\n");
             bool asset_exist = false;
             int asset_index = 0;
             for(auto asset_it = it->assets.begin(); asset_it != it->assets.end(); ++asset_it) {
@@ -125,13 +127,15 @@ class skeleton
                     accounts.modify(it, 0, [&](auto &a) {
                         a.assets[asset_index] += value;
                     });
+                    
+                    break;
                 }
                 
                 asset_index++;
             }
             
             if(!asset_exist) {
-                print("asset not exist, to add asset");
+                print("asset not exist, to add asset\n");
                 accounts.modify(it, 0, [&](auto &a) {
                     a.assets.emplace_back(value);
                 });
@@ -143,7 +147,7 @@ class skeleton
     {
         auto it = accounts.find(owner);
         if (it == accounts.end()) {
-            print("account not found");
+            print("account not found\n");
             return 0;
         }
         

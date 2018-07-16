@@ -152,8 +152,8 @@ void_result contract_deposit_evaluator::do_apply(const contract_deposit_operatio
     ss << std::to_string((uint64_t)op.from.instance);
     ss << ",\"value\":{\"amount\":";
     ss << std::to_string(op.amount.amount.value);
-    ss << ",\"asset_id\":";
-    ss << std::string(object_id_type(op.amount.asset_id));
+    ss << ",\"contract_asset_id\":";
+    ss << object_id_type(op.amount.asset_id).instance();
     ss << "}}";
     idump((ss.str()));
 
