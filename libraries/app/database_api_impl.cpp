@@ -136,7 +136,7 @@ fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope,
     abi_serializer abis(account_obj->abi);
 
     const auto &table_idx = _db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
-    auto existing_tid = table_idx.find(boost::make_tuple(code, name(scope), name(table)));
+    auto existing_tid = table_idx.find(boost::make_tuple(code & GRAPHENE_DB_MAX_INSTANCE_ID, name(scope & GRAPHENE_DB_MAX_INSTANCE_ID), name(table)));
     if (existing_tid != table_idx.end()) {
         decltype(existing_tid->id) next_tid(existing_tid->id + 1);
         const auto &kv_idx = _db.get_index_type<key_value_index>().indices().get<by_scope_primary>();
@@ -150,10 +150,7 @@ fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope,
         for(auto it = lower; it != upper; ++it) {
             if(fc::time_point::now() > end) break;
             copy_inline_row(*it, data);
-            if(tname.to_string() == "accounts")
-                result.emplace_back(abis.binary_to_variant("addbalance", data));
-            else
-                result.emplace_back(abis.binary_to_variant(tname.to_string(), data));
+            result.emplace_back(abis.binary_to_variant(tname.to_string(), data));
         }
     }
     return result;
