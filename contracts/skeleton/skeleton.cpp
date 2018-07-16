@@ -17,6 +17,8 @@ class skeleton
         vector<asset>   assets;
 
         uint64_t primary_key() const { return owner; }
+        
+        GXBLIB_SERIALIZE(account, (owner)(assets))
     };
 
     typedef graphene::multi_index<N(account), account> account_index;
@@ -134,7 +136,6 @@ class skeleton
                     a.assets.emplace_back(value);
                 });
             }
-
         }
     }
 

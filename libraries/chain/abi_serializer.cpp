@@ -8,6 +8,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <fc/io/varint.hpp>
 #include <graphene/chain/symbol.hpp>
+#include <graphene/chain/protocol/contract_asset.hpp>
 
 using namespace boost;
 
@@ -88,7 +89,7 @@ namespace graphene { namespace chain {
 
       built_in_types.emplace("symbol",                    pack_unpack<symbol>());
       built_in_types.emplace("symbol_code",               pack_unpack<symbol_code>());
-      built_in_types.emplace("asset",                     pack_unpack<asset>());
+      built_in_types.emplace("asset",                     pack_unpack<contract_asset>());
 //      built_in_types.emplace("extended_asset",            pack_unpack<extended_asset>());
    }
 
