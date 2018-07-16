@@ -19,12 +19,11 @@ void apply_context::exec_one()
     try {
         account_id_type contract_id = (account_id_type)(receiver & GRAPHENE_DB_MAX_INSTANCE_ID);
         auto &contract_obj = contract_id(*_db);
-        dlog("contract receiver: ${r}", ("r", receiver));
+        dlog("contract id: ${r}", ("r", contract_id));
         auto wasm_bytes = bytes(contract_obj.code.begin(), contract_obj.code.end());
         try {
             wasm_interface &wasm = const_cast<wasm_interface &>(_db->wasmif);
             digest_type code_version{contract_obj.code_version};
-            dlog("call wasm runtime");
             wasm.apply(code_version, wasm_bytes, *this);
         } catch (const wasm_exit &) {
         }

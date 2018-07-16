@@ -25,6 +25,7 @@ class binaryen_instantiated_module : public wasm_instantiated_module_interface {
          LiteralList args = {Literal(uint64_t(context.receiver)),
 	                     Literal(uint64_t(context.act.contract_id.instance)),
                              Literal(uint64_t(context.act.method_name))};
+         idump((context.receiver)(context.act.contract_id.instance)(context.act.method_name));
          call("apply", args, context);
       }
 

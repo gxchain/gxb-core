@@ -43,7 +43,7 @@ class contract
         print("deposit trx origin: ", get_trx_origin(), "\n");
         print("deposit trx from: ",  from, "\n");
         print("deposit asset_id: ",  value.asset_id, ", amount:", value.amount, "\n");
-        // gxb_assert(get_trx_origin() == from, "no deposit permission");
+        gxb_assert(get_trx_origin() == from, "no deposit permission");
         // check amount
         // gxb_assert(get_trx_value() == value.amount);
 

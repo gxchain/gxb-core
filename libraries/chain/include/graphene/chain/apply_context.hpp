@@ -478,7 +478,7 @@ class apply_context {
          : act(a)
          , trx_context(trx_ctx)
          , _db(&d)
-         , receiver(a.contract_id)
+         , receiver(a.contract_id.instance)
          , idx64(*this)
          , idx128(*this)
          , idx256(*this)
