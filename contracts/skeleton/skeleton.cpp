@@ -15,7 +15,7 @@ class skeleton : public graphene::contract {
       /// @abi action
       void bye(account_name user) {
           for (int i =0; i < 2; ++i) {
-              print("Bye, ", user);
+              print("Bye, ", user, "\n");
           }
       }
 };
