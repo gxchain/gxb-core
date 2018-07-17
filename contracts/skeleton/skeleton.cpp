@@ -137,6 +137,7 @@ class skeleton
             if(!asset_exist) {
                 print("asset not exist, to add asset\n");
                 accounts.modify(it, 0, [&](auto &a) {
+                    a.assets.reserve(a.assets.size() + 1);
                     a.assets.emplace_back(value);
                 });
             }
