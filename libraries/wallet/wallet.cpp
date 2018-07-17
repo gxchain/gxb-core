@@ -1081,36 +1081,6 @@
              return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW( (account)(contract)(method)(args)(fee_asset_symbol)(broadcast)) }
 
-       signed_transaction deposit_asset_to_contract(string from,
-                                        string contract,
-                                        string amount,
-                                        string asset_symbol,
-                                        string fee_asset_symbol,
-                                        bool broadcast = false)
-       { try {
-             FC_ASSERT(!self.is_locked());
-             fc::optional<asset_object> fee_asset_obj = get_asset(fee_asset_symbol);
-
-             fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
-             FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
-
-             account_object from_account_obj = get_account(from);
-             account_object contract_obj = get_account(contract);
-
-             contract_deposit_operation deposit_op;
-             deposit_op.from = from_account_obj.id;
-             deposit_op.to = contract_obj.id;
-             deposit_op.amount = asset_obj->amount_from_string(amount);
-
-             signed_transaction tx;
-             tx.operations.push_back(deposit_op);
-             set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
-             tx.validate();
-
-             return sign_transaction(tx, broadcast);
-       } FC_CAPTURE_AND_RETHROW( (from)(contract)(amount)(asset_symbol)(fee_asset_symbol)(broadcast)) }
-
-
        signed_transaction register_account(string name,
                                            public_key_type owner,
                                            public_key_type active,
@@ -4855,16 +4825,6 @@
                                       bool broadcast)
     {
         return my->call_contract(account, contract, method, args, fee_asset_symbol, broadcast);
-    }
-
-    signed_transaction wallet_api::deposit_asset_to_contract(string from,
-                                      string contract,
-                                      string amount,
-                                      string asset_symbol,
-                                      string fee_asset_symbol,
-                                      bool broadcast)
-    {
-        return my->deposit_asset_to_contract(from, contract, amount, asset_symbol, fee_asset_symbol, broadcast);
     }
 
     variant wallet_api::get_contract_tables(string contract) const

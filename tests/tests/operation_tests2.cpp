@@ -193,50 +193,6 @@ BOOST_AUTO_TEST_CASE(contract_test)
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE(deposit_contract_test)
-{ try {
-   ACTOR(alice);
-
-   transfer(account_id_type(), alice_id, asset(100000));
-   generate_block();
-
-   // create contract
-   BOOST_TEST_MESSAGE("contract deploy test");
-   contract_deploy_operation deploy_op;
-   deploy_op.account = alice_id;
-   deploy_op.name = "bob";
-   deploy_op.vm_type = "0";
-   deploy_op.vm_version = "0";
-   auto wasm = graphene::chain::wast_to_wasm(contract_test_wast_code);
-   deploy_op.code = bytes(wasm.begin(), wasm.end());
-   deploy_op.code_version = fc::sha256::hash(deploy_op.code);
-   deploy_op.abi = fc::json::from_string(contract_abi).as<abi_def>();
-   deploy_op.fee = asset(2000);
-   trx.operations.push_back(deploy_op);
-   set_expiration(db, trx);
-   sign(trx, alice_private_key);
-   idump((trx));
-   PUSH_TX(db, trx);
-   trx.clear();
-
-   auto& contract_obj = get_account("bob");
-
-   // call contract, action hi
-   BOOST_TEST_MESSAGE("contract deposit test");
-   contract_deposit_operation call_op;
-   call_op.from = alice_id;
-   call_op.to = contract_obj.id;;
-   call_op.amount = asset(2000);
-   call_op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(call_op);
-   trx.operations.push_back(call_op);
-   set_expiration(db, trx);
-   sign(trx, alice_private_key);
-   idump((trx));
-   PUSH_TX(db, trx);
-   trx.clear();
-
-} FC_LOG_AND_RETHROW() }
-
 BOOST_AUTO_TEST_CASE( withdraw_permission_test )
 { try {
    INVOKE(withdraw_permission_create);
