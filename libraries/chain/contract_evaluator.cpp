@@ -143,9 +143,6 @@ void_result contract_deposit_evaluator::do_evaluate(const contract_deposit_opera
 void_result contract_deposit_evaluator::do_apply(const contract_deposit_operation &op)
 { try {
     database& d = db();
-    // adjust balance
-    d.adjust_balance(op.from, -op.amount);
-    d.adjust_balance(op.to, op.amount);
 
     stringstream ss;
     ss << "{\"from\":";
