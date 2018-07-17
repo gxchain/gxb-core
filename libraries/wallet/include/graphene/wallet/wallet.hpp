@@ -2289,7 +2289,6 @@ FC_API( graphene::wallet::wallet_api,
         (register_account)
         (deploy_contract)
         (call_contract)
-        (deposit_asset_to_contract)
         (get_contract_tables)
         (get_table_objects)
         (register_account2)
