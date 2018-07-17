@@ -51,12 +51,12 @@ static const char contract_test_wast_code[] = R"=====(
  (import "env" "prints_l" (func $prints_l (param i32 i32)))
  (import "env" "printui" (func $printui (param i64)))
  (import "env" "read_action_data" (func $read_action_data (param i32 i32) (result i32)))
- (import "env" "transfer_asset" (func $transfer_asset (param i64 i64 i64 i64)))
+ (import "env" "deposit_asset" (func $deposit_asset (param i64 i64 i64 i64)))
  (table 9 9 anyfunc)
  (elem (i32.const 0) $__wasm_nullptr $_ZN5hello3byeEy $_ZN8graphene8contract7depositEyNS_5assetE $_ZN8graphene8contract8withdrawEyyNS_5assetE $_ZN5hello2hiEy $__stdio_close $__stdout_write $__stdio_seek $__stdio_write)
  (memory $0 1)
  (data (i32.const 4) "\10u\00\00")
- (data (i32.const 16) "Bye, \00")
+ (data (i32.const 16) "Bye, \n\00")
  (data (i32.const 32) "Hello, \00")
  (data (i32.const 48) "withdraw trx origin: \00")
  (data (i32.const 80) "\n\00")
@@ -535,7 +535,7 @@ static const char contract_test_wast_code[] = R"=====(
    )
    (i32.const 1008)
   )
-  (call $transfer_asset
+  (call $deposit_asset
    (get_local $1)
    (i64.load
     (get_local $0)
@@ -1200,7 +1200,7 @@ static const char contract_test_wast_code[] = R"=====(
    (get_local $1)
    (get_local $8)
   )
-  (call $transfer_asset
+  (call $deposit_asset
    (i64.load
     (get_local $0)
    )
