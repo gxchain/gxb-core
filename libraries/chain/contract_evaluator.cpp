@@ -36,7 +36,6 @@ namespace graphene { namespace chain {
 void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operation &op)
 { try {
     dlog("contract_deploy_evaluator do_evaluator");
-
     database &d = db();
 
     // check contract name
@@ -104,7 +103,6 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
         if (itr != p.current_fees->parameters.end()) {
             fee_param = itr->get<contract_call_operation::fee_parameters_type>();
         }
-        idump((fee_param));
 
         uint64_t ram_fee = ctx.get_ram_usage() * fee_param.price_per_kbyte_ram;
         uint64_t cpu_fee = trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu;

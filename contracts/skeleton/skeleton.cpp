@@ -10,14 +10,14 @@ class skeleton
         , accounts(_self, _self)
     {
     }
-    
+
     //@abi table account i64
     struct account {
         account_name    owner;
         vector<asset>   assets;
 
         uint64_t primary_key() const { return owner; }
-        
+
         GXBLIB_SERIALIZE(account, (owner)(assets))
     };
 
@@ -50,7 +50,7 @@ class skeleton
         // check amount
         // gxb_assert(get_trx_value() == value.amount);
 
-        transfer_asset(from, _self, value.asset_id, value.amount);
+        deposit_asset(from, _self, value.asset_id, value.amount);
         addbalance(from, value);
         print("balance: ", getbalance(from, value.asset_id), "\n");
     }
@@ -67,7 +67,7 @@ class skeleton
         // gxb_assert(get_balance(from, value.symbol) >= value.amount);
 
         subbalance(from, value);
-        transfer_asset(_self, to, value.asset_id, value.amount);
+        withdraw_asset(_self, to, value.asset_id, value.amount);
     }
 
   private:
@@ -78,8 +78,8 @@ class skeleton
             print("account not found\n");
             return;
         }
-        
-        
+
+
         int asset_index = 0;
         for(auto asset_it = it->assets.begin(); asset_it != it->assets.end(); ++asset_it) {
             print("asset.id=", asset_it->asset_id, ", asset.amount=", asset_it->amount, "\n");
@@ -88,7 +88,7 @@ class skeleton
                     accounts.modify(it, owner, [&](auto &a) {
                         a.assets.erase(asset_it);
                     });
-                    
+
                     if(it->assets.size() == 0) {
                         accounts.erase(it);
                     }
@@ -99,10 +99,10 @@ class skeleton
                 } else {
                     gxb_assert(false, "asset_it->amount < value.amount");
                 }
-                
+
                 break;
             }
-            
+
             asset_index++;
         }
     }
@@ -127,13 +127,13 @@ class skeleton
                     accounts.modify(it, 0, [&](auto &a) {
                         a.assets[asset_index] += value;
                     });
-                    
+
                     break;
                 }
-                
+
                 asset_index++;
             }
-            
+
             if(!asset_exist) {
                 print("asset not exist, to add asset\n");
                 accounts.modify(it, 0, [&](auto &a) {
@@ -150,16 +150,16 @@ class skeleton
             print("account not found\n");
             return 0;
         }
-        
+
         for(auto asset_it = it->assets.begin(); asset_it != it->assets.end(); ++asset_it) {
             if(asset_it->asset_id == asset_id) {
                 return asset_it->amount;
             }
         }
-        
+
         return 0;
     }
-    
+
   private:
     account_name _self;
     account_index accounts;

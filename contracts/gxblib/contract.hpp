@@ -47,7 +47,7 @@ class contract
         // check amount
         // gxb_assert(get_trx_value() == value.amount);
 
-        transfer_asset(from, _self, value.asset_id, value.amount);
+        deposit_asset(from, _self, value.asset_id, value.amount);
         addbalance(from, value);
         print("balance: ", getbalance(from, value.asset_id), "\n");
     }
@@ -64,7 +64,7 @@ class contract
         // gxb_assert(get_balance(from, value.symbol) >= value.amount);
 
         subbalance(from, value);
-        transfer_asset(_self, to, value.asset_id, value.amount);
+        withdraw_asset(_self, to, value.asset_id, value.amount);
     }
 
   private:
