@@ -184,8 +184,7 @@ BOOST_AUTO_TEST_CASE(contract_test)
    sign(trx, alice_private_key);
    idump((trx));
    PUSH_TX(db, trx);
-   const auto &core = asset_id_type()(db);
-   BOOST_REQUIRE_EQUAL(get_balance(contract_obj.id(db), core), 100);
+   BOOST_REQUIRE_EQUAL(get_balance(account_id_type(contract_obj.id)(db), asset_id_type()(db)), 100);
    trx.clear();
 
 } FC_LOG_AND_RETHROW() }
