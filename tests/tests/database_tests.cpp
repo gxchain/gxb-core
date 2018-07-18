@@ -118,7 +118,6 @@ BOOST_AUTO_TEST_CASE( db_store_i64_undo )
       auto ses = db._undo_db.start_undo_session();
 
       const contract_call_operation op;
-      action a{op.account, nullptr, op.act.method_name, {}};
       transaction_context trx_context(db, (uint64_t)account_id_type() & GRAPHENE_DB_MAX_INSTANCE_ID);
       apply_context ctx{db, trx_context, op.act};
       auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
@@ -145,7 +144,6 @@ BOOST_AUTO_TEST_CASE( db_store_i64_commit )
       auto ses = db._undo_db.start_undo_session();
 
       const contract_call_operation op;
-      action a{op.account, nullptr, op.act.method_name, {}};
       transaction_context trx_context(db, (uint64_t)account_id_type() & GRAPHENE_DB_MAX_INSTANCE_ID);
       apply_context ctx{db, trx_context, op.act};
       auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);

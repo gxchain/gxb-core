@@ -110,7 +110,7 @@ class action_api : public context_aware_api {
 
       int64_t get_action_asset_id() {
           if (context.act.amount.valid()) {
-              return context.act.amount.asset_id & GRAPHENE_DB_MAX_INSTANCE_ID;
+              return context.act.amount->asset_id.instance;
           }
           else {
               return 0;
@@ -119,7 +119,7 @@ class action_api : public context_aware_api {
 
       int64_t get_action_asset_amount() {
           if (context.act.amount.valid()) {
-              return context.act.amount.amount;
+              return context.act.amount->amount.value;
           }
           else {
               return 0;
@@ -1487,11 +1487,11 @@ REGISTER_INTRINSICS(crypto_api,
 );
 
 REGISTER_INTRINSICS(action_api,
-(read_action_data,       int(int, int)  )
-(action_data_size,       int()          )
-(current_receiver,       int64_t()      )
+(read_action_data,          int(int, int)  )
+(action_data_size,          int()          )
+(current_receiver,          int64_t()      )
 (get_action_asset_id,       int64_t()      )
-(get_action_asset_amount,       int64_t()      )
+(get_action_asset_amount,   int64_t()      )
 );
 
 REGISTER_INTRINSICS(asset_api,
