@@ -158,15 +158,12 @@ BOOST_AUTO_TEST_CASE(contract_test)
    trx.clear();
 
    // call contract, action hi
-   BOOST_TEST_MESSAGE("contract call test, hi");
    auto& contract_obj = get_account("bob");
 
    contract_call_operation op;
    op.account = alice_id;
    string s = "123";
-   idump((contract_obj.id));
    action act {contract_obj.id, optional<asset>(), N(hi), bytes(s.begin(), s.end())};
-   idump((act));
    op.act = act;
    op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(op);
    trx.operations.push_back(op);
@@ -176,12 +173,10 @@ BOOST_AUTO_TEST_CASE(contract_test)
    PUSH_TX(db, trx);
    trx.clear();
 
-   // call contract, action hi
-   BOOST_TEST_MESSAGE("contract call test, bye");
+   // call contract, action hi, deposit asset
    contract_call_operation call_op;
    call_op.account = alice_id;
-   action act2 {contract_obj.id, optional<asset>(), N(bye), bytes(s.begin(), s.end())};
-   idump((act2));
+   action act2 {contract_obj.id, share_type(100), N(bye), bytes(s.begin(), s.end())};
    call_op.act = act2;
    call_op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(call_op);
    trx.operations.push_back(call_op);
@@ -189,6 +184,8 @@ BOOST_AUTO_TEST_CASE(contract_test)
    sign(trx, alice_private_key);
    idump((trx));
    PUSH_TX(db, trx);
+   const auto &core = asset_id_type()(db);
+   BOOST_REQUIRE_EQUAL(get_balance(contract_obj.id(db), core), 100);
    trx.clear();
 
 } FC_LOG_AND_RETHROW() }
