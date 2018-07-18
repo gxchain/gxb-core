@@ -77,9 +77,15 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     idump((op.act));
     database& d = db();
     const account_object& contract_obj = op.act.contract_id(d);
-    FC_ASSERT(contract_obj.code.size() > 0, "contract has no code, contract_id ${n}", ("n", op.act.contract_id));
-
     acnt = &(contract_obj);
+    FC_ASSERT(acnt->code.size() > 0, "contract has no code, contract_id ${n}", ("n", op.act.contract_id));
+
+    // check method_name
+    const auto& actions = acnt->abi.actions;
+    auto iter = std::find_if(actions.begin(), actions.end(),
+            [&](const action_def& act) { return act.name == op.act.method_name; });
+    FC_ASSERT(iter != actions.end(), "method_name ${m} not found in abi", ("m", op.act.method_name));
+
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
