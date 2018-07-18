@@ -88,6 +88,12 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 { try {
     database& d = db();
     dlog("call contract, contract_id ${n}, method_name ${m}, data ${d}", ("n", op.act.contract_id)("m", op.act.method_name)("d", op.act.data));
+    if (op.act.amount.valid()) {
+        auto amnt = *op.act.amount;
+        dlog("adjust balance, amount ${a}", ("a", amnt));
+        d.adjust_balance(op.account, -amnt);
+        d.adjust_balance(op.act.contract_id, amnt);
+    }
 
     transaction_context trx_context(d, op.fee_payer().instance);
     apply_context ctx{d, trx_context, op.act};

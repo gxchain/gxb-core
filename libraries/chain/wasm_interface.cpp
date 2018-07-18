@@ -107,6 +107,24 @@ class action_api : public context_aware_api {
       name current_receiver() {
          return context.receiver;
       }
+
+      int64_t get_action_asset_id() {
+          if (context.act.amount.valid()) {
+              return context.act.amount.asset_id & GRAPHENE_DB_MAX_INSTANCE_ID;
+          }
+          else {
+              return 0;
+          }
+      }
+
+      int64_t get_action_asset_amount() {
+          if (context.act.amount.valid()) {
+              return context.act.amount.amount;
+          }
+          else {
+              return 0;
+          }
+      }
 };
 
 class global_api : public context_aware_api
@@ -1388,20 +1406,6 @@ class asset_api : public context_aware_api
         : context_aware_api(ctx, true)
     {}
 
-    void deposit_asset(int64_t from, int64_t to, int64_t asset_id, int64_t amount)
-    {
-        FC_ASSERT(from == context.trx_context.get_trx_origin(), "no deposit permission");
-        FC_ASSERT(from != to, "cannot transfer to self");
-        FC_ASSERT(to == context.receiver, "can only deposit to contract ${c}", ("c", context.receiver));
-        FC_ASSERT(amount> 0, "amount must > 0");
-
-        auto &d = context.db();
-        asset a{amount, asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID)};
-        // adjust balance
-        d.adjust_balance(account_id_type(from & GRAPHENE_DB_MAX_INSTANCE_ID), -a);
-        d.adjust_balance(account_id_type(to & GRAPHENE_DB_MAX_INSTANCE_ID), a);
-    }
-
     void withdraw_asset(int64_t from, int64_t to, int64_t asset_id, int64_t amount)
     {
         FC_ASSERT(from == context.receiver, "can only withdraw from contract ${c}", ("c", context.receiver));
@@ -1486,10 +1490,11 @@ REGISTER_INTRINSICS(action_api,
 (read_action_data,       int(int, int)  )
 (action_data_size,       int()          )
 (current_receiver,       int64_t()      )
+(get_action_asset_id,       int64_t()      )
+(get_action_asset_amount,       int64_t()      )
 );
 
 REGISTER_INTRINSICS(asset_api,
-(deposit_asset,                  void(int64_t, int64_t, int64_t, int64_t))
 (withdraw_asset,                 void(int64_t, int64_t, int64_t, int64_t))
 (get_balance,                    int64_t(int64_t, int64_t))
 );

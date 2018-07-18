@@ -44,7 +44,7 @@ namespace graphene { namespace chain {
       bool empty()const { return 0 == value; }
       bool good()const  { return !empty();   }
 
-      name( const char* str )   { set(str);           } 
+      name( const char* str )   { set(str);           }
       name( const string& str ) { set( str.c_str() ); }
 
       void set( const char* str );
