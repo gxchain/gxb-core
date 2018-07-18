@@ -73,23 +73,23 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
 void_result contract_call_evaluator::do_evaluate(const contract_call_operation &op)
 { try {
     database& d = db();
-    const account_object& contract_obj = op.act.contract_id(d);
+    const account_object& contract_obj = op.contract_id(d);
     acnt = &(contract_obj);
-    FC_ASSERT(acnt->code.size() > 0, "contract has no code, contract_id ${n}", ("n", op.act.contract_id));
+    FC_ASSERT(acnt->code.size() > 0, "contract has no code, contract_id ${n}", ("n", op.contract_id));
 
     // check method_name
     const auto& actions = acnt->abi.actions;
     auto iter = std::find_if(actions.begin(), actions.end(),
-            [&](const action_def& act) { return act.name == op.act.method_name; });
-    FC_ASSERT(iter != actions.end(), "method_name ${m} not found in abi", ("m", op.act.method_name));
+            [&](const action_def& act) { return act.name == op.method_name; });
+    FC_ASSERT(iter != actions.end(), "method_name ${m} not found in abi", ("m", op.method_name));
 
     // check balance
-    if (op.act.amount.valid()) {
-        const asset_object &asset_type = op.act.amount->asset_id(d);
-        bool insufficient_balance = d.get_balance(op.account(d), asset_type).amount >= op.act.amount->amount;
+    if (op.amount.valid()) {
+        const asset_object &asset_type = op.amount->asset_id(d);
+        bool insufficient_balance = d.get_balance(op.account(d), asset_type).amount >= op.amount->amount;
         FC_ASSERT(insufficient_balance,
                   "insufficient balance: ${balance}, unable to deposit '${total_transfer}' from account '${a}' to '${t}'",
-                  ("a", op.account)("t", contract_obj.id)("total_transfer", d.to_pretty_string(op.act.amount->amount))("balance", d.to_pretty_string(d.get_balance(op.account(d), asset_type))));
+                  ("a", op.account)("t", contract_obj.id)("total_transfer", d.to_pretty_string(op.amount->amount))("balance", d.to_pretty_string(d.get_balance(op.account(d), asset_type))));
     }
 
     return void_result();
@@ -98,15 +98,16 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 { try {
     database& d = db();
-    if (op.act.amount.valid()) {
-        auto amnt = *op.act.amount;
+    if (op.amount.valid()) {
+        auto amnt = *op.amount;
         dlog("adjust balance, amount ${a}", ("a", amnt));
         d.adjust_balance(op.account, -amnt);
-        d.adjust_balance(op.act.contract_id, amnt);
+        d.adjust_balance(op.contract_id, amnt);
     }
 
     transaction_context trx_context(d, op.fee_payer().instance);
-    apply_context ctx{d, trx_context, op.act};
+    action act{op.contract_id, op.amount, op.method_name, op.data};
+    apply_context ctx{d, trx_context, act};
     ctx.exec();
 
     // dynamic trx fee

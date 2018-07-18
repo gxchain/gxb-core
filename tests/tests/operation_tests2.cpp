@@ -159,12 +159,13 @@ BOOST_AUTO_TEST_CASE(contract_test)
 
    // call contract, action hi
    auto& contract_obj = get_account("bob");
+   string s = "123";
 
    contract_call_operation op;
    op.account = alice_id;
-   string s = "123";
-   action act {contract_obj.id, optional<asset>(), N(hi), bytes(s.begin(), s.end())};
-   op.act = act;
+   op.contract_id = contract_obj.id;
+   op.method_name = N(hi);
+   op.data = bytes(s.begin(), s.end());
    op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(op);
    trx.operations.push_back(op);
    set_expiration(db, trx);
@@ -176,8 +177,11 @@ BOOST_AUTO_TEST_CASE(contract_test)
    // call contract, action hi, deposit asset
    contract_call_operation call_op;
    call_op.account = alice_id;
-   action act2 {contract_obj.id, share_type(100), N(hi), bytes(s.begin(), s.end())};
-   call_op.act = act2;
+   call_op.account = alice_id;
+   call_op.contract_id = contract_obj.id;
+   call_op.amount = share_type(100);
+   call_op.method_name = N(hi);
+   call_op.data = bytes(s.begin(), s.end());
    call_op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(call_op);
    trx.operations.push_back(call_op);
    set_expiration(db, trx);

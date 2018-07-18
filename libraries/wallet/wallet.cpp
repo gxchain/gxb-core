@@ -1064,17 +1064,17 @@
 
              contract_call_operation contract_call_op;
              contract_call_op.account = caller.id;
-             contract_call_op.act.contract_id = contract_obj.id;
+             contract_call_op.contract_id = contract_obj.id;
              if (amount.valid()) {
-                 contract_call_op.act.amount = amount;
+                 contract_call_op.amount = amount;
              }
-             contract_call_op.act.method_name = string_to_name(method.c_str());
+             contract_call_op.method_name = string_to_name(method.c_str());
              fc::variant action_args_var = fc::json::from_string(args, fc::json::relaxed_parser);
 
              abi_serializer abis(contract_obj.abi);
              auto action_type = abis.get_action_type(method);
              GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
-             contract_call_op.act.data = abis.variant_to_binary(action_type, action_args_var);
+             contract_call_op.data = abis.variant_to_binary(action_type, action_args_var);
              dlog("contract_call_op.act.data=${d}", ("d", contract_call_op.act.data));
 
              signed_transaction tx;
@@ -1083,7 +1083,7 @@
              tx.validate();
 
              return sign_transaction(tx, broadcast);
-       } FC_CAPTURE_AND_RETHROW( (account)(contract)(method)(args)(fee_asset_symbol)(broadcast)) }
+       } FC_CAPTURE_AND_RETHROW( (account)(contract)(amount)(method)(args)(fee_asset_symbol)(broadcast)) }
 
        signed_transaction register_account(string name,
                                            public_key_type owner,

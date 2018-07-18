@@ -557,7 +557,7 @@ class apply_context {
       uint64_t get_ram_usage() const {
           return ram_usage;
       }
-      
+
       void update_ram_usage(int64_t ram_delta) {
          if (ram_delta == 0) {
             return;
@@ -567,7 +567,7 @@ class apply_context {
              dlog("Ram usage delta would overflow UINT64_MAX");
              ram_delta = 0;
          }
-         
+
         if(!(ram_delta >= 0 || ram_usage >= (uint64_t)(-ram_delta))) {
             dlog("Ram usage delta would underflow UINT64_MAX");
             ram_delta = 0;

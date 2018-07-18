@@ -31,11 +31,9 @@ struct contract_deploy_operation : public base_operation {
     asset                           fee;
     fc::string                      name;
     account_id_type                 account;
-
     fc::string                      vm_type;
     fc::string                      vm_version;
     bytes                           code;
-    string                          code_version;
     abi_def                         abi;
     extensions_type                 extensions;
 
@@ -68,7 +66,10 @@ struct contract_call_operation : public base_operation {
 
     asset                                   fee;
     account_id_type                         account;
-    action                                  act;
+    account_id_type                         contract_id;
+    fc::optional<asset>                     amount;
+    action_name                             method_name;
+    bytes                                   data;
     extensions_type                         extensions;
 
     account_id_type fee_payer() const { return account; }
@@ -76,7 +77,7 @@ struct contract_call_operation : public base_operation {
     void validate() const
     {
         FC_ASSERT(fee.amount >= 0);
-        FC_ASSERT(act.data.size() >= 0);
+        FC_ASSERT(data.size() >= 0);
     }
 
     share_type calculate_fee(const fee_parameters_type &k) const
@@ -96,7 +97,6 @@ FC_REFLECT(graphene::chain::contract_deploy_operation,
             (vm_type)
             (vm_version)
             (code)
-            (code_version)
             (abi)
             (extensions))
 
@@ -105,5 +105,8 @@ FC_REFLECT(graphene::chain::contract_call_operation::fee_parameters_type,
 FC_REFLECT(graphene::chain::contract_call_operation,
             (fee)
             (account)
-            (act)
+            (contract_id)
+            (amount)
+            (method_name)
+            (data)
             (extensions))
