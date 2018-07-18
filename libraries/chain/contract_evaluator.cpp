@@ -35,7 +35,6 @@ namespace graphene { namespace chain {
 
 void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operation &op)
 { try {
-    dlog("contract_deploy_evaluator do_evaluator");
     database &d = db();
 
     // check contract name
@@ -50,7 +49,6 @@ void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operati
 
 object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operation &o)
 { try {
-    dlog("contract_deploy_evaluator do_apply");
     const auto &new_acnt_object = db().create<account_object>([&](account_object &obj) {
             obj.registrar = o.account;
             obj.referrer = o.account;
@@ -87,13 +85,12 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 
     // check balance
     if (op.act.amount.valid()) {
-        const asset_object &asset_type = op.act.amount.asset_id(d);
-        bool insufficient_balance = d.get_balance(op.account(d), asset_type).amount >= op.act.amount.amount;
+        const asset_object &asset_type = op.act.amount->asset_id(d);
+        bool insufficient_balance = d.get_balance(op.account(d), asset_type).amount >= op.act.amount->amount;
         FC_ASSERT(insufficient_balance,
-                  "Insufficient Balance: ${balance}, unable to deposit '${total_transfer}' from account '${a}' to '${t}'",
-                  ("a", op.account.name)("t", acnt->name)("total_transfer", d.to_pretty_string(op.act.amount.amount))("balance", d.to_pretty_string(d.get_balance(op.account(d), asset_type))));
+                  "insufficient balance: ${balance}, unable to deposit '${total_transfer}' from account '${a}' to '${t}'",
+                  ("a", op.account)("t", contract_obj.id)("total_transfer", d.to_pretty_string(op.act.amount->amount))("balance", d.to_pretty_string(d.get_balance(op.account(d), asset_type))));
     }
-
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
@@ -101,7 +98,6 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 { try {
     database& d = db();
-    dlog("call contract, contract_id ${n}, method_name ${m}, data ${d}", ("n", op.act.contract_id)("m", op.act.method_name)("d", op.act.data));
     if (op.act.amount.valid()) {
         auto amnt = *op.act.amount;
         dlog("adjust balance, amount ${a}", ("a", amnt));
