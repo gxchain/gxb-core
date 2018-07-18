@@ -1,34 +1,43 @@
 #pragma once
 #include <gxblib/print.hpp>
 #include <gxblib/serialize.hpp>
+#include <gxblib/system.h>
 #include <gxblib/types.hpp>
 #include <tuple>
 
-namespace graphene
-{
+namespace graphene {
 
 extern const int64_t scaled_precision_lut[];
 
 struct asset {
-    asset(uint64_t a = 0, uint64_t id = 0)
+    asset(int64_t a = 0, uint64_t id = 0)
         : amount(a)
         , asset_id(id)
     {
+        gxb_assert(is_amount_within_range(), "magnitude of asset amount must be less than 2^62");
     }
 
-    uint64_t amount;
-    uint64_t asset_id;
+    int64_t     amount;
+    uint64_t    asset_id;
+
+    static constexpr int64_t max_amount = (1LL << 62) - 1;
+
+    bool is_amount_within_range() const { return -max_amount <= amount && amount <= max_amount; }
 
     asset &operator+=(const asset &o)
     {
         assert(asset_id == o.asset_id);
         amount += o.amount;
+        gxb_assert(-max_amount <= amount, "subtraction underflow");
+        gxb_assert(amount <= max_amount, "subtraction overflow");
         return *this;
     }
     asset &operator-=(const asset &o)
     {
         assert(asset_id == o.asset_id);
         amount -= o.amount;
+        gxb_assert(-max_amount <= amount, "subtraction underflow");
+        gxb_assert(amount <= max_amount, "subtraction overflow");
         return *this;
     }
     asset operator-() const { return asset(-amount, asset_id); }
@@ -71,19 +80,13 @@ struct asset {
         return asset(a.amount + b.amount, a.asset_id);
     }
 
-    static uint64_t scaled_precision(uint8_t precision)
+    static int64_t scaled_precision(uint8_t precision)
     {
         assert(precision < 19);
         return scaled_precision_lut[precision];
     }
 
-    void print() const
-    {
-        prints(".");
-        //       prints_l( fraction, uint32_t(p) );
-        prints(" ");
-    }
-
     GXBLIB_SERIALIZE(asset, (amount)(asset_id))
 };
+
 }
