@@ -74,7 +74,6 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
 
 void_result contract_call_evaluator::do_evaluate(const contract_call_operation &op)
 { try {
-    idump((op.act));
     database& d = db();
     const account_object& contract_obj = op.act.contract_id(d);
     acnt = &(contract_obj);
@@ -85,6 +84,15 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     auto iter = std::find_if(actions.begin(), actions.end(),
             [&](const action_def& act) { return act.name == op.act.method_name; });
     FC_ASSERT(iter != actions.end(), "method_name ${m} not found in abi", ("m", op.act.method_name));
+
+    // check balance
+    if (op.act.amount.valid()) {
+        const asset_object &asset_type = op.act.amount.asset_id(d);
+        bool insufficient_balance = d.get_balance(op.account(d), asset_type).amount >= op.act.amount.amount;
+        FC_ASSERT(insufficient_balance,
+                  "Insufficient Balance: ${balance}, unable to deposit '${total_transfer}' from account '${a}' to '${t}'",
+                  ("a", op.account.name)("t", acnt->name)("total_transfer", d.to_pretty_string(op.act.amount.amount))("balance", d.to_pretty_string(d.get_balance(op.account(d), asset_type))));
+    }
 
 
     return void_result();
