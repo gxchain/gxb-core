@@ -9,7 +9,6 @@
 
 using namespace graphene;
 
-//TODO 目前仅支持核心资产
 class skeleton : public contract
 {
   private:
@@ -25,7 +24,8 @@ class skeleton : public contract
 
     //@abi table lockrule i64
     struct lockrule {
-        uint64_t account;           //某个合约参与者的账号
+        uint64_t id;                //id=get_primary_key_by_account_and_asset(account_id, asset_id)
+        uint64_t account_id;        //某个合约参与者的账号
         int64_t lock_time_point;    //锁定开始时间
         int64_t lock_duration;      //锁定多久开始释放
         int64_t release_time_point; //释放开始时间
@@ -34,9 +34,14 @@ class skeleton : public contract
         int64_t asset_amount;       //总共锁定多少资产
         int64_t released_amount;    //总共已经释放了多少资产
 
-        uint64_t primary_key() const { return account; }
+        uint64_t primary_key() const { return id; }
 
-        GXBLIB_SERIALIZE(lockrule, (account)(lock_time_point)(lock_duration)(release_time_point)(release_duration)(asset_id)(asset_amount)(released_amount))
+        static inline uint64_t get_primary_key_by_account_and_asset(uint64_t account_id, uint64_t asset_id)
+        {
+            return (uint64_t)(account_id << 32 | (asset_id & 0xFFFFFFFF));
+        }
+
+        GXBLIB_SERIALIZE(lockrule, (id)(account_id)(lock_time_point)(lock_duration)(release_time_point)(release_duration)(asset_id)(asset_amount)(released_amount))
     };
 
     typedef graphene::multi_index<N(account), account> account_index;
@@ -57,7 +62,7 @@ class skeleton : public contract
         gxb_assert(lr == lockrules.end(), "have been locked, can only lock one time");
 
         lockrules.emplace(from, [&](auto &a) {
-            a.account = to;
+            a.account_id = to;
             a.lock_time_point = get_head_block_time();
             a.lock_duration = 30;
             a.release_time_point = a.lock_time_point + a.lock_duration;
@@ -65,6 +70,7 @@ class skeleton : public contract
             a.asset_id = value.asset_id;
             a.asset_amount = value.amount;
             a.released_amount = 0;
+            a.id = lockrule::get_primary_key_by_account_and_asset(a.account_id, a.asset_id);
         });
 
         deposit_asset(from, _self, value.asset_id, value.amount);
@@ -72,9 +78,10 @@ class skeleton : public contract
     }
 
     /// @abi action
-    void tryrelease(uint64_t who)
+    void tryrelease(uint64_t who, uint64_t asset_id)
     {
-        auto lr = lockrules.find(who);
+        uint64_t pk = lockrule::get_primary_key_by_account_and_asset(who, asset_id);
+        auto lr = lockrules.find(pk);
         gxb_assert(lr != lockrules.end(), "have no locked asset, no lockrule");
 
         uint64_t now = get_head_block_time();
@@ -98,7 +105,7 @@ class skeleton : public contract
             return;
         }
 
-        asset a{should_release_amount, 0};
+        asset a{should_release_amount, asset_id};
         subbalance(who, a);
         withdraw_asset(_self, who, a.asset_id, a.amount);
 
@@ -106,7 +113,7 @@ class skeleton : public contract
             l.released_amount += should_release_amount;
         });
 
-        if (lr->released_amount == lr->asset_amount && who_it->assets[0].amount == 0) {
+        if (lr->released_amount == lr->asset_amount) {
             print("release finished");
             lockrules.erase(lr);
         }
@@ -201,7 +208,7 @@ class skeleton : public contract
 
         return 0;
     }
-
+    
   private:
     account_index accounts;
     lockrule_index lockrules;

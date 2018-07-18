@@ -1,0 +1,27 @@
+1.需要把linear_release_asset目录重命名为skeleton，目录里面的cpp文件也改名为skeleton.cpp再用gxbcpp命令生成abi和wast，wasm
+
+2.验证相关的方法
+
+2.1部署合约
+deploy_contract cg3      nathan 0 0 /Users/sky/gxb_install/skeleton GXC true
+
+2.2.1从beita账号转账给
+call_contract beita cg3 lockasset "{\"from\":18,\"to\":17,\"value\":{\"amount\":100000000,\"contract_asset_id\":0}}" GXC true
+
+call_contract beita cg3 lockasset "{\"from\":18,\"to\":17,\"value\":{\"amount\":100000000,\"contract_asset_id\":1}}" GXC true
+
+
+get_contract_tables cg3
+
+get_table_objects cg3       account
+
+get_table_objects cg3       lockrule
+
+list_account_balances cg3
+
+
+call_contract beita cg3 tryrelease "{\"who\":17,\"asset_id\":0}" GXC true
+
+call_contract beita cg3 tryrelease "{\"who\":17,\"asset_id\":1}" GXC true
+
+call_contract beita cg3 tryrelease "{\"who\":17,\"asset_id\":2}" GXC true
