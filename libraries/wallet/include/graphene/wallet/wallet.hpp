@@ -1057,6 +1057,7 @@ class wallet_api
      * call contract
      * @param account this account use to call contract
      * @param contract contract
+     * @param amount amount of asset sent to contract
      * @param method method
      * @param arg arg
      * @param fee_asset_symbol the symbol of the fee asset.
@@ -1065,6 +1066,7 @@ class wallet_api
      */
     signed_transaction call_contract(string account,
                                      string contract,
+                                     optional<asset> amount,
                                      string method,
                                      string arg,
                                      string fee_asset_symbol,

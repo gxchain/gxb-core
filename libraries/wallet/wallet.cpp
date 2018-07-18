@@ -1050,6 +1050,7 @@
 
        signed_transaction call_contract(string account,
                                         string contract,
+                                        optional<asset> amount,
                                         string method,
                                         string args,
                                         string fee_asset_symbol,
@@ -1064,6 +1065,9 @@
              contract_call_operation contract_call_op;
              contract_call_op.account = caller.id;
              contract_call_op.act.contract_id = contract_obj.id;
+             if (amount.valid()) {
+                 contract_call_op.act.amount = amount;
+             }
              contract_call_op.act.method_name = string_to_name(method.c_str());
              fc::variant action_args_var = fc::json::from_string(args, fc::json::relaxed_parser);
 
@@ -4819,12 +4823,13 @@
 
     signed_transaction wallet_api::call_contract(string account,
                                       string contract,
+                                      optional<asset> amount,
                                       string method,
                                       string args,
                                       string fee_asset_symbol,
                                       bool broadcast)
     {
-        return my->call_contract(account, contract, method, args, fee_asset_symbol, broadcast);
+        return my->call_contract(account, contract, amount, method, args, fee_asset_symbol, broadcast);
     }
 
     variant wallet_api::get_contract_tables(string contract) const

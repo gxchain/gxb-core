@@ -2,6 +2,7 @@
 #include <gxblib/action.h>
 #include <gxblib/datastream.hpp>
 #include <gxblib/serialize.hpp>
+#include <gxblib/asset.hpp>
 
 #include <boost/preprocessor/variadic/size.hpp>
 #include <boost/preprocessor/variadic/to_tuple.hpp>
