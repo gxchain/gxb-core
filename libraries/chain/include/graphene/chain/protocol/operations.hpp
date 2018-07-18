@@ -133,8 +133,7 @@ namespace graphene { namespace chain {
             balance_unlock_operation,//72
             proxy_transfer_operation, //73
             contract_deploy_operation, //74
-            contract_call_operation, //75
-            contract_deposit_operation //76
+            contract_call_operation //75
 
          > operation;
 

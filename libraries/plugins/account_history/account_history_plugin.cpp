@@ -65,7 +65,7 @@ class account_history_plugin_impl
       account_history_plugin& _self;
       flat_set<account_id_type> _tracked_accounts;
       bool _partial_operations = true;
-      uint32_t _max_ops_per_account = 0;
+      uint64_t _max_ops_per_account = 0;
       primary_index< operation_history_index >* _oho_index;
    private:
       /** add one history record, then check and remove the earliest history record */
@@ -282,7 +282,7 @@ void account_history_plugin::plugin_set_program_options(
    cli.add_options()
          ("track-account", boost::program_options::value<std::vector<std::string>>()->composing()->multitoken(), "Account ID to track history for (may specify multiple times)")
          ("partial-operations", boost::program_options::value<bool>(), "Keep only those operations in memory that are related to account history tracking")
-         ("max-ops-per-account", boost::program_options::value<uint32_t>(), "Maximum number of operations per account will be kept in memory")
+         ("max-ops-per-account", boost::program_options::value<uint64_t>(), "Maximum number of operations per account will be kept in memory")
          ;
    cfg.add(cli);
 }
@@ -298,7 +298,7 @@ void account_history_plugin::plugin_initialize(const boost::program_options::var
        my->_partial_operations = options["partial-operations"].as<bool>();
    }
    if (options.count("max-ops-per-account")) {
-       my->_max_ops_per_account = options["max-ops-per-account"].as<uint32_t>();
+       my->_max_ops_per_account = options["max-ops-per-account"].as<uint64_t>();
    }
 }
 

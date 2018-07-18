@@ -1070,24 +1070,6 @@ class wallet_api
                                      string fee_asset_symbol,
                                      bool broadcast = false);
 
-    /** Call contract
-     *
-     * call contract
-     * @param from the account name which asset being to be deposited
-     * @param contract the contract which keep the asset
-     * @param amount the amount of asset to be deposited
-     * @param asset_symbol asset symbol
-     * @param fee_asset_symbol the symbol of the fee asset.
-     * @param broadcast broadcast
-     * @returns signed_transaction
-     */
-    signed_transaction deposit_asset_to_contract(string from,
-                                          string contract,
-                                          string amount,
-                                          string asset_symbol,
-                                          string fee_asset_symbol,
-                                          bool broadcast);
-
       /** Returns table infos about the given contract.
        *
        * @param contract the name of the contract to query
@@ -2307,7 +2289,6 @@ FC_API( graphene::wallet::wallet_api,
         (register_account)
         (deploy_contract)
         (call_contract)
-        (deposit_asset_to_contract)
         (get_contract_tables)
         (get_table_objects)
         (register_account2)
