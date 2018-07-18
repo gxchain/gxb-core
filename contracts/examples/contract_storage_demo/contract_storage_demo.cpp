@@ -1,20 +1,17 @@
-#include <gxblib/gxb.hpp>
+#include <gxblib/contract.hpp>
+#include <gxblib/dispatcher.hpp>
 #include <gxblib/multi_index.hpp>
+#include <gxblib/types.h>
 #include <string>
 
-using namespace gxblib;
 using namespace graphene;
 using std::string;
 
-//TODO FIXME int and float type can not compile by gxbcpp
-
-class contract_storage_demo : public graphene::contract
+class contract_storage_demo : public contract
 {
   public:
-    using contract::contract;
-
     contract_storage_demo(account_name self)
-        : graphene::contract(self)
+        : contract(self)
         , cpus(_self, _self)
     {
     }
@@ -34,10 +31,10 @@ class contract_storage_demo : public graphene::contract
     void remove(uint64_t id)
     {
         const auto &it = cpus.find(id);
-        if(it != cpus.end())
+        if (it != cpus.end())
             cpus.erase(it);
     }
-    
+
     /// @abi action
     void find(uint64_t id)
     {
@@ -48,13 +45,13 @@ class contract_storage_demo : public graphene::contract
             print("cpu.name = ${name}", ("name", cpu_itr->name));
         }
     }
-    
+
     /// @abi action
     void updatefreq(uint64_t id, uint64_t freq)
     {
         auto it = cpus.find(id);
         if (it != cpus.end()) {
-            cpus.modify(it, _self, [&freq](auto &the_cpu){
+            cpus.modify(it, _self, [&freq](auto &the_cpu) {
                 the_cpu.frequency = freq;
             });
             print("cpu.name = ${name}", ("name", it->name));
@@ -66,11 +63,11 @@ class contract_storage_demo : public graphene::contract
   private:
     //@abi table cpu i64
     struct cpu {
-        uint64_t    id;
-        string      manufactor;
-        string      name;
-        uint64_t    frequency;
-        
+        uint64_t id;
+        string manufactor;
+        string name;
+        uint64_t frequency;
+
         uint64_t primary_key() const { return id; }
 
         GXBLIB_SERIALIZE(cpu, (id)(manufactor)(name)(frequency));
@@ -81,4 +78,4 @@ class contract_storage_demo : public graphene::contract
     cpu_index cpus;
 };
 
-GXB_ABI(contract_storage_demo, (subbalance)(addbalance)(store)(remove)(find)(updatefreq))
+GXB_ABI(contract_storage_demo, (store)(remove)(find)(updatefreq))
