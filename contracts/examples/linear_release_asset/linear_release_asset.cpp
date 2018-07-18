@@ -56,7 +56,7 @@ class skeleton : public contract
     }
 
     /// @abi action
-    void lockasset(uint64_t from, account_name to, asset value)
+    void lockasset(uint64_t from, account_name to, asset value, int64_t lock_duration, int64_t release_duration)
     {
         auto lr = lockrules.find(from);
         gxb_assert(lr == lockrules.end(), "have been locked, can only lock one time");
@@ -64,9 +64,9 @@ class skeleton : public contract
         lockrules.emplace(from, [&](auto &a) {
             a.account_id = to;
             a.lock_time_point = get_head_block_time();
-            a.lock_duration = 30;
+            a.lock_duration = lock_duration;
             a.release_time_point = a.lock_time_point + a.lock_duration;
-            a.release_duration = 3 * 100;
+            a.release_duration = release_duration;
             a.asset_id = value.asset_id;
             a.asset_amount = value.amount;
             a.released_amount = 0;
