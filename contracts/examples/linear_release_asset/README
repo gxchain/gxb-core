@@ -1,5 +1,6 @@
-1.需要把linear_release_asset目录重命名为skeleton，目录里面的cpp文件也改名为skeleton.cpp再用gxbcpp命令生成abi和wast，wasm
-
+1.测试需要满足的条件：
+1.1 需要把linear_release_asset目录重命名为skeleton，目录里面的cpp文件也改名为skeleton.cpp再用gxbcpp命令生成abi和wast，wasm
+1.2 链上需要有GXC，GXS，SKY三种资产，如果没有先创建资产并发行到nathan和sky账号上一些资产
 
 2.验证相关的方法
 
