@@ -85,6 +85,7 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 
     // check balance
     if (op.amount.valid()) {
+        FC_ASSERT(op.amount->amount > 0, "amount > 0");
         const asset_object &asset_type = op.amount->asset_id(d);
         bool insufficient_balance = d.get_balance(op.account(d), asset_type).amount >= op.amount->amount;
         FC_ASSERT(insufficient_balance,
