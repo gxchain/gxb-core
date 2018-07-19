@@ -1038,7 +1038,6 @@
            op.vm_version = vm_version;
            op.code = bytes(wasm.begin(), wasm.end());
            op.abi = abi_def_data.as<abi_def>();
-           op.code_version = fc::sha256::hash(op.code);
 
            signed_transaction tx;
            tx.operations.push_back(op);
