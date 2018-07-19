@@ -115,10 +115,14 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     if(!trx_state->skip_fee) {
         // get global fee params
         auto fee_param = contract_call_operation::fee_parameters_type();
+        idump((fee_param));
         const auto& p = d.get_global_properties().parameters;
-        auto itr = p.current_fees->parameters.find(contract_call_operation::fee_parameters_type());
-        if (itr != p.current_fees->parameters.end()) {
-            fee_param = itr->get<contract_call_operation::fee_parameters_type>();
+        for (auto& param : p.current_fees->parameters) {
+            if (param.which() == operation::tag<contract_call_operation>::value) {
+                fee_param = param.get<contract_call_operation::fee_parameters_type>();
+                dlog("use gpo params, ${s}", ("s", fee_param));
+                break;
+            }
         }
 
         uint64_t ram_fee = ctx.get_ram_usage() * fee_param.price_per_kbyte_ram;
