@@ -16,10 +16,10 @@ class contracta : public contract
     }
 
     /// @abi action
-    void hicontract(std::string contractname)
+    void hicontract(uint64_t act_id)
     {
-        printf("hi contract:", contractname.c_str());
-        action a(gxblib::string_to_name(contractname.c_str()), asset(), N(hi), 10);
+        printf("hi contract:", act_id);
+        action a(act_id, asset(), N(hi), 10);
         a.send();
     }
 };

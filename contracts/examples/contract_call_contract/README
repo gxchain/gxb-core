@@ -2,4 +2,4 @@ deploy_contract ccca nathan 0 0 /Users/sky/gxb_install/contract_call_contract/co
 
 deploy_contract cccb nathan 0 0 /Users/sky/gxb_install/contract_call_contract/contractb GXC true
 
-call_contract beita ccca null hicontract "{\"contractname\":\"cccb\"}" SKY true
+call_contract beita ccca null hicontract "{\"act_id\":77}" GXC true
