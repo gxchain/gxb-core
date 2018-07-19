@@ -77,7 +77,6 @@ struct contract_call_operation : public base_operation {
     void validate() const
     {
         FC_ASSERT(fee.amount >= 0);
-        FC_ASSERT(amount.amount >= 0);
         FC_ASSERT(data.size() >= 0);
     }
 
