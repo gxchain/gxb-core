@@ -19,7 +19,7 @@ class contracta : public contract
     void hicontract(std::string contractname)
     {
         printf("hi contract:", contractname.c_str());
-        action a(gxblib::string_to_name(contractname.c_str()), asset(), N(hia), 10);
+        action a(gxblib::string_to_name(contractname.c_str()), asset(), N(hi), 10);
         a.send();
     }
 };
