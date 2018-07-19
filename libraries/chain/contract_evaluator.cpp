@@ -18,6 +18,7 @@
  */
 
 #include <fc/smart_ref_impl.hpp>
+
 #include <graphene/chain/contract_evaluator.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/protocol/operations.hpp>
