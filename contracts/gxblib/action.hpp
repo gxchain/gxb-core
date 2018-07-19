@@ -56,7 +56,7 @@ namespace graphene {
       {
       }
 
-      GXBLIB_SERIALIZE(action, (account)(name)(data))
+      GXBLIB_SERIALIZE(action, (account)(amount)(name)(data))
 
       void send() const
       {
