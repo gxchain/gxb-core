@@ -73,7 +73,6 @@ class skeleton : public contract
             a.id = lockrule::get_primary_key_by_account_and_asset(a.account_id, a.asset_id);
         });
 
-        deposit_asset(from, _self, value.asset_id, value.amount);
         addbalance(to, value);
     }
 
