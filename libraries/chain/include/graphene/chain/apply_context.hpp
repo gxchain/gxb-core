@@ -400,7 +400,7 @@ class apply_context {
                 auto tab = context.find_table(code, scope, table);
                 if (!tab) return -1;
 
-                auto table_end_itr = itr_cache.cache_table(**tab);
+                auto table_end_itr = itr_cache.cache_table(*tab);
 
                 const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
                 auto itr = idx.upper_bound(boost::make_tuple(tab->id, primary));
