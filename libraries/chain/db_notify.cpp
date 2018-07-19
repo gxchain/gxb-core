@@ -272,11 +272,12 @@ struct get_impacted_account_visitor
    }
 
    void operator() (const contract_deploy_operation& op) {
-       _impacted.insert(op.account);
+       _impacted.insert(op.fee_payer());
    }
 
    void operator() (const contract_call_operation& op) {
-       _impacted.insert(op.account);
+       _impacted.insert(op.fee_payer());
+       _impacted.insert(op.contract_id);
    }
 
 };

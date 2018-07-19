@@ -47,28 +47,28 @@ void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operati
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operation &o)
+object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operation &op)
 { try {
+    dlog("contract_deploy_evaluator do_apply");
+    const auto &params = db().get_global_properties().parameters;
     const auto &new_acnt_object = db().create<account_object>([&](account_object &obj) {
-            obj.registrar = o.account;
-            obj.referrer = o.account;
-            obj.lifetime_referrer = o.account;
-
-            auto &params = db().get_global_properties().parameters;
+            obj.registrar = op.account;
+            obj.referrer = op.account;
+            obj.lifetime_referrer = op.account;
             obj.network_fee_percentage = params.network_percent_of_fee;
             obj.lifetime_referrer_fee_percentage = params.lifetime_referrer_percent_of_fee;
             obj.referrer_rewards_percentage = 0;
 
-            obj.name = o.name;
-            obj.vm_type = o.vm_type;
-            obj.vm_version = o.vm_version;
-            obj.code = o.code;
-            obj.code_version = (fc::sha256::hash(o.code)).str();
-            obj.abi = o.abi;
+            obj.name = op.name;
+            obj.vm_type = op.vm_type;
+            obj.vm_version = op.vm_version;
+            obj.code = op.code;
+            obj.code_version = fc::sha256::hash(op.code);
+            obj.abi = op.abi;
             });
 
     return new_acnt_object.id;
-} FC_CAPTURE_AND_RETHROW((o)) }
+} FC_CAPTURE_AND_RETHROW((op)) }
 
 void_result contract_call_evaluator::do_evaluate(const contract_call_operation &op)
 { try {
