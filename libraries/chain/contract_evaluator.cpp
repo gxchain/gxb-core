@@ -110,30 +110,26 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     apply_context ctx{d, trx_context, act};
     ctx.exec();
 
-    // dynamic trx fee
-    dlog("before fee_from_account=${b}", ("b", fee_from_account));
-    if(!trx_state->skip_fee) {
-        // get global fee params
-        auto fee_param = contract_call_operation::fee_parameters_type();
-        idump((fee_param));
-        const auto& p = d.get_global_properties().parameters;
-        for (auto& param : p.current_fees->parameters) {
-            if (param.which() == operation::tag<contract_call_operation>::value) {
-                fee_param = param.get<contract_call_operation::fee_parameters_type>();
-                dlog("use gpo params, ${s}", ("s", fee_param));
-                break;
-            }
+    auto fee_param = contract_call_operation::fee_parameters_type();
+    idump((fee_param));
+    const auto& p = d.get_global_properties().parameters;
+    for (auto& param : p.current_fees->parameters) {
+        if (param.which() == operation::tag<contract_call_operation>::value) {
+            fee_param = param.get<contract_call_operation::fee_parameters_type>();
+            dlog("use gpo params, ${s}", ("s", fee_param));
+            break;
         }
-
-        uint64_t ram_fee = ctx.get_ram_usage() * fee_param.price_per_kbyte_ram;
-        uint64_t cpu_fee = trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu;
-
-        // TODO: support all asset for fee
-        asset fee = asset(ram_fee + cpu_fee, asset_id_type(0));
-        fee_from_account += fee;
     }
-    dlog("after fee_from_account=${b}", ("b", fee_from_account));
 
+    uint64_t ram_fee = (uint64_t)(1.0f * ctx.get_ram_usage() / 1000 * fee_param.price_per_kbyte_ram);
+    uint64_t cpu_fee = trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu;
+
+    const auto &asset_obj = d.get<asset_object>(op.fee.asset_id);
+    asset fee = asset(ram_fee + cpu_fee, asset_id_type()) * asset_obj.options.core_exchange_rate;
+    fee_from_account += fee;
+    dlog("ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
+            ("rf",ram_fee)("cf",cpu_fee)("ru",ctx.get_ram_usage())("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
+    
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
