@@ -81,7 +81,7 @@ namespace graphene { namespace chain {
     */
 
    struct void_result{};
-   typedef fc::static_variant<void_result,object_id_type,asset> operation_result;
+   typedef fc::static_variant<void_result,object_id_type,asset,contract_receipt> operation_result;
 
    struct base_operation
    {

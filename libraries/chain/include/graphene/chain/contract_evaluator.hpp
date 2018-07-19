@@ -37,7 +37,7 @@ class contract_call_evaluator : public evaluator<contract_call_evaluator>
     typedef contract_call_operation operation_type;
 
     void_result do_evaluate(const contract_call_operation &op);
-    void_result do_apply(const contract_call_operation &op);
+    operation_result do_apply(const contract_call_operation &op);
 
     const account_object* acnt;
 };

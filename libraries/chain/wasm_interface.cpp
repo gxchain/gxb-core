@@ -108,7 +108,7 @@ class action_api : public context_aware_api {
          return context.receiver;
       }
 
-      int64_t get_action_asset_id() {
+      uint64_t get_action_asset_id() {
           if (context.act.amount.valid()) {
               return context.act.amount->asset_id.instance;
           }

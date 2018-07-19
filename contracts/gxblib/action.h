@@ -52,7 +52,7 @@ extern "C" {
     */
    account_name current_receiver();
 
-   int64_t get_action_asset_id();
+   uint64_t get_action_asset_id();
 
    int64_t get_action_asset_amount();
 

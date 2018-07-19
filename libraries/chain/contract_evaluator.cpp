@@ -96,7 +96,7 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
-void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
+operation_result contract_call_evaluator::do_apply(const contract_call_operation &op)
 { try {
     database& d = db();
     if (op.amount.valid()) {
@@ -131,7 +131,9 @@ void_result contract_call_evaluator::do_apply(const contract_call_operation &op)
     dlog("ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
             ("rf",ram_fee)("cf",cpu_fee)("ru",ctx.get_ram_usage())("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
     
-    return void_result();
+//    contract_receipt receipt(contract_receipt::fee_detail(fee.asset_id, ram_fee), contract_receipt::fee_detail(fee.asset_id, cpu_fee));
+    contract_receipt receipt{{fee.asset_id, ram_fee}, {fee.asset_id, cpu_fee}};
+    return receipt;
 } FC_CAPTURE_AND_RETHROW((op)) }
 
 } } // graphene::chain
