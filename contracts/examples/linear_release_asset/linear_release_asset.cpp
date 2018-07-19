@@ -56,9 +56,11 @@ class skeleton : public contract
     }
 
     /// @abi action
-    void lockasset(uint64_t from, account_name to, asset value, int64_t lock_duration, int64_t release_duration)
+    void lockasset(uint64_t from, account_name to, int64_t lock_duration, int64_t release_duration)
     {
-        auto lr = lockrules.find(from);
+        asset ast{get_action_asset_amount(), get_action_asset_id()};
+        uint64_t pk = lockrule::get_primary_key_by_account_and_asset(to, ast.asset_id);
+        auto lr = lockrules.find(pk);
         gxb_assert(lr == lockrules.end(), "have been locked, can only lock one time");
 
         lockrules.emplace(from, [&](auto &a) {
@@ -67,13 +69,13 @@ class skeleton : public contract
             a.lock_duration = lock_duration;
             a.release_time_point = a.lock_time_point + a.lock_duration;
             a.release_duration = release_duration;
-            a.asset_id = value.asset_id;
-            a.asset_amount = value.amount;
+            a.asset_id = ast.asset_id;
+            a.asset_amount = ast.amount;
             a.released_amount = 0;
-            a.id = lockrule::get_primary_key_by_account_and_asset(a.account_id, a.asset_id);
+            a.id = pk;
         });
 
-        addbalance(to, value);
+        addbalance(to, ast);
     }
 
     /// @abi action

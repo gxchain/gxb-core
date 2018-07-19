@@ -8,10 +8,10 @@
 deploy_contract cg3 nathan 0 0 /Users/sky/gxb_install/skeleton GXC true
 
 2.2.1 从beita(1.2.18)账号转账给nathan(1.2.17)，1000GXC(1.3.0)，锁定30秒后开始根据时间线性释放，300秒全部释放完毕
-call_contract beita ch3 {"amount":100000000,"asset_id":1.3.0} lockasset  "{\"from\":18,\"to\":17,\"value\":{\"amount\":100000000,\"contract_asset_id\":0},\"lock_duration\":30,\"release_duration\":300}" GXC true
+call_contract beita ch3 {"amount":100000000,"asset_id":1.3.0} lockasset  "{\"from\":18,\"to\":17,\"lock_duration\":30,\"release_duration\":300}" GXC true
 
 2.2.2 从beita(1.2.18)账号转账给nathan(1.2.17)，1000GXS(1.3.1)，锁定100秒后开始根据时间线性释放，3000秒全部释放完毕
-call_contract beita ch3 {"amount":100000000,"asset_id":1.3.1} lockasset  "{\"from\":18,\"to\":17,\"value\":{\"amount\":100000000,\"contract_asset_id\":1},\"lock_duration\":100,\"release_duration\":3000}" GXC true
+call_contract beita ch3 {"amount":100000000,"asset_id":1.3.1} lockasset  "{\"from\":18,\"to\":17,\"lock_duration\":100,\"release_duration\":3000}" GXC true
 
 2.3.1 查询合约cg3有哪些表
 get_contract_tables cg3
