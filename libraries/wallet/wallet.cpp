@@ -1074,7 +1074,6 @@
              auto action_type = abis.get_action_type(method);
              GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
              contract_call_op.data = abis.variant_to_binary(action_type, action_args_var);
-             dlog("contract_call_op.act.data=${d}", ("d", contract_call_op.act.data));
 
              signed_transaction tx;
              tx.operations.push_back(contract_call_op);
