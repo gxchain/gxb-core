@@ -1,28 +1,34 @@
 1.需要把linear_release_asset目录重命名为skeleton，目录里面的cpp文件也改名为skeleton.cpp再用gxbcpp命令生成abi和wast，wasm
 
+
 2.验证相关的方法
 
-2.1部署合约
-deploy_contract cg3      nathan 0 0 /Users/sky/gxb_install/skeleton GXC true
+2.1 部署合约
+deploy_contract cg3 nathan 0 0 /Users/sky/gxb_install/skeleton GXC true
 
-2.2.1从beita(1.2.18)账号转账给nathan(1.2.17)，1000GXC(1.3.0)，锁定30秒后开始根据时间线性释放，300秒全部释放完毕
-call_contract beita cg3 lockasset "{\"from\":18,\"to\":17,\"value\":{\"amount\":100000000,\"contract_asset_id\":0},\"lock_duration\":30,\"release_duration\":300}" GXC true
+2.2.1 从beita(1.2.18)账号转账给nathan(1.2.17)，1000GXC(1.3.0)，锁定30秒后开始根据时间线性释放，300秒全部释放完毕
+call_contract beita ch3 {"amount":100000000,"asset_id":1.3.0} lockasset  "{\"from\":18,\"to\":17,\"value\":{\"amount\":100000000,\"contract_asset_id\":0},\"lock_duration\":30,\"release_duration\":300}" GXC true
 
-2.2.2从beita(1.2.18)账号转账给nathan(1.2.17)，1000GXS(1.3.1)，锁定300秒后开始根据时间线性释放，3000秒全部释放完毕
-call_contract beita cg3 lockasset "{\"from\":18,\"to\":17,\"value\":{\"amount\":100000000,\"contract_asset_id\":1},\"lock_duration\":300,\"release_duration\":3000}" GXC true
+2.2.2 从beita(1.2.18)账号转账给nathan(1.2.17)，1000GXS(1.3.1)，锁定100秒后开始根据时间线性释放，3000秒全部释放完毕
+call_contract beita ch3 {"amount":100000000,"asset_id":1.3.1} lockasset  "{\"from\":18,\"to\":17,\"value\":{\"amount\":100000000,\"contract_asset_id\":1},\"lock_duration\":100,\"release_duration\":3000}" GXC true
 
-2.3.1查询合约cg3有哪些表
+2.3.1 查询合约cg3有哪些表
 get_contract_tables cg3
-2.3.1查询合约cg3 account表中的记录，最多查询10ms就立即返回结果
-get_table_objects cg3       account
-2.3.2查询合约cg3 lockrule表的记录，最多查询10ms就立即返回结果
-get_table_objects cg3       lockrule
-2.3.3查询合约下有多少资产
+
+2.3.1 查询合约cg3 account表中的记录，最多查询10ms就立即返回结果
+get_table_objects cg3 account
+
+2.3.2 查询合约cg3 lockrule表的记录，最多查询10ms就立即返回结果
+get_table_objects cg3 lockrule
+
+2.3.3 查询合约下有多少资产
 list_account_balances cg3
 
-2.4.1尝试释放cg3中nathan(1.2.17)的GXC(1.3.0)资产，根据当前时间和lockrule来释放
-call_contract beita cg3 tryrelease "{\"who\":17,\"asset_id\":0}" GXC true
-2.4.2尝试释放cg3中nathan(1.2.17)的GXC(1.3.1)资产，根据当前时间和lockrule来释放
-call_contract beita cg3 tryrelease "{\"who\":17,\"asset_id\":1}" GXC true
-2.4.1尝试释放cg3中nathan(1.2.17)的SKY(1.3.2)资产，根据当前时间和lockrule来释放，因为没有存放SKY资产，所以调用会失败
-call_contract beita cg3 tryrelease "{\"who\":17,\"asset_id\":2}" GXC true
+2.4.1 尝试释放cg3中nathan(1.2.17)的GXC(1.3.0)资产，根据当前时间和lockrule来释放
+call_contract beita ch3 null tryrelease "{\"who\":17,\"asset_id\":0}" SKY true
+
+2.4.2 尝试释放cg3中nathan(1.2.17)的GXC(1.3.1)资产，根据当前时间和lockrule来释放
+call_contract beita cg3 null tryrelease "{\"who\":17,\"asset_id\":1}" GXC true
+
+2.4.1 尝试释放cg3中nathan(1.2.17)的SKY(1.3.2)资产，根据当前时间和lockrule来释放，因为没有存放SKY资产，所以调用会失败
+call_contract beita cg3 null tryrelease "{\"who\":17,\"asset_id\":2}" GXC true
