@@ -27,7 +27,6 @@ namespace graphene {
     */
    struct action {
       uint64_t                   account;
-      asset                      amount;
       action_name                name;
       bytes                      data;
 
@@ -47,16 +46,7 @@ namespace graphene {
       {
       }
 
-      template <typename T>
-      action(uint64_t a, asset amnt, action_name n, T &&value)
-          : account(a)
-          , amount(amnt)
-          , name(n)
-          , data(pack(std::forward<T>(value)))
-      {
-      }
-
-      GXBLIB_SERIALIZE(action, (account)(amount)(name)(data))
+      GXBLIB_SERIALIZE(action, (account)(name)(data))
 
       void send() const
       {

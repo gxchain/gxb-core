@@ -109,7 +109,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
 
     transaction_context trx_context(d, op.fee_payer().instance);
     action act{op.contract_id, op.amount, op.method_name, op.data};
-    apply_context ctx{d, trx_context, act};
+    apply_context ctx{d, trx_context, act, op.amount};
     ctx.exec();
 
     auto fee_param = contract_call_operation::fee_parameters_type();

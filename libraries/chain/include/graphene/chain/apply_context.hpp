@@ -474,10 +474,11 @@ class apply_context {
 
    /// Constructor
    public:
-     apply_context(database &d, transaction_context &trx_ctx, const action &a)
+     apply_context(database &d, transaction_context &trx_ctx, const action &a, optional<asset> amnt)
          : act(a)
          , trx_context(trx_ctx)
          , _db(&d)
+         , amount(amnt)
          , receiver(a.contract_id.instance)
          , idx64(*this)
          , idx128(*this)
@@ -495,6 +496,7 @@ class apply_context {
       const action&                 act; ///< message being applied
       transaction_context&          trx_context; ///< transaction context in which the action is running
       database*                     _db;
+      optional<asset>               amount;
       uint64_t                      receiver;
 
       gph_generic_index<index64_object>                                  idx64;
