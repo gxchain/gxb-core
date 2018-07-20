@@ -73,7 +73,7 @@ namespace graphene { namespace chain {
 
    void transaction_context::dispatch_action(const action &a, account_name receiver)
    {
-       apply_context acontext(db(), *this, a);
+       apply_context acontext(db(), *this, a, optional<asset>());
        acontext.receiver = receiver;
 
        try {

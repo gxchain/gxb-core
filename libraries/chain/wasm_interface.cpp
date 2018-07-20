@@ -109,8 +109,8 @@ class action_api : public context_aware_api {
       }
 
       uint64_t get_action_asset_id() {
-          if (context.act.amount.valid()) {
-              return context.act.amount->asset_id.instance;
+          if (context.amount.valid()) {
+              return context.amount->asset_id.instance;
           }
           else {
               return 0;
@@ -118,8 +118,8 @@ class action_api : public context_aware_api {
       }
 
       int64_t get_action_asset_amount() {
-          if (context.act.amount.valid()) {
-              return context.act.amount->amount.value;
+          if (context.amount.valid()) {
+              return context.amount->amount.value;
           }
           else {
               return 0;
