@@ -19,7 +19,7 @@ class contracta : public contract
     void hicontract(uint64_t act_id)
     {
         printf("hi contract:", act_id);
-        action a(act_id, asset(), N(hi), 10);
+        action a(act_id, N(hi), 10);
         a.send();
     }
 };
