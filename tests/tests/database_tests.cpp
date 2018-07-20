@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE( db_store_i64_undo )
 
       const contract_call_operation op;
       transaction_context trx_context(db, account_id_type().instance);
-      apply_context ctx{db, trx_context, {account_id_type(), optional<asset>(), N(hi), {}}};
+      apply_context ctx{db, trx_context, {account_id_type(), N(hi), {}}, optional<asset>()};
       auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
 
       ses.undo();
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE( db_store_i64_commit )
 
       const contract_call_operation op;
       transaction_context trx_context(db, account_id_type().instance);
-      apply_context ctx{db, trx_context, {account_id_type(), optional<asset>(), N(hi), {}}};
+      apply_context ctx{db, trx_context, {account_id_type(), N(hi), {}}, optional<asset>()};
       auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
 
       ses.commit();
