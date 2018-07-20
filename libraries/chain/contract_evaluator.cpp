@@ -123,7 +123,8 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
         }
     }
 
-    uint64_t ram_fee = (uint64_t)(1.0f * ctx.get_ram_usage() / 1000 * fee_param.price_per_kbyte_ram);
+    const int RAM_KBYTE = 1000;
+    uint64_t ram_fee = (uint64_t)(1.0f * ctx.get_ram_usage() / RAM_KBYTE * fee_param.price_per_kbyte_ram);
     uint64_t cpu_fee = trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu;
 
     const auto &asset_obj = d.get<asset_object>(op.fee.asset_id);
