@@ -7,18 +7,18 @@
 namespace graphene { namespace chain {
 
    struct action {
-      account_id_type          contract_id;
+      int64_t                  contract_id;
       action_name              method_name;
       bytes                    data;
 
       action() {}
 
       action(uint64_t account, action_name name, const bytes& d )
-            : contract_id(account_id_type(account & GRAPHENE_DB_MAX_INSTANCE_ID)), method_name(name), data(d) {
+            : contract_id(account & GRAPHENE_DB_MAX_INSTANCE_ID), method_name(name), data(d) {
       }
 
       action(account_id_type account, action_name name, const bytes& d )
-            : contract_id(account), method_name(name), data(d) {
+            : contract_id(account.instance), method_name(name), data(d) {
       }
 
    };

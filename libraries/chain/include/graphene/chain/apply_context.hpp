@@ -479,7 +479,7 @@ class apply_context {
          , trx_context(trx_ctx)
          , _db(&d)
          , amount(amnt)
-         , receiver(a.contract_id.instance)
+         , receiver(a.contract_id)
          , idx64(*this)
          , idx128(*this)
          , idx256(*this)

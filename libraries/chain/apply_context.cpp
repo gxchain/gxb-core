@@ -45,7 +45,7 @@ void apply_context::exec()
     exec_one();
 
     for (const auto &inline_action : _inline_actions) {
-        trx_context.dispatch_action(inline_action, inline_action.contract_id.instance);
+        trx_context.dispatch_action(inline_action, inline_action.contract_id);
     }
 }
 
@@ -57,7 +57,7 @@ void apply_context::reset_console()
 
 void apply_context::execute_inline(action &&a)
 {
-    const account_object& contract_obj = a.contract_id(db());
+    const account_object& contract_obj = account_id_type(a.contract_id)(db());
     FC_ASSERT(contract_obj.code.size() > 0, "inline action's code account ${account} does not exist", ("account", a.contract_id));
 
     _inline_actions.emplace_back(move(a));

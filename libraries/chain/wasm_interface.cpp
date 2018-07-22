@@ -1011,6 +1011,7 @@ class transaction_api : public context_aware_api {
 
          action act;
          fc::raw::unpack<action>(data, data_len, act);
+         idump((act));
          context.execute_inline(std::move(act));
       }
 };

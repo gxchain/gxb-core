@@ -18,8 +18,9 @@ class contracta : public contract
     /// @abi action
     void hicontract(uint64_t act_id)
     {
-        printf("hi contract:", act_id);
-        action a(act_id, N(hi), 10);
+        print("hi contract:", act_id);
+        std::string s = "abc";
+        action a(act_id, N(hi), bytes(s.begin(), s.end()));
         a.send();
     }
 };
