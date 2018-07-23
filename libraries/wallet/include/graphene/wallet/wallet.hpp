@@ -2156,6 +2156,14 @@ class wallet_api
        */
       fc::sha256 get_hash(const string& value);
 
+      /** sign_string
+       *
+       * @param wif_key private key
+       * @param raw_string string to be signed
+       * @return signature_type
+       */
+      signature_type sign_string(string wif_key, const string &raw_string);
+
       /** verify_transaction_signature
        * @param trx
        * @param pub_key
@@ -2380,6 +2388,7 @@ FC_API( graphene::wallet::wallet_api,
         (flood_transfer)
         (transfer_test)
         (get_hash)
+        (sign_string)
         (verify_transaction_signature)
         (verify_proxy_transfer_signature)
         (custom)

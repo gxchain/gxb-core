@@ -3853,6 +3853,16 @@
            return fc::sha256::hash(value);
        }
 
+      signature_type sign_string(string wif_key, const string &raw_string)
+      {
+          fc::optional<fc::ecc::private_key> privkey = wif_to_key(wif_key);
+          FC_ASSERT(privkey.valid(), "Malformed private key in _keys");
+
+          digest_type::encoder enc;
+          fc::raw::pack(enc, raw_string);
+          return privkey->sign_compact(enc.result());
+      }
+
        void flood_network(string prefix, uint32_t number_of_transactions)
        { try {
                const u_int16_t loop_num = 1000;
@@ -5179,6 +5189,11 @@
     fc::sha256 wallet_api::get_hash(const string& value)
     {
         return my->get_hash(value);
+    }
+
+    signature_type wallet_api::sign_string(string wif_key, const string &raw_string)
+    {
+        return my->sign_string(wif_key, raw_string);
     }
 
     bool wallet_api::verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key)
