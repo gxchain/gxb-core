@@ -8,13 +8,13 @@ using namespace graphene;
 class skeleton : public contract
 {
   public:
-    skeleton(account_name n)
-        : contract(n)
+    skeleton(uint64_t id)
+        : contract(id)
     {
     }
 
     /// @abi action
-    void hi(account_name user)
+    void hi(uint64_t user)
     {
         for (int i = 0; i < 2; ++i) {
             print("hi, ", user, "\n");

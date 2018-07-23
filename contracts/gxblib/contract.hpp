@@ -6,15 +6,15 @@ namespace graphene {
 class contract
 {
   public:
-    contract(account_name n)
-        : _self(n)
+    contract(uint64_t account_id)
+        : _self(account_id)
     {
     }
 
-    inline account_name get_self() const { return _self; }
+    inline uint64_t get_self() const { return _self; }
 
   protected:
-    account_name _self;
+    uint64_t _self;
 };
 
 }

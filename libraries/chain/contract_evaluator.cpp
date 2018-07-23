@@ -134,7 +134,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     fee_from_account += fee;
     dlog("ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
             ("rf",ram_fee)("cf",cpu_fee)("ru",ctx.get_ram_usage())("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
-    
+
     contract_receipt receipt{{fee.asset_id, ram_fee}, {fee.asset_id, cpu_fee}};
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)) }
