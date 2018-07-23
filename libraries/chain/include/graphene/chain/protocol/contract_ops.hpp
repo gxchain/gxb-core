@@ -46,6 +46,7 @@ struct contract_deploy_operation : public base_operation {
     {
         FC_ASSERT(fee.amount >= 0, "fee.amount < 0");
         FC_ASSERT(is_valid_name(name), "contract name is invalid");
+        FC_ASSERT(code.size() > 0, "contract code cannot be empty");
     }
 
     share_type calculate_fee(const fee_parameters_type &k) const

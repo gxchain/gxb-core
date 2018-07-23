@@ -37,13 +37,15 @@ namespace graphene { namespace chain {
 void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operation &op)
 { try {
     database &d = db();
+    const account_object &registrar = op.account(d);
 
     // check contract name
-    auto &acnt_indx = d.get_index_type<account_index>();
-    if (op.name.size()) {
-        auto current_account_itr = acnt_indx.indices().get<by_name>().find(op.name);
-        FC_ASSERT(current_account_itr == acnt_indx.indices().get<by_name>().end(), "Contract Name Existed, please change your contract name.");
-    }
+    auto &account_idx = d.get_index_type<account_index>();
+    auto current_account_itr = account_idx.indices().get<by_name>().find(op.name);
+    FC_ASSERT(current_account_itr == account_idx.indices().get<by_name>().end(), "contract name existed, contract name ${n}", ("n", op.name));
+
+    FC_ASSERT(op.code.size() > 0, "contract code cannot be empty");
+    FC_ASSERT(op.abi.actions.size() > 0, "contract has no actions");
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
