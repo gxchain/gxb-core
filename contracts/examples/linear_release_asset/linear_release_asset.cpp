@@ -4,7 +4,6 @@
 #include <gxblib/dispatcher.hpp>
 #include <gxblib/global.h>
 #include <gxblib/multi_index.hpp>
-#include <gxblib/types.h>
 #include <vector>
 
 using namespace graphene;
@@ -14,7 +13,7 @@ class skeleton : public contract
   private:
     //@abi table account i64
     struct account {
-        account_name owner;
+        uint64_t owner;
         std::vector<asset> assets;
 
         uint64_t primary_key() const { return owner; }
@@ -48,7 +47,7 @@ class skeleton : public contract
     typedef graphene::multi_index<N(lockrule), lockrule> lockrule_index;
 
   public:
-    skeleton(account_name n)
+    skeleton(uint64_t n)
         : contract(n)
         , accounts(_self, _self)
         , lockrules(_self, _self)
@@ -56,14 +55,14 @@ class skeleton : public contract
     }
 
     /// @abi action
-    void lockasset(uint64_t from, account_name to, int64_t lock_duration, int64_t release_duration)
+    void lockasset(uint64_t to, int64_t lock_duration, int64_t release_duration)
     {
         asset ast{get_action_asset_amount(), get_action_asset_id()};
         uint64_t pk = lockrule::get_primary_key_by_account_and_asset(to, ast.asset_id);
         auto lr = lockrules.find(pk);
         gxb_assert(lr == lockrules.end(), "have been locked, can only lock one time");
 
-        lockrules.emplace(from, [&](auto &a) {
+        lockrules.emplace(pk, [&](auto &a) {
             a.account_id = to;
             a.lock_time_point = get_head_block_time();
             a.lock_duration = lock_duration;
@@ -121,7 +120,7 @@ class skeleton : public contract
     }
 
   private:
-    void subbalance(account_name owner, asset value)
+    void subbalance(uint64_t owner, asset value)
     {
         auto it = accounts.find(owner);
         if (it == accounts.end()) {
@@ -156,7 +155,7 @@ class skeleton : public contract
         }
     }
 
-    void addbalance(account_name owner, asset value)
+    void addbalance(uint64_t owner, asset value)
     {
         auto it = accounts.find(owner);
         if (it == accounts.end()) {
@@ -193,7 +192,7 @@ class skeleton : public contract
         }
     }
 
-    uint64_t getbalance(account_name owner, uint64_t asset_id)
+    uint64_t getbalance(uint64_t owner, uint64_t asset_id)
     {
         auto it = accounts.find(owner);
         if (it == accounts.end()) {

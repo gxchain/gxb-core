@@ -3,14 +3,13 @@
 #include <gxblib/contract.hpp>
 #include <gxblib/dispatcher.hpp>
 #include <gxblib/print.hpp>
-#include <gxblib/types.hpp>
 
 using namespace graphene;
 
 class contracta : public contract
 {
   public:
-    contracta(account_name uname)
+    contracta(uint64_t uname)
         : contract(uname)
     {
     }
