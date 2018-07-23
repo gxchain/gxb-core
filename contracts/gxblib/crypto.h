@@ -46,26 +46,28 @@ void assert_sha512(char *data, uint32_t length, const checksum512 *hash);
 void assert_ripemd160(char *data, uint32_t length, const checksum160 *hash);
 
 /**
- *  Calculates sha256( data,length) and stores result in memory pointed to by hash 
+ *  Calculates sha256( data,length) and stores result in memory pointed to by hash
  *  `hash` should be checksum<256>
  */
 void sha256(char *data, uint32_t length, checksum256 *hash);
 
 /**
- *  Calculates sha1( data,length) and stores result in memory pointed to by hash 
+ *  Calculates sha1( data,length) and stores result in memory pointed to by hash
  *  `hash` should be checksum<160>
  */
 void sha1(char *data, uint32_t length, checksum160 *hash);
 
 /**
- *  Calculates sha512( data,length) and stores result in memory pointed to by hash 
+ *  Calculates sha512( data,length) and stores result in memory pointed to by hash
  *  `hash` should be checksum<512>
  */
 void sha512(char *data, uint32_t length, checksum512 *hash);
 
 /**
- *  Calculates ripemd160( data,length) and stores result in memory pointed to by hash 
+ *  Calculates ripemd160( data,length) and stores result in memory pointed to by hash
  *  `hash` should be checksum<160>
  */
 void ripemd160(char *data, uint32_t length, checksum160 *hash);
+
+bool verify_signature(chat *data, uint32_t length, signature* sig, public_key *pub_key);
 }

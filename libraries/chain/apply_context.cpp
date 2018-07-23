@@ -60,6 +60,8 @@ void apply_context::execute_inline(action &&a)
     const account_object& contract_obj = account_id_type(a.contract_id)(db());
     FC_ASSERT(contract_obj.code.size() > 0, "inline action's code account ${account} does not exist", ("account", a.contract_id));
 
+    // TODO
+    // authorization
     _inline_actions.emplace_back(move(a));
 }
 

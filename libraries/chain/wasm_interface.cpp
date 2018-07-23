@@ -224,6 +224,17 @@ class crypto_api : public context_aware_api {
       void ripemd160(array_ptr<char> data, size_t datalen, fc::ripemd160& hash_val) {
          hash_val = encode<fc::ripemd160::encoder>( data, datalen );
       }
+
+      bool verify_signature(array_ptr<char> data, size_t datalen, const fc::ecc::compact_signature& sig, const fc::ecc::public_key &pub_key)
+      {
+          std::string raw_txt(data, datalen);
+          digest_type::encoder enc;
+          fc::raw::pack(enc, raw_txt);
+          idump((sig));
+          idump((pub_key));
+          idump((raw_txt));
+          return fc::ecc::public_key(sig, enc.result(), true) == pub_key;
+      }
 };
 
 class context_free_system_api : public context_aware_api
@@ -1485,6 +1496,7 @@ REGISTER_INTRINSICS(crypto_api,
 (sha256,                 void(int, int, int)           )
 (sha512,                 void(int, int, int)           )
 (ripemd160,              void(int, int, int)           )
+(verify_signature,       int(int, int, int, int)       )
 );
 
 REGISTER_INTRINSICS(action_api,
