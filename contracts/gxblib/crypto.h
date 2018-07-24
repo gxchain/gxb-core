@@ -69,5 +69,5 @@ void sha512(char *data, uint32_t length, checksum512 *hash);
  */
 void ripemd160(char *data, uint32_t length, checksum160 *hash);
 
-bool verify_signature(char *data, uint32_t length, signature* sig, char *pub_key_data, uint32_t pub_key_length);
+bool verify_signature(char *data, uint32_t length, char *sig_data, uint32_t sig_len, char *pub_key_data, uint32_t pub_key_length);
 }
