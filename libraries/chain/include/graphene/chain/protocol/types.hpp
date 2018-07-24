@@ -504,24 +504,18 @@ namespace graphene { namespace chain {
    struct contract_receipt {
        struct fee_detail {
            asset_id_type asset_id;
-           uint64_t amount;
-
-           fee_detail() = default;
-           fee_detail(const asset_id_type &id, uint64_t amt) : asset_id(id), amount(amt) {}
+           uint64_t amount = 0;
        };
 
        uint8_t status = 0;
        fee_detail ram_fee;
        fee_detail cpu_fee;
-
-       contract_receipt() = default;
        explicit operator std::string() const
        {
            return "{\"status\":" + std::to_string(status) + "\"ram_fee\":{\"asset_id\":" + std::string(object_id_type(ram_fee.asset_id)) +
                    ",\"amount\":"+ std::to_string(ram_fee.amount) + "},\"cpu_fee\":{\"asset_id\":" +
                    std::string(object_id_type(cpu_fee.asset_id)) + ",\"amount\":"+ std::to_string(cpu_fee.amount) +"}";
        }
-       contract_receipt(uint8_t s, const fee_detail& ramfee, const fee_detail& cpufee) : status(s), ram_fee(ramfee), cpu_fee(cpufee) {}
    };
 
 
@@ -543,9 +537,6 @@ FC_REFLECT( graphene::chain::extended_public_key_type, (key_data) )
 FC_REFLECT( graphene::chain::extended_public_key_type::binary_key, (check)(data) )
 FC_REFLECT( graphene::chain::extended_private_key_type, (key_data) )
 FC_REFLECT( graphene::chain::extended_private_key_type::binary_key, (check)(data) )
-
-FC_REFLECT( graphene::chain::contract_receipt, (ram_fee)(cpu_fee) )
-FC_REFLECT( graphene::chain::contract_receipt::fee_detail, (asset_id)(amount) )
 
 FC_REFLECT_ENUM( graphene::chain::data_market_type_enum,
                  (free_data_market)
@@ -670,6 +661,8 @@ FC_REFLECT( graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_base
 FC_REFLECT( graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
 FC_REFLECT( graphene::chain::interest_rate_t, (lock_days)(interest_rate)(is_valid) )
 FC_REFLECT( graphene::chain::lock_balance_params_t, (params) )
+FC_REFLECT( graphene::chain::contract_receipt::fee_detail, (asset_id)(amount) )
+FC_REFLECT( graphene::chain::contract_receipt, (status)(ram_fee)(cpu_fee) )
 
 FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)
