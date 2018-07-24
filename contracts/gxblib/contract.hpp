@@ -1,4 +1,5 @@
 #pragma once
+#include <gxblib/types.h>
 
 namespace graphene {
 
