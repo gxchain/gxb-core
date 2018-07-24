@@ -31,7 +31,7 @@ struct public_key {
 };
 
 struct signature {
-   uint8_t data[66];
+   uint8_t data[65];
 };
 
 struct ALIGNED(checksum256) {
