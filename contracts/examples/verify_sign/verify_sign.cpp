@@ -18,12 +18,12 @@ class verify_sign : public contract
     {
         char *pub_key_data;
         int pub_key_len = pub_key.length();
-        pub_key_data = (char *)malloc((pub_key_len + 1) * sizeof(char));
-        pub_key.copy(pub_key_data, pub_key_len, 0);
+        pub_key_data = (char *)malloc((pub_key_len) * sizeof(char));
+        pub_key.copy(pub_key_data, pub_key_len);
 
         char *data;
         int len = raw_string.length();
-        data = (char *) malloc((len + 1) * sizeof(char));
+        data = (char *) malloc((len) * sizeof(char));
         raw_string.copy(data, len, 0);
 
         print("pub_key, ", pub_key, "\n");
