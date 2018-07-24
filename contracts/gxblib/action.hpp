@@ -48,11 +48,13 @@ namespace graphene {
 
       GXBLIB_SERIALIZE(action, (account)(name)(data))
 
+      /*
       void send() const
       {
           auto serialize = pack(*this);
           ::send_inline(serialize.data(), serialize.size());
       }
+      */
 
    };
 
