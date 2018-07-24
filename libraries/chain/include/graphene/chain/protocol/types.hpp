@@ -500,28 +500,28 @@ namespace graphene { namespace chain {
       friend bool operator == ( const extended_private_key_type& p1, const extended_private_key_type& p2);
       friend bool operator != ( const extended_private_key_type& p1, const extended_private_key_type& p2);
    };
-   
+
    struct contract_receipt {
        struct fee_detail {
            asset_id_type asset_id;
            uint64_t amount;
-           
+
            fee_detail() = default;
            fee_detail(const asset_id_type &id, uint64_t amt) : asset_id(id), amount(amt) {}
        };
-       
+
+       uint8_t status = 0;
        fee_detail ram_fee;
        fee_detail cpu_fee;
-       
+
        contract_receipt() = default;
-       contract_receipt(const fee_detail& ramfee, const fee_detail& cpufee) : ram_fee(ramfee), cpu_fee(cpufee) {}
-       
        explicit operator std::string() const
        {
-           return "{\"ram_fee\":{\"asset_id\":" + std::string(object_id_type(ram_fee.asset_id)) +
+           return "{\"status\":" + std::to_string(status) + "\"ram_fee\":{\"asset_id\":" + std::string(object_id_type(ram_fee.asset_id)) +
                    ",\"amount\":"+ std::to_string(ram_fee.amount) + "},\"cpu_fee\":{\"asset_id\":" +
                    std::string(object_id_type(cpu_fee.asset_id)) + ",\"amount\":"+ std::to_string(cpu_fee.amount) +"}";
        }
+       contract_receipt(uint8_t s, const fee_detail& ramfee, const fee_detail& cpufee) : status(s), ram_fee(ramfee), cpu_fee(cpufee) {}
    };
 
 

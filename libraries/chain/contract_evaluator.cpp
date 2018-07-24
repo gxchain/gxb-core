@@ -125,9 +125,10 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
         }
     }
 
-    const int RAM_KBYTE = 1000;
-    uint64_t ram_fee = (uint64_t)(1.0f * ctx.get_ram_usage() / RAM_KBYTE * fee_param.price_per_kbyte_ram);
-    uint64_t cpu_fee = trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu;
+    auto ram_result = fc::uint128(ctx.get_ram_usage() * fee_param.price_per_kbyte_ram) / 1024;
+    auto cpu_result = fc::uint128(trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu);
+    uint64_t ram_fee = ram_result.to_uint64();
+    uint64_t cpu_fee = cpu_result.to_uint64();
 
     const auto &asset_obj = d.get<asset_object>(op.fee.asset_id);
     asset fee = asset(ram_fee + cpu_fee, asset_id_type()) * asset_obj.options.core_exchange_rate;
@@ -135,7 +136,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     dlog("ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
             ("rf",ram_fee)("cf",cpu_fee)("ru",ctx.get_ram_usage())("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
 
-    contract_receipt receipt{{fee.asset_id, ram_fee}, {fee.asset_id, cpu_fee}};
+    contract_receipt receipt{0, {fee.asset_id, ram_fee}, {fee.asset_id, cpu_fee}};
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)) }
 
