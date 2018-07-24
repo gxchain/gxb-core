@@ -1427,12 +1427,13 @@ class asset_api : public context_aware_api
         : context_aware_api(ctx, true)
     {}
 
-    void withdraw_asset(int64_t from, int64_t to, int64_t asset_id, int64_t amount)
+    void withdraw_asset(uint64_t from, uint64_t to, uint64_t asset_id, int64_t amount)
     {
         FC_ASSERT(from == context.receiver, "can only withdraw from contract ${c}", ("c", context.receiver));
         FC_ASSERT(from != to, "cannot transfer to self");
         FC_ASSERT(amount> 0, "amount must > 0");
 
+        dlog("asset_id=${i}", ("i", asset_id));
         auto &d = context.db();
         asset a{amount, asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID)};
         // adjust balance

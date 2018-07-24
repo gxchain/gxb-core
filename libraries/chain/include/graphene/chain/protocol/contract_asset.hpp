@@ -8,13 +8,13 @@ extern const int64_t scaled_precision_lut[];
 struct contract_asset {
     contract_asset(int64_t a = 0, uint64_t id = 0)
         : amount(a)
-        , contract_asset_id(id)
+        , asset_id(id)
     {
         FC_ASSERT(is_amount_within_range(), "magnitude of asset amount must be less than 2^62");
     }
 
     int64_t     amount;
-    uint64_t    contract_asset_id;
+    uint64_t    asset_id;
 
     static constexpr int64_t max_amount = (1LL << 62) - 1;
 
@@ -22,7 +22,7 @@ struct contract_asset {
 
     contract_asset &operator+=(const contract_asset &o)
     {
-        FC_ASSERT(contract_asset_id == o.contract_asset_id);
+        FC_ASSERT(asset_id == o.asset_id);
         amount += o.amount;
         FC_ASSERT(-max_amount <= amount, "subtraction underflow");
         FC_ASSERT(amount <= max_amount, "subtraction overflow");
@@ -30,21 +30,21 @@ struct contract_asset {
     }
     contract_asset &operator-=(const contract_asset &o)
     {
-        FC_ASSERT(contract_asset_id == o.contract_asset_id);
+        FC_ASSERT(asset_id == o.asset_id);
         amount -= o.amount;
         FC_ASSERT(-max_amount <= amount, "subtraction underflow");
         FC_ASSERT(amount <= max_amount, "subtraction overflow");
         return *this;
     }
-    contract_asset operator-() const { return contract_asset(-amount, contract_asset_id); }
+    contract_asset operator-() const { return contract_asset(-amount, asset_id); }
 
     friend bool operator==(const contract_asset &a, const contract_asset &b)
     {
-        return std::tie(a.contract_asset_id, a.amount) == std::tie(b.contract_asset_id, b.amount);
+        return std::tie(a.asset_id, a.amount) == std::tie(b.asset_id, b.amount);
     }
     friend bool operator<(const contract_asset &a, const contract_asset &b)
     {
-        FC_ASSERT(a.contract_asset_id == b.contract_asset_id);
+        FC_ASSERT(a.asset_id == b.asset_id);
         return a.amount < b.amount;
     }
     friend bool operator<=(const contract_asset &a, const contract_asset &b)
@@ -67,13 +67,13 @@ struct contract_asset {
 
     friend contract_asset operator-(const contract_asset &a, const contract_asset &b)
     {
-        FC_ASSERT(a.contract_asset_id == b.contract_asset_id);
-        return contract_asset(a.amount - b.amount, a.contract_asset_id);
+        FC_ASSERT(a.asset_id == b.asset_id);
+        return contract_asset(a.amount - b.amount, a.asset_id);
     }
     friend contract_asset operator+(const contract_asset &a, const contract_asset &b)
     {
-        FC_ASSERT(a.contract_asset_id == b.contract_asset_id);
-        return contract_asset(a.amount + b.amount, a.contract_asset_id);
+        FC_ASSERT(a.asset_id == b.asset_id);
+        return contract_asset(a.amount + b.amount, a.asset_id);
     }
 
     static int64_t scaled_precision(uint8_t precision)
@@ -85,4 +85,4 @@ struct contract_asset {
 
 } }
 
-FC_REFLECT(graphene::chain::contract_asset, (amount)(contract_asset_id))
+FC_REFLECT(graphene::chain::contract_asset, (amount)(asset_id))
