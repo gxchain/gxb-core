@@ -28,7 +28,7 @@ class transfer : public contract
         uint64_t asset_id = get_action_asset_id();
 
         gxb_assert(asset_amount > 0, "deposit amount must > 0");
-        gxb_assert(asset_amount >= 0, "deposit asset_id must >= 0");
+        gxb_assert(asset_id >= 0, "deposit asset_id must >= 0");
 
         asset amount{asset_amount, asset_id};
 
