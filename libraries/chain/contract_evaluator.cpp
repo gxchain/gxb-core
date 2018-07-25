@@ -87,7 +87,7 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     FC_ASSERT(iter != actions.end(), "method_name ${m} not found in abi", ("m", op.method_name));
     if (op.amount.valid()) {
         // check method_name, must be payable
-        FC_ASSERRT(iter->payable, "method_name ${m} not payable", ("m", op.method_name));
+        FC_ASSERT(iter->payable, "method_name ${m} not payable", ("m", op.method_name));
     }
 
 
