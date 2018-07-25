@@ -1,6 +1,6 @@
 #include <gxblib/asset.h>
-#include <gxblib/asset.hpp>
 #include <gxblib/contract.hpp>
+#include <gxblib/contract_asset.hpp>
 #include <gxblib/dispatcher.hpp>
 #include <gxblib/global.h>
 #include <gxblib/multi_index.hpp>
@@ -29,7 +29,7 @@ class transfer : public contract
 
         gxb_assert(asset_amount > 0, "deposit amount must > 0");
 
-        asset amount{asset_amount, asset_id};
+        contract_asset amount{asset_amount, asset_id};
 
         auto it = ownerassets_index.find(owner);
         if (it == ownerassets_index.end()) {
@@ -65,7 +65,7 @@ class transfer : public contract
     }
 
     // @abi action
-    void withdraw(asset amount, uint64_t to)
+    void withdraw(contract_asset amount, uint64_t to)
     {
         uint64_t owner = get_trx_sender();
         auto it = ownerassets_index.find(owner);
@@ -76,7 +76,7 @@ class transfer : public contract
 
         int asset_index = 0;
         for (auto asset_it = it->assets.begin(); asset_it != it->assets.end(); ++asset_it) {
-            if ((amount.asset_id & GRAPHENE_DB_MAX_INSTANCE_ID) == asset_it->asset_id ) {
+            if ((amount.asset_id & GRAPHENE_DB_MAX_INSTANCE_ID) == asset_it->asset_id) {
                 gxb_assert(asset_it->amount >= amount.amount, "balance not enough");
                 print("asset_it->amount=", asset_it->amount);
                 print("amount.amount=", amount.amount);
@@ -92,7 +92,7 @@ class transfer : public contract
                         o.assets[asset_index] -= amount;
                     });
                 }
-                
+
                 break;
             }
             asset_index++;
@@ -105,7 +105,7 @@ class transfer : public contract
     //@abi table ownerassets i64
     struct ownerassets {
         uint64_t owner;
-        std::vector<asset> assets;
+        std::vector<contract_asset> assets;
 
         uint64_t primary_key() const { return owner; }
 

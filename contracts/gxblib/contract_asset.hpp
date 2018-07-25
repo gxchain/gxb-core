@@ -9,8 +9,8 @@ namespace graphene {
 
 extern const int64_t scaled_precision_lut[];
 
-struct asset {
-    asset(int64_t a = 0, uint64_t id = 0)
+struct contract_asset {
+    contract_asset(int64_t a = 0, uint64_t id = 0)
         : amount(a)
         , asset_id(id & GRAPHENE_DB_MAX_INSTANCE_ID)
     {

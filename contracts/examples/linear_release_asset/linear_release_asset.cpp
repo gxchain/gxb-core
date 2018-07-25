@@ -1,6 +1,6 @@
 #include <gxblib/asset.h>
-#include <gxblib/asset.hpp>
 #include <gxblib/contract.hpp>
+#include <gxblib/contract_asset.hpp>
 #include <gxblib/dispatcher.hpp>
 #include <gxblib/global.h>
 #include <gxblib/multi_index.hpp>
@@ -14,7 +14,7 @@ class skeleton : public contract
     //@abi table account i64
     struct account {
         uint64_t owner;
-        std::vector<asset> assets;
+        std::vector<contract_asset> assets;
 
         uint64_t primary_key() const { return owner; }
 
@@ -57,7 +57,7 @@ class skeleton : public contract
     /// @abi action
     void lockasset(uint64_t to, int64_t lock_duration, int64_t release_duration)
     {
-        asset ast{get_action_asset_amount(), get_action_asset_id()};
+        contract_asset ast{get_action_asset_amount(), get_action_asset_id()};
         uint64_t pk = lockrule::get_primary_key_by_account_and_asset(to, ast.asset_id);
         auto lr = lockrules.find(pk);
         gxb_assert(lr == lockrules.end(), "have been locked, can only lock one time");
@@ -105,7 +105,7 @@ class skeleton : public contract
             return;
         }
 
-        asset a{should_release_amount, asset_id};
+        contract_asset a{should_release_amount, asset_id};
         subbalance(who, a);
         withdraw_asset(_self, who, a.asset_id, a.amount);
 
@@ -120,7 +120,7 @@ class skeleton : public contract
     }
 
   private:
-    void subbalance(uint64_t owner, asset value)
+    void subbalance(uint64_t owner, contract_asset value)
     {
         auto it = accounts.find(owner);
         if (it == accounts.end()) {
@@ -155,7 +155,7 @@ class skeleton : public contract
         }
     }
 
-    void addbalance(uint64_t owner, asset value)
+    void addbalance(uint64_t owner, contract_asset value)
     {
         auto it = accounts.find(owner);
         if (it == accounts.end()) {
@@ -208,7 +208,7 @@ class skeleton : public contract
 
         return 0;
     }
-    
+
   private:
     account_index accounts;
     lockrule_index lockrules;

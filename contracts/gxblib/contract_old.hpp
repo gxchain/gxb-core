@@ -1,10 +1,10 @@
 #pragma once
 #include <gxblib/gxb.hpp>
-#include <gxblib/asset.hpp>
 #include <gxblib/global.h>
 #include <gxblib/system.h>
 #include <gxblib/asset.h>
 #include <gxblib/multi_index.hpp>
+#include "contract_asset.hpp"
 
 namespace graphene {
 
