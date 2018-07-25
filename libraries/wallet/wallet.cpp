@@ -935,7 +935,6 @@
        { try {
              account_object contract_obj = get_account(contract);
 
-             bool table_exist = false;
              const auto& tables = contract_obj.abi.tables;
              auto iter = std::find_if(tables.begin(), tables.end(),
                      [&](const table_def& t) { return t.name == table; });
