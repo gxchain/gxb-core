@@ -65,15 +65,8 @@ class transfer : public contract
     }
 
     // @abi action
-    void withdraw(asset amount)
+    void withdraw(asset amount, uint64_t to)
     {
-        print("amount.id=", amount.asset_id);
-        print("amount.amount=", amount.amount);
-        int64_t asset_amount = get_action_asset_amount();
-        if (asset_amount > 0) {//skip trap for lose asset
-            deposit();
-        }
-
         uint64_t owner = get_trx_sender();
         auto it = ownerassets_index.find(owner);
         if (it == ownerassets_index.end()) {
@@ -85,6 +78,8 @@ class transfer : public contract
         for (auto asset_it = it->assets.begin(); asset_it != it->assets.end(); ++asset_it) {
             if (asset_it->asset_id == amount.asset_id) {
                 gxb_assert(asset_it->amount >= amount.amount, "balance not enough");
+                print("asset_it->amount=", asset_it->amount);
+                print("amount.amount=", amount.amount);
                 if (asset_it->amount == amount.amount) {
                     ownerassets_index.modify(it, 0, [&](auto &o) {
                         o.assets.erase(asset_it);
@@ -97,11 +92,13 @@ class transfer : public contract
                         o.assets[asset_index] -= amount;
                     });
                 }
+                
+                break;
             }
             asset_index++;
         }
 
-        withdraw_asset(_self, owner, amount.asset_id, amount.amount);
+        withdraw_asset(_self, to, amount.asset_id, amount.amount);
     }
 
   private:
