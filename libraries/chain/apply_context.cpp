@@ -29,11 +29,17 @@ void apply_context::exec_one()
         }
    } FC_CAPTURE_AND_RETHROW((_pending_console_output.str()));
 
-
    auto console = _pending_console_output.str();
-   dlog("CONSOLE OUTPUT BEGIN =====================\n"
+   auto prefix = fc::format_string(
+                                   "\n[(${a},${n})->${r}] ",
+                                   fc::mutable_variant_object()
+                                   ("a", account_id_type(act.contract_id))
+                                   ("n", act.method_name)
+                                   ("r", account_id_type(receiver)));
+
+   dlog(prefix + "CONSOLE OUTPUT BEGIN =====================\n"
            + console + "\n"
-           + " CONSOLE OUTPUT END =====================" );
+           + prefix + "CONSOLE OUTPUT END =====================" );
 
    reset_console();
    auto end = fc::time_point::now();
