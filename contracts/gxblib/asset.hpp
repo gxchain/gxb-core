@@ -8,11 +8,12 @@
 namespace graphene {
 
 extern const int64_t scaled_precision_lut[];
+#define GRAPHENE_DB_MAX_INSTANCE_ID  (uint64_t(-1)>>16)
 
 struct asset {
     asset(int64_t a = 0, uint64_t id = 0)
         : amount(a)
-        , asset_id(id)
+        , asset_id(id & GRAPHENE_DB_MAX_INSTANCE_ID)
     {
         gxb_assert(is_amount_within_range(), "magnitude of asset amount must be less than 2^62");
     }
