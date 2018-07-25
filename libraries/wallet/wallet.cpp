@@ -932,54 +932,36 @@
        }
 
        variants get_table_objects(string contract, string table)
-       {
-           try {
-               FC_ASSERT(!self.is_locked());
-               FC_ASSERT(is_valid_name(contract));
+       { try {
+             account_object contract_obj = get_account(contract);
 
-               account_object contract_account = this->get_account(contract);
+             bool table_exist = false;
+             const auto& tables = contract_obj.abi.tables;
+             auto iter = std::find_if(tables.begin(), tables.end(),
+                     [&](const table_def& t) { return t.name == table; });
 
-               bool table_exist = false;
-               for (auto &t : contract_account.abi.tables) {
-                   if (t.name == table) {
-                       table_exist = true;
-                       break;
-                   }
-               }
-               if (table_exist) {
-                   return _remote_db->get_table_objects(contract_account.id.number, contract_account.id.number, name(table));
-               } else {
-                   GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
-               }
-           }
-           FC_CAPTURE_AND_LOG((contract))
-
-           return variants();
-       }
+             if (iter != tables.end()) {
+                 return _remote_db->get_table_objects(contract_obj.id.number, contract_obj.id.number, name(table));
+             } else {
+                 GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
+             }
+       } FC_CAPTURE_AND_LOG((contract)(table)) }
 
        variant get_contract_tables(string contract)
-       {
-           try {
-               FC_ASSERT(!self.is_locked());
-               FC_ASSERT(is_valid_name(contract));
+       { try {
+             account_object contract_obj = get_account(contract);
 
-               account_object contract_account = this->get_account(contract);
+             fc::variants result;
+             auto tables = contract_obj.abi.tables;
+             result.reserve(tables.size());
 
-               fc::variants result;
-               auto tables = contract_account.abi.tables;
-               result.reserve(tables.size());
+             std::transform(tables.begin(), tables.end(), std::back_inserter(result),
+                     [](table_def t_def) -> fc::variant {
+                     return name(t_def.name).to_string();
+                     });
 
-               std::transform(tables.begin(), tables.end(), std::back_inserter(result),
-                              [](table_def t_def) -> fc::variant {
-                                  return name(t_def.name).to_string();
-                              });
-
-               return result;
-           }
-           FC_CAPTURE_AND_LOG((contract))
-
-           return variant();
-       }
+             return result;
+       } FC_CAPTURE_AND_LOG((contract)) }
 
        signed_transaction deploy_contract(string name,
                                           string account,
