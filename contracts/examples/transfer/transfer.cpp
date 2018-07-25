@@ -20,6 +20,7 @@ class transfer : public contract
     }
 
     // @abi action
+    // @abi payable
     void deposit()
     {
         uint64_t owner = get_trx_sender();

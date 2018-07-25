@@ -103,14 +103,21 @@ bool abi_generator::inspect_type_methods_for_actions(const Decl* decl) { try {
 
     // Try to get "action" annotation from method comment
     bool raw_comment_is_action = false;
+    bool payable = false;
     const RawComment* raw_comment = ast_context->getRawCommentForDeclNoCache(method);
     if(raw_comment != nullptr) {
       SourceManager& source_manager = ast_context->getSourceManager();
       string raw_text = raw_comment->getRawText(source_manager);
-      regex r(R"(@abi (action)((?: [a-z0-9]+)*))");
-      smatch smatch;
-      regex_search(raw_text, smatch, r);
-      raw_comment_is_action = smatch.size() == 3;
+      regex action_r(R"(@abi (action)((?: [a-z0-9]+)*))");
+      smatch action_smatch;
+      regex_search(raw_text, action_smatch, action_r);
+      raw_comment_is_action = action_smatch.size() == 3;
+      
+      regex payable_r(R"(@abi (payable)((?: [a-z0-9]+)*))");
+      smatch payable_smatch;
+      regex_search(raw_text, payable_smatch, payable_r);
+      raw_comment_is_action = payable_smatch.size() == 3;
+      payable = payable_smatch.size() == 3;
     }
 
     // Check if current method is listed the EOSIO_ABI macro
@@ -147,7 +154,7 @@ bool abi_generator::inspect_type_methods_for_actions(const Decl* decl) { try {
 
     full_types[method_name] = method_name;
 
-    output->actions.push_back({method_name, method_name, rc[method_name]});
+    output->actions.push_back({method_name, method_name, payable, rc[method_name]});
     at_least_one_action = true;
   };
 
@@ -206,7 +213,7 @@ void abi_generator::handle_decl(const Decl* decl) { try {
   string raw_text = raw_comment->getRawText(source_manager);
   regex r;
 
-  // If EOSIO_ABI macro was found, we will only check if the current Decl
+  // If GXB_ABI macro was found, we will only check if the current Decl
   // is intented to be an ABI table record, otherwise we check for both (action or table)
   if( target_contract.size() )
     r = regex(R"(@abi (table)((?: [a-z0-9]+)*))");
@@ -247,7 +254,7 @@ void abi_generator::handle_decl(const Decl* decl) { try {
             ABI_ASSERT(ac->type == type_name, "Same action name with different type ${action}",("action",action));
             continue;
           }
-          output->actions.push_back({action, type_name, rc[action]});
+          output->actions.push_back({action, type_name, false, rc[action]});
         }
 
       } else if (type == "table") {

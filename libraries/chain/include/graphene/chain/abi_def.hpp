@@ -52,12 +52,13 @@ struct struct_def {
 
 struct action_def {
    action_def() = default;
-   action_def(const action_name& name, const type_name& type, const string& ricardian_contract)
-   :name(name), type(type), ricardian_contract(ricardian_contract)
+   action_def(const action_name& name, const type_name& type, bool tpayable, const string& ricardian_contract)
+   :name(name), type(type), payable(tpayable), ricardian_contract(ricardian_contract)
    {}
 
    action_name name;
    type_name   type;
+   bool        payable = false;
    string      ricardian_contract;
 };
 
@@ -124,7 +125,7 @@ vector<type_def> common_type_defs();
 FC_REFLECT( graphene::chain::type_def                         , (new_type_name)(type) )
 FC_REFLECT( graphene::chain::field_def                        , (name)(type) )
 FC_REFLECT( graphene::chain::struct_def                       , (name)(base)(fields) )
-FC_REFLECT( graphene::chain::action_def                       , (name)(type)(ricardian_contract) )
+FC_REFLECT( graphene::chain::action_def                       , (name)(type)(payable)(ricardian_contract) )
 FC_REFLECT( graphene::chain::table_def                        , (name)(index_type)(key_names)(key_types)(type) )
 FC_REFLECT( graphene::chain::clause_pair                      , (id)(body) )
 FC_REFLECT( graphene::chain::error_message                    , (error_code)(error_msg) )
