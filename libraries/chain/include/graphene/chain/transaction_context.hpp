@@ -2,10 +2,6 @@
 
 namespace graphene { namespace chain {
 
-   namespace config {
-       const fc::microseconds cpu_duration_limit = fc::microseconds(10 * 1000);//default 10ms TODO can config by configuration
-   }
-
    class transaction_context {
       private:
          void init();
