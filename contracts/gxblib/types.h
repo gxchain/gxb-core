@@ -14,6 +14,8 @@ extern "C" {
  *  @{
  */
 
+#define GRAPHENE_DB_MAX_INSTANCE_ID  (uint64_t(-1)>>16)
+
 typedef uint64_t account_name;
 typedef uint64_t permission_name;
 typedef uint64_t table_name;

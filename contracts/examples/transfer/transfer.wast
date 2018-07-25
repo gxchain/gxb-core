@@ -445,7 +445,10 @@
   )
   (i64.store offset=32
    (get_local $10)
-   (get_local $2)
+   (i64.and
+    (get_local $2)
+    (i64.const 281474976710655)
+   )
   )
   (i64.store offset=24
    (get_local $10)
@@ -1066,11 +1069,14 @@
        )
       )
       (set_local $3
-       (i64.load
-        (i32.add
-         (get_local $1)
-         (i32.const 8)
+       (i64.and
+        (i64.load
+         (i32.add
+          (get_local $1)
+          (i32.const 8)
+         )
         )
+        (i64.const 281474976710655)
        )
       )
       (set_local $7
@@ -1079,13 +1085,13 @@
       (loop $label$8
        (br_if $label$4
         (i64.eq
+         (get_local $3)
          (i64.load
           (i32.add
            (get_local $8)
            (i32.const 8)
           )
          )
-         (get_local $3)
         )
        )
        (i32.store offset=4

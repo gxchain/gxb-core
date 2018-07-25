@@ -76,7 +76,7 @@ class transfer : public contract
 
         int asset_index = 0;
         for (auto asset_it = it->assets.begin(); asset_it != it->assets.end(); ++asset_it) {
-            if (asset_it->asset_id == amount.asset_id) {
+            if ((amount.asset_id & GRAPHENE_DB_MAX_INSTANCE_ID) == asset_it->asset_id ) {
                 gxb_assert(asset_it->amount >= amount.amount, "balance not enough");
                 print("asset_it->amount=", asset_it->amount);
                 print("amount.amount=", amount.amount);
