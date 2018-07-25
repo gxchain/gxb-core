@@ -24,7 +24,7 @@ struct contract_asset {
 
     bool is_amount_within_range() const { return -max_amount <= amount && amount <= max_amount; }
 
-    asset &operator+=(const asset &o)
+    contract_asset &operator+=(const contract_asset &o)
     {
         assert(asset_id == o.asset_id);
         amount += o.amount;
@@ -32,7 +32,7 @@ struct contract_asset {
         gxb_assert(amount <= max_amount, "subtraction overflow");
         return *this;
     }
-    asset &operator-=(const asset &o)
+    contract_asset &operator-=(const contract_asset &o)
     {
         assert(asset_id == o.asset_id);
         amount -= o.amount;
@@ -40,44 +40,44 @@ struct contract_asset {
         gxb_assert(amount <= max_amount, "subtraction overflow");
         return *this;
     }
-    asset operator-() const { return asset(-amount, asset_id); }
+    contract_asset operator-() const { return contract_asset(-amount, asset_id); }
 
-    friend bool operator==(const asset &a, const asset &b)
+    friend bool operator==(const contract_asset &a, const contract_asset &b)
     {
         return std::tie(a.asset_id, a.amount) == std::tie(b.asset_id, b.amount);
     }
-    friend bool operator<(const asset &a, const asset &b)
+    friend bool operator<(const contract_asset &a, const contract_asset &b)
     {
         assert(a.asset_id == b.asset_id);
         return a.amount < b.amount;
     }
-    friend bool operator<=(const asset &a, const asset &b)
+    friend bool operator<=(const contract_asset &a, const contract_asset &b)
     {
         return (a == b) || (a < b);
     }
 
-    friend bool operator!=(const asset &a, const asset &b)
+    friend bool operator!=(const contract_asset &a, const contract_asset &b)
     {
         return !(a == b);
     }
-    friend bool operator>(const asset &a, const asset &b)
+    friend bool operator>(const contract_asset &a, const contract_asset &b)
     {
         return !(a <= b);
     }
-    friend bool operator>=(const asset &a, const asset &b)
+    friend bool operator>=(const contract_asset &a, const contract_asset &b)
     {
         return !(a < b);
     }
 
-    friend asset operator-(const asset &a, const asset &b)
+    friend contract_asset operator-(const contract_asset &a, const contract_asset &b)
     {
         assert(a.asset_id == b.asset_id);
-        return asset(a.amount - b.amount, a.asset_id);
+        return contract_asset(a.amount - b.amount, a.asset_id);
     }
-    friend asset operator+(const asset &a, const asset &b)
+    friend contract_asset operator+(const contract_asset &a, const contract_asset &b)
     {
         assert(a.asset_id == b.asset_id);
-        return asset(a.amount + b.amount, a.asset_id);
+        return contract_asset(a.amount + b.amount, a.asset_id);
     }
 
     static int64_t scaled_precision(uint8_t precision)
@@ -86,7 +86,7 @@ struct contract_asset {
         return scaled_precision_lut[precision];
     }
 
-    GXBLIB_SERIALIZE(asset, (amount)(asset_id))
+    GXBLIB_SERIALIZE(contract_asset, (amount)(asset_id))
 };
 
 }
