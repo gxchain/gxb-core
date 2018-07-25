@@ -85,10 +85,16 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     auto iter = std::find_if(actions.begin(), actions.end(),
             [&](const action_def& act) { return act.name == op.method_name; });
     FC_ASSERT(iter != actions.end(), "method_name ${m} not found in abi", ("m", op.method_name));
+    if (op.amount.valid()) {
+        // check method_name, must be payable
+        FC_ASSERRT(iter->payable, "method_name ${m} not payable", ("m", op.method_name));
+    }
+
 
     // check balance
     if (op.amount.valid()) {
         FC_ASSERT(op.amount->amount > 0, "amount > 0");
+        // check balance
         const asset_object &asset_type = op.amount->asset_id(d);
         bool insufficient_balance = d.get_balance(op.account(d), asset_type).amount >= op.amount->amount;
         FC_ASSERT(insufficient_balance,
