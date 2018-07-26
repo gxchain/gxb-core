@@ -15,7 +15,7 @@ class transfer1 : public contract
     struct account {
         //48bit -->account_id (account_id = id >> 16)
         //16bit -->asset_id (asset_id = id & 0xFFFF)
-        //id = ((account_id << 16) || asset_id)
+        //id = ((account_id << 16) | (asset_id & 0xFFFF))
         uint64_t id;
         int64_t amount;
 
