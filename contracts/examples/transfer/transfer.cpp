@@ -15,51 +15,36 @@ class transfer : public contract
   public:
     transfer(uint64_t account_id)
         : contract(account_id)
-        , ownerassets_index(_self, _self)
-    {
-    }
+        , accounts(_self, _self)
+    {}
 
     // @abi action
     // @abi payable
     void deposit()
     {
-        uint64_t owner = get_trx_sender();
         int64_t asset_amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
-
-        gxb_assert(asset_amount > 0, "deposit amount must > 0");
-
         contract_asset amount{asset_amount, asset_id};
 
-        auto it = ownerassets_index.find(owner);
-        if (it == ownerassets_index.end()) {
+        uint64_t owner = get_trx_sender();
+        auto it = accounts.find(owner);
+        if (it == accounts.end()) {
             print("owner not exist, to add owner");
-            ownerassets_index.emplace(owner, [&](auto &o) {
+            accounts.emplace(owner, [&](auto &o) {
                 o.owner = owner;
-                o.assets.emplace_back(amount);
+                o.balances.emplace_back(amount);
             });
         } else {
             print("owner exist");
-            bool asset_exist = false;
-            int asset_index = 0;
-            for (auto asset_it = it->assets.begin(); asset_it != it->assets.end(); ++asset_it) {
-                if (asset_it->asset_id == asset_id) {
-                    print("asset exist, to update");
-                    asset_exist = true;
-                    ownerassets_index.modify(it, 0, [&](auto &o) {
-                        o.assets[asset_index] += amount;
-                    });
-                    break;
-                }
-
-                asset_index++;
-            }
-
-            if (!asset_exist) {
+            uint16_t asset_index = std::distance(it->balances.begin(),
+                    find_if(it->balances.begin(), it->balances.end(), [&](contract_asset a) { return a.asset_id == asset_id; })
+                    );
+            if (asset_index < it->balances.size()) {
+                print("asset exist, to update");
+                accounts.modify(it, 0, [&](auto &o) { o.balances[asset_index] += amount; });
+            } else {
                 print("asset not exist, to add");
-                ownerassets_index.modify(it, 0, [&](auto &o) {
-                    o.assets.emplace_back(amount);
-                });
+                accounts.modify(it, 0, [&](auto &o) { o.balances.emplace_back(amount); });
             }
         }
     }
@@ -68,28 +53,28 @@ class transfer : public contract
     void withdraw(contract_asset amount, uint64_t to)
     {
         uint64_t owner = get_trx_sender();
-        auto it = ownerassets_index.find(owner);
-        if (it == ownerassets_index.end()) {
+        auto it = accounts.find(owner);
+        if (it == accounts.end()) {
             print("owner has no asset");
             return;
         }
 
         int asset_index = 0;
-        for (auto asset_it = it->assets.begin(); asset_it != it->assets.end(); ++asset_it) {
+        for (auto asset_it = it->balances.begin(); asset_it != it->balances.end(); ++asset_it) {
             if ((amount.asset_id & GRAPHENE_DB_MAX_INSTANCE_ID) == asset_it->asset_id) {
                 gxb_assert(asset_it->amount >= amount.amount, "balance not enough");
                 print("asset_it->amount=", asset_it->amount);
                 print("amount.amount=", amount.amount);
                 if (asset_it->amount == amount.amount) {
-                    ownerassets_index.modify(it, 0, [&](auto &o) {
-                        o.assets.erase(asset_it);
+                    accounts.modify(it, 0, [&](auto &o) {
+                        o.balances.erase(asset_it);
                     });
-                    if (it->assets.size() == 0) {
-                        ownerassets_index.erase(it);
+                    if (it->balances.size() == 0) {
+                        accounts.erase(it);
                     }
                 } else {
-                    ownerassets_index.modify(it, 0, [&](auto &o) {
-                        o.assets[asset_index] -= amount;
+                    accounts.modify(it, 0, [&](auto &o) {
+                        o.balances[asset_index] -= amount;
                     });
                 }
 
@@ -102,19 +87,19 @@ class transfer : public contract
     }
 
   private:
-    //@abi table ownerassets i64
-    struct ownerassets {
+    //@abi table account i64
+    struct account {
         uint64_t owner;
-        std::vector<contract_asset> assets;
+        std::vector<contract_asset> balances;
 
         uint64_t primary_key() const { return owner; }
 
-        GXBLIB_SERIALIZE(ownerassets, (owner)(assets))
+        GXBLIB_SERIALIZE(account, (owner)(balances))
     };
 
-    typedef graphene::multi_index<N(ownerassets), ownerassets> ownerassets_index_type;
+    typedef graphene::multi_index<N(account), account> account_index;
 
-    ownerassets_index_type ownerassets_index;
+    account_index accounts;
 };
 
 GXB_ABI(transfer, (deposit)(withdraw))
