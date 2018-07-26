@@ -1525,9 +1525,6 @@
            account_object issuer_account = get_account( issuer );
            account_object datasource_account_object = get_account( datasource_account );
            data_market_category_object  data_market_category = this->get_data_market_category(category_id);
-           FC_ASSERT(0!= (&issuer_account));
-           FC_ASSERT(0!= (&datasource_account_object));
-           FC_ASSERT(0!= (&data_market_category));
            FC_ASSERT(product_name!="", "product_name cannot be empty!");
 
            free_data_product_create_operation create_op;
