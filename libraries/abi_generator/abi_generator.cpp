@@ -23,10 +23,6 @@ void abi_generator::set_verbose(bool verbose) {
   this->verbose = verbose;
 }
 
-void abi_generator::set_ricardian_contracts(const ricardian_contracts& contracts) {
-  this->rc = contracts;
-}
-
 void abi_generator::set_abi_context(const string& abi_context) {
   this->abi_context = abi_context;
 }
@@ -154,7 +150,7 @@ bool abi_generator::inspect_type_methods_for_actions(const Decl* decl) { try {
 
     full_types[method_name] = method_name;
 
-    output->actions.push_back({method_name, method_name, payable, rc[method_name]});
+    output->actions.push_back({method_name, method_name, payable});
     at_least_one_action = true;
   };
 
@@ -164,7 +160,6 @@ bool abi_generator::inspect_type_methods_for_actions(const Decl* decl) { try {
     auto export_methods_impl = [&export_method](const CXXRecordDecl* rec_decl, auto& ref) -> void {
 
 
-      auto tmp = rec_decl->bases();
       auto rec_name = rec_decl->getName().str();
 
       rec_decl->forallBases([&ref](const CXXRecordDecl* base) -> bool {
@@ -254,7 +249,7 @@ void abi_generator::handle_decl(const Decl* decl) { try {
             ABI_ASSERT(ac->type == type_name, "Same action name with different type ${action}",("action",action));
             continue;
           }
-          output->actions.push_back({action, type_name, false, rc[action]});
+          output->actions.push_back({action, type_name, false});
         }
 
       } else if (type == "table") {
