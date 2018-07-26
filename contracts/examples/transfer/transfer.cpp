@@ -50,8 +50,10 @@ class transfer : public contract
     }
 
     // @abi action
-    void withdraw(contract_asset amount, uint64_t to)
+    void withdraw(uint64_t to_account, uint64_t contract_asset_id, int64_t amount)
     {
+        uint64_t asset_id = contract_asset_id & GRAPHENE_DB_MAX_INSTANCE_ID;
+        contract_asset asset{amount, asset_id};
         uint64_t owner = get_trx_sender();
         auto it = accounts.find(owner);
         if (it == accounts.end()) {
@@ -61,11 +63,11 @@ class transfer : public contract
 
         int asset_index = 0;
         for (auto asset_it = it->balances.begin(); asset_it != it->balances.end(); ++asset_it) {
-            if ((amount.asset_id & GRAPHENE_DB_MAX_INSTANCE_ID) == asset_it->asset_id) {
-                gxb_assert(asset_it->amount >= amount.amount, "balance not enough");
+            if ((asset.asset_id) == asset_it->asset_id) {
+                gxb_assert(asset_it->amount >= asset.amount, "balance not enough");
                 print("asset_it->amount=", asset_it->amount);
-                print("amount.amount=", amount.amount);
-                if (asset_it->amount == amount.amount) {
+                print("amount.amount=", asset.amount);
+                if (asset_it->amount == asset.amount) {
                     accounts.modify(it, 0, [&](auto &o) {
                         o.balances.erase(asset_it);
                     });
@@ -74,7 +76,7 @@ class transfer : public contract
                     }
                 } else {
                     accounts.modify(it, 0, [&](auto &o) {
-                        o.balances[asset_index] -= amount;
+                        o.balances[asset_index] -= asset;
                     });
                 }
 
@@ -83,7 +85,7 @@ class transfer : public contract
             asset_index++;
         }
 
-        withdraw_asset(_self, to, amount.asset_id, amount.amount);
+        withdraw_asset(_self, to_account, asset.asset_id, asset.amount);
     }
 
   private:
