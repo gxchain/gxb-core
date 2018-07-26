@@ -944,6 +944,7 @@
              } else {
                  GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
              }
+             return variants();
        } FC_CAPTURE_AND_LOG((contract)(table)) }
 
        variant get_contract_tables(string contract)
