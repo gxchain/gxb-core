@@ -944,7 +944,8 @@
              } else {
                  GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
              }
-       } FC_CAPTURE_AND_LOG((contract)(table)) }
+             return variants();
+       } FC_CAPTURE_AND_RETHROW((contract)(table)) }
 
        variant get_contract_tables(string contract)
        { try {
@@ -960,7 +961,7 @@
                      });
 
              return result;
-       } FC_CAPTURE_AND_LOG((contract)) }
+       } FC_CAPTURE_AND_RETHROW((contract)) }
 
        signed_transaction deploy_contract(string name,
                                           string account,
