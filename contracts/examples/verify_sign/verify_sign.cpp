@@ -35,6 +35,5 @@ class verify_sign : public contract
         print("ret code, ", ret, "\n");
     }
 };
-};
 
 GXB_ABI(verify_sign, (verify))
