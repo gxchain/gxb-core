@@ -1432,7 +1432,7 @@ class wallet_api
       blind_receipt receive_blind_transfer( string confirmation_receipt, string opt_from, string opt_memo );
 
       /**
-       *  Transfers a public balance from to one or more blinded balances using a
+       *  Transfers a public balance from @from to one or more blinded balances using a
        *  stealth transfer.
        */
       blind_confirmation transfer_to_blind( string from_account_id_or_name,
@@ -1805,7 +1805,7 @@ class wallet_api
          string account,
          worker_vote_delta delta,
          bool broadcast = false
-         );`
+         );
 
       /**
        * Get information about a vesting balance object.
