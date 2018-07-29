@@ -1427,7 +1427,7 @@ class wallet_api
        *
        *  @param confirmation_receipt - a base58 encoded stealth confirmation
        *  @param opt_from - if not empty and the sender is a unknown public key, then the unknown public key will be given the label opt_from
-       *  @opt_memo - memo
+       *  @param opt_memo － opt_memo
        */
       blind_receipt receive_blind_transfer( string confirmation_receipt, string opt_from, string opt_memo );
 
@@ -1798,7 +1798,7 @@ class wallet_api
        * Update your votes for a worker
        *
        * @param account The account which will pay the fee and update votes.
-       * @param worker_vote_delta {"vote_for" : [...], "vote_against" : [...], "vote_abstain" : [...]}
+       * @param delta worker_vote_delta {"vote_for" : [...], "vote_against" : [...], "vote_abstain" : [...]}
        * @param broadcast true if you wish to broadcast the transaction.
        */
       signed_transaction update_worker_votes(
@@ -1875,7 +1875,7 @@ class wallet_api
        * @param type owner / active / all
        * @param weight_threshold weight_threshold of multi-sig account
        * @param key_auths public_keys
-       * @param account_weights public_key weights
+       * @param key_weights key_weights
        * @param fee_symbol fee asset symbol
        * @param broadcast true if you wish to broadcast the transaction
        * @return the signed transaction changing your account
@@ -2080,6 +2080,7 @@ class wallet_api
        /**  For illegal merchants, remove merchant rights while removing data source permissions
        * @param propose_account
        * @param merchant_account
+       * @param broadcast
        * @return the signed version of the transaction
        */
       signed_transaction propose_deprecate_merchant(string propose_account, string merchant_account, bool broadcast = false);
