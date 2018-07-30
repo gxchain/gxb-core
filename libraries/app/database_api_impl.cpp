@@ -31,11 +31,15 @@
 
 #include <fc/crypto/hex.hpp>
 
+#include <fc/reflect/variant.hpp>
+
 #include <boost/range/iterator_range.hpp>
 #include <boost/rational.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/algorithm/string.hpp>
 #include <graphene/chain/abi_serializer.hpp>
+#include <graphene/chain/transaction_context.hpp>
+#include <graphene/chain/apply_context.hpp>
 
 #include <cctype>
 
@@ -1508,7 +1512,41 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
       GET_REQUIRED_FEES_MAX_RECURSION );
    for( operation& op : _ops )
    {
-      result.push_back( helper.set_op_fees( op ) );
+       if (op.which() == operation::tag<contract_call_operation>::value) {
+           undo_database::session session = _db._undo_db.start_undo_session();
+           contract_call_operation &opr = op.get<contract_call_operation>();
+           transaction_context trx_context(_db, opr.fee_payer().instance);
+           action act{opr.contract_id, opr.method_name, opr.data};
+           apply_context ctx{_db, trx_context, act, opr.amount};
+           ctx.exec();
+
+           auto fee_param = contract_call_operation::fee_parameters_type();
+           idump((fee_param));
+           const auto &p = _db.get_global_properties().parameters;
+           for (auto &param : p.current_fees->parameters) {
+               if (param.which() == operation::tag<contract_call_operation>::value) {
+                   fee_param = param.get<contract_call_operation::fee_parameters_type>();
+                   dlog("use gpo params, ${s}", ("s", fee_param));
+                   break;
+               }
+           }
+
+           auto ram_result = fc::uint128(ctx.get_ram_usage() * fee_param.price_per_kbyte_ram) / 1024;
+           auto cpu_result = fc::uint128(trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu);
+           uint64_t ram_fee = ram_result.to_uint64();
+           uint64_t cpu_fee = cpu_result.to_uint64();
+           dlog("----------ram_fee=${rf}", ("rf", ram_fee));
+           dlog("++++++++++cpu_fee=${cf}", ("cf", cpu_fee));
+
+           asset fee = asset(ram_fee + cpu_fee, asset_id_type()) * a.options.core_exchange_rate;
+
+           fc::variant r;
+           fc::to_variant(fee, r);
+           result.push_back(r);
+           session.undo();
+       } else {
+           result.push_back(helper.set_op_fees(op));
+      }
    }
    return result;
 }
