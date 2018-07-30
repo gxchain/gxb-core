@@ -50,7 +50,7 @@ void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operati
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operation &op)
+object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operation &op, uint32_t billed_cpu_time_us)
 { try {
     dlog("contract_deploy_evaluator do_apply");
     const auto &params = db().get_global_properties().parameters;
@@ -105,8 +105,9 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
-operation_result contract_call_evaluator::do_apply(const contract_call_operation &op)
+operation_result contract_call_evaluator::do_apply(const contract_call_operation &op, uint32_t billed_cpu_time_us)
 { try {
+    idump((billed_cpu_time_us));
     database& d = db();
     if (op.amount.valid()) {
         auto amnt = *op.amount;
@@ -132,7 +133,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     }
 
     auto ram_result = fc::uint128(ctx.get_ram_usage() * fee_param.price_per_kbyte_ram) / 1024;
-    auto cpu_result = fc::uint128(trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu);
+    auto cpu_result = fc::uint128((billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage()) * fee_param.price_per_ms_cpu);
     uint64_t ram_fee = ram_result.to_uint64();
     uint64_t cpu_fee = cpu_result.to_uint64();
 

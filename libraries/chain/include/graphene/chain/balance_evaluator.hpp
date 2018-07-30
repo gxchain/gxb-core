@@ -44,7 +44,7 @@ public:
     * @note the fee is always 0 for this particular operation because once the
     * balance is claimed it frees up memory and it cannot be used to spam the network
     */
-   void_result do_apply(const balance_claim_operation& op);
+   void_result do_apply(const balance_claim_operation& op, uint32_t billed_cpu_time_us = 0);
 };
 
 } } // graphene::chain

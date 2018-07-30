@@ -28,7 +28,7 @@ void_result datasource_copyright_clear_evaluator::do_evaluate( const datasource_
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 
-void_result datasource_copyright_clear_evaluator::do_apply( const datasource_copyright_clear_operation& op )
+void_result datasource_copyright_clear_evaluator::do_apply(const datasource_copyright_clear_operation& op, uint32_t billed_cpu_time_us = 0)
 { try {
     database& _db = db();
     const auto& datasource_copyright_idx = _db.get_index_type<datasource_copyright_index>().indices().get<by_multi_id>();

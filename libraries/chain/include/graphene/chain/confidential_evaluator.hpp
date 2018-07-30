@@ -36,7 +36,7 @@ class transfer_to_blind_evaluator : public evaluator<transfer_to_blind_evaluator
       typedef transfer_to_blind_operation operation_type;
 
       void_result do_evaluate( const transfer_to_blind_operation& o );
-      void_result do_apply( const transfer_to_blind_operation& o ) ;
+      void_result do_apply(const transfer_to_blind_operation& o, uint32_t billed_cpu_time_us = 0) ;
 
       virtual void pay_fee() override;
 };
@@ -47,7 +47,7 @@ class transfer_from_blind_evaluator : public evaluator<transfer_from_blind_evalu
       typedef transfer_from_blind_operation operation_type;
 
       void_result do_evaluate( const transfer_from_blind_operation& o );
-      void_result do_apply( const transfer_from_blind_operation& o ) ;
+      void_result do_apply(const transfer_from_blind_operation& o, uint32_t billed_cpu_time_us = 0) ;
 
       virtual void pay_fee() override;
 };
@@ -58,7 +58,7 @@ class blind_transfer_evaluator : public evaluator<blind_transfer_evaluator>
       typedef blind_transfer_operation operation_type;
 
       void_result do_evaluate( const blind_transfer_operation& o );
-      void_result do_apply( const blind_transfer_operation& o ) ;
+      void_result do_apply(const blind_transfer_operation& o, uint32_t billed_cpu_time_us = 0) ;
 
       virtual void pay_fee() override;
 };
