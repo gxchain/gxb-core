@@ -4114,6 +4114,11 @@
        return my->_remote_db->get_account_count();
     }
 
+    uint64_t wallet_api::get_asset_count() const
+    {
+       return my->_remote_db->get_asset_count();
+    }
+
     uint64_t wallet_api::get_data_transaction_product_costs(fc::time_point_sec start, fc::time_point_sec end) const
     {
        return my->_remote_db->get_data_transaction_product_costs(start, end) / GRAPHENE_BLOCKCHAIN_PRECISION;

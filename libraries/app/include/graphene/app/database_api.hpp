@@ -285,6 +285,11 @@ class database_api
       uint64_t get_account_count()const;
 
       /**
+       * @brief Get the total number of assets registered with the blockchain
+       */
+      uint64_t get_asset_count() const;
+
+      /**
       * @brief get_data_transaction_product_costs
       * @param start
       * @param end
@@ -840,6 +845,7 @@ FC_API(graphene::app::database_api,
    (lookup_account_names)
    (lookup_accounts)
    (get_account_count)
+   (get_asset_count)
    (is_account_registered)
 
    // statistic

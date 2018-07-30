@@ -582,6 +582,11 @@ uint64_t database_api_impl::get_account_count()const
    return _db.get_index_type<account_index>().indices().size();
 }
 
+uint64_t database_api_impl::get_asset_count()const
+{
+   return _db.get_index_type<asset_index>().indices().size();
+}
+
 vector<asset> database_api_impl::get_account_balances(account_id_type acnt, const flat_set<asset_id_type>& assets)const
 {
    vector<asset> result;

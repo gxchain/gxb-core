@@ -246,6 +246,11 @@ uint64_t database_api::get_account_count()const
    return my->get_account_count();
 }
 
+uint64_t database_api::get_asset_count() const
+{
+   return my->get_asset_count();
+}
+
 map<account_id_type, uint64_t> database_api::list_data_transaction_complain_requesters(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint8_t limit) const
 {
     return my->list_data_transaction_complain_requesters(start_date_time, end_date_time, limit);
