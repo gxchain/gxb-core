@@ -554,7 +554,7 @@ void database::_apply_block( const signed_block& next_block )
 
 
 
-processed_transaction database::apply_transaction(const signed_transaction& trx, uint32_t skip, vector<operation_result> operation_results)
+processed_transaction database::apply_transaction(const signed_transaction& trx, uint32_t skip, const vector<operation_result> &operation_results)
 {
    processed_transaction result;
    detail::with_skip_flags( *this, skip, [&]()
@@ -564,7 +564,7 @@ processed_transaction database::apply_transaction(const signed_transaction& trx,
    return result;
 }
 
-processed_transaction database::_apply_transaction(const signed_transaction& trx, vector<operation_result> operation_results)
+processed_transaction database::_apply_transaction(const signed_transaction& trx, const vector<operation_result> &operation_results)
 { try {
    uint32_t skip = get_node_properties().skip_flags;
 
