@@ -48,7 +48,7 @@ namespace graphene { namespace chain {
        * not perform these extra checks.
        */
       virtual operation_result evaluate(const operation& op) = 0;
-      virtual operation_result apply(const operation& op, uint32_t billed_cpu_time_us) = 0;
+      virtual operation_result apply(const operation& op, uint32_t billed_cpu_time_us = 0) = 0;
 
       /**
        * Routes the fee to where it needs to go.  The default implementation

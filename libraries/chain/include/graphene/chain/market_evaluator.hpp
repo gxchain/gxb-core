@@ -41,7 +41,7 @@ namespace graphene { namespace chain {
          typedef limit_order_create_operation operation_type;
 
          void_result do_evaluate( const limit_order_create_operation& o );
-         object_id_type do_apply( const limit_order_create_operation& o );
+         object_id_type do_apply(const limit_order_create_operation& o, int32_t billed_cpu_time_us = 0);
 
          asset calculate_market_fee( const asset_object* aobj, const asset& trade_amount );
 
@@ -63,7 +63,7 @@ namespace graphene { namespace chain {
          typedef limit_order_cancel_operation operation_type;
 
          void_result do_evaluate( const limit_order_cancel_operation& o );
-         asset do_apply( const limit_order_cancel_operation& o );
+         asset do_apply(const limit_order_cancel_operation& o, int32_t billed_cpu_time_us = 0);
 
          const limit_order_object* _order;
    };
@@ -74,7 +74,7 @@ namespace graphene { namespace chain {
          typedef call_order_update_operation operation_type;
 
          void_result do_evaluate( const call_order_update_operation& o );
-         void_result do_apply( const call_order_update_operation& o );
+         void_result do_apply(const call_order_update_operation& o, int32_t billed_cpu_time_us = 0);
 
          bool _closing_order = false;
          const asset_object* _debt_asset = nullptr;

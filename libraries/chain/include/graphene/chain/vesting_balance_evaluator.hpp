@@ -36,7 +36,7 @@ class vesting_balance_create_evaluator : public evaluator<vesting_balance_create
         typedef vesting_balance_create_operation operation_type;
 
         void_result do_evaluate( const vesting_balance_create_operation& op );
-        object_id_type do_apply( const vesting_balance_create_operation& op );
+        object_id_type do_apply(const vesting_balance_create_operation& op, int32_t billed_cpu_time_us = 0);
 };
 
 class vesting_balance_withdraw_evaluator : public evaluator<vesting_balance_withdraw_evaluator>
@@ -45,7 +45,7 @@ class vesting_balance_withdraw_evaluator : public evaluator<vesting_balance_with
         typedef vesting_balance_withdraw_operation operation_type;
 
         void_result do_evaluate( const vesting_balance_withdraw_operation& op );
-        void_result do_apply( const vesting_balance_withdraw_operation& op );
+        void_result do_apply(const vesting_balance_withdraw_operation& op, int32_t billed_cpu_time_us = 0);
 };
 
 } } // graphene::chain
