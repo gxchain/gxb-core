@@ -24,6 +24,7 @@
 #include <graphene/chain/protocol/operations.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/protocol/name.hpp>
+#include <graphene/chain/protocol/contract_receipt.hpp>
 
 #include <graphene/chain/apply_context.hpp>
 #include <graphene/chain/transaction_context.hpp>
@@ -146,7 +147,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     dlog("ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
             ("rf",ram_fee)("cf",cpu_fee)("ru",ctx.get_ram_usage())("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
 
-    contract_receipt receipt{billed_cpu_time_us, ram_usage_bs, {fee_from_account.asset_id, fee_from_account.amount.value}};
+    contract_receipt receipt{billed_cpu_time_us, ram_usage_bs, fee_from_account};
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)) }
 

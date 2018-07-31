@@ -37,6 +37,8 @@
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/evaluator.hpp>
 
+#include <graphene/chain/protocol/contract_receipt.hpp>
+
 #include <fc/smart_ref_impl.hpp>
 
 namespace graphene { namespace chain {
