@@ -621,9 +621,15 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    //Finally process the operations
    processed_transaction ptrx(trx);
    _current_op_in_trx = 0;
-   for (const auto &op : ptrx.operations) {
+   for (uint16_t i = 0; i < ptrx.operations.size(); ++i) {
+       const auto &op = ptrx.operations.at(i);
+       const auto &op_result = ptrx.operation_results.at(i);
        // get billed_cpu_time_us
        uint32_t billed_cpu_time_us = 0;
+       if (op_result.which() == operation_result::tag<contract_receipt>::value) {
+           billed_cpu_time_us = op_result.get<contract_receipt>().billed_cpu_time_us;
+           idump((billed_cpu_time_us));
+       }
 
        // vector<operation_result> operation_results;
        eval_state.operation_results.emplace_back(apply_operation(eval_state, op, billed_cpu_time_us));
