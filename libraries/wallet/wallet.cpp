@@ -1473,7 +1473,6 @@
 
            FC_ASSERT( !self.is_locked() );
            const account_object issuer_account = get_account( issuer );
-           FC_ASSERT(0!= (&issuer_account));
            FC_ASSERT(category_name!="", "category_name cannot be empty!");
            FC_ASSERT(data_market_type==1 || data_market_type==2, "data_market_type must 1 or 2");
 
@@ -1625,7 +1624,6 @@
            FC_ASSERT( !self.is_locked() );
            account_object issuer_account = get_account( issuer );
            data_market_category_object  data_market_category = this->get_data_market_category(category_id);
-           FC_ASSERT(0!= (&issuer_account));
            FC_ASSERT(0!= (&data_market_category));
            FC_ASSERT(product_name!="", "product_name cannot be empty!");
 
@@ -1706,7 +1704,6 @@
 
            account_object issuer_account = get_account( issuer );
            data_market_category_object  data_market_category = this->get_data_market_category(category_id);
-           FC_ASSERT(0!= (&issuer_account));
            FC_ASSERT(0!= (&data_market_category));
            FC_ASSERT(league_name!="", "league_name cannot be empty!");
            FC_ASSERT(data_products.size() == prices.size(), "data_products size must equal to prices size");
