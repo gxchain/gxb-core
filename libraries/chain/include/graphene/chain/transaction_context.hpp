@@ -3,19 +3,8 @@
 namespace graphene { namespace chain {
 
    class transaction_context {
-      private:
-         void init();
-
       public:
-
-        void init_for_implicit_trx();
-
-        void init_for_input_trx();
         transaction_context(database &d, int64_t origin);
-
-        void exec();
-        void finalize();
-        void squash();
 
         void pause_billing_timer();
 
@@ -27,9 +16,6 @@ namespace graphene { namespace chain {
         {
             return transaction_cpu_usage_us;
         }
-
-      private:
-        void validate_cpu_usage_to_bill() const;
 
       private:
         void dispatch_action(const action &a, account_name receiver);
