@@ -132,10 +132,10 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     }
 
 
-    uint32_t cpu_time_us = trx_context.get_cpu_usage();
+    uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
     uint32_t ram_usage_bs = ctx.get_ram_usage();
     auto ram_result = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
-    auto cpu_result = fc::uint128((billed_cpu_time_us > 0 ? billed_cpu_time_us : cpu_time_us) * fee_param.price_per_ms_cpu);
+    auto cpu_result = fc::uint128( cpu_time_us * fee_param.price_per_ms_cpu);
     uint64_t ram_fee = ram_result.to_uint64();
     uint64_t cpu_fee = cpu_result.to_uint64();
 
