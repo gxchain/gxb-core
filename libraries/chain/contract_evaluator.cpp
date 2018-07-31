@@ -24,6 +24,7 @@
 #include <graphene/chain/protocol/operations.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/protocol/name.hpp>
+#include <graphene/chain/protocol/contract_receipt.hpp>
 
 #include <graphene/chain/apply_context.hpp>
 #include <graphene/chain/transaction_context.hpp>
@@ -50,7 +51,7 @@ void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operati
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operation &op)
+object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operation &op, uint32_t billed_cpu_time_us)
 { try {
     dlog("contract_deploy_evaluator do_apply");
     const auto &params = db().get_global_properties().parameters;
@@ -105,8 +106,9 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
-operation_result contract_call_evaluator::do_apply(const contract_call_operation &op)
+operation_result contract_call_evaluator::do_apply(const contract_call_operation &op, uint32_t billed_cpu_time_us)
 { try {
+    idump((billed_cpu_time_us));
     database& d = db();
     if (op.amount.valid()) {
         auto amnt = *op.amount;
@@ -131,8 +133,11 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
         }
     }
 
-    auto ram_result = fc::uint128(ctx.get_ram_usage() * fee_param.price_per_kbyte_ram) / 1024;
-    auto cpu_result = fc::uint128(trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu);
+
+    uint32_t billed_cpu_time_us = trx_context.get_cpu_usage();
+    uint32_t ram_usage_bs = ctx.get_ram_usage();
+    auto ram_result = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
+    auto cpu_result = fc::uint128((billed_cpu_time_us > 0 ? billed_cpu_time_us : billed_cpu_time_us) * fee_param.price_per_ms_cpu);
     uint64_t ram_fee = ram_result.to_uint64();
     uint64_t cpu_fee = cpu_result.to_uint64();
 
@@ -142,7 +147,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     dlog("ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
             ("rf",ram_fee)("cf",cpu_fee)("ru",ctx.get_ram_usage())("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
 
-    contract_receipt receipt{0, {fee.asset_id, ram_fee}, {fee.asset_id, cpu_fee}};
+    contract_receipt receipt{billed_cpu_time_us, ram_usage_bs, fee_from_account};
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)) }
 

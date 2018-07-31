@@ -36,7 +36,7 @@ namespace graphene { namespace chain {
          typedef proposal_create_operation operation_type;
 
          void_result do_evaluate( const proposal_create_operation& o );
-         object_id_type do_apply( const proposal_create_operation& o );
+         object_id_type do_apply(const proposal_create_operation& o, int32_t billed_cpu_time_us = 0);
 
          transaction _proposed_trx;
    };
@@ -47,7 +47,7 @@ namespace graphene { namespace chain {
          typedef proposal_update_operation operation_type;
 
          void_result do_evaluate( const proposal_update_operation& o );
-         void_result do_apply( const proposal_update_operation& o );
+         void_result do_apply(const proposal_update_operation& o, int32_t billed_cpu_time_us = 0);
 
          const proposal_object* _proposal = nullptr;
          processed_transaction _processed_transaction;
@@ -61,7 +61,7 @@ namespace graphene { namespace chain {
          typedef proposal_delete_operation operation_type;
 
          void_result do_evaluate( const proposal_delete_operation& o );
-         void_result do_apply(const proposal_delete_operation&);
+         void_result do_apply(const proposal_delete_operation&, int32_t billed_cpu_time_us = 0);
 
          const proposal_object* _proposal = nullptr;
    };

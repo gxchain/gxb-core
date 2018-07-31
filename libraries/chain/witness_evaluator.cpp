@@ -36,7 +36,7 @@ void_result witness_create_evaluator::do_evaluate( const witness_create_operatio
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type witness_create_evaluator::do_apply( const witness_create_operation& op )
+object_id_type witness_create_evaluator::do_apply(const witness_create_operation& op, int32_t billed_cpu_time_us)
 { try {
    vote_id_type vote_id;
    db().modify(db().get_global_properties(), [&vote_id](global_property_object& p) {
@@ -58,7 +58,7 @@ void_result witness_update_evaluator::do_evaluate( const witness_update_operatio
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result witness_update_evaluator::do_apply( const witness_update_operation& op )
+void_result witness_update_evaluator::do_apply(const witness_update_operation& op, int32_t billed_cpu_time_us)
 { try {
    database& _db = db();
    _db.modify(

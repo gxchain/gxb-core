@@ -57,7 +57,7 @@ void_result league_create_evaluator::do_evaluate( const league_create_operation&
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type league_create_evaluator::do_apply( const league_create_operation& op )
+object_id_type league_create_evaluator::do_apply(const league_create_operation& op, int32_t billed_cpu_time_us)
 { try {
 
    const auto& new_object = db().create<league_object>( [&]( league_object& obj ){
@@ -111,7 +111,7 @@ void_result league_update_evaluator::do_evaluate( const league_update_operation&
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result league_update_evaluator::do_apply( const league_update_operation& op )
+void_result league_update_evaluator::do_apply(const league_update_operation& op, int32_t billed_cpu_time_us)
 {
     try {
         database& _db = db();

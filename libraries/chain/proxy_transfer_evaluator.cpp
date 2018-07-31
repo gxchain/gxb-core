@@ -101,7 +101,7 @@ void_result proxy_transfer_evaluator::do_evaluate(const proxy_transfer_operation
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
-void_result proxy_transfer_evaluator::do_apply(const proxy_transfer_operation &op)
+void_result proxy_transfer_evaluator::do_apply(const proxy_transfer_operation &op, int32_t billed_cpu_time_us)
 { try {
     // create signature_object
     const auto& new_object = db().create<signature_object>([&](signature_object& obj) {

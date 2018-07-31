@@ -178,7 +178,7 @@ void_result pay_data_transaction_evaluator::do_evaluate( const pay_data_transact
 
 }  FC_CAPTURE_AND_RETHROW( (op) ) }
 
-operation_result pay_data_transaction_evaluator::do_apply(const pay_data_transaction_operation& op)
+operation_result pay_data_transaction_evaluator::do_apply(const pay_data_transaction_operation& op, int32_t billed_cpu_time_us)
 { try {
    database& _db = db();
    const auto& data_transaction_idx = _db.get_index_type<data_transaction_index>().indices().get<by_request_id>();

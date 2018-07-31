@@ -31,28 +31,28 @@ void_result stale_data_market_category_create_evaluator::do_evaluate( const stal
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type stale_data_market_category_create_evaluator::do_apply( const stale_data_market_category_create_operation& op )
+object_id_type stale_data_market_category_create_evaluator::do_apply(const stale_data_market_category_create_operation& op, int32_t billed_cpu_time_us)
 { try {
    return  object_id_type();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 
-void_result stale_data_market_category_update_evaluator::do_evaluate( const stale_data_market_category_update_operation& op )
+void_result stale_data_market_category_update_evaluator::do_evaluate(const stale_data_market_category_update_operation& op)
 { try {
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result stale_data_market_category_update_evaluator::do_apply( const stale_data_market_category_update_operation& op )
+void_result stale_data_market_category_update_evaluator::do_apply(const stale_data_market_category_update_operation& op, int32_t billed_cpu_time_us)
 { try {
   return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result stale_free_data_product_create_evaluator::do_evaluate( const stale_free_data_product_create_operation& op )
+void_result stale_free_data_product_create_evaluator::do_evaluate(const stale_free_data_product_create_operation& op)
 { try {
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type stale_free_data_product_create_evaluator::do_apply( const stale_free_data_product_create_operation& op )
+object_id_type stale_free_data_product_create_evaluator::do_apply(const stale_free_data_product_create_operation& op, int32_t billed_cpu_time_us)
 { try {
    return  object_id_type();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -62,7 +62,7 @@ void_result stale_free_data_product_update_evaluator::do_evaluate( const stale_f
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result stale_free_data_product_update_evaluator::do_apply( const stale_free_data_product_update_operation& op )
+void_result stale_free_data_product_update_evaluator::do_apply(const stale_free_data_product_update_operation& op, int32_t billed_cpu_time_us)
 { try {
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -72,17 +72,17 @@ void_result stale_league_create_evaluator::do_evaluate( const stale_league_creat
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type stale_league_create_evaluator::do_apply( const stale_league_create_operation& op )
+object_id_type stale_league_create_evaluator::do_apply(const stale_league_create_operation& op, int32_t billed_cpu_time_us)
 { try {
    return  object_id_type();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result stale_league_update_evaluator::do_evaluate( const stale_league_update_operation& op )
+void_result stale_league_update_evaluator::do_evaluate(const stale_league_update_operation& op)
 { try {
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result stale_league_update_evaluator::do_apply( const stale_league_update_operation& op )
+void_result stale_league_update_evaluator::do_apply(const stale_league_update_operation& op, int32_t billed_cpu_time_us)
 { try {
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -92,7 +92,7 @@ void_result stale_league_data_product_create_evaluator::do_evaluate( const stale
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type stale_league_data_product_create_evaluator::do_apply( const stale_league_data_product_create_operation& op )
+object_id_type stale_league_data_product_create_evaluator::do_apply(const stale_league_data_product_create_operation& op, int32_t billed_cpu_time_us)
 { try {
    return  object_id_type();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -103,7 +103,7 @@ void_result stale_league_data_product_update_evaluator::do_evaluate( const stale
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result stale_league_data_product_update_evaluator::do_apply( const stale_league_data_product_update_operation& op )
+void_result stale_league_data_product_update_evaluator::do_apply(const stale_league_data_product_update_operation& op, int32_t billed_cpu_time_us)
 { try {
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }

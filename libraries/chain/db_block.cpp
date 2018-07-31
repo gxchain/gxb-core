@@ -37,6 +37,8 @@
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/evaluator.hpp>
 
+#include <graphene/chain/protocol/contract_receipt.hpp>
+
 #include <fc/smart_ref_impl.hpp>
 
 namespace graphene { namespace chain {
@@ -513,7 +515,8 @@ void database::_apply_block( const signed_block& next_block )
        * for transactions when validating broadcast transactions or
        * when building a block.
        */
-      apply_transaction( trx, skip );
+      // add cpu time
+      apply_transaction(trx, skip);
       ++_current_trx_in_block;
    }
 
@@ -618,10 +621,13 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    //Finally process the operations
    processed_transaction ptrx(trx);
    _current_op_in_trx = 0;
-   for( const auto& op : ptrx.operations )
-   {
-      eval_state.operation_results.emplace_back(apply_operation(eval_state, op));
-      ++_current_op_in_trx;
+   for (const auto &op : ptrx.operations) {
+       // get billed_cpu_time_us
+       uint32_t billed_cpu_time_us = 0;
+
+       // vector<operation_result> operation_results;
+       eval_state.operation_results.emplace_back(apply_operation(eval_state, op, billed_cpu_time_us));
+       ++_current_op_in_trx;
    }
    ptrx.operation_results = std::move(eval_state.operation_results);
 
@@ -633,7 +639,7 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    return ptrx;
 } FC_CAPTURE_AND_RETHROW( (trx) ) }
 
-operation_result database::apply_operation(transaction_evaluation_state& eval_state, const operation& op)
+operation_result database::apply_operation(transaction_evaluation_state& eval_state, const operation& op, uint32_t billed_cpu_time_us)
 { try {
    int i_which = op.which();
    uint64_t u_which = uint64_t( i_which );
@@ -645,7 +651,7 @@ operation_result database::apply_operation(transaction_evaluation_state& eval_st
    if( !eval )
       assert( "No registered evaluator for this operation" && false );
    auto op_id = push_applied_operation( op );
-   auto result = eval->evaluate( eval_state, op, true );
+   auto result = eval->evaluate(eval_state, op, true, billed_cpu_time_us);
    set_applied_operation_result( op_id, result );
    return result;
 } FC_CAPTURE_AND_RETHROW( (op) ) }

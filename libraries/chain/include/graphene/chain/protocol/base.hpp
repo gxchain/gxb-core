@@ -26,6 +26,7 @@
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/asset.hpp>
 #include <graphene/chain/protocol/authority.hpp>
+#include <graphene/chain/protocol/contract_receipt.hpp>
 
 namespace graphene { namespace chain {
 

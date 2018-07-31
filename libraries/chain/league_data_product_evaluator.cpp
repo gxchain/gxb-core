@@ -38,7 +38,7 @@ void_result league_data_product_create_evaluator::do_evaluate( const league_data
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type league_data_product_create_evaluator::do_apply( const league_data_product_create_operation& op )
+object_id_type league_data_product_create_evaluator::do_apply(const league_data_product_create_operation& op, int32_t billed_cpu_time_us)
 { try {
 
    const auto& new_object = db().create<league_data_product_object>( [&]( league_data_product_object& obj ){
@@ -80,7 +80,7 @@ void_result league_data_product_update_evaluator::do_evaluate( const league_data
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 
-void_result league_data_product_update_evaluator::do_apply( const league_data_product_update_operation& op )
+void_result league_data_product_update_evaluator::do_apply(const league_data_product_update_operation& op, int32_t billed_cpu_time_us)
 {
     try {
         database& _db = db();

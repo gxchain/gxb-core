@@ -29,7 +29,7 @@ namespace graphene { namespace chain {
          typedef pay_data_transaction_operation operation_type;
 
          void_result do_evaluate( const pay_data_transaction_operation& op );
-         operation_result do_apply( const pay_data_transaction_operation& op );
+         operation_result do_apply(const pay_data_transaction_operation& op, int32_t billed_cpu_time_us = 0);
 
          // @override
          void prepare_fee(account_id_type account_id, asset fee, const operation& o);

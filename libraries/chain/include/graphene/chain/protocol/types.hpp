@@ -501,24 +501,6 @@ namespace graphene { namespace chain {
       friend bool operator != ( const extended_private_key_type& p1, const extended_private_key_type& p2);
    };
 
-   struct contract_receipt {
-       struct fee_detail {
-           asset_id_type asset_id;
-           uint64_t amount = 0;
-       };
-
-       uint8_t status = 0;
-       fee_detail ram_fee;
-       fee_detail cpu_fee;
-       explicit operator std::string() const
-       {
-           return "{\"status\":" + std::to_string(status) + "\"ram_fee\":{\"asset_id\":" + std::string(object_id_type(ram_fee.asset_id)) +
-                   ",\"amount\":"+ std::to_string(ram_fee.amount) + "},\"cpu_fee\":{\"asset_id\":" +
-                   std::string(object_id_type(cpu_fee.asset_id)) + ",\"amount\":"+ std::to_string(cpu_fee.amount) +"}";
-       }
-   };
-
-
 } }  // graphene::chain
 
 namespace fc
@@ -661,8 +643,6 @@ FC_REFLECT( graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_base
 FC_REFLECT( graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
 FC_REFLECT( graphene::chain::interest_rate_t, (lock_days)(interest_rate)(is_valid) )
 FC_REFLECT( graphene::chain::lock_balance_params_t, (params) )
-FC_REFLECT( graphene::chain::contract_receipt::fee_detail, (asset_id)(amount) )
-FC_REFLECT( graphene::chain::contract_receipt, (status)(ram_fee)(cpu_fee) )
 
 FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)
