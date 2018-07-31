@@ -502,16 +502,21 @@ namespace graphene { namespace chain {
    };
 
    struct contract_receipt {
+       struct fee_detail {
+           asset_id_type asset_id;
+           int64_t     amount;
+       };
+
        uint32_t billed_cpu_time_us = 0;
        uint32_t ram_usage_bs = 0;
-       asset    fee;
+       fee_detail fee;
 
        explicit operator std::string() const
        {
            return "{\"billed_cpu_time_us\":" + std::to_string(billed_cpu_time_us) +
                   ", \"ram_usage_bs\":" + std::to_string(ram_usage_bs)  +
                   ", \"fee\":{\"asset_id\":" + std::string(object_id_type(fee.asset_id)) +
-                  ",\"amount\":"+ std::to_string(fee.amount) + "} + "}";
+                  ", \"amount\":"+ std::to_string(fee.amount) + "}}";
        }
    };
 
@@ -658,6 +663,7 @@ FC_REFLECT( graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_base
 FC_REFLECT( graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
 FC_REFLECT( graphene::chain::interest_rate_t, (lock_days)(interest_rate)(is_valid) )
 FC_REFLECT( graphene::chain::lock_balance_params_t, (params) )
+FC_REFLECT( graphene::chain::contract_receipt::fee_detail, (asset_id)(amount) )
 FC_REFLECT( graphene::chain::contract_receipt, (billed_cpu_time_us)(ram_usage_bs)(fee) )
 
 FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,

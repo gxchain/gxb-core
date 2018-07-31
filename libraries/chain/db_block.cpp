@@ -553,7 +553,7 @@ void database::_apply_block( const signed_block& next_block )
 
 
 
-processed_transaction database::apply_transaction(const signed_transaction& trx, uint32_t skip, uint32_t billed_cpu_time_us)
+processed_transaction database::apply_transaction(const signed_transaction& trx, uint32_t skip)
 {
    processed_transaction result;
    detail::with_skip_flags( *this, skip, [&]()
@@ -619,12 +619,13 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    //Finally process the operations
    processed_transaction ptrx(trx);
    _current_op_in_trx = 0;
-   for( const auto& op : ptrx.operations )
-   {
-      // get billed_cpu_time_us
-      //
-      eval_state.operation_results.emplace_back(apply_operation(eval_state, op, billed_cpu_time_us));
-      ++_current_op_in_trx;
+   for (const auto &op : ptrx.operations) {
+       // get billed_cpu_time_us
+       uint32_t billed_cpu_time_us = 0;
+
+       // vector<operation_result> operation_results;
+       eval_state.operation_results.emplace_back(apply_operation(eval_state, op, billed_cpu_time_us));
+       ++_current_op_in_trx;
    }
    ptrx.operation_results = std::move(eval_state.operation_results);
 
