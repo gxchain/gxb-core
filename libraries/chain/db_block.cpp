@@ -513,7 +513,8 @@ void database::_apply_block( const signed_block& next_block )
        * for transactions when validating broadcast transactions or
        * when building a block.
        */
-      apply_transaction( trx, skip );
+      // add cpu time
+      apply_transaction(trx, skip);
       ++_current_trx_in_block;
    }
 
@@ -552,7 +553,7 @@ void database::_apply_block( const signed_block& next_block )
 
 
 
-processed_transaction database::apply_transaction(const signed_transaction& trx, uint32_t skip)
+processed_transaction database::apply_transaction(const signed_transaction& trx, uint32_t skip, uint32_t billed_cpu_time_us)
 {
    processed_transaction result;
    detail::with_skip_flags( *this, skip, [&]()
@@ -562,7 +563,7 @@ processed_transaction database::apply_transaction(const signed_transaction& trx,
    return result;
 }
 
-processed_transaction database::_apply_transaction(const signed_transaction& trx, uint32_t billed_cpu_time_us)
+processed_transaction database::_apply_transaction(const signed_transaction& trx)
 { try {
    uint32_t skip = get_node_properties().skip_flags;
 
@@ -620,6 +621,8 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    _current_op_in_trx = 0;
    for( const auto& op : ptrx.operations )
    {
+      // get billed_cpu_time_us
+      //
       eval_state.operation_results.emplace_back(apply_operation(eval_state, op, billed_cpu_time_us));
       ++_current_op_in_trx;
    }

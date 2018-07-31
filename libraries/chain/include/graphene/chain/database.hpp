@@ -435,7 +435,7 @@ namespace graphene { namespace chain {
 
        private:
          void                  _apply_block( const signed_block& next_block );
-         processed_transaction _apply_transaction(const signed_transaction &trx, uint32_t billed_cpu_time_us = 0);
+         processed_transaction _apply_transaction(const signed_transaction &trx);
 
          ///Steps involved in applying a new block
          ///@{
