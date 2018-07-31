@@ -623,12 +623,14 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    _current_op_in_trx = 0;
    for (uint16_t i = 0; i < ptrx.operations.size(); ++i) {
        const auto &op = ptrx.operations.at(i);
-       const auto &op_result = ptrx.operation_results.at(i);
-       // get billed_cpu_time_us
        uint32_t billed_cpu_time_us = 0;
-       if (op_result.which() == operation_result::tag<contract_receipt>::value) {
-           billed_cpu_time_us = op_result.get<contract_receipt>().billed_cpu_time_us;
-           idump((billed_cpu_time_us));
+       if (i < ptrx.operation_results.size()) {
+           const auto &op_result = ptrx.operation_results.at(i);
+           // get billed_cpu_time_us
+           if (op_result.which() == operation_result::tag<contract_receipt>::value) {
+               billed_cpu_time_us = op_result.get<contract_receipt>().billed_cpu_time_us;
+               idump((billed_cpu_time_us));
+           }
        }
 
        // vector<operation_result> operation_results;
