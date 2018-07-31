@@ -65,7 +65,10 @@ class transfer1 : public contract
                 o.amount = asset_amount;
             });
         } else {
-            print("account_id:", owner, "asset_id:", asset_id, " record exist");
+            print("account_id:", owner, "asset_id:", asset_id, " record exist, to update");
+            accounts.modify(it, 0, [&](auto &o) {
+                o.amount += asset_amount;
+            });
         }
     }
 
