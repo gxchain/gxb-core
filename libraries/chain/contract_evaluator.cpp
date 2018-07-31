@@ -53,7 +53,6 @@ void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operati
 
 object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operation &op, uint32_t billed_cpu_time_us)
 { try {
-    dlog("contract_deploy_evaluator do_apply");
     const auto &params = db().get_global_properties().parameters;
     const auto &new_acnt_object = db().create<account_object>([&](account_object &obj) {
             obj.registrar = op.account;
@@ -111,7 +110,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     database& d = db();
     if (op.amount.valid()) {
         auto amnt = *op.amount;
-        dlog("adjust balance, amount ${a}", ("a", amnt));
+        dlog("contract_call adjust balance, ${f} -> ${t}, asset ${a}", ("f", op.account)("t", op.contract_id)("a", amnt));
         d.adjust_balance(op.account, -amnt);
         d.adjust_balance(op.contract_id, amnt);
     }
@@ -134,16 +133,14 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
 
     uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
     uint32_t ram_usage_bs = ctx.get_ram_usage();
-    auto ram_result = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
-    auto cpu_result = fc::uint128( cpu_time_us * fee_param.price_per_ms_cpu);
-    uint64_t ram_fee = ram_result.to_uint64();
-    uint64_t cpu_fee = cpu_result.to_uint64();
+    auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
+    auto cpu_fee = fc::uint128( cpu_time_us * fee_param.price_per_ms_cpu);
 
     const auto &asset_obj = d.get<asset_object>(op.fee.asset_id);
-    asset fee = asset(ram_fee + cpu_fee, asset_id_type()) * asset_obj.options.core_exchange_rate;
+    asset fee = asset(ram_fee.to_uint64() + cpu_fee.to_uint64(), asset_id_type()) * asset_obj.options.core_exchange_rate;
     fee_from_account += fee;
     dlog("ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
-            ("rf",ram_fee)("cf",cpu_fee)("ru",ctx.get_ram_usage())("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
+            ("rf",ram_fee.to_uint64())("cf",cpu_fee.to_uint64())("ru",ctx.get_ram_usage())("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
 
     contract_receipt receipt{cpu_time_us, ram_usage_bs, fee_from_account};
     return receipt;
