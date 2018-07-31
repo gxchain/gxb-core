@@ -515,8 +515,7 @@ void database::_apply_block( const signed_block& next_block )
        * for transactions when validating broadcast transactions or
        * when building a block.
        */
-      // add cpu time
-      apply_transaction(trx, skip);
+      apply_transaction(trx, skip, trx.operation_results);
       ++_current_trx_in_block;
    }
 
