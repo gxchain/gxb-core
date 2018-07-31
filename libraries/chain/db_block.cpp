@@ -555,17 +555,17 @@ void database::_apply_block( const signed_block& next_block )
 
 
 
-processed_transaction database::apply_transaction(const signed_transaction& trx, uint32_t skip)
+processed_transaction database::apply_transaction(const signed_transaction& trx, uint32_t skip, vector<operation_result> operation_results)
 {
    processed_transaction result;
    detail::with_skip_flags( *this, skip, [&]()
    {
-      result = _apply_transaction(trx);
+      result = _apply_transaction(trx, operation_results);
    });
    return result;
 }
 
-processed_transaction database::_apply_transaction(const signed_transaction& trx)
+processed_transaction database::_apply_transaction(const signed_transaction& trx, vector<operation_result> operation_results)
 { try {
    uint32_t skip = get_node_properties().skip_flags;
 
@@ -624,8 +624,8 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    for (uint16_t i = 0; i < ptrx.operations.size(); ++i) {
        const auto &op = ptrx.operations.at(i);
        uint32_t billed_cpu_time_us = 0;
-       if (i < ptrx.operation_results.size()) {
-           const auto &op_result = ptrx.operation_results.at(i);
+       if (i < operation_results.size()) {
+           const auto &op_result = operation_results.at(i);
            // get billed_cpu_time_us
            if (op_result.which() == operation_result::tag<contract_receipt>::value) {
                billed_cpu_time_us = op_result.get<contract_receipt>().billed_cpu_time_us;
