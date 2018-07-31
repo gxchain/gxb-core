@@ -108,7 +108,6 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 
 operation_result contract_call_evaluator::do_apply(const contract_call_operation &op, uint32_t billed_cpu_time_us)
 { try {
-    idump((billed_cpu_time_us));
     database& d = db();
     if (op.amount.valid()) {
         auto amnt = *op.amount;
@@ -123,7 +122,6 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     ctx.exec();
 
     auto fee_param = contract_call_operation::fee_parameters_type();
-    idump((fee_param));
     const auto& p = d.get_global_properties().parameters;
     for (auto& param : p.current_fees->parameters) {
         if (param.which() == operation::tag<contract_call_operation>::value) {
@@ -134,10 +132,10 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     }
 
 
-    uint32_t billed_cpu_time_us = trx_context.get_cpu_usage();
+    uint32_t cpu_time_us = trx_context.get_cpu_usage();
     uint32_t ram_usage_bs = ctx.get_ram_usage();
     auto ram_result = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
-    auto cpu_result = fc::uint128((billed_cpu_time_us > 0 ? billed_cpu_time_us : billed_cpu_time_us) * fee_param.price_per_ms_cpu);
+    auto cpu_result = fc::uint128((billed_cpu_time_us > 0 ? billed_cpu_time_us : cpu_time_us) * fee_param.price_per_ms_cpu);
     uint64_t ram_fee = ram_result.to_uint64();
     uint64_t cpu_fee = cpu_result.to_uint64();
 
@@ -147,7 +145,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     dlog("ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
             ("rf",ram_fee)("cf",cpu_fee)("ru",ctx.get_ram_usage())("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
 
-    contract_receipt receipt{billed_cpu_time_us, ram_usage_bs, fee_from_account};
+    contract_receipt receipt{cpu_time_us, ram_usage_bs, fee_from_account};
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)) }
 

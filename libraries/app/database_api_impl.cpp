@@ -1526,7 +1526,6 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
            ctx.exec();
 
            auto fee_param = contract_call_operation::fee_parameters_type();
-           idump((fee_param));
            const auto &p = _db.get_global_properties().parameters;
            for (auto &param : p.current_fees->parameters) {
                if (param.which() == operation::tag<contract_call_operation>::value) {
