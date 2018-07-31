@@ -14,30 +14,6 @@ namespace graphene { namespace chain {
    {
    }
 
-   void transaction_context::init()
-   {
-   }
-
-   void transaction_context::init_for_implicit_trx()
-   {
-   }
-
-   void transaction_context::init_for_input_trx()
-   {
-   }
-
-   void transaction_context::exec()
-   {
-   }
-
-   void transaction_context::finalize()
-   {
-   }
-
-   void transaction_context::squash()
-   {
-   }
-
    void transaction_context::pause_billing_timer() {
        pause_time = fc::time_point::now();
    }
