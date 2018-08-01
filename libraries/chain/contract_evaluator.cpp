@@ -35,6 +35,38 @@
 
 namespace graphene { namespace chain {
 
+contract_receipt contract_call_evaluator::contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
+{
+    transaction_context trx_context(db, op.fee_payer().instance);
+    action act{op.contract_id, op.method_name, op.data};
+    apply_context ctx{db, trx_context, act, op.amount};
+    ctx.exec();
+
+    auto fee_param = contract_call_operation::fee_parameters_type();
+    const auto& p = db.get_global_properties().parameters;
+    for (auto& param : p.current_fees->parameters) {
+        if (param.which() == operation::tag<contract_call_operation>::value) {
+            fee_param = param.get<contract_call_operation::fee_parameters_type>();
+            dlog("use gpo params, ${s}", ("s", fee_param));
+            break;
+        }
+    }
+
+    uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
+    uint32_t ram_usage_bs = ctx.get_ram_usage();
+    auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
+    auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
+
+    const auto &asset_obj = db.get<asset_object>(op.fee.asset_id);
+    asset fee = asset(ram_fee.to_uint64() + cpu_fee.to_uint64(), asset_id_type()) * asset_obj.options.core_exchange_rate;
+    fee_from_account += fee;
+    dlog("ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
+            ("rf",ram_fee.to_uint64())("cf",cpu_fee.to_uint64())("ru",ctx.get_ram_usage())("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
+
+    contract_receipt receipt{cpu_time_us, ram_usage_bs, fee_from_account};
+    return receipt;
+}
+
 void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operation &op)
 { try {
     database &d = db();
@@ -77,11 +109,10 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 { try {
     database& d = db();
     const account_object& contract_obj = op.contract_id(d);
-    acnt = &(contract_obj);
-    FC_ASSERT(acnt->code.size() > 0, "contract has no code, contract_id ${n}", ("n", op.contract_id));
+    FC_ASSERT(contract_obj.code.size() > 0, "contract has no code, contract_id ${n}", ("n", op.contract_id));
 
     // check method_name
-    const auto& actions = acnt->abi.actions;
+    const auto& actions = contract_obj.abi.actions;
     auto iter = std::find_if(actions.begin(), actions.end(),
             [&](const action_def& act) { return act.name == op.method_name; });
     FC_ASSERT(iter != actions.end(), "method_name ${m} not found in abi", ("m", op.method_name));
@@ -115,34 +146,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
         d.adjust_balance(op.contract_id, amnt);
     }
 
-    transaction_context trx_context(d, op.fee_payer().instance);
-    action act{op.contract_id, op.method_name, op.data};
-    apply_context ctx{d, trx_context, act, op.amount};
-    ctx.exec();
-
-    auto fee_param = contract_call_operation::fee_parameters_type();
-    const auto& p = d.get_global_properties().parameters;
-    for (auto& param : p.current_fees->parameters) {
-        if (param.which() == operation::tag<contract_call_operation>::value) {
-            fee_param = param.get<contract_call_operation::fee_parameters_type>();
-            dlog("use gpo params, ${s}", ("s", fee_param));
-            break;
-        }
-    }
-
-
-    uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
-    uint32_t ram_usage_bs = ctx.get_ram_usage();
-    auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
-    auto cpu_fee = fc::uint128( cpu_time_us * fee_param.price_per_ms_cpu);
-
-    const auto &asset_obj = d.get<asset_object>(op.fee.asset_id);
-    asset fee = asset(ram_fee.to_uint64() + cpu_fee.to_uint64(), asset_id_type()) * asset_obj.options.core_exchange_rate;
-    fee_from_account += fee;
-    dlog("ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
-            ("rf",ram_fee.to_uint64())("cf",cpu_fee.to_uint64())("ru",ctx.get_ram_usage())("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
-
-    contract_receipt receipt{cpu_time_us, ram_usage_bs, fee_from_account};
+    contract_receipt receipt = contract_exec(d, op, billed_cpu_time_us);
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)) }
 
