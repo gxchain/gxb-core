@@ -952,12 +952,12 @@
              account_object contract_obj = get_account(contract);
 
              fc::variants result;
-             auto tables = contract_obj.abi.tables;
+             const auto &tables = contract_obj.abi.tables;
              result.reserve(tables.size());
 
              std::transform(tables.begin(), tables.end(), std::back_inserter(result),
-                     [](table_def t_def) -> fc::variant {
-                     return name(t_def.name).to_string();
+                     [](const table_def &t_def) -> fc::variant {
+                         return name(t_def.name).to_string();
                      });
 
              return result;
