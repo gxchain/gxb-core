@@ -70,7 +70,6 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
 void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operation &op)
 { try {
     database &d = db();
-    const account_object &registrar = op.account(d);
 
     // check contract name
     auto &account_idx = d.get_index_type<account_index>();

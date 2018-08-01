@@ -354,7 +354,6 @@ class softfloat_api : public context_aware_api
       {
           float32_t a = to_softfloat32(af);
           float32_t b = to_softfloat32(bf);
-          uint32_t sign_of_a = a.v >> 31;
           uint32_t sign_of_b = b.v >> 31;
           a.v &= ~(1 << 31);             // clear the sign bit
           a.v = a.v | (sign_of_b << 31); // add the sign of b
@@ -533,7 +532,6 @@ class softfloat_api : public context_aware_api
       {
           float64_t a = to_softfloat64(af);
           float64_t b = to_softfloat64(bf);
-          uint64_t sign_of_a = a.v >> 63;
           uint64_t sign_of_b = b.v >> 63;
           a.v &= ~(uint64_t(1) << 63);   // clear the sign bit
           a.v = a.v | (sign_of_b << 63); // add the sign of b
@@ -591,7 +589,6 @@ class softfloat_api : public context_aware_api
           float64_t ret;
           int e = a.v >> 52 & 0x7FF;
           float64_t y;
-          double de = 1 / DBL_EPSILON;
           if (a.v == 0x8000000000000000) {
               return af;
           }

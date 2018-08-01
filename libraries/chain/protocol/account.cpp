@@ -69,13 +69,13 @@ bool is_valid_name( const string& name )
 
     if( len < GRAPHENE_MIN_ACCOUNT_NAME_LENGTH )
     {
-          ilog( ".");
+        ilog(".");
         return false;
     }
 
     if( len > GRAPHENE_MAX_ACCOUNT_NAME_LENGTH )
     {
-          ilog( ".");
+        ilog(".");
         return false;
     }
 
@@ -127,7 +127,7 @@ bool is_valid_name( const string& name )
              case '-':
                 break;
              default:
-          ilog( ".");
+                ilog( ".");
                 return false;
           }
        }
