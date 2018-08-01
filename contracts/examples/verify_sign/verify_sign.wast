@@ -136,27 +136,24 @@
     (get_local $3)
     (tee_local $5
      (call $malloc
-      (i32.add
-       (tee_local $4
-        (select
-         (i32.load offset=4
-          (get_local $3)
-         )
-         (i32.shr_u
-          (tee_local $4
-           (i32.load8_u
-            (get_local $3)
-           )
+      (tee_local $4
+       (select
+        (i32.load offset=4
+         (get_local $3)
+        )
+        (i32.shr_u
+         (tee_local $4
+          (i32.load8_u
+           (get_local $3)
           )
-          (i32.const 1)
          )
-         (i32.and
-          (get_local $4)
-          (i32.const 1)
-         )
+         (i32.const 1)
+        )
+        (i32.and
+         (get_local $4)
+         (i32.const 1)
         )
        )
-       (i32.const 1)
       )
      )
     )
@@ -169,27 +166,24 @@
     (get_local $1)
     (tee_local $7
      (call $malloc
-      (i32.add
-       (tee_local $6
-        (select
-         (i32.load offset=4
-          (get_local $1)
-         )
-         (i32.shr_u
-          (tee_local $6
-           (i32.load8_u
-            (get_local $1)
-           )
+      (tee_local $6
+       (select
+        (i32.load offset=4
+         (get_local $1)
+        )
+        (i32.shr_u
+         (tee_local $6
+          (i32.load8_u
+           (get_local $1)
           )
-          (i32.const 1)
          )
-         (i32.and
-          (get_local $6)
-          (i32.const 1)
-         )
+         (i32.const 1)
+        )
+        (i32.and
+         (get_local $6)
+         (i32.const 1)
         )
        )
-       (i32.const 1)
       )
      )
     )
@@ -410,7 +404,7 @@
      (i32.const 12)
     )
     (i32.const 0)
-    (i32.const 66)
+    (i32.const 65)
    )
   )
   (i32.store
@@ -907,14 +901,7 @@
     (i32.const 76)
    )
   )
-  (i32.store offset=396
-   (get_local $2)
-   (i32.add
-    (get_local $2)
-    (i32.const 77)
-   )
-  )
-  (call $_ZN5boost3pfr6detail19for_each_field_implINS1_14sequence_tuple5tupleIJRhS5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_EEEZN8graphenersINS7_10datastreamIPKcEE9signatureLPv0EEERT_SG_RT0_EUlSG_E_JLj0ELj1ELj2ELj3ELj4ELj5ELj6ELj7ELj8ELj9ELj10ELj11ELj12ELj13ELj14ELj15ELj16ELj17ELj18ELj19ELj20ELj21ELj22ELj23ELj24ELj25ELj26ELj27ELj28ELj29ELj30ELj31ELj32ELj33ELj34ELj35ELj36ELj37ELj38ELj39ELj40ELj41ELj42ELj43ELj44ELj45ELj46ELj47ELj48ELj49ELj50ELj51ELj52ELj53ELj54ELj55ELj56ELj57ELj58ELj59ELj60ELj61ELj62ELj63ELj64ELj65EEEEvSG_OSH_NSt3__116integer_sequenceIjJXspT1_EEEENSL_17integral_constantIbLb0EEE
+  (call $_ZN5boost3pfr6detail19for_each_field_implINS1_14sequence_tuple5tupleIJRhS5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_EEEZN8graphenersINS7_10datastreamIPKcEE9signatureLPv0EEERT_SG_RT0_EUlSG_E_JLj0ELj1ELj2ELj3ELj4ELj5ELj6ELj7ELj8ELj9ELj10ELj11ELj12ELj13ELj14ELj15ELj16ELj17ELj18ELj19ELj20ELj21ELj22ELj23ELj24ELj25ELj26ELj27ELj28ELj29ELj30ELj31ELj32ELj33ELj34ELj35ELj36ELj37ELj38ELj39ELj40ELj41ELj42ELj43ELj44ELj45ELj46ELj47ELj48ELj49ELj50ELj51ELj52ELj53ELj54ELj55ELj56ELj57ELj58ELj59ELj60ELj61ELj62ELj63ELj64EEEEvSG_OSH_NSt3__116integer_sequenceIjJXspT1_EEEENSL_17integral_constantIbLb0EEE
    (i32.add
     (get_local $2)
     (i32.const 136)
@@ -1466,7 +1453,7 @@
   )
   (unreachable)
  )
- (func $_ZN5boost3pfr6detail19for_each_field_implINS1_14sequence_tuple5tupleIJRhS5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_EEEZN8graphenersINS7_10datastreamIPKcEE9signatureLPv0EEERT_SG_RT0_EUlSG_E_JLj0ELj1ELj2ELj3ELj4ELj5ELj6ELj7ELj8ELj9ELj10ELj11ELj12ELj13ELj14ELj15ELj16ELj17ELj18ELj19ELj20ELj21ELj22ELj23ELj24ELj25ELj26ELj27ELj28ELj29ELj30ELj31ELj32ELj33ELj34ELj35ELj36ELj37ELj38ELj39ELj40ELj41ELj42ELj43ELj44ELj45ELj46ELj47ELj48ELj49ELj50ELj51ELj52ELj53ELj54ELj55ELj56ELj57ELj58ELj59ELj60ELj61ELj62ELj63ELj64ELj65EEEEvSG_OSH_NSt3__116integer_sequenceIjJXspT1_EEEENSL_17integral_constantIbLb0EEE (param $0 i32) (param $1 i32)
+ (func $_ZN5boost3pfr6detail19for_each_field_implINS1_14sequence_tuple5tupleIJRhS5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_S5_EEEZN8graphenersINS7_10datastreamIPKcEE9signatureLPv0EEERT_SG_RT0_EUlSG_E_JLj0ELj1ELj2ELj3ELj4ELj5ELj6ELj7ELj8ELj9ELj10ELj11ELj12ELj13ELj14ELj15ELj16ELj17ELj18ELj19ELj20ELj21ELj22ELj23ELj24ELj25ELj26ELj27ELj28ELj29ELj30ELj31ELj32ELj33ELj34ELj35ELj36ELj37ELj38ELj39ELj40ELj41ELj42ELj43ELj44ELj45ELj46ELj47ELj48ELj49ELj50ELj51ELj52ELj53ELj54ELj55ELj56ELj57ELj58ELj59ELj60ELj61ELj62ELj63ELj64EEEEvSG_OSH_NSt3__116integer_sequenceIjJXspT1_EEEENSL_17integral_constantIbLb0EEE (param $0 i32) (param $1 i32)
   (local $2 i32)
   (drop
    (call $memcpy
@@ -3010,30 +2997,6 @@
      (get_local $0)
     )
     (i32.load offset=4
-     (tee_local $2
-      (i32.load
-       (get_local $1)
-      )
-     )
-    )
-    (i32.const 1)
-   )
-  )
-  (i32.store offset=4
-   (get_local $2)
-   (i32.add
-    (i32.load offset=4
-     (get_local $2)
-    )
-    (i32.const 1)
-   )
-  )
-  (drop
-   (call $memcpy
-    (i32.load offset=260
-     (get_local $0)
-    )
-    (i32.load offset=4
      (tee_local $1
       (i32.load
        (get_local $1)
@@ -3080,13 +3043,13 @@
    (call $memcpy
     (i32.add
      (get_local $3)
-     (i32.const 22)
+     (i32.const 23)
     )
     (i32.add
      (get_local $1)
      (i32.const 12)
     )
-    (i32.const 66)
+    (i32.const 65)
    )
   )
   (drop
@@ -3109,9 +3072,9 @@
     )
     (i32.add
      (get_local $3)
-     (i32.const 22)
+     (i32.const 23)
     )
-    (i32.const 66)
+    (i32.const 65)
    )
   )
   (set_local $0

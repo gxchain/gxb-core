@@ -33,7 +33,7 @@
  (table 3 3 anyfunc)
  (elem (i32.const 0) $__wasm_nullptr $_ZN9transfer17depositEv $_ZN9transfer18withdrawEyyx)
  (memory $0 1)
- (data (i32.const 4) "@d\00\00")
+ (data (i32.const 4) "Pd\00\00")
  (data (i32.const 16) "object passed to iterator_to is not in multi_index\00")
  (data (i32.const 80) "owner:\00")
  (data (i32.const 96) " has no asset:\00")
@@ -53,8 +53,8 @@
  (data (i32.const 736) "record not exist, to add\00")
  (data (i32.const 768) "account_id:\00")
  (data (i32.const 784) "asset_id:\00")
- (data (i32.const 800) " record exist\00")
- (data (i32.const 816) "cannot create objects in table of another contract\00")
+ (data (i32.const 800) " record exist, to update\00")
+ (data (i32.const 832) "cannot create objects in table of another contract\00")
  (export "memory" (memory $0))
  (export "_ZeqRK11checksum256S1_" (func $_ZeqRK11checksum256S1_))
  (export "_ZeqRK11checksum160S1_" (func $_ZeqRK11checksum160S1_))
@@ -482,9 +482,11 @@
      (call $gxb_assert
       (i32.eq
        (i32.load offset=16
-        (call $_ZNK8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE31load_object_by_primary_iteratorEl
-         (get_local $7)
-         (get_local $6)
+        (tee_local $6
+         (call $_ZNK8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE31load_object_by_primary_iteratorEl
+          (get_local $7)
+          (get_local $6)
+         )
         )
        )
        (get_local $7)
@@ -506,6 +508,26 @@
     )
     (call $prints
      (i32.const 800)
+    )
+    (i32.store offset=8
+     (get_local $9)
+     (i32.add
+      (get_local $9)
+      (i32.const 24)
+     )
+    )
+    (call $gxb_assert
+     (i32.const 1)
+     (i32.const 304)
+    )
+    (call $_ZN8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE6modifyIZNS1_7depositEvEUlRT_E0_EEvRKS2_yOS5_
+     (get_local $7)
+     (get_local $6)
+     (i64.const 0)
+     (i32.add
+      (get_local $9)
+      (i32.const 8)
+     )
     )
     (br $label$2)
    )
@@ -2211,7 +2233,7 @@
     )
     (call $current_receiver)
    )
-   (i32.const 816)
+   (i32.const 832)
   )
   (i32.store offset=16
    (tee_local $4
@@ -2431,9 +2453,126 @@
    )
   )
  )
+ (func $_ZN8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE6modifyIZNS1_7depositEvEUlRT_E0_EEvRKS2_yOS5_ (param $0 i32) (param $1 i32) (param $2 i64) (param $3 i32)
+  (local $4 i64)
+  (local $5 i32)
+  (i32.store offset=4
+   (i32.const 0)
+   (tee_local $5
+    (i32.sub
+     (i32.load offset=4
+      (i32.const 0)
+     )
+     (i32.const 16)
+    )
+   )
+  )
+  (call $gxb_assert
+   (i32.eq
+    (i32.load offset=16
+     (get_local $1)
+    )
+    (get_local $0)
+   )
+   (i32.const 352)
+  )
+  (call $gxb_assert
+   (i64.eq
+    (i64.load
+     (get_local $0)
+    )
+    (call $current_receiver)
+   )
+   (i32.const 400)
+  )
+  (i64.store offset=8
+   (get_local $1)
+   (i64.add
+    (i64.load offset=8
+     (get_local $1)
+    )
+    (i64.load
+     (i32.load
+      (get_local $3)
+     )
+    )
+   )
+  )
+  (set_local $4
+   (i64.load
+    (get_local $1)
+   )
+  )
+  (call $gxb_assert
+   (i32.const 1)
+   (i32.const 464)
+  )
+  (drop
+   (call $memcpy
+    (get_local $5)
+    (get_local $1)
+    (i32.const 8)
+   )
+  )
+  (drop
+   (call $memcpy
+    (i32.or
+     (get_local $5)
+     (i32.const 8)
+    )
+    (i32.add
+     (get_local $1)
+     (i32.const 8)
+    )
+    (i32.const 8)
+   )
+  )
+  (call $db_update_i64
+   (i32.load offset=20
+    (get_local $1)
+   )
+   (get_local $2)
+   (get_local $5)
+   (i32.const 16)
+  )
+  (block $label$0
+   (br_if $label$0
+    (i64.lt_u
+     (get_local $4)
+     (i64.load offset=16
+      (get_local $0)
+     )
+    )
+   )
+   (i64.store
+    (i32.add
+     (get_local $0)
+     (i32.const 16)
+    )
+    (select
+     (i64.const -2)
+     (i64.add
+      (get_local $4)
+      (i64.const 1)
+     )
+     (i64.gt_u
+      (get_local $4)
+      (i64.const -3)
+     )
+    )
+   )
+  )
+  (i32.store offset=4
+   (i32.const 0)
+   (i32.add
+    (get_local $5)
+    (i32.const 16)
+   )
+  )
+ )
  (func $malloc (param $0 i32) (result i32)
   (call $_ZN8graphene14memory_manager6mallocEm
-   (i32.const 868)
+   (i32.const 884)
    (get_local $0)
   )
  )
@@ -2889,13 +3028,13 @@
    (block $label$1
     (br_if $label$1
      (i32.eqz
-      (i32.load8_u offset=9264
+      (i32.load8_u offset=9280
        (i32.const 0)
       )
      )
     )
     (set_local $7
-     (i32.load offset=9268
+     (i32.load offset=9284
       (i32.const 0)
      )
     )
@@ -2904,11 +3043,11 @@
    (set_local $7
     (current_memory)
    )
-   (i32.store8 offset=9264
+   (i32.store8 offset=9280
     (i32.const 0)
     (i32.const 1)
    )
-   (i32.store offset=9268
+   (i32.store offset=9284
     (i32.const 0)
     (tee_local $7
      (i32.shl
@@ -2959,7 +3098,7 @@
        )
       )
       (set_local $3
-       (i32.load offset=9268
+       (i32.load offset=9284
         (i32.const 0)
        )
       )
@@ -2967,7 +3106,7 @@
      (set_local $8
       (i32.const 0)
      )
-     (i32.store offset=9268
+     (i32.store offset=9284
       (i32.const 0)
       (get_local $3)
      )
@@ -3021,18 +3160,18 @@
      )
      (block $label$6
       (br_if $label$6
-       (i32.load8_u offset=9264
+       (i32.load8_u offset=9280
         (i32.const 0)
        )
       )
       (set_local $3
        (current_memory)
       )
-      (i32.store8 offset=9264
+      (i32.store8 offset=9280
        (i32.const 0)
        (i32.const 1)
       )
-      (i32.store offset=9268
+      (i32.store offset=9284
        (i32.const 0)
        (tee_local $3
         (i32.shl
@@ -3100,12 +3239,12 @@
        )
       )
       (set_local $6
-       (i32.load offset=9268
+       (i32.load offset=9284
         (i32.const 0)
        )
       )
      )
-     (i32.store offset=9268
+     (i32.store offset=9284
       (i32.const 0)
       (i32.add
        (get_local $6)
@@ -3365,7 +3504,7 @@
     (br_if $label$1
      (i32.lt_s
       (tee_local $2
-       (i32.load offset=9252
+       (i32.load offset=9268
         (i32.const 0)
        )
       )
@@ -3373,7 +3512,7 @@
      )
     )
     (set_local $3
-     (i32.const 9060)
+     (i32.const 9076)
     )
     (set_local $1
      (i32.add
@@ -3381,7 +3520,7 @@
        (get_local $2)
        (i32.const 12)
       )
-      (i32.const 9060)
+      (i32.const 9076)
      )
     )
     (loop $label$2
@@ -3472,7 +3611,7 @@
     )
     (i32.store8
      (tee_local $0
-      (i32.load offset=9272
+      (i32.load offset=9288
        (i32.const 0)
       )
      )
