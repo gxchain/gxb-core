@@ -1523,6 +1523,7 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
            transaction_evaluation_state eval_state(&_db);
            eval_state.operation_results.reserve(1);
            eval_state.skip_fee = true;
+           eval_state.skip_fee_schedule_check = true;
            auto op_result = _db.apply_operation(eval_state, opr);
            auto fee = op_result.get<contract_receipt>().fee;
 
