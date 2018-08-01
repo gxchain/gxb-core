@@ -50,7 +50,7 @@ extern "C" {
     *  @brief Get the current receiver of the action
     *  @return the account which specifies the current receiver of the action
     */
-   account_name current_receiver();
+   uint64_t current_receiver();
 
    uint64_t get_action_asset_id();
 

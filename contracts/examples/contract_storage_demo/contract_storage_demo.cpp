@@ -10,7 +10,7 @@ using std::string;
 class contract_storage_demo : public contract
 {
   public:
-    contract_storage_demo(account_name self)
+    contract_storage_demo(uint64_t self)
         : contract(self)
         , cpus(_self, _self)
     {

@@ -116,7 +116,7 @@ struct name {
     }
 
     friend bool operator==(const name &a, const name &b) { return a.value == b.value; }
-    account_name value = 0;
+    uint64_t value = 0;
 
   private:
     static void trim_right_dots(std::string &str)
