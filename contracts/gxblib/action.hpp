@@ -14,11 +14,14 @@ namespace graphene {
    T unpack_action_data() {
       constexpr size_t max_stack_buffer_size = 512;
       size_t size = action_data_size();
-      char* buffer = (char*)( max_stack_buffer_size < size ? malloc(size) : alloca(size) );
-      read_action_data( buffer, size );
-      return unpack<T>( buffer, size );
+      char *buffer = (char *) (max_stack_buffer_size < size ? malloc(size) : alloca(size));
+      read_action_data(buffer, size);
+      auto res = unpack<T>(buffer, size);
+      if (max_stack_buffer_size < size) {
+          free(buffer);
+      }
+      return res;
    }
-
 
    /**
     * This is the packed representation of an action along with

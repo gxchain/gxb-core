@@ -121,7 +121,7 @@ std::unique_ptr<wasm_instantiated_module_interface> wavm_runtime::instantiate_mo
    graphene::chain::webassembly::common::root_resolver resolver;
    LinkResult link_result = linkModule(*module, resolver);
    ModuleInstance *instance = instantiateModule(*module, std::move(link_result.resolvedImports));
-   FC_ASSERT(instance != nullptr);
+   FC_ASSERT(instance != nullptr, "Fail to Instantiate WAVM Module");
 
    return std::make_unique<wavm_instantiated_module>(instance, std::move(module), initial_memory);
 }
