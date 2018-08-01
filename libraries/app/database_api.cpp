@@ -75,6 +75,11 @@ bytes database_api::serialize_contract_call_args(string contract, string method,
     return my->serialize_contract_call_args(contract, method, json_args);
 }
 
+string database_api::serialize_transaction(signed_transaction tx) const
+{
+    return my->serialize_transaction(tx);
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Subscriptions                                                    //

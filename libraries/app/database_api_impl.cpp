@@ -160,6 +160,11 @@ fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope,
     return result;
 }
 
+string database_api_impl::serialize_transaction(signed_transaction tx) const
+{
+    return fc::to_hex(fc::raw::pack(tx));
+}
+
 bytes database_api_impl::serialize_contract_call_args(string contract, string method, string json_args) const
 {
     auto contract_obj = get_account_by_name(contract);

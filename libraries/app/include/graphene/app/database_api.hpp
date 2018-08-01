@@ -88,6 +88,7 @@ class database_api
       fc::variants get_objects(const vector<object_id_type>& ids)const;
       fc::variants get_table_objects(uint64_t code, uint64_t scope, uint64_t table) const;
       bytes serialize_contract_call_args(string contract, string method, string json_args) const;
+      string serialize_transaction(signed_transaction tx) const;
 
       ///////////////////
       // Subscriptions //
@@ -810,6 +811,7 @@ FC_API(graphene::app::database_api,
    (get_objects)
    (get_table_objects)
    (serialize_contract_call_args)
+   (serialize_transaction)
    // Subscriptions
    (set_subscribe_callback)
    (set_data_transaction_subscribe_callback)
