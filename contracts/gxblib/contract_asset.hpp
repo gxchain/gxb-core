@@ -42,6 +42,43 @@ struct contract_asset {
     }
     contract_asset operator-() const { return contract_asset(-amount, asset_id); }
 
+    contract_asset &operator*=(int64_t a)
+    {
+        eosio_assert(a == 0 || (amount * a) / a == amount, "multiplication overflow or underflow");
+        eosio_assert(-max_amount <= amount, "multiplication underflow");
+        eosio_assert(amount <= max_amount, "multiplication overflow");
+        amount *= a;
+        return *this;
+    }
+
+    friend contract_asset operator*(const contract_asset &a, int64_t b)
+    {
+        contract_asset result = a;
+        result *= b;
+        return result;
+    }
+
+    friend contract_asset operator*(int64_t b, const contract_asset &a)
+    {
+        contract_asset result = a;
+        result *= b;
+        return result;
+    }
+
+    contract_asset &operator/=(int64_t a)
+    {
+        amount /= a;
+        return *this;
+    }
+
+    friend contract_asset operator/(const contract_asset &a, int64_t b)
+    {
+        contract_asset result = a;
+        result /= b;
+        return result;
+    }
+
+
     friend bool operator==(const contract_asset &a, const contract_asset &b)
     {
         return std::tie(a.asset_id, a.amount) == std::tie(b.asset_id, b.amount);
