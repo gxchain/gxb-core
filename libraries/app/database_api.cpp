@@ -75,11 +75,6 @@ bytes database_api::serialize_contract_call_args(string contract, string method,
     return my->serialize_contract_call_args(contract, method, json_args);
 }
 
-string database_api::serialize_transaction(signed_transaction tx) const
-{
-    return my->serialize_transaction(tx);
-}
-
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Subscriptions                                                    //
@@ -536,6 +531,11 @@ vector<variant> database_api::lookup_vote_ids( const vector<vote_id_type>& votes
 std::string database_api::get_transaction_hex(const signed_transaction& trx)const
 {
    return my->get_transaction_hex( trx );
+}
+
+std::string database_api::serialize_transaction(const signed_transaction& trx) const
+{
+    return my->serialize_transaction(trx);
 }
 
 set<public_key_type> database_api::get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const

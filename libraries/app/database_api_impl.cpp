@@ -160,11 +160,6 @@ fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope,
     return result;
 }
 
-string database_api_impl::serialize_transaction(signed_transaction tx) const
-{
-    return fc::to_hex(fc::raw::pack(tx));
-}
-
 bytes database_api_impl::serialize_contract_call_args(string contract, string method, string json_args) const
 {
     auto contract_obj = get_account_by_name(contract);
@@ -1343,6 +1338,11 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
 std::string database_api_impl::get_transaction_hex(const signed_transaction& trx)const
 {
    return fc::to_hex(fc::raw::pack(trx));
+}
+
+std::string database_api_impl::serialize_transaction(const signed_transaction& trx) const
+{
+    return fc::to_hex(fc::raw::pack(trx));
 }
 
 set<public_key_type> database_api_impl::get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const

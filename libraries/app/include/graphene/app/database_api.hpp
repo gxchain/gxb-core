@@ -88,7 +88,6 @@ class database_api
       fc::variants get_objects(const vector<object_id_type>& ids)const;
       fc::variants get_table_objects(uint64_t code, uint64_t scope, uint64_t table) const;
       bytes serialize_contract_call_args(string contract, string method, string json_args) const;
-      string serialize_transaction(signed_transaction tx) const;
 
       ///////////////////
       // Subscriptions //
@@ -615,6 +614,9 @@ class database_api
 
       /// @brief Get a hexdump of the serialized binary form of a transaction
       std::string get_transaction_hex(const signed_transaction& trx)const;
+
+      /// @brief Get a hexdump of the serialized binary form of a transaction
+      std::string serialize_transaction(const signed_transaction& tx) const;
 
       /**
        *  This API will take a partially signed transaction and a set of public keys that the owner has the ability to sign for

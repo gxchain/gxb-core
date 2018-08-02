@@ -83,7 +83,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       fc::variants get_objects(const vector<object_id_type>& ids)const;
       fc::variants get_table_objects(uint64_t code, uint64_t scope, uint64_t table) const;
       bytes serialize_contract_call_args(string contract, string method, string json_args) const;
-      string serialize_transaction(signed_transaction tx) const;
 
       // Subscriptions
       void set_subscribe_callback( std::function<void(const variant&)> cb, bool notify_remove_create );
@@ -182,6 +181,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Authority / validation
       std::string get_transaction_hex(const signed_transaction& trx)const;
+      std::string serialize_transaction(const signed_transaction& trx) const;
       set<public_key_type> get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const;
       set<public_key_type> get_potential_signatures( const signed_transaction& trx )const;
       set<address> get_potential_address_signatures( const signed_transaction& trx )const;
