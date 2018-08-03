@@ -54,7 +54,7 @@ const data_transaction_commission_percent_t database::get_commission_percent() c
     return data_transaction_commission_percent_t();
 }
 
-const vm_cpu_limit_t dababase::get_cpu_limit() const
+const vm_cpu_limit_t database::get_cpu_limit() const
 {
     const chain_parameters& params = get_global_properties().parameters;
     for (auto& ext : params.extensions) {
