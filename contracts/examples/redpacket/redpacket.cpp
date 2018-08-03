@@ -9,8 +9,6 @@
 #include <gxblib/system.h>
 #include <gxblib/types.h>
 
-#include <sstream>
-
 using namespace graphene;
 
 class redpacket : public contract
@@ -141,7 +139,7 @@ class redpacket : public contract
             return;
         }
 
-        gxb_assert(it->amount >= amount, "balance not enough");
+        gxb_assert(it->amount.amount >= amount, "balance not enough");
 
         auto packet_it = packets.find(owner);
         if (packet_it != packets.end()) {
@@ -149,31 +147,31 @@ class redpacket : public contract
             return;
         }
 
+        int64_t block_num = get_head_block_num();
+        int shares_sum = 0;
+        vector<int> shares;
+        shares.reserve(number);
+        checksum160 sum160;
+        
+        std::string random_bash;
+        for (int i = 0; i < number; i++) {
+            random_bash = pubkey + std::to_string(i) + std::to_string(block_num);
+            print("random_bash=", random_bash.c_str());
+            ripemd160(const_cast<char*>(random_bash.c_str()), random_bash.length(), &sum160);
+            shares.emplace_back(sum160.hash[0]);
+            shares_sum += sum160.hash[0];
+        }
+        
         packets.emplace(owner, [&](auto &o) {
             o.account_id = owner;
             o.pub_key = pubkey;
             o.amount = amount;
             o.number = number;
             o.subpackets.reserve(number);
-
-            int shares_sum = 0;
-            vector<int> shares(10);
-
-            checksum160 sum160;
-
-            std::stringstream stream;
             
-            int64_t block_num = get_head_block_num();
             for (int i = 0; i < number; i++) {
-                stream << pubkey << i << block_num;
-                std::string s = stream.str();
-                ripemd160(const_cast<char*>(s.c_str()), s.length(), &sum160);
-                shares.emplace_back(sum160.hash[0]);
-                shares_sum += sum160.hash[0];
-            }
-
-            for (int i = 0; i < number; i++) {
-                o.subpackets.emplace_back(amount * shares[i] / 100);
+                print("share=", shares[i]);
+                o.subpackets.emplace_back(contract_asset{amount * shares[i] / shares_sum, it->amount.asset_id});
             }
         });
     }
@@ -189,13 +187,12 @@ class redpacket : public contract
             return;
         }
 
-        std::stringstream stream;
-        stream << nonce;
-        std::string stringnonce = stream.str();
+        std::string stringnonce = std::to_string(nonce);
 
-        signature sg;
-        sig.copy((char*)sg.data, 65, 0);
-        int ret = verify_signature(const_cast<char*>(stringnonce.c_str()), stringnonce.length(), &sg, const_cast<char*>(it->pub_key.c_str()), it->pub_key.length());
+        print("stringnonce=", stringnonce);
+        print("x=", it->pub_key.c_str());
+        print("sig =", sig);
+        int ret = verify_signature(stringnonce.c_str(), stringnonce.length(), sig.c_str(), sig.length(), it->pub_key.c_str(), it->pub_key.length());
 
         print("ret=", ret);
         if (ret != 0) {

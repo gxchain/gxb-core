@@ -16,9 +16,7 @@ class verify_sign : public contract
 
     void verify(std::string &raw_string, std::string &sig, std::string &pub_key)
     {
-        signature sg;
-        sig.copy(sg.data, 65, 0);
-        int ret = verify_signature(raw_string.c_str(), raw_string.length(), &sg, pub_key.c_str(), pub_key.length());
+        int ret = verify_signature(raw_string.c_str(), raw_string.length(), sig.c_str(), sig.length(), pub_key.c_str(), pub_key.length());
         print("ret code, ", ret, "\n");
     }
 };
