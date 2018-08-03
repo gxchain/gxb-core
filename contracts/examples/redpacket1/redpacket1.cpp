@@ -155,6 +155,7 @@ class redpacket1 : public contract
         }
     }
 
+    // @abi action
     void close()
     {
         uint64_t owner = get_trx_sender();
