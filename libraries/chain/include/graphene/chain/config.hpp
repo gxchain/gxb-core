@@ -77,9 +77,6 @@
 
 #define GRAPHENE_DEFAULT_COMMISSION_PERCENT                     1000
 
-// cpu duration limit, default 10 ms
-#define GRAPHENE_VM_CPU_DURATION_LIMIT                          uint64_t(10 * 1000)
-
 /**
  *  These ratios are fixed point numbers with a denominator of GRAPHENE_COLLATERAL_RATIO_DENOM, the
  *  minimum maitenance collateral is therefore 1.001x and the default

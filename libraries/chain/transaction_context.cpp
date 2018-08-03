@@ -5,11 +5,11 @@
 
 namespace graphene { namespace chain {
 
-   transaction_context::transaction_context(database &d, int64_t origin) :
+   transaction_context::transaction_context(database &d, int64_t origin, uint64_t trx_cpu_limit) :
         _db(&d),
         trx_origin(origin),
         start(fc::time_point::now()),
-        _deadline(start + fc::microseconds(GRAPHENE_VM_CPU_DURATION_LIMIT)),
+        _deadline(start + fc::microseconds(trx_cpu_limit)),
         transaction_cpu_usage_us(0)
    {
    }

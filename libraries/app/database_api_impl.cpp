@@ -264,6 +264,17 @@ data_transaction_commission_percent_t database_api_impl::get_commission_percent(
     FC_THROW("no ommission_rate");
 }
 
+vm_cpu_limit_t database_api_impl::get_cpu_limit() const
+{
+    const chain_parameters& params = get_global_properties().parameters;
+    for (auto& ext : params.extensions) {
+        if (ext.which() == future_extensions::tag<vm_cpu_limit_t>::value) {
+            return ext.get<vm_cpu_limit_t>();
+        }
+    }
+    return vm_cpu_limit_t();
+}
+
 chain_property_object database_api_impl::get_chain_properties()const
 {
    return _db.get(chain_property_id_type());
