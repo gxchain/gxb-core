@@ -105,7 +105,7 @@ class redpacket : public contract
         if (it->amount == amount) {
             balances.erase(it);
         } else {
-            print("withdraw part, to udpate");
+            print("withdraw part, to udpate\n");
             balances.modify(it, 0, [&](auto &o) {
                 o.amount -= amount;
             });
@@ -135,7 +135,7 @@ class redpacket : public contract
 
         auto it = balances.find(owner);
         if (it == balances.end()) {
-            print("balance not enough");
+            print("balance not enough\n");
             return;
         }
 
@@ -152,28 +152,36 @@ class redpacket : public contract
         vector<int> shares;
         shares.reserve(number);
         checksum160 sum160;
-        
+
         std::string random_bash;
         for (int i = 0; i < number; i++) {
             random_bash = pubkey + std::to_string(i) + std::to_string(block_num);
-            print("random_bash=", random_bash.c_str());
-            ripemd160(const_cast<char*>(random_bash.c_str()), random_bash.length(), &sum160);
+            print("random_bash=", random_bash.c_str(), "\n");
+            ripemd160(const_cast<char *>(random_bash.c_str()), random_bash.length(), &sum160);
             shares.emplace_back(sum160.hash[0]);
             shares_sum += sum160.hash[0];
         }
-        
+
         packets.emplace(owner, [&](auto &o) {
             o.account_id = owner;
             o.pub_key = pubkey;
             o.amount = amount;
             o.number = number;
             o.subpackets.reserve(number);
-            
+
             for (int i = 0; i < number; i++) {
-                print("share=", shares[i]);
+                print("share=", shares[i], "\n");
                 o.subpackets.emplace_back(contract_asset{amount * shares[i] / shares_sum, it->amount.asset_id});
             }
         });
+
+        if (it->amount.amount == amount) {
+            balances.erase(it);
+        } else {
+            balances.modify(it, 0, [&](auto &o) {
+                o.amount.amount -= amount;
+            });
+        }
     }
 
     // @abi action
@@ -189,12 +197,12 @@ class redpacket : public contract
 
         std::string stringnonce = std::to_string(nonce);
 
-        print("stringnonce=", stringnonce);
-        print("x=", it->pub_key.c_str());
-        print("sig =", sig);
+        print("stringnonce=", stringnonce, "\n");
+        print("x=", it->pub_key.c_str(), "\n");
+        print("sig=", sig, "\n");
         int ret = verify_signature(stringnonce.c_str(), stringnonce.length(), sig.c_str(), sig.length(), it->pub_key.c_str(), it->pub_key.length());
 
-        print("ret=", ret);
+        print("ret=", ret, "\n");
         if (ret != 0) {
             print("you hava no auth");
             return;
@@ -202,7 +210,7 @@ class redpacket : public contract
 
         auto record_it = packetrecords.find(owner);
         if (record_it != packetrecords.end()) {
-            print("you can only rob once, you have rob from the packet");
+            print("you can only rob once, you have rob from the packet\n");
             return;
         }
 
@@ -224,6 +232,13 @@ class redpacket : public contract
         packets.modify(it, 0, [&](auto &o) {
             o.subpackets.erase(subpacket_it);
         });
+        
+        if(it->subpackets.size() == 0) {
+            packets.erase(it);
+            for(auto record_it = packetrecords.begin();record_it != packetrecords.end();) {
+                record_it = packetrecords.erase(record_it);
+            }
+        }
     }
 };
 

@@ -1,0 +1,27 @@
+
+
+deploy_contract abkax55152 nathan 0 0 /Users/sky/gxb_install/redpacket GXC true
+
+
+call_contract nathan abkax55152 {"amount":10000000,"asset_id":1.3.0} deposit "{}" GXC true
+
+
+call_contract nathan abkax55152 null issuepacket "{\"pubkey\":\"GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b\",\"amount\":10000000,\"number\":2}" GXS true
+
+
+call_contract nathan abkax55152 null robpacket "{\"packetowner\":17,\"sig\":\"20217c7a2c9f00b886ba029c65bb0338407a292db97eb0937b7e8a50b19f70fbfd1dd1bec9f861f616a850a6a8cb955ba870e8750ef145ae33b9c05cced8b033eb\",\"nonce\":456}" GXS true
+
+
+get_contract_tables abkax55152
+
+get_table_objects abkax55152 balance
+
+get_table_objects abkax55152 packet
+
+get_table_objects abkax55152 packetrecord
+
+list_account_balances abkax55152
+
+
+pubkey:"GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b"
+wifkey:"5J9vj4XiwVQ2HNr22uFrxgaaerqrPN7xZQER9z2hwSPeWdbMKBM"
