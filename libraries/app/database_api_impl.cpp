@@ -261,7 +261,7 @@ data_transaction_commission_percent_t database_api_impl::get_commission_percent(
             return ext.get<data_transaction_commission_percent_t>();
         }
     }
-    FC_THROW("no ommission_rate");
+    return data_transaction_commission_percent_t();
 }
 
 vm_cpu_limit_t database_api_impl::get_cpu_limit() const
