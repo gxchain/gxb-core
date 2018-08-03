@@ -225,22 +225,22 @@ class crypto_api : public context_aware_api {
          hash_val = encode<fc::ripemd160::encoder>( data, datalen );
       }
 
-      bool verify_signature(array_ptr<char> data, size_t datalen, const fc::ecc::compact_signature& sig, array_ptr<char>pub_key_data, size_t pub_key_length)
+      bool verify_signature(array_ptr<char> data, size_t datalen, array_ptr<char> sig, size_t siglen, array_ptr<char> pub_key, size_t pub_keylen)
       {
-          std::string raw_txt(data, datalen);
-          std::string pub_key(pub_key_data, pub_key_length);
-
-          idump((sig));
-          idump((raw_txt));
-          idump((pub_key));
-
-          public_key_type pk{pub_key};
-
-          idump((pk));
-
           digest_type::encoder enc;
-          fc::raw::pack(enc, raw_txt);
-          return public_key_type(fc::ecc::public_key(sig, enc.result(), true)) == pk;
+          fc::raw::pack(enc, data.value);
+
+          fc::ecc::compact_signature compact_sig;
+          const char *p = sig.value;
+          for (int i = 0; i < siglen; i = i + 2) {
+              const unsigned char *c = (unsigned char*)(p + i);
+              unsigned char c1 = c[0] >= 97 ? (c[0] - 97 + 10) : c[0] - 48;
+              unsigned char c2 = c[1] >= 97 ? (c[1] - 97 + 10) : c[1] - 48;
+              compact_sig.data[i / 2] = (c1 << 4) | c2;
+          }
+          
+          public_key_type pk{pub_key.value};
+          return public_key_type(fc::ecc::public_key(compact_sig, enc.result(), true)) == pk;
       }
 };
 
@@ -1501,7 +1501,7 @@ REGISTER_INTRINSICS(crypto_api,
 (sha256,                 void(int, int, int)           )
 (sha512,                 void(int, int, int)           )
 (ripemd160,              void(int, int, int)           )
-(verify_signature,       int(int, int, int, int, int)  )
+(verify_signature,       int(int, int, int, int, int, int)  )
 );
 
 REGISTER_INTRINSICS(action_api,
