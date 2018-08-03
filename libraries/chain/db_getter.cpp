@@ -54,6 +54,18 @@ const data_transaction_commission_percent_t database::get_commission_percent() c
     return data_transaction_commission_percent_t();
 }
 
+const vm_cpu_limit_t database::get_cpu_limit() const
+{
+    const chain_parameters& params = get_global_properties().parameters;
+    for (auto& ext : params.extensions) {
+        if (ext.which() == future_extensions::tag<vm_cpu_limit_t>::value) {
+            return ext.get<vm_cpu_limit_t>();
+        }
+    }
+    // return default value
+    return vm_cpu_limit_t();
+}
+
 const chain_property_object& database::get_chain_properties()const
 {
    return get( chain_property_id_type() );

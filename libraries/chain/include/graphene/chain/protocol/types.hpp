@@ -120,6 +120,12 @@ namespace graphene { namespace chain {
        uint16_t reserve_percent = (1 * GRAPHENE_1_PERCENT); // reserve percent of commission, go to reserve pool
    };
 
+   // vm execution cpu limit
+   struct vm_cpu_limit_t {
+       uint64_t trx_cpu_limit = 1000; // 1 ms
+       uint64_t block_cpu_limit = 100000; // 100 ms
+   };
+
    struct operation_ext_copyright_hash_t {
        fc::optional<string> copyright_hash;
    };
@@ -635,16 +641,17 @@ FC_REFLECT_TYPENAME( graphene::chain::signature_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::table_id_object_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::key_value_object_id_type)
 
-FC_REFLECT( graphene::chain::void_t, )
-FC_REFLECT( graphene::chain::operation_ext_version_t, (version))
-FC_REFLECT( graphene::chain::data_transaction_commission_percent_t, (league_data_market_commission_percent)(free_data_market_commission_percent)(commission_account)(reserve_percent))
-FC_REFLECT( graphene::chain::operation_ext_copyright_hash_t, (copyright_hash))
-FC_REFLECT( graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_bases)(product_pocs_weights))
-FC_REFLECT( graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
-FC_REFLECT( graphene::chain::interest_rate_t, (lock_days)(interest_rate)(is_valid) )
-FC_REFLECT( graphene::chain::lock_balance_params_t, (params) )
+FC_REFLECT(graphene::chain::void_t, )
+FC_REFLECT(graphene::chain::operation_ext_version_t, (version))
+FC_REFLECT(graphene::chain::data_transaction_commission_percent_t, (league_data_market_commission_percent)(free_data_market_commission_percent)(commission_account)(reserve_percent))
+FC_REFLECT(graphene::chain::operation_ext_copyright_hash_t, (copyright_hash))
+FC_REFLECT(graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_bases)(product_pocs_weights))
+FC_REFLECT(graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
+FC_REFLECT(graphene::chain::interest_rate_t, (lock_days)(interest_rate)(is_valid))
+FC_REFLECT(graphene::chain::lock_balance_params_t, (params))
+FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
 
-FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
+FC_REFLECT_ENUM(graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)
    (white_list)
    (transfer_restricted)
@@ -655,4 +662,3 @@ FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (witness_fed_asset)
    (committee_fed_asset)
    )
-

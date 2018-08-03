@@ -163,6 +163,11 @@ class database_api
       data_transaction_commission_percent_t get_commission_percent() const;
 
       /**
+       *  @brief Retrieve vm cpu_limit
+       */
+      vm_cpu_limit_t get_cpu_limit() const;
+
+      /**
        * @brief Retrieve compile-time constants
        */
       fc::variant_object get_config()const;
