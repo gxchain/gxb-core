@@ -165,7 +165,7 @@ class database_api
       /**
        *  @brief Retrieve vm cpu_limit
        */
-      vm_cpu_limit_t database_api::get_cpu_limit() const;
+      vm_cpu_limit_t get_cpu_limit() const;
 
       /**
        * @brief Retrieve compile-time constants
