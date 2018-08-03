@@ -47,7 +47,7 @@ namespace graphene { namespace chain {
        }
    }
 
-   void transaction_context::dispatch_action(const action &a, account_name receiver)
+   void transaction_context::dispatch_action(const action &a, uint64_t receiver)
    {
        apply_context acontext(db(), *this, a, optional<asset>());
        acontext.receiver = receiver;
@@ -55,6 +55,7 @@ namespace graphene { namespace chain {
        try {
            acontext.exec();
        } catch (...) {
+           wlog("apply_context exec failed");
            throw;
        }
    }

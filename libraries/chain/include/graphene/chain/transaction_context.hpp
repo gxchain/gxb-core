@@ -18,7 +18,7 @@ namespace graphene { namespace chain {
         }
 
       private:
-        void dispatch_action(const action &a, account_name receiver);
+        void dispatch_action(const action &a, uint64_t receiver);
         inline void dispatch_action(const action &a)
         {
             dispatch_action(a, a.contract_id);
