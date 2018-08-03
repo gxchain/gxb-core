@@ -3,23 +3,24 @@
 static const char contract_test_wast_code[] = R"=====(
 (module
  (type $FUNCSIG$vij (func (param i32 i64)))
+ (type $FUNCSIG$vi (func (param i32)))
+ (type $FUNCSIG$vj (func (param i64)))
  (type $FUNCSIG$i (func (result i32)))
  (type $FUNCSIG$iii (func (param i32 i32) (result i32)))
  (type $FUNCSIG$iiii (func (param i32 i32 i32) (result i32)))
- (type $FUNCSIG$vi (func (param i32)))
- (type $FUNCSIG$vj (func (param i64)))
  (type $FUNCSIG$v (func))
  (import "env" "action_data_size" (func $action_data_size (result i32)))
  (import "env" "memcpy" (func $memcpy (param i32 i32 i32) (result i32)))
  (import "env" "prints" (func $prints (param i32)))
  (import "env" "printui" (func $printui (param i64)))
  (import "env" "read_action_data" (func $read_action_data (param i32 i32) (result i32)))
- (table 2 2 anyfunc)
- (elem (i32.const 0) $__wasm_nullptr $_ZN5hello2hiEy)
+ (table 3 3 anyfunc)
+ (elem (i32.const 0) $__wasm_nullptr $_ZN5hello2hiEy $_ZN5hello3byeEy)
  (memory $0 1)
- (data (i32.const 4) "\00a\00\00")
- (data (i32.const 16) "hi, \00")
+ (data (i32.const 4) "\10a\00\00")
+ (data (i32.const 16) "bye, \00")
  (data (i32.const 32) "\n\00")
+ (data (i32.const 48) "hi, \00")
  (export "memory" (memory $0))
  (export "_ZeqRK11checksum256S1_" (func $_ZeqRK11checksum256S1_))
  (export "_ZeqRK11checksum160S1_" (func $_ZeqRK11checksum160S1_))
@@ -65,7 +66,7 @@ static const char contract_test_wast_code[] = R"=====(
      (i32.load offset=4
       (i32.const 0)
      )
-     (i32.const 32)
+     (i32.const 48)
     )
    )
   )
@@ -76,27 +77,62 @@ static const char contract_test_wast_code[] = R"=====(
      (get_local $0)
     )
    )
-   (i64.store offset=24
+   (i64.store offset=40
     (get_local $3)
     (get_local $1)
    )
-   (br_if $label$0
-    (i64.ne
-     (get_local $2)
-     (i64.const 7746191359077253120)
+   (block $label$1
+    (br_if $label$1
+     (i64.eq
+      (get_local $2)
+      (i64.const 4581286720942637056)
+     )
     )
+    (br_if $label$0
+     (i64.ne
+      (get_local $2)
+      (i64.const 7746191359077253120)
+     )
+    )
+    (i32.store offset=36
+     (get_local $3)
+     (i32.const 0)
+    )
+    (i32.store offset=32
+     (get_local $3)
+     (i32.const 1)
+    )
+    (i64.store offset=8 align=4
+     (get_local $3)
+     (i64.load offset=32
+      (get_local $3)
+     )
+    )
+    (drop
+     (call $_ZN8graphene14execute_actionI5helloS1_JyEEEbPT_MT0_FvDpT1_E
+      (i32.add
+       (get_local $3)
+       (i32.const 40)
+      )
+      (i32.add
+       (get_local $3)
+       (i32.const 8)
+      )
+     )
+    )
+    (br $label$0)
    )
-   (i32.store offset=20
+   (i32.store offset=28
     (get_local $3)
     (i32.const 0)
    )
-   (i32.store offset=16
+   (i32.store offset=24
     (get_local $3)
-    (i32.const 1)
+    (i32.const 2)
    )
-   (i64.store offset=8 align=4
+   (i64.store offset=16 align=4
     (get_local $3)
-    (i64.load offset=16
+    (i64.load offset=24
      (get_local $3)
     )
    )
@@ -104,11 +140,11 @@ static const char contract_test_wast_code[] = R"=====(
     (call $_ZN8graphene14execute_actionI5helloS1_JyEEEbPT_MT0_FvDpT1_E
      (i32.add
       (get_local $3)
-      (i32.const 24)
+      (i32.const 40)
      )
      (i32.add
       (get_local $3)
-      (i32.const 8)
+      (i32.const 16)
      )
     )
    )
@@ -117,13 +153,13 @@ static const char contract_test_wast_code[] = R"=====(
    (i32.const 0)
    (i32.add
     (get_local $3)
-    (i32.const 32)
+    (i32.const 48)
    )
   )
  )
  (func $_ZN5hello2hiEy (type $FUNCSIG$vij) (param $0 i32) (param $1 i64)
   (call $prints
-   (i32.const 16)
+   (i32.const 48)
   )
   (call $printui
    (get_local $1)
@@ -132,7 +168,7 @@ static const char contract_test_wast_code[] = R"=====(
    (i32.const 32)
   )
   (call $prints
-   (i32.const 16)
+   (i32.const 48)
   )
   (call $printui
    (get_local $1)
@@ -296,9 +332,29 @@ static const char contract_test_wast_code[] = R"=====(
   )
   (i32.const 1)
  )
+ (func $_ZN5hello3byeEy (type $FUNCSIG$vij) (param $0 i32) (param $1 i64)
+  (call $prints
+   (i32.const 16)
+  )
+  (call $printui
+   (get_local $1)
+  )
+  (call $prints
+   (i32.const 32)
+  )
+  (call $prints
+   (i32.const 16)
+  )
+  (call $printui
+   (get_local $1)
+  )
+  (call $prints
+   (i32.const 32)
+  )
+ )
  (func $malloc (param $0 i32) (result i32)
   (call $_ZN8graphene14memory_manager6mallocEm
-   (i32.const 36)
+   (i32.const 56)
    (get_local $0)
   )
  )
@@ -754,13 +810,13 @@ static const char contract_test_wast_code[] = R"=====(
    (block $label$1
     (br_if $label$1
      (i32.eqz
-      (i32.load8_u offset=8432
+      (i32.load8_u offset=8452
        (i32.const 0)
       )
      )
     )
     (set_local $7
-     (i32.load offset=8436
+     (i32.load offset=8456
       (i32.const 0)
      )
     )
@@ -769,11 +825,11 @@ static const char contract_test_wast_code[] = R"=====(
    (set_local $7
     (current_memory)
    )
-   (i32.store8 offset=8432
+   (i32.store8 offset=8452
     (i32.const 0)
     (i32.const 1)
    )
-   (i32.store offset=8436
+   (i32.store offset=8456
     (i32.const 0)
     (tee_local $7
      (i32.shl
@@ -824,7 +880,7 @@ static const char contract_test_wast_code[] = R"=====(
        )
       )
       (set_local $3
-       (i32.load offset=8436
+       (i32.load offset=8456
         (i32.const 0)
        )
       )
@@ -832,7 +888,7 @@ static const char contract_test_wast_code[] = R"=====(
      (set_local $8
       (i32.const 0)
      )
-     (i32.store offset=8436
+     (i32.store offset=8456
       (i32.const 0)
       (get_local $3)
      )
@@ -886,18 +942,18 @@ static const char contract_test_wast_code[] = R"=====(
      )
      (block $label$6
       (br_if $label$6
-       (i32.load8_u offset=8432
+       (i32.load8_u offset=8452
         (i32.const 0)
        )
       )
       (set_local $3
        (current_memory)
       )
-      (i32.store8 offset=8432
+      (i32.store8 offset=8452
        (i32.const 0)
        (i32.const 1)
       )
-      (i32.store offset=8436
+      (i32.store offset=8456
        (i32.const 0)
        (tee_local $3
         (i32.shl
@@ -965,12 +1021,12 @@ static const char contract_test_wast_code[] = R"=====(
        )
       )
       (set_local $6
-       (i32.load offset=8436
+       (i32.load offset=8456
         (i32.const 0)
        )
       )
      )
-     (i32.store offset=8436
+     (i32.store offset=8456
       (i32.const 0)
       (i32.add
        (get_local $6)
@@ -1230,7 +1286,7 @@ static const char contract_test_wast_code[] = R"=====(
     (br_if $label$1
      (i32.lt_s
       (tee_local $2
-       (i32.load offset=8420
+       (i32.load offset=8440
         (i32.const 0)
        )
       )
@@ -1238,7 +1294,7 @@ static const char contract_test_wast_code[] = R"=====(
      )
     )
     (set_local $3
-     (i32.const 8228)
+     (i32.const 8248)
     )
     (set_local $1
      (i32.add
@@ -1246,7 +1302,7 @@ static const char contract_test_wast_code[] = R"=====(
        (get_local $2)
        (i32.const 12)
       )
-      (i32.const 8228)
+      (i32.const 8248)
      )
     )
     (loop $label$2
@@ -1383,19 +1439,23 @@ static const char contract_test_wast_code[] = R"=====(
 
 static const char contract_abi [] = R"=====(
 {
-  "____comment": "This file was generated by gxb-abigen. DO NOT EDIT - 2018-07-18T11:47:53",
+  "____comment": "This file was generated by gxb-abigen. DO NOT EDIT - 2018-08-03T09:40:17",
   "version": "gxb::abi/1.0",
-  "types": [{
-      "new_type_name": "account_name",
-      "type": "uint64"
-    }
-  ],
+  "types": [],
   "structs": [{
       "name": "hi",
       "base": "",
       "fields": [{
           "name": "user",
-          "type": "account_name"
+          "type": "uint64"
+        }
+      ]
+    },{
+      "name": "bye",
+      "base": "",
+      "fields": [{
+          "name": "user",
+          "type": "uint64"
         }
       ]
     }
@@ -1403,11 +1463,14 @@ static const char contract_abi [] = R"=====(
   "actions": [{
       "name": "hi",
       "type": "hi",
-      "ricardian_contract": ""
+      "payable": true
+    },{
+      "name": "bye",
+      "type": "bye",
+      "payable": false
     }
   ],
   "tables": [],
-  "ricardian_clauses": [],
   "error_messages": [],
   "abi_extensions": []
 }
