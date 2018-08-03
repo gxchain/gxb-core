@@ -57,7 +57,7 @@ class redpacket1 : public contract
 
     // @abi action
     // @abi payable
-    void issuepacket(std::string pubkey, uint64_t number)
+    void create(std::string pubkey, uint64_t number)
     {
         int64_t amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
@@ -80,8 +80,9 @@ class redpacket1 : public contract
             random_base = pubkey + std::to_string(i) + std::to_string(block_num);
             print("random_bash=", random_base.c_str(), "\n");
             ripemd160(const_cast<char *>(random_base.c_str()), random_base.length(), &sum160);
-            shares.emplace_back(sum160.hash[0]);
-            shares_sum += sum160.hash[0];
+            uint8_t share = sum160.hash[0] == 0 ? 10 : sum160.hash[0];
+            shares.emplace_back(share);
+            shares_sum += share;
         }
 
         packets.emplace(owner, [&](auto &o) {
@@ -91,15 +92,19 @@ class redpacket1 : public contract
             o.number = number;
             o.subpackets.reserve(number);
 
-            for (int i = 0; i < number; i++) {
+            int64_t share_used_sum = 0;
+            for (int i = 0; i < number - 1; i++) {
                 print("share=", shares[i], "\n");
-                o.subpackets.emplace_back(contract_asset{(int64_t)(1.0f * amount / shares_sum * shares[i]), asset_id});
+                int64_t share_amount = (int64_t)(1.0f * amount / shares_sum * shares[i]);
+                o.subpackets.emplace_back(contract_asset{share_amount, asset_id});
+                share_used_sum += share_amount;
             }
+            o.subpackets.emplace_back(contract_asset{amount - share_used_sum, asset_id});
         });
     }
 
     // @abi action
-    void robpacket(uint64_t packetowner, std::string &sig, uint64_t nonce)
+    void open(uint64_t packetowner, std::string &sig, uint64_t nonce)
     {
         uint64_t owner = get_trx_sender();
 
@@ -149,6 +154,33 @@ class redpacket1 : public contract
             }
         }
     }
+
+    void close()
+    {
+        uint64_t owner = get_trx_sender();
+
+        auto it = packets.find(owner);
+        if (it == packets.end()) {
+            print("owner:", owner, "has no create red packet");
+            return;
+        }
+
+        int64_t amount;
+        packets.modify(it, 0, [&](auto &o) {
+            for (auto subpacket_it = o.subpackets.begin(); subpacket_it != o.subpackets.end();) {
+                amount += subpacket_it->amount;
+                subpacket_it = o.subpackets.erase(subpacket_it);
+            }  
+        });
+
+        packets.erase(it);
+
+        for(auto packetrecords_it = packetrecords.begin();packetrecords_it!=packetrecords.end();++packetrecords_it) {
+            packetrecords.erase(packetrecords_it);
+        }
+
+        withdraw_asset(_self, owner, it->amount.asset_id, amount);
+    }
 };
 
-GXB_ABI(redpacket1, (issuepacket)(robpacket))
+GXB_ABI(redpacket1, (create)(open)(close))
