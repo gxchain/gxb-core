@@ -4,7 +4,7 @@ namespace graphene { namespace chain {
 
    class transaction_context {
       public:
-        transaction_context(database &d, int64_t origin);
+        transaction_context(database &d, int64_t origin, uint64_t trx_cpu_limit);
 
         void pause_billing_timer();
 

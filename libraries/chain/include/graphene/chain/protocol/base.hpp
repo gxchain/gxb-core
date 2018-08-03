@@ -112,7 +112,8 @@ namespace graphene { namespace chain {
        data_transaction_commission_percent_t, // 3
        pocs_threshold_league_t,
        pocs_threshold_league_data_product_t,
-       lock_balance_params_t // 6
+       lock_balance_params_t, // 6
+       vm_cpu_limit_t // 7
        > future_extensions;
 
    /**

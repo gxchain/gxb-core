@@ -168,6 +168,11 @@ data_transaction_commission_percent_t database_api::get_commission_percent() con
   return my->get_commission_percent();
 }
 
+vm_cpu_limit_t database_api::get_cpu_limit() const
+{
+    return my->get_cpu_limit();
+}
+
 fc::variant_object database_api::get_config()const
 {
    return my->get_config();

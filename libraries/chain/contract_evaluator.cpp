@@ -37,7 +37,8 @@ namespace graphene { namespace chain {
 
 contract_receipt contract_call_evaluator::contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
 {
-    transaction_context trx_context(db, op.fee_payer().instance);
+    auto cpu_param = db.get_cpu_limit();
+    transaction_context trx_context(db, op.fee_payer().instance, cpu_param.trx_cpu_limit);
     action act{op.contract_id, op.method_name, op.data};
     apply_context ctx{db, trx_context, act, op.amount};
     ctx.exec();
