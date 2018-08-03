@@ -9,7 +9,7 @@ namespace graphene { namespace chain {
         _db(&d),
         trx_origin(origin),
         start(fc::time_point::now()),
-        _deadline(start + trx_cpu_limit),
+        _deadline(start + fc::microseconds(trx_cpu_limit)),
         transaction_cpu_usage_us(0)
    {
    }
