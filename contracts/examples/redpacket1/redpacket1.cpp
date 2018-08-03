@@ -93,7 +93,7 @@ class redpacket1 : public contract
 
             for (int i = 0; i < number; i++) {
                 print("share=", shares[i], "\n");
-                o.subpackets.emplace_back(contract_asset{amount * shares[i] / shares_sum, asset_id});
+                o.subpackets.emplace_back(contract_asset{(int64_t)(1.0f * amount / shares_sum * shares[i]), asset_id});
             }
         });
     }
@@ -111,14 +111,9 @@ class redpacket1 : public contract
 
         std::string stringnonce = std::to_string(nonce);
 
-        print("stringnonce=", stringnonce, "\n");
-        print("x=", it->pub_key.c_str(), "\n");
-        print("sig=", sig, "\n");
         int ret = verify_signature(stringnonce.c_str(), stringnonce.length(), sig.c_str(), sig.length(), it->pub_key.c_str(), it->pub_key.length());
-
-        print("ret=", ret, "\n");
         if (ret != 0) {
-            print("you hava no auth");
+            print("you sig is invalid, please check you private key");
             return;
         }
 
@@ -146,10 +141,10 @@ class redpacket1 : public contract
         packets.modify(it, 0, [&](auto &o) {
             o.subpackets.erase(subpacket_it);
         });
-        
-        if(it->subpackets.size() == 0) {
+
+        if (it->subpackets.size() == 0) {
             packets.erase(it);
-            for(auto record_it = packetrecords.begin();record_it != packetrecords.end();) {
+            for (auto record_it = packetrecords.begin(); record_it != packetrecords.end();) {
                 record_it = packetrecords.erase(record_it);
             }
         }
