@@ -519,6 +519,17 @@ void database::_apply_block( const signed_block& next_block )
       ++_current_trx_in_block;
    }
 
+   // check block cpu limit
+   uint64_t block_cpu_time_us = 0;
+   for (const auto &trx : next_block.transactions) {
+       for (const auto op_result : trx.operation_results) {
+           if (op_result.which() == operation_result::tag<contract_receipt>::value) {
+               block_cpu_time_us += op_result.get<contract_receipt>().billed_cpu_time_us;
+           }
+       }
+   }
+   FC_ASSERT(block_cpu_time_us <= get_cpu_limit().block_cpu_limit, "block cpu time exceed global block limit");
+
    update_global_dynamic_data(next_block);
    update_signing_witness(signing_witness, next_block);
    update_last_irreversible_block();
