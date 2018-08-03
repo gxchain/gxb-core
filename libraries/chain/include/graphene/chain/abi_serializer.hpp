@@ -18,9 +18,11 @@ using namespace fc;
  */
 struct abi_serializer {
    abi_serializer(){ configure_built_in_types(); }
-   abi_serializer( const abi_def& abi );
-   void set_abi(const abi_def& abi);
+   abi_serializer( const abi_def& abi, const fc::microseconds& max_serialization_time );
+   void set_abi(const abi_def& abi, const fc::microseconds& max_serialization_time);
 
+   static const size_t max_recursion_depth = 32;
+   
    map<type_name, type_name>  typedefs;
    map<type_name, struct_def> structs;
    map<name,type_name>        actions;
@@ -33,12 +35,12 @@ struct abi_serializer {
    map<type_name, pair<unpack_function, pack_function>> built_in_types;
    void configure_built_in_types();
 
-   void validate()const;
+   void validate(const fc::time_point& deadline, const fc::microseconds& max_serialization_time)const;
 
    type_name resolve_type(const type_name& t)const;
    bool      is_array(const type_name& type)const;
    bool      is_optional(const type_name& type)const;
-   bool      is_type(const type_name& type)const;
+   bool      is_type(const type_name& rtype, size_t recursion_depth, const fc::time_point& deadline, const fc::microseconds& max_serialization_time)const;
    bool      is_builtin_type(const type_name& type)const;
    bool      is_integer(const type_name& type) const;
    int       get_integer_size(const type_name& type) const;
@@ -53,10 +55,10 @@ struct abi_serializer {
    optional<string>  get_error_message( uint64_t error_code )const;
 
    fc::variant binary_to_variant(const type_name& type, const bytes& binary)const;
-   bytes       variant_to_binary(const type_name& type, const fc::variant& var)const;
+   bytes       variant_to_binary(const type_name& type, const fc::variant& var,size_t recursion_depth, const fc::time_point& deadline, const fc::microseconds& max_serialization_time)const;
 
    fc::variant binary_to_variant(const type_name& type, fc::datastream<const char*>& binary)const;
-   void        variant_to_binary(const type_name& type, const fc::variant& var, fc::datastream<char*>& ds)const;
+   void        variant_to_binary(const type_name& type, const fc::variant& var, fc::datastream<char*>& ds, size_t recursion_depth, const fc::time_point& deadline, const fc::microseconds& max_serialization_time)const;
 
    template<typename T, typename Resolver>
    static void to_variant( const T& o, fc::variant& vo, Resolver resolver );

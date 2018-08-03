@@ -137,7 +137,7 @@ fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope,
     if(!account_obj.valid())
         return result;
 
-    abi_serializer abis(account_obj->abi);
+    abi_serializer abis(account_obj->abi, fc::milliseconds(10000));
 
     const auto &table_idx = _db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
     auto existing_tid = table_idx.find(boost::make_tuple(code & GRAPHENE_DB_MAX_INSTANCE_ID, name(scope & GRAPHENE_DB_MAX_INSTANCE_ID), name(table)));
@@ -169,11 +169,12 @@ bytes database_api_impl::serialize_contract_call_args(string contract, string me
 
     fc::variant action_args_var = fc::json::from_string(json_args, fc::json::relaxed_parser);
 
-    abi_serializer abis(contract_obj->abi);
+    abi_serializer abis(contract_obj->abi, fc::milliseconds(10000));
     auto action_type = abis.get_action_type(method);
     GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
-    bytes x = abis.variant_to_binary(action_type, action_args_var);
-    return x;
+    const fc::time_point deadline = fc::time_point::now() + fc::milliseconds(10000);
+    bytes bin_data = abis.variant_to_binary(action_type, action_args_var, 0, deadline, fc::milliseconds(10000));
+    return bin_data;
 }
 
 void database_api_impl::set_subscribe_callback( std::function<void(const variant&)> cb, bool notify_remove_create )

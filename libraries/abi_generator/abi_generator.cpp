@@ -311,7 +311,7 @@ bool abi_generator::is_string(const string& type) {
 }
 
 void abi_generator::get_all_fields(const struct_def& s, vector<field_def>& fields) {
-  abi_serializer abis(*output);
+//  abi_serializer abis(*output, fc::seconds(1)); //TODO FIXME why to create a abis instance which no using?
 
   for(const auto& field : s.fields) {
     fields.push_back(field);

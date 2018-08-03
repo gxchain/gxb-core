@@ -51,8 +51,8 @@ BOOST_FIXTURE_TEST_SUITE(database_api_tests, database_fixture)
           /***
            * Act
            */
-          create_account("dan", dan_private_key.get_public_key()).id;
-          create_account("nathan", nathan_private_key.get_public_key()).id;
+          create_account("dan", dan_private_key.get_public_key());
+          create_account("nathan", nathan_private_key.get_public_key());
           // Unregistered key will not be registered with any account
 
 
