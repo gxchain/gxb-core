@@ -431,7 +431,6 @@ namespace graphene { namespace chain {
 
    //typedef object_id< implementation_ids, impl_search_results_object_type,search_results_object<DerivedClass>>          search_results_id_type;
 
-   typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
    typedef fc::ripemd160                                        checksum_type;
    typedef fc::ripemd160                                        transaction_id_type;
