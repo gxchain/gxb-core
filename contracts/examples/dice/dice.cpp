@@ -1,3 +1,4 @@
+#include <gxblib/asset.h>
 #include <gxblib/contract.hpp>
 #include <gxblib/contract_asset.hpp>
 #include <gxblib/crypto.h>
@@ -27,10 +28,13 @@ class dice : public contract
     }
 
     //@abi action
-    void offerbet(const contract_asset &bet, const uint64_t player, const checksum256 &commitment)
+    void offerbet(const contract_asset &bet, const checksum256 &commitment)
     {
+        uint64_t player = get_trx_sender();
+
         auto cur_player_itr = accounts.find(player);
         gxb_assert(cur_player_itr != accounts.end(), "unknown account");
+        gxb_assert(cur_player_itr->balance >= bet, "balance not enouth");
 
         // Store new offer
         auto new_offer_itr = offers.emplace(_self, [&](auto &offer) {
@@ -46,14 +50,12 @@ class dice : public contract
         auto matched_offer_itr = idx.lower_bound((uint64_t) new_offer_itr->bet.amount);
 
         if (matched_offer_itr == idx.end() || matched_offer_itr->bet != new_offer_itr->bet || matched_offer_itr->owner == new_offer_itr->owner) {
-
             // No matching bet found, update player's account
             accounts.modify(cur_player_itr, 0, [&](auto &acnt) {
                 gxb_assert(acnt.balance >= bet, "insufficient balance");
                 acnt.balance -= bet;
                 acnt.open_offers++;
             });
-
         } else {
             // Create global game counter if not exists
             auto gdice_itr = global_dices.begin();
@@ -109,7 +111,6 @@ class dice : public contract
     //@abi action
     void canceloffer(const checksum256 &commitment)
     {
-
         auto idx = offers.template get_index<N(commitment)>();
         auto offer_itr = idx.find(offer::get_commitment(commitment));
 
@@ -148,8 +149,8 @@ class dice : public contract
         gxb_assert(is_zero(curr_reveal.reveal) == true, "player already revealed");
 
         if (!is_zero(prev_reveal.reveal)) {
-
             checksum256 result;
+
             sha256((char *) &game_itr->player1, sizeof(player) * 2, &result);
 
             auto prev_revealer_offer = idx.find(offer::get_commitment(prev_reveal.commitment));
@@ -161,10 +162,8 @@ class dice : public contract
             } else {
                 pay_and_clean(*game_itr, *prev_revealer_offer, *curr_revealer_offer);
             }
-
         } else {
             games.modify(game_itr, 0, [&](auto &game) {
-
                 if (is_equal(curr_reveal.commitment, game.player1.commitment))
                     game.player1.reveal = source;
                 else
@@ -178,7 +177,6 @@ class dice : public contract
     //@abi action
     void claimexpired(const uint64_t gameid)
     {
-
         auto game_itr = games.find(gameid);
 
         gxb_assert(game_itr != games.end(), "game not found");
@@ -198,28 +196,33 @@ class dice : public contract
     }
 
     //@abi action
-    void deposit(const uint64_t from, const contract_asset &quantity)
+    //@abi payable
+    void deposit()
     {
-        gxb_assert(quantity.amount > 0, "must deposit positive quantity");
+        int64_t asset_amount = get_action_asset_amount();
+        uint64_t asset_id = get_action_asset_id();
+        uint64_t owner = get_trx_sender();
 
-        auto itr = accounts.find(from);
+        auto itr = accounts.find(owner);
         if (itr == accounts.end()) {
             itr = accounts.emplace(_self, [&](auto &acnt) {
-                acnt.owner = from;
+                acnt.owner = owner;
             });
         }
 
+        contract_asset ast{asset_amount, asset_id};
         accounts.modify(itr, 0, [&](auto &acnt) {
-            acnt.balance += quantity;
+            acnt.balance += ast;
         });
     }
 
     //@abi action
-    void withdraw(const uint64_t to, const contract_asset &quantity)
+    void withdraw(const contract_asset &quantity)
     {
+        uint64_t owner = get_trx_sender();
         gxb_assert(quantity.amount > 0, "must withdraw positive quantity");
 
-        auto itr = accounts.find(to);
+        auto itr = accounts.find(owner);
         gxb_assert(itr != accounts.end(), "unknown account");
 
         accounts.modify(itr, 0, [&](auto &acnt) {
@@ -230,6 +233,8 @@ class dice : public contract
         if (itr->is_empty()) {
             accounts.erase(itr);
         }
+
+        withdraw_asset(_self, owner, quantity.asset_id, quantity.amount);
     }
 
   private:
@@ -334,7 +339,8 @@ class dice : public contract
         return p64[0] == 0 && p64[1] == 0 && p64[2] == 0 && p64[3] == 0;
     }
 
-    void pay_and_clean(const game &g, const offer &winner_offer,
+    void pay_and_clean(const game &g,
+                       const offer &winner_offer,
                        const offer &loser_offer)
     {
         auto winner_account = accounts.find(winner_offer.owner);
