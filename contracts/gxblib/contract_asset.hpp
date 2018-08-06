@@ -26,7 +26,7 @@ struct contract_asset {
 
     contract_asset &operator+=(const contract_asset &o)
     {
-        assert(asset_id == o.asset_id);
+        gxb_assert(asset_id == o.asset_id);
         amount += o.amount;
         gxb_assert(-max_amount <= amount, "subtraction underflow");
         gxb_assert(amount <= max_amount, "subtraction overflow");
@@ -34,7 +34,7 @@ struct contract_asset {
     }
     contract_asset &operator-=(const contract_asset &o)
     {
-        assert(asset_id == o.asset_id);
+        gxb_assert(asset_id == o.asset_id);
         amount -= o.amount;
         gxb_assert(-max_amount <= amount, "subtraction underflow");
         gxb_assert(amount <= max_amount, "subtraction overflow");
@@ -45,9 +45,9 @@ struct contract_asset {
     contract_asset &operator*=(int64_t a)
     {
         gxb_assert(a == 0 || (amount * a) / a == amount, "multiplication overflow or underflow");
+        amount *= a;
         gxb_assert(-max_amount <= amount, "multiplication underflow");
         gxb_assert(amount <= max_amount, "multiplication overflow");
-        amount *= a;
         return *this;
     }
 
@@ -85,7 +85,7 @@ struct contract_asset {
     }
     friend bool operator<(const contract_asset &a, const contract_asset &b)
     {
-        assert(a.asset_id == b.asset_id);
+        gxb_assert(a.asset_id == b.asset_id);
         return a.amount < b.amount;
     }
     friend bool operator<=(const contract_asset &a, const contract_asset &b)
@@ -108,18 +108,18 @@ struct contract_asset {
 
     friend contract_asset operator-(const contract_asset &a, const contract_asset &b)
     {
-        assert(a.asset_id == b.asset_id);
+        gxb_assert(a.asset_id == b.asset_id);
         return contract_asset(a.amount - b.amount, a.asset_id);
     }
     friend contract_asset operator+(const contract_asset &a, const contract_asset &b)
     {
-        assert(a.asset_id == b.asset_id);
+        gxb_assert(a.asset_id == b.asset_id);
         return contract_asset(a.amount + b.amount, a.asset_id);
     }
 
     static int64_t scaled_precision(uint8_t precision)
     {
-        assert(precision < 19);
+        gxb_assert(precision < 19);
         return scaled_precision_lut[precision];
     }
 
