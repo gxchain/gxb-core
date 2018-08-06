@@ -8,41 +8,10 @@
 
 using namespace graphene;
 
-class transfer1 : public contract
+class bank : public contract
 {
-  private:
-    //@abi table account i64
-    struct account {
-        //48bit -->account_id (account_id = id >> 16)
-        //16bit -->asset_id (asset_id = id & 0xFFFF)
-        //id = ((account_id << 16) | (asset_id & 0xFFFF))
-        uint64_t id;
-        int64_t amount;
-
-        uint64_t primary_key() const { return id; }
-
-        static inline uint64_t gen_id(uint64_t account_id, uint64_t asset_id)
-        {
-            return ((account_id << 16) | (asset_id & 0xFFFF));
-        }
-
-        uint64_t get_asset_id()
-        {
-            return id & 0xFFFF;
-        }
-
-        uint64_t get_account_id()
-        {
-            return id >> 16;
-        }
-
-        GRAPHENE_SERIALIZE(account, (id)(amount))
-    };
-
-    typedef graphene::multi_index<N(account), account> account_index;
-
   public:
-    transfer1(uint64_t account_id)
+    bank(uint64_t account_id)
         : contract(account_id)
         , accounts(_self, _self)
     {
@@ -81,11 +50,7 @@ class transfer1 : public contract
         uint64_t pk = account::gen_id(owner, asset_id);
 
         auto it = accounts.find(pk);
-        if (it == accounts.end()) {
-            print("owner:", owner, " has no asset:", asset_id);
-            return;
-        }
-
+        graphene_assert(it != accounts.end(), "asset_id not found");
         graphene_assert(it->amount >= amount, "balance not enough");
 
         if (it->amount == amount) {
@@ -101,8 +66,43 @@ class transfer1 : public contract
         withdraw_asset(_self, to_account, asset_id, amount);
     }
 
+    // @abi action
+    void transfer(uint64_t to_account, uint64_t contract_asset_id, int64_t amount)
+    {
+        withdraw(to_account, contract_asset_id, amount);
+    }
+
   private:
+    //@abi table account i64
+    struct account {
+        //48bit -->account_id (account_id = id >> 16)
+        //16bit -->asset_id (asset_id = id & 0xFFFF)
+        //id = ((account_id << 16) | (asset_id & 0xFFFF))
+        uint64_t id;
+        int64_t amount;
+
+        uint64_t primary_key() const { return id; }
+
+        static inline uint64_t gen_id(uint64_t account_id, uint64_t asset_id)
+        {
+            return ((account_id << 16) | (asset_id & 0xFFFF));
+        }
+
+        uint64_t get_asset_id()
+        {
+            return id & 0xFFFF;
+        }
+
+        uint64_t get_account_id()
+        {
+            return id >> 16;
+        }
+
+        GRAPHENE_SERIALIZE(account, (id)(amount))
+    };
+
+    typedef graphene::multi_index<N(account), account> account_index;
     account_index accounts;
 };
 
-GRAPHENE_ABI(transfer1, (deposit)(withdraw))
+GRAPHENE_ABI(bank, (deposit)(withdraw)(transfer))

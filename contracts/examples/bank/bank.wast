@@ -6,11 +6,11 @@
  (type $FUNCSIG$iii (func (param i32 i32) (result i32)))
  (type $FUNCSIG$iiii (func (param i32 i32 i32) (result i32)))
  (type $FUNCSIG$j (func (result i64)))
- (type $FUNCSIG$ijjjj (func (param i64 i64 i64 i64) (result i32)))
  (type $FUNCSIG$vii (func (param i32 i32)))
- (type $FUNCSIG$vj (func (param i64)))
+ (type $FUNCSIG$ijjjj (func (param i64 i64 i64 i64) (result i32)))
  (type $FUNCSIG$vjjjj (func (param i64 i64 i64 i64)))
  (type $FUNCSIG$vijii (func (param i32 i64 i32 i32)))
+ (type $FUNCSIG$vj (func (param i64)))
  (type $FUNCSIG$ijjjjii (func (param i64 i64 i64 i64 i32 i32) (result i32)))
  (import "env" "abort" (func $abort))
  (import "env" "action_data_size" (func $action_data_size (result i32)))
@@ -24,19 +24,18 @@
  (import "env" "get_action_asset_amount" (func $get_action_asset_amount (result i64)))
  (import "env" "get_action_asset_id" (func $get_action_asset_id (result i64)))
  (import "env" "get_trx_sender" (func $get_trx_sender (result i64)))
- (import "env" "gxb_assert" (func $gxb_assert (param i32 i32)))
+ (import "env" "graphene_assert" (func $graphene_assert (param i32 i32)))
  (import "env" "memcpy" (func $memcpy (param i32 i32 i32) (result i32)))
  (import "env" "prints" (func $prints (param i32)))
  (import "env" "printui" (func $printui (param i64)))
  (import "env" "read_action_data" (func $read_action_data (param i32 i32) (result i32)))
  (import "env" "withdraw_asset" (func $withdraw_asset (param i64 i64 i64 i64)))
- (table 3 3 anyfunc)
- (elem (i32.const 0) $__wasm_nullptr $_ZN9transfer17depositEv $_ZN9transfer18withdrawEyyx)
+ (table 4 4 anyfunc)
+ (elem (i32.const 0) $__wasm_nullptr $_ZN4bank7depositEv $_ZN4bank8transferEyyx $_ZN4bank8withdrawEyyx)
  (memory $0 1)
  (data (i32.const 4) "Pd\00\00")
  (data (i32.const 16) "object passed to iterator_to is not in multi_index\00")
- (data (i32.const 80) "owner:\00")
- (data (i32.const 96) " has no asset:\00")
+ (data (i32.const 80) "asset_id not found\00")
  (data (i32.const 112) "balance not enough\00")
  (data (i32.const 144) "withdraw all, to delete the record\00")
  (data (i32.const 192) "cannot pass end iterator to erase\00")
@@ -104,7 +103,7 @@
      (i32.load offset=4
       (i32.const 0)
      )
-     (i32.const 80)
+     (i32.const 96)
     )
    )
   )
@@ -118,52 +117,84 @@
    (i64.store
     (i32.add
      (get_local $7)
-     (i32.const 48)
+     (i32.const 64)
     )
     (get_local $1)
    )
    (i64.store
     (i32.add
      (get_local $7)
-     (i32.const 56)
+     (i32.const 72)
     )
     (i64.const -1)
    )
    (i64.store
     (i32.add
      (get_local $7)
-     (i32.const 64)
+     (i32.const 80)
     )
     (i64.const 0)
    )
    (i32.store
     (i32.add
      (get_local $7)
-     (i32.const 72)
+     (i32.const 88)
     )
     (i32.const 0)
    )
-   (i64.store offset=40
+   (i64.store offset=56
     (get_local $7)
     (get_local $1)
    )
-   (i64.store offset=32
+   (i64.store offset=48
     (get_local $7)
     (get_local $1)
    )
    (block $label$1
     (block $label$2
-     (br_if $label$2
-      (i64.eq
-       (get_local $2)
-       (i64.const -2039333636196532224)
+     (block $label$3
+      (br_if $label$3
+       (i64.eq
+        (get_local $2)
+        (i64.const -3617168760277827584)
+       )
       )
-     )
-     (br_if $label$1
-      (i64.ne
-       (get_local $2)
-       (i64.const 5380477996647841792)
+      (br_if $label$2
+       (i64.eq
+        (get_local $2)
+        (i64.const -2039333636196532224)
+       )
       )
+      (br_if $label$1
+       (i64.ne
+        (get_local $2)
+        (i64.const 5380477996647841792)
+       )
+      )
+      (i32.store offset=44
+       (get_local $7)
+       (i32.const 0)
+      )
+      (i32.store offset=40
+       (get_local $7)
+       (i32.const 1)
+      )
+      (i64.store align=4
+       (get_local $7)
+       (i64.load offset=40
+        (get_local $7)
+       )
+      )
+      (drop
+       (call $_ZN8graphene14execute_actionI4bankS1_JEEEbPT_MT0_FvDpT1_E
+        (i32.add
+         (get_local $7)
+         (i32.const 48)
+        )
+        (get_local $7)
+       )
+      )
+      (br $label$1)
      )
      (i32.store offset=28
       (get_local $7)
@@ -171,44 +202,47 @@
      )
      (i32.store offset=24
       (get_local $7)
-      (i32.const 1)
+      (i32.const 2)
      )
-     (i64.store align=4
+     (i64.store offset=16 align=4
       (get_local $7)
       (i64.load offset=24
        (get_local $7)
       )
      )
      (drop
-      (call $_ZN8graphene14execute_actionI9transfer1S1_JEEEbPT_MT0_FvDpT1_E
+      (call $_ZN8graphene14execute_actionI4bankS1_JyyxEEEbPT_MT0_FvDpT1_E
        (i32.add
         (get_local $7)
-        (i32.const 32)
+        (i32.const 48)
        )
-       (get_local $7)
+       (i32.add
+        (get_local $7)
+        (i32.const 16)
+       )
       )
      )
      (br $label$1)
     )
-    (i32.store offset=20
+    (i32.store offset=36
      (get_local $7)
      (i32.const 0)
     )
-    (i32.store offset=16
+    (i32.store offset=32
      (get_local $7)
-     (i32.const 2)
+     (i32.const 3)
     )
     (i64.store offset=8 align=4
      (get_local $7)
-     (i64.load offset=16
+     (i64.load offset=32
       (get_local $7)
      )
     )
     (drop
-     (call $_ZN8graphene14execute_actionI9transfer1S1_JyyxEEEbPT_MT0_FvDpT1_E
+     (call $_ZN8graphene14execute_actionI4bankS1_JyyxEEEbPT_MT0_FvDpT1_E
       (i32.add
        (get_local $7)
-       (i32.const 32)
+       (i32.const 48)
       )
       (i32.add
        (get_local $7)
@@ -223,22 +257,22 @@
       (i32.load
        (i32.add
         (get_local $7)
-        (i32.const 64)
+        (i32.const 80)
        )
       )
      )
     )
    )
-   (block $label$3
-    (block $label$4
-     (br_if $label$4
+   (block $label$4
+    (block $label$5
+     (br_if $label$5
       (i32.eq
        (tee_local $6
         (i32.load
          (tee_local $5
           (i32.add
            (get_local $7)
-           (i32.const 68)
+           (i32.const 84)
           )
          )
         )
@@ -246,7 +280,7 @@
        (get_local $3)
       )
      )
-     (loop $label$5
+     (loop $label$6
       (set_local $4
        (i32.load
         (tee_local $6
@@ -261,8 +295,8 @@
        (get_local $6)
        (i32.const 0)
       )
-      (block $label$6
-       (br_if $label$6
+      (block $label$7
+       (br_if $label$7
         (i32.eqz
          (get_local $4)
         )
@@ -271,7 +305,7 @@
         (get_local $4)
        )
       )
-      (br_if $label$5
+      (br_if $label$6
        (i32.ne
         (get_local $3)
         (get_local $6)
@@ -282,11 +316,11 @@
       (i32.load
        (i32.add
         (get_local $7)
-        (i32.const 64)
+        (i32.const 80)
        )
       )
      )
-     (br $label$3)
+     (br $label$4)
     )
     (set_local $6
      (get_local $3)
@@ -304,11 +338,11 @@
    (i32.const 0)
    (i32.add
     (get_local $7)
-    (i32.const 80)
+    (i32.const 96)
    )
   )
  )
- (func $_ZN9transfer17depositEv (type $FUNCSIG$vi) (param $0 i32)
+ (func $_ZN4bank7depositEv (type $FUNCSIG$vi) (param $0 i32)
   (local $1 i64)
   (local $2 i64)
   (local $3 i64)
@@ -435,7 +469,7 @@
         (get_local $4)
        )
       )
-      (call $gxb_assert
+      (call $graphene_assert
        (i32.eq
         (i32.load offset=16
          (tee_local $6
@@ -479,11 +513,11 @@
        (i32.const 0)
       )
      )
-     (call $gxb_assert
+     (call $graphene_assert
       (i32.eq
        (i32.load offset=16
         (tee_local $6
-         (call $_ZNK8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE31load_object_by_primary_iteratorEl
+         (call $_ZNK8graphene11multi_indexILy3607749778735104000EN4bank7accountEJEE31load_object_by_primary_iteratorEl
           (get_local $7)
           (get_local $6)
          )
@@ -516,11 +550,11 @@
       (i32.const 24)
      )
     )
-    (call $gxb_assert
+    (call $graphene_assert
      (i32.const 1)
      (i32.const 304)
     )
-    (call $_ZN8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE6modifyIZNS1_7depositEvEUlRT_E0_EEvRKS2_yOS5_
+    (call $_ZN8graphene11multi_indexILy3607749778735104000EN4bank7accountEJEE6modifyIZNS1_7depositEvEUlRT_E0_EEvRKS2_yOS5_
      (get_local $7)
      (get_local $6)
      (i64.const 0)
@@ -548,7 +582,7 @@
      (i32.const 16)
     )
    )
-   (call $_ZN8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE7emplaceIZNS1_7depositEvEUlRT_E_EENS3_14const_iteratorEyOS5_
+   (call $_ZN8graphene11multi_indexILy3607749778735104000EN4bank7accountEJEE7emplaceIZNS1_7depositEvEUlRT_E_EENS3_14const_iteratorEyOS5_
     (get_local $9)
     (get_local $7)
     (get_local $3)
@@ -566,7 +600,7 @@
    )
   )
  )
- (func $_ZN8graphene14execute_actionI9transfer1S1_JEEEbPT_MT0_FvDpT1_E (param $0 i32) (param $1 i32) (result i32)
+ (func $_ZN8graphene14execute_actionI4bankS1_JEEEbPT_MT0_FvDpT1_E (param $0 i32) (param $1 i32) (result i32)
   (local $2 i32)
   (local $3 i32)
   (local $4 i32)
@@ -679,18 +713,17 @@
   )
   (i32.const 1)
  )
- (func $_ZN9transfer18withdrawEyyx (type $FUNCSIG$vijjj) (param $0 i32) (param $1 i64) (param $2 i64) (param $3 i64)
+ (func $_ZN4bank8withdrawEyyx (type $FUNCSIG$vijjj) (param $0 i32) (param $1 i64) (param $2 i64) (param $3 i64)
   (local $4 i64)
-  (local $5 i64)
+  (local $5 i32)
   (local $6 i32)
   (local $7 i32)
   (local $8 i32)
   (local $9 i32)
   (local $10 i32)
-  (local $11 i32)
   (i32.store offset=4
    (i32.const 0)
-   (tee_local $11
+   (tee_local $10
     (i32.sub
      (i32.load offset=4
       (i32.const 0)
@@ -700,15 +733,13 @@
    )
   )
   (i64.store
-   (get_local $11)
+   (get_local $10)
    (get_local $3)
   )
-  (set_local $5
+  (set_local $4
    (i64.or
     (i64.shl
-     (tee_local $4
-      (call $get_trx_sender)
-     )
+     (call $get_trx_sender)
      (i64.const 16)
     )
     (i64.and
@@ -720,7 +751,7 @@
   (block $label$0
    (br_if $label$0
     (i32.eq
-     (tee_local $10
+     (tee_local $9
       (i32.load
        (i32.add
         (get_local $0)
@@ -728,7 +759,7 @@
        )
       )
      )
-     (tee_local $6
+     (tee_local $5
       (i32.load
        (i32.add
         (get_local $0)
@@ -738,16 +769,16 @@
      )
     )
    )
-   (set_local $9
+   (set_local $8
     (i32.add
-     (get_local $10)
+     (get_local $9)
      (i32.const -24)
     )
    )
-   (set_local $7
+   (set_local $6
     (i32.sub
      (i32.const 0)
-     (get_local $6)
+     (get_local $5)
     )
    )
    (loop $label$1
@@ -755,19 +786,19 @@
      (i64.eq
       (i64.load
        (i32.load
-        (get_local $9)
+        (get_local $8)
        )
       )
-      (get_local $5)
+      (get_local $4)
      )
     )
-    (set_local $10
-     (get_local $9)
-    )
     (set_local $9
-     (tee_local $8
+     (get_local $8)
+    )
+    (set_local $8
+     (tee_local $7
       (i32.add
-       (get_local $9)
+       (get_local $8)
        (i32.const -24)
       )
      )
@@ -775,210 +806,202 @@
     (br_if $label$1
      (i32.ne
       (i32.add
-       (get_local $8)
        (get_local $7)
+       (get_local $6)
       )
       (i32.const -24)
      )
     )
    )
   )
-  (set_local $8
+  (set_local $7
    (i32.add
     (get_local $0)
     (i32.const 8)
    )
   )
-  (set_local $2
+  (block $label$2
+   (block $label$3
+    (br_if $label$3
+     (i32.eq
+      (get_local $9)
+      (get_local $5)
+     )
+    )
+    (call $graphene_assert
+     (i32.eq
+      (i32.load offset=16
+       (tee_local $8
+        (i32.load
+         (i32.add
+          (get_local $9)
+          (i32.const -24)
+         )
+        )
+       )
+      )
+      (get_local $7)
+     )
+     (i32.const 16)
+    )
+    (br $label$2)
+   )
+   (set_local $8
+    (i32.const 0)
+   )
+   (br_if $label$2
+    (i32.lt_s
+     (tee_local $9
+      (call $db_find_i64
+       (i64.load
+        (i32.add
+         (get_local $0)
+         (i32.const 8)
+        )
+       )
+       (i64.load
+        (i32.add
+         (get_local $0)
+         (i32.const 16)
+        )
+       )
+       (i64.const 3607749778735104000)
+       (get_local $4)
+      )
+     )
+     (i32.const 0)
+    )
+   )
+   (call $graphene_assert
+    (i32.eq
+     (i32.load offset=16
+      (tee_local $8
+       (call $_ZNK8graphene11multi_indexILy3607749778735104000EN4bank7accountEJEE31load_object_by_primary_iteratorEl
+        (get_local $7)
+        (get_local $9)
+       )
+      )
+     )
+     (get_local $7)
+    )
+    (i32.const 16)
+   )
+  )
+  (set_local $4
    (i64.and
     (get_local $2)
     (i64.const 281474976710655)
    )
   )
-  (block $label$2
-   (block $label$3
-    (block $label$4
-     (block $label$5
-      (block $label$6
-       (block $label$7
-        (br_if $label$7
-         (i32.eq
-          (get_local $10)
-          (get_local $6)
-         )
-        )
-        (call $gxb_assert
-         (i32.eq
-          (i32.load offset=16
-           (tee_local $9
-            (i32.load
-             (i32.add
-              (get_local $10)
-              (i32.const -24)
-             )
-            )
-           )
-          )
-          (get_local $8)
-         )
-         (i32.const 16)
-        )
-        (br_if $label$6
-         (get_local $9)
-        )
-        (br $label$5)
-       )
-       (br_if $label$5
-        (i32.lt_s
-         (tee_local $9
-          (call $db_find_i64
-           (i64.load
-            (i32.add
-             (get_local $0)
-             (i32.const 8)
-            )
-           )
-           (i64.load
-            (i32.add
-             (get_local $0)
-             (i32.const 16)
-            )
-           )
-           (i64.const 3607749778735104000)
-           (get_local $5)
-          )
-         )
-         (i32.const 0)
-        )
-       )
-       (call $gxb_assert
-        (i32.eq
-         (i32.load offset=16
-          (tee_local $9
-           (call $_ZNK8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE31load_object_by_primary_iteratorEl
-            (get_local $8)
-            (get_local $9)
-           )
-          )
-         )
-         (get_local $8)
-        )
-        (i32.const 16)
-       )
-      )
-      (call $gxb_assert
-       (i64.ge_s
-        (i64.load offset=8
-         (get_local $9)
-        )
-        (get_local $3)
-       )
-       (i32.const 112)
-      )
-      (br_if $label$4
-       (i64.ne
-        (i64.load offset=8
-         (get_local $9)
-        )
-        (get_local $3)
-       )
-      )
-      (call $prints
-       (i32.const 144)
-      )
-      (call $gxb_assert
-       (i32.const 1)
-       (i32.const 192)
-      )
-      (call $gxb_assert
-       (i32.const 1)
-       (i32.const 240)
-      )
-      (block $label$8
-       (br_if $label$8
-        (i32.lt_s
-         (tee_local $10
-          (call $db_next_i64
-           (i32.load offset=20
-            (get_local $9)
-           )
-           (i32.add
-            (get_local $11)
-            (i32.const 8)
-           )
-          )
-         )
-         (i32.const 0)
-        )
-       )
-       (drop
-        (call $_ZNK8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE31load_object_by_primary_iteratorEl
-         (get_local $8)
-         (get_local $10)
-        )
-       )
-      )
-      (call $_ZN8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE5eraseERKS2_
-       (get_local $8)
-       (get_local $9)
-      )
-      (br $label$3)
-     )
-     (call $prints
-      (i32.const 80)
-     )
-     (call $printui
-      (get_local $4)
-     )
-     (call $prints
-      (i32.const 96)
-     )
-     (call $printui
-      (get_local $2)
-     )
-     (br $label$2)
-    )
-    (call $prints
-     (i32.const 272)
-    )
-    (i32.store offset=8
-     (get_local $11)
-     (get_local $11)
-    )
-    (call $gxb_assert
-     (i32.const 1)
-     (i32.const 304)
-    )
-    (call $_ZN8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE6modifyIZNS1_8withdrawEyyxEUlRT_E_EEvRKS2_yOS5_
+  (call $graphene_assert
+   (tee_local $9
+    (i32.ne
      (get_local $8)
-     (get_local $9)
-     (i64.const 0)
-     (i32.add
-      (get_local $11)
-      (i32.const 8)
-     )
+     (i32.const 0)
     )
    )
-   (call $withdraw_asset
-    (i64.load
-     (get_local $0)
+   (i32.const 80)
+  )
+  (call $graphene_assert
+   (i64.ge_s
+    (i64.load offset=8
+     (get_local $8)
     )
-    (get_local $1)
-    (get_local $2)
-    (i64.load
-     (get_local $11)
+    (get_local $3)
+   )
+   (i32.const 112)
+  )
+  (block $label$4
+   (block $label$5
+    (br_if $label$5
+     (i64.ne
+      (i64.load offset=8
+       (get_local $8)
+      )
+      (get_local $3)
+     )
     )
+    (call $prints
+     (i32.const 144)
+    )
+    (call $graphene_assert
+     (get_local $9)
+     (i32.const 192)
+    )
+    (call $graphene_assert
+     (get_local $9)
+     (i32.const 240)
+    )
+    (block $label$6
+     (br_if $label$6
+      (i32.lt_s
+       (tee_local $9
+        (call $db_next_i64
+         (i32.load offset=20
+          (get_local $8)
+         )
+         (i32.add
+          (get_local $10)
+          (i32.const 8)
+         )
+        )
+       )
+       (i32.const 0)
+      )
+     )
+     (drop
+      (call $_ZNK8graphene11multi_indexILy3607749778735104000EN4bank7accountEJEE31load_object_by_primary_iteratorEl
+       (get_local $7)
+       (get_local $9)
+      )
+     )
+    )
+    (call $_ZN8graphene11multi_indexILy3607749778735104000EN4bank7accountEJEE5eraseERKS2_
+     (get_local $7)
+     (get_local $8)
+    )
+    (br $label$4)
+   )
+   (call $prints
+    (i32.const 272)
+   )
+   (i32.store offset=8
+    (get_local $10)
+    (get_local $10)
+   )
+   (call $graphene_assert
+    (get_local $9)
+    (i32.const 304)
+   )
+   (call $_ZN8graphene11multi_indexILy3607749778735104000EN4bank7accountEJEE6modifyIZNS1_8withdrawEyyxEUlRT_E_EEvRKS2_yOS5_
+    (get_local $7)
+    (get_local $8)
+    (i64.const 0)
+    (i32.add
+     (get_local $10)
+     (i32.const 8)
+    )
+   )
+  )
+  (call $withdraw_asset
+   (i64.load
+    (get_local $0)
+   )
+   (get_local $1)
+   (get_local $4)
+   (i64.load
+    (get_local $10)
    )
   )
   (i32.store offset=4
    (i32.const 0)
    (i32.add
-    (get_local $11)
+    (get_local $10)
     (i32.const 16)
    )
   )
  )
- (func $_ZN8graphene14execute_actionI9transfer1S1_JyyxEEEbPT_MT0_FvDpT1_E (param $0 i32) (param $1 i32) (result i32)
+ (func $_ZN8graphene14execute_actionI4bankS1_JyyxEEEbPT_MT0_FvDpT1_E (param $0 i32) (param $1 i32) (result i32)
   (local $2 i32)
   (local $3 i32)
   (local $4 i64)
@@ -1193,7 +1216,15 @@
   )
   (i32.const 1)
  )
- (func $_ZNK8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE31load_object_by_primary_iteratorEl (param $0 i32) (param $1 i32) (result i32)
+ (func $_ZN4bank8transferEyyx (type $FUNCSIG$vijjj) (param $0 i32) (param $1 i64) (param $2 i64) (param $3 i64)
+  (call $_ZN4bank8withdrawEyyx
+   (get_local $0)
+   (get_local $1)
+   (get_local $2)
+   (get_local $3)
+  )
+ )
+ (func $_ZNK8graphene11multi_indexILy3607749778735104000EN4bank7accountEJEE31load_object_by_primary_iteratorEl (param $0 i32) (param $1 i32) (result i32)
   (local $2 i32)
   (local $3 i32)
   (local $4 i32)
@@ -1298,7 +1329,7 @@
     )
     (br $label$2)
    )
-   (call $gxb_assert
+   (call $graphene_assert
     (i32.xor
      (i32.shr_u
       (tee_local $6
@@ -1460,7 +1491,7 @@
      )
      (br $label$6)
     )
-    (call $_ZNSt3__16vectorIN8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE8item_ptrENS_9allocatorIS6_EEE24__emplace_back_slow_pathIJNS_10unique_ptrINS5_4itemENS_14default_deleteISC_EEEERyRlEEEvDpOT_
+    (call $_ZNSt3__16vectorIN8graphene11multi_indexILy3607749778735104000EN4bank7accountEJEE8item_ptrENS_9allocatorIS6_EEE24__emplace_back_slow_pathIJNS_10unique_ptrINS5_4itemENS_14default_deleteISC_EEEERyRlEEEvDpOT_
      (i32.add
       (get_local $0)
       (i32.const 24)
@@ -1506,7 +1537,7 @@
   )
   (get_local $6)
  )
- (func $_ZN8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE5eraseERKS2_ (param $0 i32) (param $1 i32)
+ (func $_ZN8graphene11multi_indexILy3607749778735104000EN4bank7accountEJEE5eraseERKS2_ (param $0 i32) (param $1 i32)
   (local $2 i64)
   (local $3 i32)
   (local $4 i32)
@@ -1514,7 +1545,7 @@
   (local $6 i32)
   (local $7 i32)
   (local $8 i32)
-  (call $gxb_assert
+  (call $graphene_assert
    (i32.eq
     (i32.load offset=16
      (get_local $1)
@@ -1523,7 +1554,7 @@
    )
    (i32.const 528)
   )
-  (call $gxb_assert
+  (call $graphene_assert
    (i64.eq
     (i64.load
      (get_local $0)
@@ -1602,7 +1633,7 @@
     )
    )
   )
-  (call $gxb_assert
+  (call $graphene_assert
    (i32.ne
     (get_local $7)
     (get_local $3)
@@ -1767,7 +1798,7 @@
    )
   )
  )
- (func $_ZN8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE6modifyIZNS1_8withdrawEyyxEUlRT_E_EEvRKS2_yOS5_ (param $0 i32) (param $1 i32) (param $2 i64) (param $3 i32)
+ (func $_ZN8graphene11multi_indexILy3607749778735104000EN4bank7accountEJEE6modifyIZNS1_8withdrawEyyxEUlRT_E_EEvRKS2_yOS5_ (param $0 i32) (param $1 i32) (param $2 i64) (param $3 i32)
   (local $4 i64)
   (local $5 i32)
   (i32.store offset=4
@@ -1781,7 +1812,7 @@
     )
    )
   )
-  (call $gxb_assert
+  (call $graphene_assert
    (i32.eq
     (i32.load offset=16
      (get_local $1)
@@ -1790,7 +1821,7 @@
    )
    (i32.const 352)
   )
-  (call $gxb_assert
+  (call $graphene_assert
    (i64.eq
     (i64.load
      (get_local $0)
@@ -1817,7 +1848,7 @@
     (get_local $1)
    )
   )
-  (call $gxb_assert
+  (call $graphene_assert
    (i32.const 1)
    (i32.const 464)
   )
@@ -1884,7 +1915,7 @@
    )
   )
  )
- (func $_ZNSt3__16vectorIN8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE8item_ptrENS_9allocatorIS6_EEE24__emplace_back_slow_pathIJNS_10unique_ptrINS5_4itemENS_14default_deleteISC_EEEERyRlEEEvDpOT_ (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32)
+ (func $_ZNSt3__16vectorIN8graphene11multi_indexILy3607749778735104000EN4bank7accountEJEE8item_ptrENS_9allocatorIS6_EEE24__emplace_back_slow_pathIJNS_10unique_ptrINS5_4itemENS_14default_deleteISC_EEEERyRlEEEvDpOT_ (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32)
   (local $4 i32)
   (local $5 i32)
   (local $6 i32)
@@ -2209,7 +2240,7 @@
    )
   )
  )
- (func $_ZN8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE7emplaceIZNS1_7depositEvEUlRT_E_EENS3_14const_iteratorEyOS5_ (param $0 i32) (param $1 i32) (param $2 i64) (param $3 i32)
+ (func $_ZN8graphene11multi_indexILy3607749778735104000EN4bank7accountEJEE7emplaceIZNS1_7depositEvEUlRT_E_EENS3_14const_iteratorEyOS5_ (param $0 i32) (param $1 i32) (param $2 i64) (param $3 i32)
   (local $4 i32)
   (local $5 i64)
   (local $6 i32)
@@ -2226,7 +2257,7 @@
     )
    )
   )
-  (call $gxb_assert
+  (call $graphene_assert
    (i64.eq
     (i64.load
      (get_local $1)
@@ -2399,7 +2430,7 @@
     )
     (br $label$1)
    )
-   (call $_ZNSt3__16vectorIN8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE8item_ptrENS_9allocatorIS6_EEE24__emplace_back_slow_pathIJNS_10unique_ptrINS5_4itemENS_14default_deleteISC_EEEERyRlEEEvDpOT_
+   (call $_ZNSt3__16vectorIN8graphene11multi_indexILy3607749778735104000EN4bank7accountEJEE8item_ptrENS_9allocatorIS6_EEE24__emplace_back_slow_pathIJNS_10unique_ptrINS5_4itemENS_14default_deleteISC_EEEERyRlEEEvDpOT_
     (i32.add
      (get_local $1)
      (i32.const 24)
@@ -2453,7 +2484,7 @@
    )
   )
  )
- (func $_ZN8graphene11multi_indexILy3607749778735104000EN9transfer17accountEJEE6modifyIZNS1_7depositEvEUlRT_E0_EEvRKS2_yOS5_ (param $0 i32) (param $1 i32) (param $2 i64) (param $3 i32)
+ (func $_ZN8graphene11multi_indexILy3607749778735104000EN4bank7accountEJEE6modifyIZNS1_7depositEvEUlRT_E0_EEvRKS2_yOS5_ (param $0 i32) (param $1 i32) (param $2 i64) (param $3 i32)
   (local $4 i64)
   (local $5 i32)
   (i32.store offset=4
@@ -2467,7 +2498,7 @@
     )
    )
   )
-  (call $gxb_assert
+  (call $graphene_assert
    (i32.eq
     (i32.load offset=16
      (get_local $1)
@@ -2476,7 +2507,7 @@
    )
    (i32.const 352)
   )
-  (call $gxb_assert
+  (call $graphene_assert
    (i64.eq
     (i64.load
      (get_local $0)
@@ -2503,7 +2534,7 @@
     (get_local $1)
    )
   )
-  (call $gxb_assert
+  (call $graphene_assert
    (i32.const 1)
    (i32.const 464)
   )
