@@ -1,12 +1,12 @@
 #pragma once
-#include <gxblib/print.hpp>
-#include <gxblib/action.hpp>
+#include <graphenelib/print.hpp>
+#include <graphenelib/action.hpp>
 
 #include <boost/fusion/adapted/std_tuple.hpp>
 #include <boost/fusion/include/std_tuple.hpp>
 
 #include <boost/mp11/tuple.hpp>
-#define N(X) ::gxblib::string_to_name(#X)
+#define N(X) ::graphenelib::string_to_name(#X)
 namespace graphene {
    template<typename Contract, typename FirstAction>
    bool dispatch( uint64_t code, uint64_t act ) {
@@ -53,7 +53,7 @@ namespace graphene {
    }
 
 #define GXB_API_CALL( r, OP, elem ) \
-   case gxblib::string_to_name( BOOST_PP_STRINGIZE(elem) ): \
+   case graphenelib::string_to_name( BOOST_PP_STRINGIZE(elem) ): \
       graphene::execute_action( &thiscontract, &OP::elem ); \
       break;
 

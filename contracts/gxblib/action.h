@@ -3,7 +3,7 @@
  *  @copyright defined in LICENSE.txt
  */
 #pragma once
-#include <gxblib/system.h>
+#include <graphenelib/system.h>
 
 extern "C" {
    /**

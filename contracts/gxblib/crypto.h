@@ -1,12 +1,12 @@
 #pragma once
-#include <gxblib/types.h>
+#include <graphenelib/types.h>
 extern "C" {
 /**
  *  This method is implemented as:
  *
  *  checksum calc_hash;
  *  sha256( data, length, &calc_hash );
- *  gxb_assert( calc_hash == hash, "invalid hash" );
+ *  graphene_assert( calc_hash == hash, "invalid hash" );
  *
  *  This method is optimized to a NO-OP when in fast evaluation mode
  */
@@ -17,7 +17,7 @@ void assert_sha256(char *data, uint32_t length, const checksum256 *hash);
  *
  *  checksum calc_hash;
  *  sha1( data, length, &calc_hash );
- *  gxb_assert( calc_hash == hash, "invalid hash" );
+ *  graphene_assert( calc_hash == hash, "invalid hash" );
  *
  *  This method is optimized to a NO-OP when in fast evaluation mode
  */
@@ -28,7 +28,7 @@ void assert_sha1(char *data, uint32_t length, const checksum160 *hash);
  *
  *  checksum calc_hash;
  *  sha512( data, length, &calc_hash );
- *  gxb_assert( calc_hash == hash, "invalid hash" );
+ *  graphene_assert( calc_hash == hash, "invalid hash" );
  *
  *  This method is optimized to a NO-OP when in fast evaluation mode
  */
@@ -39,7 +39,7 @@ void assert_sha512(char *data, uint32_t length, const checksum512 *hash);
  *
  *  checksum calc_hash;
  *  ripemd160( data, length, &calc_hash );
- *  gxb_assert( calc_hash == hash, "invalid hash" );
+ *  graphene_assert( calc_hash == hash, "invalid hash" );
  *
  *  This method is optimized to a NO-OP when in fast evaluation mode
  */

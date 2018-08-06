@@ -1,10 +1,10 @@
 #pragma once
 #include <functional>
-#include <gxblib/types.h>
+#include <graphenelib/types.h>
 #include <string>
 #include <tuple>
 
-namespace gxblib
+namespace graphenelib
 {
 
 /**
@@ -60,7 +60,7 @@ static constexpr uint64_t string_to_name(const char *str)
     * @brief used to generate a compile time uint64_t from the base32 encoded string interpretation of X
     * @ingroup types
     */
-#define N(X) ::gxblib::string_to_name(#X)
+#define N(X) ::graphenelib::string_to_name(#X)
 
 static constexpr uint64_t name_suffix(uint64_t tmp)
 {

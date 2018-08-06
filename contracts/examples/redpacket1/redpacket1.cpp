@@ -1,13 +1,13 @@
-#include <gxblib/asset.h>
-#include <gxblib/contract.hpp>
-#include <gxblib/contract_asset.hpp>
-#include <gxblib/crypto.h>
-#include <gxblib/dispatcher.hpp>
-#include <gxblib/global.h>
-#include <gxblib/multi_index.hpp>
-#include <gxblib/print.hpp>
-#include <gxblib/system.h>
-#include <gxblib/types.h>
+#include <graphenelib/asset.h>
+#include <graphenelib/contract.hpp>
+#include <graphenelib/contract_asset.hpp>
+#include <graphenelib/crypto.h>
+#include <graphenelib/dispatcher.hpp>
+#include <graphenelib/global.h>
+#include <graphenelib/multi_index.hpp>
+#include <graphenelib/print.hpp>
+#include <graphenelib/system.h>
+#include <graphenelib/types.h>
 
 using namespace graphene;
 

@@ -282,7 +282,7 @@ namespace graphene {
 
          char* malloc_from_freed(uint32_t size)
          {
-            //gxb_assert(_offset == _heap_size, "malloc_from_freed was designed to only be called after _heap was completely allocated");
+            //graphene_assert(_offset == _heap_size, "malloc_from_freed was designed to only be called after _heap was completely allocated");
 
             char* current = _heap + _size_marker;
             while (current != nullptr)

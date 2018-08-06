@@ -1,8 +1,8 @@
-#include <gxblib/contract.hpp>
-#include <gxblib/crypto.h>
-#include <gxblib/dispatcher.hpp>
-#include <gxblib/print.hpp>
-#include <gxblib/types.h>
+#include <graphenelib/contract.hpp>
+#include <graphenelib/crypto.h>
+#include <graphenelib/dispatcher.hpp>
+#include <graphenelib/print.hpp>
+#include <graphenelib/types.h>
 
 using namespace graphene;
 

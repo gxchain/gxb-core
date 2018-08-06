@@ -1,6 +1,6 @@
 #pragma once
-#include <gxblib/types.hpp>
-#include <gxblib/action.hpp>
-#include <gxblib/print.hpp>
-#include <gxblib/dispatcher.hpp>
-#include <gxblib/contract.hpp>
+#include <graphenelib/types.hpp>
+#include <graphenelib/action.hpp>
+#include <graphenelib/print.hpp>
+#include <graphenelib/dispatcher.hpp>
+#include <graphenelib/contract.hpp>

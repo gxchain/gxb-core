@@ -1,7 +1,7 @@
 #pragma once
-#include <gxblib/print.h>
-#include <gxblib/types.hpp>
-#include <gxblib/fixed_key.hpp>
+#include <graphenelib/print.h>
+#include <graphenelib/types.hpp>
+#include <graphenelib/fixed_key.hpp>
 #include <utility>
 #include <string>
 
@@ -148,7 +148,7 @@ namespace graphene {
     * @brief Prints a 64 bit names as base32 encoded string
     * @param name 64 bit name to be printed
     */
-   inline void print( gxblib::name name ) {
+   inline void print( graphenelib::name name ) {
       printn(name.value);
    }
 
