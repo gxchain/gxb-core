@@ -1,4 +1,5 @@
 /*
+ *
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
  *
  * The MIT License
@@ -318,8 +319,7 @@ signed_block database::_generate_block(
    witness_id_type witness_id,
    const fc::ecc::private_key& block_signing_private_key
    )
-{
-   try {
+{ try {
    uint32_t skip = get_node_properties().skip_flags;
    uint32_t slot_num = get_slot_at_time( when );
    FC_ASSERT( slot_num > 0 );
@@ -353,41 +353,48 @@ signed_block database::_generate_block(
    _pending_tx_session.reset();
    _pending_tx_session = _undo_db.start_undo_session();
 
+   uint64_t block_cpu_limit = get_cpu_limit().block_cpu_limit;
+   uint64_t new_block_cpu = 0;
    uint64_t postponed_tx_count = 0;
    // pop pending state (reset to head block state)
-   for( const processed_transaction& tx : _pending_tx )
-   {
-      size_t new_total_size = total_block_size + fc::raw::pack_size( tx );
+   for (const processed_transaction &tx : _pending_tx) {
+       size_t new_total_size = total_block_size + fc::raw::pack_size(tx);
 
-      // postpone transaction if it would make block too big
-      if( new_total_size >= maximum_block_size )
-      {
-         postponed_tx_count++;
-         continue;
-      }
+       // postpone transaction if it would make block too big
+       if (new_total_size >= maximum_block_size || new_block_cpu >= block_cpu_limit) {
+           postponed_tx_count++;
+           continue;
+       }
 
-      try
-      {
-         auto temp_session = _undo_db.start_undo_session();
-         processed_transaction ptx = _apply_transaction( tx );
-         temp_session.merge();
+       try {
+           auto temp_session = _undo_db.start_undo_session();
+           processed_transaction ptx = _apply_transaction(tx);
+           // check block cpu limit
+           for (const auto op_result : ptx.operation_results) {
+               if (op_result.which() == operation_result::tag<contract_receipt>::value) {
+                   new_block_cpu += op_result.get<contract_receipt>().billed_cpu_time_us;
+               }
+           }
+           if (new_block_cpu >= block_cpu_limit) {
+               postponed_tx_count++;
+               continue;
+           }
 
-         // We have to recompute pack_size(ptx) because it may be different
-         // than pack_size(tx) (i.e. if one or more results increased
-         // their size)
-         total_block_size += fc::raw::pack_size( ptx );
-         pending_block.transactions.push_back( ptx );
-      }
-      catch ( const fc::exception& e )
-      {
-         // Do nothing, transaction will not be re-applied
-         wlog( "Transaction was not processed while generating block due to ${e}", ("e", e) );
-         wlog( "The transaction was ${t}", ("t", tx) );
-      }
+           temp_session.merge();
+
+           // We have to recompute pack_size(ptx) because it may be different
+           // than pack_size(tx) (i.e. if one or more results increased
+           // their size)
+           total_block_size += fc::raw::pack_size(ptx);
+           pending_block.transactions.push_back(ptx);
+       } catch (const fc::exception &e) {
+           // Do nothing, transaction will not be re-applied
+           wlog("Transaction was not processed while generating block due to ${e}", ("e", e));
+           wlog("The transaction was ${t}", ("t", tx));
+       }
    }
-   if( postponed_tx_count > 0 )
-   {
-      wlog( "Postponed ${n} transactions due to block size limit", ("n", postponed_tx_count) );
+   if (postponed_tx_count > 0) {
+       wlog("Postponed ${n} transactions due to block size limit", ("n", postponed_tx_count));
    }
 
    _pending_tx_session.reset();
@@ -404,19 +411,18 @@ signed_block database::_generate_block(
    pending_block.witness = witness_id;
    // dlog("packaged block: ${pending_block}", ("pending_block", pending_block));
 
-   if( !(skip & skip_witness_signature) )
-      pending_block.sign( block_signing_private_key );
+   if (!(skip & skip_witness_signature))
+       pending_block.sign(block_signing_private_key);
 
    // TODO:  Move this to _push_block() so session is restored.
-   if( !(skip & skip_block_size_check) )
-   {
-      FC_ASSERT( fc::raw::pack_size(pending_block) <= get_global_properties().parameters.maximum_block_size );
+   if (!(skip & skip_block_size_check)) {
+       FC_ASSERT(fc::raw::pack_size(pending_block) <= get_global_properties().parameters.maximum_block_size);
    }
 
-   push_block( pending_block, skip );
+   push_block(pending_block, skip);
 
    return pending_block;
-} FC_CAPTURE_AND_RETHROW( (witness_id) ) }
+} FC_CAPTURE_AND_RETHROW((witness_id)) }
 
 /**
  * Removes the most recent block from the database and
