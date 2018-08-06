@@ -394,7 +394,7 @@ signed_block database::_generate_block(
        }
    }
    if (postponed_tx_count > 0) {
-       wlog("Postponed ${n} transactions due to block size limit", ("n", postponed_tx_count));
+       wlog("Postponed ${n} transactions due to block size limit or block cpu limit", ("n", postponed_tx_count));
    }
 
    _pending_tx_session.reset();
