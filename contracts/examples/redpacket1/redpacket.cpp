@@ -11,47 +11,13 @@
 
 using namespace graphene;
 
-class redpacket1 : public contract
+class redpacket : public contract
 {
-  private:
-    //@abi table packet i64
-    struct packet {
-        uint64_t account_id;
-        std::string pub_key;
-        contract_asset amount;
-        uint32_t number;
-        vector<contract_asset> subpackets;
-
-        uint64_t primary_key() const { return account_id; }
-
-        GRAPHENE_SERIALIZE(packet, (account_id)(pub_key)(amount)(number)(subpackets))
-    };
-    typedef graphene::multi_index<N(packet), packet> packet_index;
-
-    struct record {
-        uint64_t account_id;
-        contract_asset amount;
-    };
-
-    //@abi table packetrecord i64
-    struct packetrecord {
-        uint64_t packet_id;
-        std::vector<record> records;
-
-        uint64_t primary_key() const { return packet_id; }
-
-        GRAPHENE_SERIALIZE(packetrecord, (packet_id)(records))
-    };
-    typedef graphene::multi_index<N(packetrecord), packetrecord> packetrecord_index;
-
-    packet_index packets;
-    packetrecord_index packetrecords;
-
   public:
-    redpacket1(uint64_t id)
+    redpacket(uint64_t id)
         : contract(id)
         , packets(_self, _self)
-        , packetrecords(_self, _self)
+        , records(_self, _self)
     {
     }
 
@@ -59,27 +25,27 @@ class redpacket1 : public contract
     // @abi payable
     void create(std::string pubkey, uint64_t number)
     {
+        // validate pubkey
+
         int64_t amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
         uint64_t owner = get_trx_sender();
 
         auto packet_it = packets.find(owner);
-        if (packet_it != packets.end()) {
-            print("you can only create one packet");
-            return;
-        }
+        graphene_assert(packet_it == packets.end(), "already has one redpacket");
+        graphene_assert(number <= 1000, "max 1000 redpacket");
 
+        // allocate redpacket
         int64_t block_num = get_head_block_num();
         int shares_sum = 0;
-        vector<int> shares;
-        shares.reserve(number);
-        checksum160 sum160;
 
-        std::string random_base;
+        vector<int> shares;
         for (int i = 0; i < number; i++) {
-            random_base = pubkey + std::to_string(i) + std::to_string(block_num);
-            print("random_bash=", random_base.c_str(), "\n");
-            ripemd160(const_cast<char *>(random_base.c_str()), random_base.length(), &sum160);
+            std::string random_str = pubkey + std::to_string(i) + std::to_string(block_num);
+            print("random_str = ", random_str.c_str(), "\n");
+
+            checksum160 sum160;
+            ripemd160(const_cast<char *>(random_str.c_str()), random_str.length(), &sum160);
             uint8_t share = sum160.hash[0] == 0 ? 10 : sum160.hash[0];
             shares.emplace_back(share);
             shares_sum += share;
@@ -122,8 +88,8 @@ class redpacket1 : public contract
             return;
         }
 
-        auto record_it = packetrecords.find(owner);
-        if (record_it != packetrecords.end()) {
+        auto record_it = records.find(owner);
+        if (record_it != records.end()) {
             print("you can only rob once, you have rob from the packet\n");
             return;
         }
@@ -134,13 +100,13 @@ class redpacket1 : public contract
 
         auto subpacket_it = it->subpackets.begin() + subpacketsindex;
 
-        packetrecords.emplace(owner, [&](auto &o) {
-            record r;
+        records.emplace(owner, [&](auto &o) {
+            account r;
             r.account_id = owner;
             r.amount.amount = it->subpackets[subpacketsindex].amount;
 
             o.packet_id = owner;
-            o.records.emplace_back(r);
+            o.accounts.emplace_back(r);
         });
 
         packets.modify(it, 0, [&](auto &o) {
@@ -149,8 +115,8 @@ class redpacket1 : public contract
 
         if (it->subpackets.size() == 0) {
             packets.erase(it);
-            for (auto record_it = packetrecords.begin(); record_it != packetrecords.end();) {
-                record_it = packetrecords.erase(record_it);
+            for (auto record_it = records.begin(); record_it != records.end();) {
+                record_it = records.erase(record_it);
             }
         }
     }
@@ -161,27 +127,59 @@ class redpacket1 : public contract
         uint64_t owner = get_trx_sender();
 
         auto it = packets.find(owner);
-        if (it == packets.end()) {
-            print("owner:", owner, "has no create red packet");
-            return;
-        }
+        graphene_assert(it != packets.end(), "no redpacket");
 
         int64_t amount;
         packets.modify(it, 0, [&](auto &o) {
             for (auto subpacket_it = o.subpackets.begin(); subpacket_it != o.subpackets.end();) {
                 amount += subpacket_it->amount;
                 subpacket_it = o.subpackets.erase(subpacket_it);
-            }  
+            }
         });
 
         packets.erase(it);
 
-        for(auto packetrecords_it = packetrecords.begin();packetrecords_it!=packetrecords.end();++packetrecords_it) {
-            packetrecords.erase(packetrecords_it);
+        for (auto packetrecords_it = records.begin(); packetrecords_it != records.end(); ++packetrecords_it) {
+            records.erase(packetrecords_it);
         }
 
         withdraw_asset(_self, owner, it->amount.asset_id, amount);
     }
+
+  private:
+    //@abi table packet i64
+    struct packet {
+        uint64_t account_id;
+        std::string pub_key;
+        contract_asset amount;
+        uint32_t number;
+        vector<contract_asset> subpackets;
+
+        uint64_t primary_key() const { return account_id; }
+
+        GRAPHENE_SERIALIZE(packet, (account_id)(pub_key)(amount)(number)(subpackets))
+    };
+    typedef graphene::multi_index<N(packet), packet> packet_index;
+
+    struct account {
+        uint64_t account_id;
+        contract_asset amount;
+    };
+
+    //@abi table record i64
+    struct record {
+        uint64_t packet_id;
+        std::vector<account> accounts;
+
+        uint64_t primary_key() const { return packet_id; }
+
+        GRAPHENE_SERIALIZE(record, (packet_id)(accounts))
+    };
+    typedef graphene::multi_index<N(record), record> record_index;
+
+    packet_index        packets;
+    record_index        records;
+
 };
 
-GRAPHENE_ABI(redpacket1, (create)(open)(close))
+GRAPHENE_ABI(redpacket, (create)(open)(close))
