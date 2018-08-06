@@ -24,4 +24,4 @@ class contracta : public contract
     }
 };
 
-GXB_ABI(contracta, (hicontract))
+GRAPHENE_ABI(contracta, (hicontract))

@@ -52,15 +52,15 @@ namespace graphene {
       return true;
    }
 
-#define GXB_API_CALL( r, OP, elem ) \
+#define GRAPHENE_API_CALL( r, OP, elem ) \
    case graphenelib::string_to_name( BOOST_PP_STRINGIZE(elem) ): \
       graphene::execute_action( &thiscontract, &OP::elem ); \
       break;
 
-#define GXB_API( TYPE,  MEMBERS ) \
+#define GRAPHENE_API( TYPE,  MEMBERS ) \
    BOOST_PP_SEQ_FOR_EACH( GXB_API_CALL, TYPE, MEMBERS )
 
-#define GXB_ABI( TYPE, MEMBERS ) \
+#define GRAPHENE_ABI( TYPE, MEMBERS ) \
 extern "C" { \
    void apply( uint64_t receiver, uint64_t code, uint64_t action ) { \
       auto self = receiver; \

@@ -84,7 +84,7 @@ namespace graphene {
          }
       }
 
-      GXBLIB_SERIALIZE(contract_symbol_type, (value))
+      GRAPHENE_SERIALIZE(contract_symbol_type, (value))
    };
 
 } /// namespace graphene

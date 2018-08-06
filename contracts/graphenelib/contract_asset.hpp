@@ -123,7 +123,7 @@ struct contract_asset {
         return scaled_precision_lut[precision];
     }
 
-    GXBLIB_SERIALIZE(contract_asset, (amount)(asset_id))
+    GRAPHENE_SERIALIZE(contract_asset, (amount)(asset_id))
 };
 
 }

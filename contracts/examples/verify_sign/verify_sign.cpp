@@ -21,4 +21,4 @@ class verify_sign : public contract
     }
 };
 
-GXB_ABI(verify_sign, (verify))
+GRAPHENE_ABI(verify_sign, (verify))

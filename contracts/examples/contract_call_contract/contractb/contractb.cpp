@@ -21,4 +21,4 @@ class contractb : public contract
     }
 };
 
-GXB_ABI(contractb, (hi))
+GRAPHENE_ABI(contractb, (hi))

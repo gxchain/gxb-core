@@ -96,7 +96,7 @@ class transfer : public contract
 
         uint64_t primary_key() const { return owner; }
 
-        GXBLIB_SERIALIZE(account, (owner)(balances))
+        GRAPHENE_SERIALIZE(account, (owner)(balances))
     };
 
     typedef graphene::multi_index<N(account), account> account_index;
@@ -104,4 +104,4 @@ class transfer : public contract
     account_index accounts;
 };
 
-GXB_ABI(transfer, (deposit)(withdraw))
+GRAPHENE_ABI(transfer, (deposit)(withdraw))

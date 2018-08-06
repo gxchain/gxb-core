@@ -20,7 +20,7 @@ class redpacket : public contract
         contract_asset amount;
 
         uint64_t primary_key() const { return account_id; }
-        GXBLIB_SERIALIZE(balance, (account_id)(amount))
+        GRAPHENE_SERIALIZE(balance, (account_id)(amount))
     };
     typedef graphene::multi_index<N(balance), balance> balance_index;
 
@@ -34,7 +34,7 @@ class redpacket : public contract
 
         uint64_t primary_key() const { return account_id; }
 
-        GXBLIB_SERIALIZE(packet, (account_id)(pub_key)(amount)(number)(subpackets))
+        GRAPHENE_SERIALIZE(packet, (account_id)(pub_key)(amount)(number)(subpackets))
     };
     typedef graphene::multi_index<N(packet), packet> packet_index;
 
@@ -50,7 +50,7 @@ class redpacket : public contract
 
         uint64_t primary_key() const { return packet_id; }
 
-        GXBLIB_SERIALIZE(packetrecord, (packet_id)(records))
+        GRAPHENE_SERIALIZE(packetrecord, (packet_id)(records))
     };
     typedef graphene::multi_index<N(packetrecord), packetrecord> packetrecord_index;
 
@@ -232,7 +232,7 @@ class redpacket : public contract
         packets.modify(it, 0, [&](auto &o) {
             o.subpackets.erase(subpacket_it);
         });
-        
+
         if(it->subpackets.size() == 0) {
             packets.erase(it);
             for(auto record_it = packetrecords.begin();record_it != packetrecords.end();) {
@@ -242,4 +242,4 @@ class redpacket : public contract
     }
 };
 
-GXB_ABI(redpacket, (deposit)(withdraw)(withdrawall)(issuepacket)(robpacket))
+GRAPHENE_ABI(redpacket, (deposit)(withdraw)(withdrawall)(issuepacket)(robpacket))

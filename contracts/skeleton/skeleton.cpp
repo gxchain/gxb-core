@@ -22,4 +22,4 @@ class skeleton : public contract
     }
 };
 
-GXB_ABI(skeleton, (hi))
+GRAPHENE_ABI(skeleton, (hi))

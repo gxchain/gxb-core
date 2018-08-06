@@ -36,7 +36,7 @@ class transfer1 : public contract
             return id >> 16;
         }
 
-        GXBLIB_SERIALIZE(account, (id)(amount))
+        GRAPHENE_SERIALIZE(account, (id)(amount))
     };
 
     typedef graphene::multi_index<N(account), account> account_index;
@@ -105,4 +105,4 @@ class transfer1 : public contract
     account_index accounts;
 };
 
-GXB_ABI(transfer1, (deposit)(withdraw))
+GRAPHENE_ABI(transfer1, (deposit)(withdraw))
