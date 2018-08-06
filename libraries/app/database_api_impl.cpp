@@ -1535,12 +1535,12 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
    for( operation& op : _ops )
    {
        if (op.which() == operation::tag<contract_call_operation>::value) {
-           undo_database::session session = _db._undo_db.start_undo_session();
+           auto tmp_session = _db._undo_db.start_undo_session();
            contract_call_operation &opr = op.get<contract_call_operation>();
            transaction_evaluation_state eval_state(&_db);
            eval_state.operation_results.reserve(1);
            // eval_state.skip_fee = true;
-           // eval_state.skip_fee_schedule_check = true;
+           eval_state.skip_fee_schedule_check = true;
            auto op_result = _db.apply_operation(eval_state, opr);
            auto fee = op_result.get<contract_receipt>().fee;
 
