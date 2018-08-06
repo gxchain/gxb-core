@@ -220,13 +220,13 @@ namespace graphene {
       }
    };
 
-   struct find_gxb_abi_macro_action : public PreprocessOnlyAction {
+   struct find_gxc_abi_macro_action : public PreprocessOnlyAction {
 
          string& contract;
          vector<string>& actions;
          const string& abi_context;
 
-         find_gxb_abi_macro_action(string& contract, vector<string>& actions, const string& abi_context
+         find_gxc_abi_macro_action(string& contract, vector<string>& actions, const string& abi_context
             ): contract(contract),
             actions(actions), abi_context(abi_context) {
          }
@@ -234,9 +234,9 @@ namespace graphene {
          struct callback_handler : public PPCallbacks {
 
             CompilerInstance& compiler_instance;
-            find_gxb_abi_macro_action& act;
+            find_gxc_abi_macro_action& act;
 
-            callback_handler(CompilerInstance& compiler_instance, find_gxb_abi_macro_action& act)
+            callback_handler(CompilerInstance& compiler_instance, find_gxc_abi_macro_action& act)
             : compiler_instance(compiler_instance), act(act) {}
 
             string remove_namespace(const string& full_name) {

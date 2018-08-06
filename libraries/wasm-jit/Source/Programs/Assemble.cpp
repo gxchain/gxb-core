@@ -7,7 +7,7 @@ int commandMain(int argc,char** argv)
 {
 	if(argc < 3)
 	{
-		std::cerr << "Usage: gxb-wast2wasm in.wast out.wasm [switches]" << std::endl;
+		std::cerr << "Usage: gxc-wast2wasm in.wast out.wasm [switches]" << std::endl;
 		std::cerr << "  -n|--omit-names\t\tOmits WAST function and local names from the output" << std::endl;
 		return EXIT_FAILURE;
 	}
@@ -29,7 +29,7 @@ int commandMain(int argc,char** argv)
 			}
 		}
 	}
-	
+
 	// Load the WAST module.
 	IR::Module module;
 	if(!loadTextModule(inputFilename,module)) { return EXIT_FAILURE; }
