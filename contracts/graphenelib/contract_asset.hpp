@@ -26,7 +26,7 @@ struct contract_asset {
 
     contract_asset &operator+=(const contract_asset &o)
     {
-        graphene_assert(asset_id == o.asset_id);
+        graphene_assert(asset_id == o.asset_id, "different asset_id");
         amount += o.amount;
         graphene_assert(-max_amount <= amount, "subtraction underflow");
         graphene_assert(amount <= max_amount, "subtraction overflow");
@@ -34,7 +34,7 @@ struct contract_asset {
     }
     contract_asset &operator-=(const contract_asset &o)
     {
-        graphene_assert(asset_id == o.asset_id);
+        graphene_assert(asset_id == o.asset_id, "different asset_id");
         amount -= o.amount;
         graphene_assert(-max_amount <= amount, "subtraction underflow");
         graphene_assert(amount <= max_amount, "subtraction overflow");
@@ -85,7 +85,7 @@ struct contract_asset {
     }
     friend bool operator<(const contract_asset &a, const contract_asset &b)
     {
-        graphene_assert(a.asset_id == b.asset_id);
+        graphene_assert(a.asset_id == b.asset_id, "different asset_id");
         return a.amount < b.amount;
     }
     friend bool operator<=(const contract_asset &a, const contract_asset &b)
@@ -108,18 +108,18 @@ struct contract_asset {
 
     friend contract_asset operator-(const contract_asset &a, const contract_asset &b)
     {
-        graphene_assert(a.asset_id == b.asset_id);
+        graphene_assert(a.asset_id == b.asset_id, "different asset_id");
         return contract_asset(a.amount - b.amount, a.asset_id);
     }
     friend contract_asset operator+(const contract_asset &a, const contract_asset &b)
     {
-        graphene_assert(a.asset_id == b.asset_id);
+        graphene_assert(a.asset_id == b.asset_id, "different asset_id");
         return contract_asset(a.amount + b.amount, a.asset_id);
     }
 
     static int64_t scaled_precision(uint8_t precision)
     {
-        graphene_assert(precision < 19);
+        graphene_assert(precision < 19, "precision < 19");
         return scaled_precision_lut[precision];
     }
 
