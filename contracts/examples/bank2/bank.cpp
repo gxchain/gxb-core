@@ -10,10 +10,10 @@
 
 using namespace graphene;
 
-class transfer : public contract
+class bank : public contract
 {
   public:
-    transfer(uint64_t account_id)
+    bank(uint64_t account_id)
         : contract(account_id)
         , accounts(_self, _self)
     {}
@@ -88,6 +88,12 @@ class transfer : public contract
         withdraw_asset(_self, to_account, asset.asset_id, asset.amount);
     }
 
+    // @abi action
+    void transfer(uint64_t to_account, uint64_t contract_asset_id, int64_t amount)
+    {
+        withdraw(to_account, contract_asset_id, amount);
+    }
+
   private:
     //@abi table account i64
     struct account {
@@ -104,4 +110,4 @@ class transfer : public contract
     account_index accounts;
 };
 
-GRAPHENE_ABI(transfer, (deposit)(withdraw))
+GRAPHENE_ABI(bank, (deposit)(withdraw)(transfer))
