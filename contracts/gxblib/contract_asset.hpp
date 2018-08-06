@@ -26,7 +26,7 @@ struct contract_asset {
 
     contract_asset &operator+=(const contract_asset &o)
     {
-        gxb_assert(asset_id == o.asset_id);
+        gxb_assert(asset_id == o.asset_id, "asset_id invalid");
         amount += o.amount;
         gxb_assert(-max_amount <= amount, "subtraction underflow");
         gxb_assert(amount <= max_amount, "subtraction overflow");
@@ -34,7 +34,7 @@ struct contract_asset {
     }
     contract_asset &operator-=(const contract_asset &o)
     {
-        gxb_assert(asset_id == o.asset_id);
+        gxb_assert(asset_id == o.asset_id, "asset_id invalid");
         amount -= o.amount;
         gxb_assert(-max_amount <= amount, "subtraction underflow");
         gxb_assert(amount <= max_amount, "subtraction overflow");
@@ -85,7 +85,7 @@ struct contract_asset {
     }
     friend bool operator<(const contract_asset &a, const contract_asset &b)
     {
-        gxb_assert(a.asset_id == b.asset_id);
+        gxb_assert(a.asset_id == b.asset_id, "asset_id invalid");
         return a.amount < b.amount;
     }
     friend bool operator<=(const contract_asset &a, const contract_asset &b)
@@ -108,18 +108,18 @@ struct contract_asset {
 
     friend contract_asset operator-(const contract_asset &a, const contract_asset &b)
     {
-        gxb_assert(a.asset_id == b.asset_id);
+        gxb_assert(a.asset_id == b.asset_id, "asset_id invalid");
         return contract_asset(a.amount - b.amount, a.asset_id);
     }
     friend contract_asset operator+(const contract_asset &a, const contract_asset &b)
     {
-        gxb_assert(a.asset_id == b.asset_id);
+        gxb_assert(a.asset_id == b.asset_id, "asset_id invalid");
         return contract_asset(a.amount + b.amount, a.asset_id);
     }
 
     static int64_t scaled_precision(uint8_t precision)
     {
-        gxb_assert(precision < 19);
+        gxb_assert(precision < 19, "precision invalid");
         return scaled_precision_lut[precision];
     }
 
