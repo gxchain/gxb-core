@@ -67,7 +67,7 @@ extern "C" { \
       if (code == self) { \
          TYPE thiscontract( self ); \
          switch( action ) { \
-            GXB_API( TYPE, MEMBERS ) \
+            GRAPHENE_API( TYPE, MEMBERS ) \
          } \
       } \
    } \
