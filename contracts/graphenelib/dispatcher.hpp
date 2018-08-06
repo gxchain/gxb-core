@@ -58,7 +58,7 @@ namespace graphene {
       break;
 
 #define GRAPHENE_API( TYPE,  MEMBERS ) \
-   BOOST_PP_SEQ_FOR_EACH( GXB_API_CALL, TYPE, MEMBERS )
+   BOOST_PP_SEQ_FOR_EACH( GRAPHENE_API_CALL, TYPE, MEMBERS )
 
 #define GRAPHENE_ABI( TYPE, MEMBERS ) \
 extern "C" { \
