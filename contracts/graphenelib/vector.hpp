@@ -1,6 +1,6 @@
 #pragma once
-#include <gxblib/memory.hpp>
-#include <gxblib/stdlib.hpp>
+#include <graphenelib/memory.hpp>
+#include <graphenelib/stdlib.hpp>
 #include <vector>
 
 namespace graphene {

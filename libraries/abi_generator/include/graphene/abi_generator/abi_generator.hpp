@@ -220,13 +220,13 @@ namespace graphene {
       }
    };
 
-   struct find_gxb_abi_macro_action : public PreprocessOnlyAction {
+   struct find_gxc_abi_macro_action : public PreprocessOnlyAction {
 
          string& contract;
          vector<string>& actions;
          const string& abi_context;
 
-         find_gxb_abi_macro_action(string& contract, vector<string>& actions, const string& abi_context
+         find_gxc_abi_macro_action(string& contract, vector<string>& actions, const string& abi_context
             ): contract(contract),
             actions(actions), abi_context(abi_context) {
          }
@@ -234,9 +234,9 @@ namespace graphene {
          struct callback_handler : public PPCallbacks {
 
             CompilerInstance& compiler_instance;
-            find_gxb_abi_macro_action& act;
+            find_gxc_abi_macro_action& act;
 
-            callback_handler(CompilerInstance& compiler_instance, find_gxb_abi_macro_action& act)
+            callback_handler(CompilerInstance& compiler_instance, find_gxc_abi_macro_action& act)
             : compiler_instance(compiler_instance), act(act) {}
 
             string remove_namespace(const string& full_name) {
@@ -262,7 +262,7 @@ namespace graphene {
 
                auto* id = token.getIdentifierInfo();
                if( id == nullptr ) return;
-               if( id->getName() != "GXB_ABI" ) return;
+               if( id->getName() != "GRAPHENE_ABI" ) return;
 
                const auto& sm = compiler_instance.getSourceManager();
                auto file_name = sm.getFilename(range.getBegin());
@@ -276,7 +276,7 @@ namespace graphene {
                clang::SourceLocation e(clang::Lexer::getLocForEndOfToken(_e, 0, sm, compiler_instance.getLangOpts()));
                auto macrostr = string(sm.getCharacterData(b), sm.getCharacterData(e)-sm.getCharacterData(b));
 
-               regex r(R"(GXB_ABI\s*\(\s*(.+?)\s*,((?:.+?)*)\s*\))");
+               regex r(R"(GRAPHENE_ABI\s*\(\s*(.+?)\s*,((?:.+?)*)\s*\))");
                smatch smatch;
                auto res = regex_search(macrostr, smatch, r);
                ABI_ASSERT( res );

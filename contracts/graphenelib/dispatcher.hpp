@@ -1,12 +1,12 @@
 #pragma once
-#include <gxblib/print.hpp>
-#include <gxblib/action.hpp>
+#include <graphenelib/print.hpp>
+#include <graphenelib/action.hpp>
 
 #include <boost/fusion/adapted/std_tuple.hpp>
 #include <boost/fusion/include/std_tuple.hpp>
 
 #include <boost/mp11/tuple.hpp>
-#define N(X) ::gxblib::string_to_name(#X)
+#define N(X) ::graphenelib::string_to_name(#X)
 namespace graphene {
    template<typename Contract, typename FirstAction>
    bool dispatch( uint64_t code, uint64_t act ) {
@@ -52,22 +52,22 @@ namespace graphene {
       return true;
    }
 
-#define GXB_API_CALL( r, OP, elem ) \
-   case gxblib::string_to_name( BOOST_PP_STRINGIZE(elem) ): \
+#define GRAPHENE_API_CALL( r, OP, elem ) \
+   case graphenelib::string_to_name( BOOST_PP_STRINGIZE(elem) ): \
       graphene::execute_action( &thiscontract, &OP::elem ); \
       break;
 
-#define GXB_API( TYPE,  MEMBERS ) \
-   BOOST_PP_SEQ_FOR_EACH( GXB_API_CALL, TYPE, MEMBERS )
+#define GRAPHENE_API( TYPE,  MEMBERS ) \
+   BOOST_PP_SEQ_FOR_EACH( GRAPHENE_API_CALL, TYPE, MEMBERS )
 
-#define GXB_ABI( TYPE, MEMBERS ) \
+#define GRAPHENE_ABI( TYPE, MEMBERS ) \
 extern "C" { \
    void apply( uint64_t receiver, uint64_t code, uint64_t action ) { \
       auto self = receiver; \
       if (code == self) { \
          TYPE thiscontract( self ); \
          switch( action ) { \
-            GXB_API( TYPE, MEMBERS ) \
+            GRAPHENE_API( TYPE, MEMBERS ) \
          } \
       } \
    } \

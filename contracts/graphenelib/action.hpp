@@ -1,7 +1,7 @@
 #pragma once
-#include <gxblib/action.h>
-#include <gxblib/datastream.hpp>
-#include <gxblib/serialize.hpp>
+#include <graphenelib/action.h>
+#include <graphenelib/datastream.hpp>
+#include <graphenelib/serialize.hpp>
 #include <boost/preprocessor/variadic/size.hpp>
 #include <boost/preprocessor/variadic/to_tuple.hpp>
 #include <boost/preprocessor/tuple/enum.hpp>
@@ -48,7 +48,7 @@ namespace graphene {
       {
       }
 
-      GXBLIB_SERIALIZE(action, (account)(name)(data))
+      GRAPHENE_SERIALIZE(action, (account)(name)(data))
 
       /*
       void send() const

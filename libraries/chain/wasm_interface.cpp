@@ -256,7 +256,7 @@ class context_free_system_api : public context_aware_api
         FC_ASSERT(false, "abort() called");
     }
 
-    void gxb_assert(bool condition, null_terminated_ptr msg)
+    void graphene_assert(bool condition, null_terminated_ptr msg)
     {
         if (BOOST_UNLIKELY(!condition)) {
             std::string message(msg);
@@ -265,7 +265,7 @@ class context_free_system_api : public context_aware_api
         }
     }
 
-    void gxb_assert_message(bool condition, array_ptr<const char> msg, size_t msg_len)
+    void graphene_assert_message(bool condition, array_ptr<const char> msg, size_t msg_len)
     {
         if (BOOST_UNLIKELY(!condition)) {
             std::string message(msg, msg_len);
@@ -274,7 +274,7 @@ class context_free_system_api : public context_aware_api
         }
     }
 
-    void gxb_assert_code(bool condition, uint64_t error_code)
+    void graphene_assert_code(bool condition, uint64_t error_code)
     {
         if (BOOST_UNLIKELY(!condition)) {
             edump((error_code));
@@ -283,7 +283,7 @@ class context_free_system_api : public context_aware_api
         }
     }
 
-    void gxb_exit(int32_t code)
+    void graphene_exit(int32_t code)
     {
         throw wasm_exit{code};
     }
@@ -1477,11 +1477,11 @@ REGISTER_INTRINSICS(console_api,
 );
 
 REGISTER_INTRINSICS(context_free_system_api,
-(abort,                void()              )
-(gxb_assert,           void(int, int)      )
-(gxb_assert_message,   void(int, int, int) )
-(gxb_assert_code,      void(int, int64_t)  )
-(gxb_exit,             void(int)           )
+(abort,                     void()              )
+(graphene_assert,           void(int, int)      )
+(graphene_assert_message,   void(int, int, int) )
+(graphene_assert_code,      void(int, int64_t)  )
+(graphene_exit,             void(int)           )
 );
 
 REGISTER_INTRINSICS(global_api,

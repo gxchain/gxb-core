@@ -1,13 +1,13 @@
-#include <gxblib/asset.h>
-#include <gxblib/contract.hpp>
-#include <gxblib/contract_asset.hpp>
-#include <gxblib/crypto.h>
-#include <gxblib/dispatcher.hpp>
-#include <gxblib/global.h>
-#include <gxblib/multi_index.hpp>
-#include <gxblib/print.hpp>
-#include <gxblib/system.h>
-#include <gxblib/types.h>
+#include <graphenelib/asset.h>
+#include <graphenelib/contract.hpp>
+#include <graphenelib/contract_asset.hpp>
+#include <graphenelib/crypto.h>
+#include <graphenelib/dispatcher.hpp>
+#include <graphenelib/global.h>
+#include <graphenelib/multi_index.hpp>
+#include <graphenelib/print.hpp>
+#include <graphenelib/system.h>
+#include <graphenelib/types.h>
 
 using namespace graphene;
 
@@ -20,7 +20,7 @@ class redpacket : public contract
         contract_asset amount;
 
         uint64_t primary_key() const { return account_id; }
-        GXBLIB_SERIALIZE(balance, (account_id)(amount))
+        GRAPHENE_SERIALIZE(balance, (account_id)(amount))
     };
     typedef graphene::multi_index<N(balance), balance> balance_index;
 
@@ -34,7 +34,7 @@ class redpacket : public contract
 
         uint64_t primary_key() const { return account_id; }
 
-        GXBLIB_SERIALIZE(packet, (account_id)(pub_key)(amount)(number)(subpackets))
+        GRAPHENE_SERIALIZE(packet, (account_id)(pub_key)(amount)(number)(subpackets))
     };
     typedef graphene::multi_index<N(packet), packet> packet_index;
 
@@ -50,7 +50,7 @@ class redpacket : public contract
 
         uint64_t primary_key() const { return packet_id; }
 
-        GXBLIB_SERIALIZE(packetrecord, (packet_id)(records))
+        GRAPHENE_SERIALIZE(packetrecord, (packet_id)(records))
     };
     typedef graphene::multi_index<N(packetrecord), packetrecord> packetrecord_index;
 
@@ -83,7 +83,7 @@ class redpacket : public contract
                 o.amount.asset_id = asset_id;
             });
         } else {
-            gxb_assert(it->amount.asset_id == asset_id, "you can only use one asset type");
+            graphene_assert(it->amount.asset_id == asset_id, "you can only use one asset type");
             balances.modify(it, 0, [&](auto &o) {
                 o.amount.amount += asset_amount;
             });
@@ -100,7 +100,7 @@ class redpacket : public contract
             return;
         }
 
-        gxb_assert(it->amount >= amount, "balance not enough");
+        graphene_assert(it->amount >= amount, "balance not enough");
 
         if (it->amount == amount) {
             balances.erase(it);
@@ -139,7 +139,7 @@ class redpacket : public contract
             return;
         }
 
-        gxb_assert(it->amount.amount >= amount, "balance not enough");
+        graphene_assert(it->amount.amount >= amount, "balance not enough");
 
         auto packet_it = packets.find(owner);
         if (packet_it != packets.end()) {
@@ -232,7 +232,7 @@ class redpacket : public contract
         packets.modify(it, 0, [&](auto &o) {
             o.subpackets.erase(subpacket_it);
         });
-        
+
         if(it->subpackets.size() == 0) {
             packets.erase(it);
             for(auto record_it = packetrecords.begin();record_it != packetrecords.end();) {
@@ -242,4 +242,4 @@ class redpacket : public contract
     }
 };
 
-GXB_ABI(redpacket, (deposit)(withdraw)(withdrawall)(issuepacket)(robpacket))
+GRAPHENE_ABI(redpacket, (deposit)(withdraw)(withdrawall)(issuepacket)(robpacket))

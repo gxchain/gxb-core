@@ -4,7 +4,7 @@ find_package(LLVM 4.0 REQUIRED CONFIG)
 
 link_directories(${LLVM_LIBRARY_DIR})
 
-add_executable(gxb-abigen ${SOURCES})
+add_executable(gxc-abigen ${SOURCES})
 
 set( CMAKE_CXX_STANDARD 14 )
 
@@ -18,11 +18,11 @@ if( GPERFTOOLS_FOUND )
     list( APPEND PLATFORM_SPECIFIC_LIBS tcmalloc )
 endif()
 
-target_link_libraries(gxb-abigen abi_generator)
+target_link_libraries(gxc-abigen abi_generator)
 
 
 install( TARGETS
-   gxb-abigen
+   gxc-abigen
 
    RUNTIME DESTINATION bin
    LIBRARY DESTINATION lib

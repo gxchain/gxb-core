@@ -1,8 +1,8 @@
 #pragma once
-#include <gxblib/print.hpp>
-#include <gxblib/serialize.hpp>
-#include <gxblib/system.h>
-#include <gxblib/types.hpp>
+#include <graphenelib/print.hpp>
+#include <graphenelib/serialize.hpp>
+#include <graphenelib/system.h>
+#include <graphenelib/types.hpp>
 #include <tuple>
 
 namespace graphene {
@@ -14,7 +14,7 @@ struct contract_asset {
         : amount(a)
         , asset_id(id & GRAPHENE_DB_MAX_INSTANCE_ID)
     {
-        gxb_assert(is_amount_within_range(), "magnitude of asset amount must be less than 2^62");
+        graphene_assert(is_amount_within_range(), "magnitude of asset amount must be less than 2^62");
     }
 
     int64_t     amount;
@@ -26,28 +26,28 @@ struct contract_asset {
 
     contract_asset &operator+=(const contract_asset &o)
     {
-        gxb_assert(asset_id == o.asset_id, "asset_id invalid");
+        graphene_assert(asset_id == o.asset_id, "different asset_id");
         amount += o.amount;
-        gxb_assert(-max_amount <= amount, "subtraction underflow");
-        gxb_assert(amount <= max_amount, "subtraction overflow");
+        graphene_assert(-max_amount <= amount, "subtraction underflow");
+        graphene_assert(amount <= max_amount, "subtraction overflow");
         return *this;
     }
     contract_asset &operator-=(const contract_asset &o)
     {
-        gxb_assert(asset_id == o.asset_id, "asset_id invalid");
+        graphene_assert(asset_id == o.asset_id, "different asset_id");
         amount -= o.amount;
-        gxb_assert(-max_amount <= amount, "subtraction underflow");
-        gxb_assert(amount <= max_amount, "subtraction overflow");
+        graphene_assert(-max_amount <= amount, "subtraction underflow");
+        graphene_assert(amount <= max_amount, "subtraction overflow");
         return *this;
     }
     contract_asset operator-() const { return contract_asset(-amount, asset_id); }
 
     contract_asset &operator*=(int64_t a)
     {
-        gxb_assert(a == 0 || (amount * a) / a == amount, "multiplication overflow or underflow");
+        graphene_assert(a == 0 || (amount * a) / a == amount, "multiplication overflow or underflow");
         amount *= a;
-        gxb_assert(-max_amount <= amount, "multiplication underflow");
-        gxb_assert(amount <= max_amount, "multiplication overflow");
+        graphene_assert(-max_amount <= amount, "multiplication underflow");
+        graphene_assert(amount <= max_amount, "multiplication overflow");
         return *this;
     }
 
@@ -85,7 +85,7 @@ struct contract_asset {
     }
     friend bool operator<(const contract_asset &a, const contract_asset &b)
     {
-        gxb_assert(a.asset_id == b.asset_id, "asset_id invalid");
+        graphene_assert(a.asset_id == b.asset_id, "different asset_id");
         return a.amount < b.amount;
     }
     friend bool operator<=(const contract_asset &a, const contract_asset &b)
@@ -108,22 +108,22 @@ struct contract_asset {
 
     friend contract_asset operator-(const contract_asset &a, const contract_asset &b)
     {
-        gxb_assert(a.asset_id == b.asset_id, "asset_id invalid");
+        graphene_assert(a.asset_id == b.asset_id, "different asset_id");
         return contract_asset(a.amount - b.amount, a.asset_id);
     }
     friend contract_asset operator+(const contract_asset &a, const contract_asset &b)
     {
-        gxb_assert(a.asset_id == b.asset_id, "asset_id invalid");
+        graphene_assert(a.asset_id == b.asset_id, "different asset_id");
         return contract_asset(a.amount + b.amount, a.asset_id);
     }
 
     static int64_t scaled_precision(uint8_t precision)
     {
-        gxb_assert(precision < 19, "precision invalid");
+        graphene_assert(precision < 19, "precision < 19");
         return scaled_precision_lut[precision];
     }
 
-    GXBLIB_SERIALIZE(contract_asset, (amount)(asset_id))
+    GRAPHENE_SERIALIZE(contract_asset, (amount)(asset_id))
 };
 
 }

@@ -1,11 +1,11 @@
-#include <gxblib/asset.h>
-#include <gxblib/contract.hpp>
-#include <gxblib/contract_asset.hpp>
-#include <gxblib/dispatcher.hpp>
-#include <gxblib/global.h>
-#include <gxblib/multi_index.hpp>
-#include <gxblib/print.hpp>
-#include <gxblib/system.h>
+#include <graphenelib/asset.h>
+#include <graphenelib/contract.hpp>
+#include <graphenelib/contract_asset.hpp>
+#include <graphenelib/dispatcher.hpp>
+#include <graphenelib/global.h>
+#include <graphenelib/multi_index.hpp>
+#include <graphenelib/print.hpp>
+#include <graphenelib/system.h>
 #include <vector>
 
 using namespace graphene;
@@ -64,7 +64,7 @@ class transfer : public contract
         int asset_index = 0;
         for (auto asset_it = it->balances.begin(); asset_it != it->balances.end(); ++asset_it) {
             if ((asset.asset_id) == asset_it->asset_id) {
-                gxb_assert(asset_it->amount >= asset.amount, "balance not enough");
+                graphene_assert(asset_it->amount >= asset.amount, "balance not enough");
                 print("asset_it->amount=", asset_it->amount);
                 print("amount.amount=", asset.amount);
                 if (asset_it->amount == asset.amount) {
@@ -96,7 +96,7 @@ class transfer : public contract
 
         uint64_t primary_key() const { return owner; }
 
-        GXBLIB_SERIALIZE(account, (owner)(balances))
+        GRAPHENE_SERIALIZE(account, (owner)(balances))
     };
 
     typedef graphene::multi_index<N(account), account> account_index;
@@ -104,4 +104,4 @@ class transfer : public contract
     account_index accounts;
 };
 
-GXB_ABI(transfer, (deposit)(withdraw))
+GRAPHENE_ABI(transfer, (deposit)(withdraw))

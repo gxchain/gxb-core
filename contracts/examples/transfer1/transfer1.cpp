@@ -1,9 +1,9 @@
-#include <gxblib/asset.h>
-#include <gxblib/contract.hpp>
-#include <gxblib/dispatcher.hpp>
-#include <gxblib/global.h>
-#include <gxblib/multi_index.hpp>
-#include <gxblib/print.hpp>
+#include <graphenelib/asset.h>
+#include <graphenelib/contract.hpp>
+#include <graphenelib/dispatcher.hpp>
+#include <graphenelib/global.h>
+#include <graphenelib/multi_index.hpp>
+#include <graphenelib/print.hpp>
 #include <vector>
 
 using namespace graphene;
@@ -36,7 +36,7 @@ class transfer1 : public contract
             return id >> 16;
         }
 
-        GXBLIB_SERIALIZE(account, (id)(amount))
+        GRAPHENE_SERIALIZE(account, (id)(amount))
     };
 
     typedef graphene::multi_index<N(account), account> account_index;
@@ -86,7 +86,7 @@ class transfer1 : public contract
             return;
         }
 
-        gxb_assert(it->amount >= amount, "balance not enough");
+        graphene_assert(it->amount >= amount, "balance not enough");
 
         if (it->amount == amount) {
             print("withdraw all, to delete the record");
@@ -105,4 +105,4 @@ class transfer1 : public contract
     account_index accounts;
 };
 
-GXB_ABI(transfer1, (deposit)(withdraw))
+GRAPHENE_ABI(transfer1, (deposit)(withdraw))

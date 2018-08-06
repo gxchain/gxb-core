@@ -1,10 +1,10 @@
 #pragma once
-#include <gxblib/system.h>
-#include <gxblib/memory.h>
-#include <gxblib/vector.hpp>
+#include <graphenelib/system.h>
+#include <graphenelib/memory.h>
+#include <graphenelib/vector.hpp>
 #include <boost/container/flat_set.hpp>
 #include <boost/container/flat_map.hpp>
-#include <gxblib/varint.hpp>
+#include <graphenelib/varint.hpp>
 #include <array>
 #include <set>
 #include <map>
@@ -42,7 +42,7 @@ class datastream {
       *  @param s the number of bytes to read
       */
       inline bool read( char* d, size_t s ) {
-        // gxb_assert( size_t(_end - _pos) >= (size_t)s, "read" );
+        // graphene_assert( size_t(_end - _pos) >= (size_t)s, "read" );
         memcpy( d, _pos, s );
         _pos += s;
         return true;
@@ -55,7 +55,7 @@ class datastream {
       *  @param s The number of bytes to write
       */
       inline bool write( const char* d, size_t s ) {
-        // gxb_assert( _end - _pos >= (int32_t)s, "write" );
+        // graphene_assert( _end - _pos >= (int32_t)s, "write" );
         memcpy( (void*)_pos, d, s );
         _pos += s;
         return true;
@@ -67,7 +67,7 @@ class datastream {
       *  @param c byte to write
       */
       inline bool put(char c) {
-        // gxb_assert( _pos < _end, "put" );
+        // graphene_assert( _pos < _end, "put" );
         *_pos = c;
         ++_pos;
         return true;
@@ -81,7 +81,7 @@ class datastream {
       inline bool get( unsigned char& c ) { return get( *(char*)&c ); }
       inline bool get( char& c )
       {
-        // gxb_assert( _pos < _end, "get" );
+        // graphene_assert( _pos < _end, "get" );
         c = *_pos;
         ++_pos;
         return true;
@@ -298,7 +298,7 @@ template<typename DataStream, typename T, std::size_t N,
 DataStream& operator >> ( DataStream& ds, T (&v)[N] ) {
    unsigned_int s;
    ds >> s;
-   // gxb_assert( N == s.value, "T[] size and unpacked size don't match");
+   // graphene_assert( N == s.value, "T[] size and unpacked size don't match");
    for( uint32_t i = 0; i < N; ++i )
       ds >> v[i];
    return ds;
@@ -309,7 +309,7 @@ template<typename DataStream, typename T, std::size_t N,
 DataStream& operator >> ( DataStream& ds, T (&v)[N] ) {
    unsigned_int s;
    ds >> s;
-   // gxb_assert( N == s.value, "T[] size and unpacked size don't match");
+   // graphene_assert( N == s.value, "T[] size and unpacked size don't match");
    ds.read((char*)&v[0], sizeof(v));
    return ds;
 }

@@ -1,7 +1,7 @@
-#include <gxblib/contract.hpp>
-#include <gxblib/dispatcher.hpp>
-#include <gxblib/multi_index.hpp>
-#include <gxblib/types.h>
+#include <graphenelib/contract.hpp>
+#include <graphenelib/dispatcher.hpp>
+#include <graphenelib/multi_index.hpp>
+#include <graphenelib/types.h>
 #include <string>
 
 using namespace graphene;
@@ -70,7 +70,7 @@ class contract_storage_demo : public contract
 
         uint64_t primary_key() const { return id; }
 
-        GXBLIB_SERIALIZE(cpu, (id)(manufactor)(name)(frequency));
+        GRAPHENE_SERIALIZE(cpu, (id)(manufactor)(name)(frequency));
     };
 
     typedef graphene::multi_index<N(cpu), cpu> cpu_index;
@@ -78,4 +78,4 @@ class contract_storage_demo : public contract
     cpu_index cpus;
 };
 
-GXB_ABI(contract_storage_demo, (store)(remove)(find)(updatefreq))
+GRAPHENE_ABI(contract_storage_demo, (store)(remove)(find)(updatefreq))

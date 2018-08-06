@@ -1,9 +1,9 @@
-#include <gxblib/asset.h>
-#include <gxblib/contract.hpp>
-#include <gxblib/contract_asset.hpp>
-#include <gxblib/dispatcher.hpp>
-#include <gxblib/global.h>
-#include <gxblib/multi_index.hpp>
+#include <graphenelib/asset.h>
+#include <graphenelib/contract.hpp>
+#include <graphenelib/contract_asset.hpp>
+#include <graphenelib/dispatcher.hpp>
+#include <graphenelib/global.h>
+#include <graphenelib/multi_index.hpp>
 #include <vector>
 
 using namespace graphene;
@@ -18,7 +18,7 @@ class skeleton : public contract
 
         uint64_t primary_key() const { return owner; }
 
-        GXBLIB_SERIALIZE(account, (owner)(assets))
+        GRAPHENE_SERIALIZE(account, (owner)(assets))
     };
 
     //@abi table lockrule i64
@@ -40,7 +40,7 @@ class skeleton : public contract
             return (uint64_t)(account_id << 32 | (asset_id & 0xFFFFFFFF));
         }
 
-        GXBLIB_SERIALIZE(lockrule, (id)(account_id)(lock_time_point)(lock_duration)(release_time_point)(release_duration)(asset_id)(asset_amount)(released_amount))
+        GRAPHENE_SERIALIZE(lockrule, (id)(account_id)(lock_time_point)(lock_duration)(release_time_point)(release_duration)(asset_id)(asset_amount)(released_amount))
     };
 
     typedef graphene::multi_index<N(account), account> account_index;
@@ -60,7 +60,7 @@ class skeleton : public contract
         contract_asset ast{get_action_asset_amount(), get_action_asset_id()};
         uint64_t pk = lockrule::get_primary_key_by_account_and_asset(to, ast.asset_id);
         auto lr = lockrules.find(pk);
-        gxb_assert(lr == lockrules.end(), "have been locked, can only lock one time");
+        graphene_assert(lr == lockrules.end(), "have been locked, can only lock one time");
 
         lockrules.emplace(pk, [&](auto &a) {
             a.account_id = to;
@@ -82,7 +82,7 @@ class skeleton : public contract
     {
         uint64_t pk = lockrule::get_primary_key_by_account_and_asset(who, asset_id);
         auto lr = lockrules.find(pk);
-        gxb_assert(lr != lockrules.end(), "have no locked asset, no lockrule");
+        graphene_assert(lr != lockrules.end(), "have no locked asset, no lockrule");
 
         uint64_t now = get_head_block_time();
         if (now <= lr->release_time_point) {
@@ -91,7 +91,7 @@ class skeleton : public contract
         }
 
         auto who_it = accounts.find(who);
-        gxb_assert(who_it != accounts.end(), "have no locked asset, no asset");
+        graphene_assert(who_it != accounts.end(), "have no locked asset, no asset");
 
         int percentage = (now - lr->release_time_point) * 100 / lr->release_duration;
         if (percentage > 100)
@@ -145,7 +145,7 @@ class skeleton : public contract
                         a.assets[asset_index] -= value;
                     });
                 } else {
-                    gxb_assert(false, "asset_it->amount < value.amount");
+                    graphene_assert(false, "asset_it->amount < value.amount");
                 }
 
                 break;
@@ -214,4 +214,4 @@ class skeleton : public contract
     lockrule_index lockrules;
 };
 
-GXB_ABI(skeleton, (lockasset)(tryrelease))
+GRAPHENE_ABI(skeleton, (lockasset)(tryrelease))

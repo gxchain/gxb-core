@@ -1,8 +1,8 @@
-#include <gxblib/action.h>
-#include <gxblib/action.hpp>
-#include <gxblib/contract.hpp>
-#include <gxblib/dispatcher.hpp>
-#include <gxblib/print.hpp>
+#include <graphenelib/action.h>
+#include <graphenelib/action.hpp>
+#include <graphenelib/contract.hpp>
+#include <graphenelib/dispatcher.hpp>
+#include <graphenelib/print.hpp>
 
 using namespace graphene;
 
@@ -21,4 +21,4 @@ class contractb : public contract
     }
 };
 
-GXB_ABI(contractb, (hi))
+GRAPHENE_ABI(contractb, (hi))
