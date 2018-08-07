@@ -19,7 +19,6 @@ void apply_context::exec_one()
     try {
         account_id_type contract_id = (account_id_type)(receiver & GRAPHENE_DB_MAX_INSTANCE_ID);
         auto &contract_obj = contract_id(*_db);
-        dlog("contract id: ${r}", ("r", contract_id));
         auto wasm_bytes = bytes(contract_obj.code.begin(), contract_obj.code.end());
         try {
             wasm_interface &wasm = const_cast<wasm_interface &>(_db->wasmif);
@@ -93,7 +92,7 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, c
 
     // update_db_usage
     update_ram_usage((int64_t)(buffer_size + config::billable_size_v<key_value_object>));
-    dlog("db_store_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", buffer_size + config::billable_size_v<key_value_object>)("n", ram_usage));
+    // dlog("db_store_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", buffer_size + config::billable_size_v<key_value_object>)("n", ram_usage));
 
     keyval_cache.cache_table(tab);
     return keyval_cache.add(new_obj);
