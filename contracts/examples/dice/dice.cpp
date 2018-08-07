@@ -1,12 +1,12 @@
-#include <gxblib/asset.h>
-#include <gxblib/contract.hpp>
-#include <gxblib/contract_asset.hpp>
-#include <gxblib/crypto.h>
-#include <gxblib/dispatcher.hpp>
-#include <gxblib/global.h>
-#include <gxblib/multi_index.hpp>
-#include <gxblib/print.hpp>
-#include <gxblib/system.h>
+#include <graphenelib/asset.h>
+#include <graphenelib/contract.hpp>
+#include <graphenelib/contract_asset.hpp>
+#include <graphenelib/crypto.h>
+#include <graphenelib/dispatcher.hpp>
+#include <graphenelib/global.h>
+#include <graphenelib/multi_index.hpp>
+#include <graphenelib/print.hpp>
+#include <graphenelib/system.h>
 #include <string>
 #include <utility>
 #include <vector>
@@ -33,8 +33,8 @@ class dice : public contract
         uint64_t player = get_trx_sender();
 
         auto cur_player_itr = accounts.find(player);
-        gxb_assert(cur_player_itr != accounts.end(), "unknown account");
-        gxb_assert(cur_player_itr->balance >= bet, "balance not enouth");
+        graphene_assert(cur_player_itr != accounts.end(), "unknown account");
+        graphene_assert(cur_player_itr->balance >= bet, "balance not enouth");
 
         // Store new offer
         auto new_offer_itr = offers.emplace(_self, [&](auto &offer) {
@@ -146,7 +146,7 @@ class dice : public contract
             std::swap(curr_reveal, prev_reveal);
         }
 
-        gxb_assert(is_zero(curr_reveal.reveal) == true, "player already revealed");
+        graphene_assert(is_zero(curr_reveal.reveal) == true, "player already revealed");
 
         if (!is_zero(prev_reveal.reveal)) {
             checksum256 result;
@@ -179,18 +179,18 @@ class dice : public contract
     {
         auto game_itr = games.find(gameid);
 
-        gxb_assert(game_itr != games.end(), "game not found");
-        gxb_assert(game_itr->deadline != 0 && get_head_block_time() > game_itr->deadline, "game not expired");
+        graphene_assert(game_itr != games.end(), "game not found");
+        graphene_assert(game_itr->deadline != 0 && get_head_block_time() > game_itr->deadline, "game not expired");
 
         auto idx = offers.template get_index<N(commitment)>();
         auto player1_offer = idx.find(offer::get_commitment(game_itr->player1.commitment));
         auto player2_offer = idx.find(offer::get_commitment(game_itr->player2.commitment));
 
         if (!is_zero(game_itr->player1.reveal)) {
-            gxb_assert(is_zero(game_itr->player2.reveal), "game error");
+            graphene_assert(is_zero(game_itr->player2.reveal), "game error");
             pay_and_clean(*game_itr, *player1_offer, *player2_offer);
         } else {
-            gxb_assert(is_zero(game_itr->player1.reveal), "game error");
+            graphene_assert(is_zero(game_itr->player1.reveal), "game error");
             pay_and_clean(*game_itr, *player2_offer, *player1_offer);
         }
     }
@@ -220,10 +220,10 @@ class dice : public contract
     void withdraw(const contract_asset &quantity)
     {
         uint64_t owner = get_trx_sender();
-        gxb_assert(quantity.amount > 0, "must withdraw positive quantity");
+        graphene_assert(quantity.amount > 0, "must withdraw positive quantity");
 
         auto itr = accounts.find(owner);
-        gxb_assert(itr != accounts.end(), "unknown account");
+        graphene_assert(itr != accounts.end(), "unknown account");
 
         accounts.modify(itr, 0, [&](auto &acnt) {
             gxb_assert(acnt.balance >= quantity, "insufficient balance");
@@ -258,7 +258,7 @@ class dice : public contract
             return key256::make_from_word_sequence<uint64_t>(p64[0], p64[1], p64[2], p64[3]);
         }
 
-        GXBLIB_SERIALIZE(offer, (id)(owner)(bet)(commitment)(gameid))
+        GRAPHENE_SERIALIZE(offer, (id)(owner)(bet)(commitment)(gameid))
     };
 
     typedef multi_index<N(offer), offer,
@@ -270,7 +270,7 @@ class dice : public contract
         checksum256 commitment;
         checksum256 reveal;
 
-        GXBLIB_SERIALIZE(player, (commitment)(reveal))
+        GRAPHENE_SERIALIZE(player, (commitment)(reveal))
     };
 
     //@abi table game i64
@@ -283,7 +283,7 @@ class dice : public contract
 
         uint64_t primary_key() const { return id; }
 
-        GXBLIB_SERIALIZE(game, (id)(bet)(deadline)(player1)(player2))
+        GRAPHENE_SERIALIZE(game, (id)(bet)(deadline)(player1)(player2))
     };
 
     typedef multi_index<N(game), game> game_index;
@@ -295,7 +295,7 @@ class dice : public contract
 
         uint64_t primary_key() const { return id; }
 
-        GXBLIB_SERIALIZE(global_dice, (id)(nextgameid))
+        GRAPHENE_SERIALIZE(global_dice, (id)(nextgameid))
     };
 
     typedef multi_index<N(global), global_dice> global_dice_index;
@@ -311,7 +311,7 @@ class dice : public contract
 
         uint64_t primary_key() const { return owner; }
 
-        GXBLIB_SERIALIZE(account, (owner)(balance)(open_offers)(open_games))
+        GRAPHENE_SERIALIZE(account, (owner)(balance)(open_offers)(open_games))
     };
 
     typedef multi_index<N(account), account> account_index;
@@ -364,4 +364,4 @@ class dice : public contract
     }
 };
 
-GXB_ABI(dice, (offerbet)(canceloffer)(reveal)(claimexpired)(deposit)(withdraw))
+GRAPHENE_ABI(dice, (offerbet)(canceloffer)(reveal)(claimexpired)(deposit)(withdraw))
