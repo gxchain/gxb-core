@@ -1428,7 +1428,7 @@ class asset_api : public context_aware_api
         FC_ASSERT(from != to, "cannot transfer to self");
         FC_ASSERT(amount> 0, "amount must > 0");
 
-        dlog("asset_id=${i}", ("i", asset_id));
+        dlog("${f} -> ${t}, amount ${a}, asset_id ${i}", ("f", from)("t", to)("a", amount)("i", asset_id));
         auto &d = context.db();
         asset a{amount, asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID)};
         // adjust balance
