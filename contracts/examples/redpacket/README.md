@@ -13,12 +13,12 @@ gxx -g contracts/examples/redpacket/redpacket.abi contracts/examples/redpacket/r
 
 ### 合编部署和调用
 
-1. 启动cli_wallet
+#### 启动cli_wallet
 ```
 ./programs/cli_wallet/cli_wallet -sws:///127.0.0.1:28099 --chain-id xxxx
 ```
 
-2.部署合约
+#### 部署合约
 ```
 // 这里使用nathan帐户部署合约，部署的合约名为redpacket
 unlocked >>> deploy_contract redpacket nathan 0 0 ./contracts/examples/redpacket GXC true
@@ -26,20 +26,20 @@ unlocked >>> deploy_contract redpacket nathan 0 0 ./contracts/examples/redpacket
 
 ```
 
-3. 调用合约
+#### 调用合约
 
-发行红包
+1. 发行红包
 ```
 // 使用nathan帐户，发行一个红包， 红包公钥为GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b， 金额总量为100 GXC(链上为大数，需要乘以10万)， 数量为5个
 unlocked >>> call_contract nathan redpacket {"amount":10000000,"asset_id":1.3.0} issue "{\"pubkey\":\"GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b\",\"number\":5}" GXC true
 ```
 
-发行红包后，查询redpacket合约的帐户余额
+2. 发行红包后，查询redpacket合约的帐户余额
 ```
 unlocked >>> list_account_balances redpacket
 ```
 
-打开红包
+3. 打开红包
 ```
 // 使用nathan帐户打开一个红包
 // 合约名redpacket
@@ -49,7 +49,7 @@ unlocked >>> call_contract nathan redpacket null open "{\"packet_issuer\":17,\"s
 
 ```
 
-列出合约所有的存储表
+4. 列出合约所有的存储表
 ```
 unlocked >>> get_contract_tables redpacket
 [
@@ -58,7 +58,7 @@ unlocked >>> get_contract_tables redpacket
 ]
 ```
 
-查询合约的packet表，该表记录了所有的红包
+5. 查询合约的packet表，该表记录了所有的红包
 ```
 unlocked >>> get_table_objects redpacket packet
 [{
@@ -79,7 +79,7 @@ unlocked >>> get_table_objects redpacket packet
 ]
 ```
 
-查询合约的record表，该表记录了所有的开红包记录
+6. 查询合约的record表，该表记录了所有的开红包记录
 ```
 unlocked >>> get_table_objects redpacket record
 [{
@@ -94,7 +94,7 @@ unlocked >>> get_table_objects redpacket record
 
 ```
 
-如果红包未抢完，发行者可以关闭红包，余额退还
+7. 如果红包未抢完，发行者可以关闭红包，余额退还
 
 ```
 // 只有发行红包的帐户，才可以关闭红包
