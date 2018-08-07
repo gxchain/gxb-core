@@ -4,7 +4,7 @@ redpacket 合约
 
 
 
-#### 合编编译
+#### 合约编译
 
 1. 生成wast:
 ```
@@ -16,7 +16,7 @@ gxx -o contracts/examples/redpacket/redpacket.wast contracts/examples/redpacket/
 gxx -g contracts/examples/redpacket/redpacket.abi contracts/examples/redpacket/redpacket.cpp 
 ```
 
-#### 合编部署和调用
+#### 合约部署和调用
 
 ##### 启动cli_wallet
 ```
