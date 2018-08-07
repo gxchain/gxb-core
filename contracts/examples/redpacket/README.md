@@ -1,5 +1,10 @@
+redpacket 合约
+---------
 
-### 合编编译
+
+
+
+#### 合编编译
 
 1. 生成wast:
 ```
@@ -11,14 +16,14 @@ gxx -o contracts/examples/redpacket/redpacket.wast contracts/examples/redpacket/
 gxx -g contracts/examples/redpacket/redpacket.abi contracts/examples/redpacket/redpacket.cpp 
 ```
 
-### 合编部署和调用
+#### 合编部署和调用
 
-#### 启动cli_wallet
+##### 启动cli_wallet
 ```
 ./programs/cli_wallet/cli_wallet -sws:///127.0.0.1:28099 --chain-id xxxx
 ```
 
-#### 部署合约
+##### 部署合约
 ```
 // 这里使用nathan帐户部署合约，部署的合约名为redpacket
 unlocked >>> deploy_contract redpacket nathan 0 0 ./contracts/examples/redpacket GXC true
@@ -26,7 +31,7 @@ unlocked >>> deploy_contract redpacket nathan 0 0 ./contracts/examples/redpacket
 
 ```
 
-#### 调用合约
+##### 调用合约
 
 1. 发行红包
 ```
