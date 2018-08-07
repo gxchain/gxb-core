@@ -94,14 +94,15 @@ class redpacket : public contract
         }
 
         // update records
-        uint64_t idx = timestamp % packet_iter->subpackets.size();
+        uint64_t current_idx = timestamp % packet_iter->subpackets.size();
+        int64_t current_amount = packet_iter->subpackets[current_idx];
         records.modify(record_iter, sender, [&](auto &o) {
             o.packet_issuer = packet_issuer;
-            o.accounts.push_back({sender, packet_iter->subpackets[idx]});
+            o.accounts.push_back({sender, current_amount});
         });
-        print("got redpacket amount:", packet_iter->subpackets[idx]);
+        print("got redpacket amount:", current_amount);
 
-        auto subpacket_it = packet_iter->subpackets.begin() + idx;
+        auto subpacket_it = packet_iter->subpackets.begin() + current_idx;
         packets.modify(packet_iter, sender, [&](auto &o) {
             o.subpackets.erase(subpacket_it);
         });
@@ -112,7 +113,7 @@ class redpacket : public contract
             packets.erase(packet_iter);
             records.erase(record_iter);
         }
-        withdraw_asset(_self, sender, packet_iter->total_amount.asset_id, packet_iter->subpackets[idx]);
+        withdraw_asset(_self, sender, packet_iter->total_amount.asset_id, current_amount);
     }
 
     // @abi action
@@ -146,7 +147,7 @@ class redpacket : public contract
         std::string             pub_key;
         contract_asset          total_amount;
         uint32_t                number;
-        vector<uint64_t>        subpackets;
+        vector<int64_t>         subpackets;
 
         uint64_t primary_key() const { return issuer; }
 
@@ -156,7 +157,7 @@ class redpacket : public contract
 
     struct account {
         uint64_t    account_id;
-        uint64_t    amount;
+        int64_t     amount;
 
         GRAPHENE_SERIALIZE(account, (account_id)(amount))
     };
