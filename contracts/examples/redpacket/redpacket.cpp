@@ -77,7 +77,7 @@ class redpacket : public contract
         // check signature
         std::string s = std::to_string(timestamp);
         int ret = verify_signature(s.c_str(), s.length(), sig.c_str(), sig.length(), packet_iter->pub_key.c_str(), packet_iter->pub_key.length());
-        graphene_assert(ret == 0, "signature not valid");
+        graphene_assert(ret == 1, "signature not valid");
 
         // check record
         auto record_iter = records.find(packet_issuer);
