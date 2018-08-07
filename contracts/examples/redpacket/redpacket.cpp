@@ -23,7 +23,7 @@ class redpacket : public contract
 
     // @abi action
     // @abi payable
-    void create(std::string pubkey, uint64_t number)
+    void issue(std::string pubkey, uint64_t number)
     {
         // validate pubkey
 
@@ -33,7 +33,7 @@ class redpacket : public contract
 
         auto packet_it = packets.find(owner);
         graphene_assert(packet_it == packets.end(), "already has one redpacket");
-        graphene_assert(number <= 1000, "max 1000 redpacket");
+        graphene_assert(number <= 200, "max 200 redpacket");
 
         // allocate redpacket
         int64_t block_num = get_head_block_num();
@@ -41,8 +41,6 @@ class redpacket : public contract
         int64_t shares_sum = 0;
         for (int i = 0; i < number; i++) {
             std::string random_str = pubkey + std::to_string(i) + std::to_string(block_num);
-            print("random_str = ", random_str.c_str(), "\n");
-
             checksum160 sum160;
             ripemd160(const_cast<char *>(random_str.c_str()), random_str.length(), &sum160);
             uint8_t share = sum160.hash[0] == 0 ? 10 : sum160.hash[0];
@@ -58,7 +56,7 @@ class redpacket : public contract
             int64_t share_used_sum = 0;
             for (int i = 0; i < number - 1; i++) {
                 int64_t share_amount = total_amount * shares[i] / shares_sum;
-                print("share: ", shares[i], "share amount: ", share_amount,  "\n");
+                // print("share: ", shares[i], ", share_amount: ", share_amount,  "\n");
                 o.subpackets.emplace_back(share_amount);
                 share_used_sum += share_amount;
             }
@@ -101,6 +99,7 @@ class redpacket : public contract
             o.packet_issuer = packet_issuer;
             o.accounts.push_back({sender, packet_iter->subpackets[idx]});
         });
+        print("got redpacket amount:", packet_iter->subpackets[idx]);
 
         auto subpacket_it = packet_iter->subpackets.begin() + idx;
         packets.modify(packet_iter, sender, [&](auto &o) {
@@ -123,17 +122,19 @@ class redpacket : public contract
         auto packet_iter = packets.find(owner);
         graphene_assert(packet_iter != packets.end(), "no redpacket");
 
-        auto record_iter = records.find(owner);
-        graphene_assert(record_iter != records.end(), "no redpacket");
-
         uint64_t asset_id = packet_iter->total_amount.asset_id;
         int64_t left_amount;
         for (uint64_t subpacket : packet_iter->subpackets) {
             left_amount += subpacket;
         }
-
+        print("withdraw amount:", left_amount);
         packets.erase(packet_iter);
-        records.erase(record_iter);
+
+        // remove records
+        auto record_iter = records.find(owner);
+        if (record_iter != records.end()) {
+            records.erase(record_iter);
+        }
 
         withdraw_asset(_self, owner, asset_id, left_amount);
     }
@@ -173,7 +174,6 @@ class redpacket : public contract
 
     packet_index        packets;
     record_index        records;
-
 };
 
-GRAPHENE_ABI(redpacket, (create)(open)(close))
+GRAPHENE_ABI(redpacket, (issue)(open)(close))
