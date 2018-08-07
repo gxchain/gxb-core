@@ -228,7 +228,7 @@ class crypto_api : public context_aware_api {
       bool verify_signature(array_ptr<char> data, size_t datalen, array_ptr<char> sig, size_t siglen, array_ptr<char> pub_key, size_t pub_keylen)
       {
           digest_type::encoder enc;
-          fc::raw::pack(enc, data.value);
+          fc::raw::pack(enc, std::string(data.value));
 
           fc::ecc::compact_signature compact_sig;
           const char *p = sig.value;
