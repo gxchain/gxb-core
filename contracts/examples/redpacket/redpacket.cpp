@@ -9,6 +9,8 @@
 #include <graphenelib/system.h>
 #include <graphenelib/types.h>
 
+#include<cmath>
+
 using namespace graphene;
 
 class redpacket : public contract
@@ -25,8 +27,6 @@ class redpacket : public contract
     // @abi payable
     void issue(std::string pubkey, uint64_t number)
     {
-        // validate pubkey
-
         int64_t total_amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
         uint64_t owner = get_trx_sender();
@@ -68,7 +68,9 @@ class redpacket : public contract
     void open(uint64_t packet_issuer, std::string &sig, uint64_t timestamp)
     {
         uint64_t sender = get_trx_sender();
+        int64_t now = get_head_block_time();
         // check timestamp
+        // graphene_assert(abs(now - timestamp) <= 30, "timestamp exceeds 30s around now");
 
         // check redpacket
         auto packet_iter = packets.find(packet_issuer);
