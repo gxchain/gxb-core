@@ -5,6 +5,7 @@
 #include <graphene/chain/wasm_validation.hpp>
 #include <graphene/chain/wasm_injection.hpp>
 #include <graphene/chain/exceptions.hpp>
+#include <graphene/chain/asset_object.hpp>
 
 #include <fc/exception/exception.hpp>
 #include <fc/crypto/sha256.hpp>
@@ -174,6 +175,16 @@ class global_api : public context_aware_api
         std::string account_name(data, datalen);
         const auto& idx = context.db().get_index_type<account_index>().indices().get<by_name>();
         auto itr = idx.find(account_name);
+        if (itr != idx.end())
+            return (itr->get_id()).instance;
+        return -1;
+    }
+
+    int64_t get_asset_id(array_ptr<char> data, size_t datalen)
+    {
+        std::string symbol(data, datalen);
+        const auto& idx = context.db().get_index_type<asset_index>().indices().get<by_symbol>();
+        auto itr = idx.find(symbol);
         if (itr != idx.end())
             return (itr->get_id()).instance;
         return -1;
@@ -1491,7 +1502,8 @@ REGISTER_INTRINSICS(global_api,
 (get_head_block_time,   int64_t()          )
 (get_trx_sender,        int64_t()          )
 (get_trx_origin,        int64_t()          )
-(get_account_id,        int64_t(int, int) )
+(get_account_id,        int64_t(int, int)  )
+(get_asset_id,          int64_t(int, int)       )
 );
 
 REGISTER_INTRINSICS(crypto_api,

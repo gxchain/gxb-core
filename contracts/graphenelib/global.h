@@ -14,4 +14,6 @@ extern "C" {
     int64_t get_trx_origin();
     // get account_id by name
     int64_t get_account_id(const char *data, uint32_t length);
+    // get asset_id by symbol
+    int64_t get_asset_id(const char *data, uint32_t length);
 }
