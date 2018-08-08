@@ -14,7 +14,7 @@ class skeleton : public contract
     }
 
     /// @abi action
-    void hi(uint64_t user)
+    void hi(std::string user)
     {
         for (int i = 0; i < 2; ++i) {
             print("hi, ", user, "\n");
