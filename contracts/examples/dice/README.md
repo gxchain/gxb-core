@@ -77,7 +77,7 @@ call_contract nathan d11421 null offerbet "{\"bet\":{\"amount\":1000000,\"asset_
 call_contract beita d11421 null reveal "{\"commitment\":\"492b184fdcb41f442d539e792600a8db67c47eb16c0265e5d1e553473f462486\",\"source\":\"a80b8a6d1bf2cf798b045366d920531b2ce5f13082c4b2b08d53cfeab5d24b7a\"}" GXS true
 call_contract nathan d11421 null reveal "{\"commitment\":\"c807cc6c0b9121f6b151f39dcf5fd819e3cb9a6d18f46c7a635f1015148bcc76\",\"source\":\"5387ec637ac4bdbcf9577451cdc61f4d11ba600ba5540a27065a15aa3f8d45d1\"}" GXS true
 ```
-亮牌后系统根据commitment的大小判断，小的获胜，并完成account表的更新操作，查看account表
+亮牌后系统根据2位玩家的commitment和resource计算1个hash，比较hash值的第一个和第二个字节的大小来决定胜负，并完成account表的更新操作，查看account表
 ```
 get_table_objects d11421 account
 
