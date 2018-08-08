@@ -44,10 +44,10 @@ struct contract_asset {
 
     contract_asset &operator*=(int64_t a)
     {
-        graphene_assert(a == 0 || (amount * a) / a == amount, "multiplication overflow or underflow");
-        amount *= a;
-        graphene_assert(-max_amount <= amount, "multiplication underflow");
-        graphene_assert(amount <= max_amount, "multiplication overflow");
+        int128_t tmp = (int128_t)amount * (int128_t)a;
+        eosio_assert( tmp <= max_amount, "multiplication overflow" );
+        eosio_assert( tmp >= -max_amount, "multiplication underflow" );
+        amount = (int64_t)tmp;
         return *this;
     }
 
@@ -67,6 +67,8 @@ struct contract_asset {
 
     contract_asset &operator/=(int64_t a)
     {
+        eosio_assert(a != 0, "divide by zero");
+        eosio_assert(!(amount == std::numeric_limits<int64_t>::min() && a == -1), "signed division overflow");
         amount /= a;
         return *this;
     }
