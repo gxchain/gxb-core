@@ -1,11 +1,9 @@
 #include <graphenelib/asset.h>
 #include <graphenelib/contract.hpp>
-#include <graphenelib/contract_asset.hpp>
 #include <graphenelib/dispatcher.hpp>
 #include <graphenelib/global.h>
 #include <graphenelib/multi_index.hpp>
 #include <graphenelib/print.hpp>
-#include <graphenelib/system.h>
 #include <vector>
 
 using namespace graphene;
@@ -16,7 +14,8 @@ class bank : public contract
     bank(uint64_t account_id)
         : contract(account_id)
         , accounts(_self, _self)
-    {}
+    {
+    }
 
     // @abi action
     // @abi payable
@@ -24,28 +23,21 @@ class bank : public contract
     {
         int64_t asset_amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
-        contract_asset amount{asset_amount, asset_id};
-
         uint64_t owner = get_trx_sender();
-        auto it = accounts.find(owner);
+
+        uint64_t pk = account::gen_id(owner, asset_id);
+        auto it = accounts.find(pk);
         if (it == accounts.end()) {
-            print("owner not exist, to add owner");
-            accounts.emplace(owner, [&](auto &o) {
-                o.owner = owner;
-                o.balances.emplace_back(amount);
+            print("record not exist, to add");
+            accounts.emplace(pk, [&](auto &o) {
+                o.id = pk;
+                o.amount = asset_amount;
             });
         } else {
-            print("owner exist");
-            uint16_t asset_index = std::distance(it->balances.begin(),
-                    find_if(it->balances.begin(), it->balances.end(), [&](contract_asset a) { return a.asset_id == asset_id; })
-                    );
-            if (asset_index < it->balances.size()) {
-                print("asset exist, to update");
-                accounts.modify(it, 0, [&](auto &o) { o.balances[asset_index] += amount; });
-            } else {
-                print("asset not exist, to add");
-                accounts.modify(it, 0, [&](auto &o) { o.balances.emplace_back(amount); });
-            }
+            print("account_id:", owner, "asset_id:", asset_id, " record exist, to update");
+            accounts.modify(it, 0, [&](auto &o) {
+                o.amount += asset_amount;
+            });
         }
     }
 
@@ -53,39 +45,25 @@ class bank : public contract
     void withdraw(uint64_t to_account, uint64_t contract_asset_id, int64_t amount)
     {
         uint64_t asset_id = contract_asset_id & GRAPHENE_DB_MAX_INSTANCE_ID;
-        contract_asset asset{amount, asset_id};
         uint64_t owner = get_trx_sender();
-        auto it = accounts.find(owner);
-        if (it == accounts.end()) {
-            print("owner has no asset");
-            return;
+
+        uint64_t pk = account::gen_id(owner, asset_id);
+
+        auto it = accounts.find(pk);
+        graphene_assert(it != accounts.end(), "asset_id not found");
+        graphene_assert(it->amount >= amount, "balance not enough");
+
+        if (it->amount == amount) {
+            print("withdraw all, to delete the record");
+            accounts.erase(it);
+        } else {
+            print("withdraw part, to udpate");
+            accounts.modify(it, 0, [&](auto &o) {
+                o.amount -= amount;
+            });
         }
 
-        int asset_index = 0;
-        for (auto asset_it = it->balances.begin(); asset_it != it->balances.end(); ++asset_it) {
-            if ((asset.asset_id) == asset_it->asset_id) {
-                graphene_assert(asset_it->amount >= asset.amount, "balance not enough");
-                print("asset_it->amount=", asset_it->amount);
-                print("amount.amount=", asset.amount);
-                if (asset_it->amount == asset.amount) {
-                    accounts.modify(it, 0, [&](auto &o) {
-                        o.balances.erase(asset_it);
-                    });
-                    if (it->balances.size() == 0) {
-                        accounts.erase(it);
-                    }
-                } else {
-                    accounts.modify(it, 0, [&](auto &o) {
-                        o.balances[asset_index] -= asset;
-                    });
-                }
-
-                break;
-            }
-            asset_index++;
-        }
-
-        withdraw_asset(_self, to_account, asset.asset_id, asset.amount);
+        withdraw_asset(_self, to_account, asset_id, amount);
     }
 
     // @abi action
@@ -97,16 +75,33 @@ class bank : public contract
   private:
     //@abi table account i64
     struct account {
-        uint64_t owner;
-        std::vector<contract_asset> balances;
+        //48bit -->account_id (account_id = id >> 16)
+        //16bit -->asset_id (asset_id = id & 0xFFFF)
+        //id = ((account_id << 16) | (asset_id & 0xFFFF))
+        uint64_t id;
+        int64_t amount;
 
-        uint64_t primary_key() const { return owner; }
+        uint64_t primary_key() const { return id; }
 
-        GRAPHENE_SERIALIZE(account, (owner)(balances))
+        static inline uint64_t gen_id(uint64_t account_id, uint64_t asset_id)
+        {
+            return ((account_id << 16) | (asset_id & 0xFFFF));
+        }
+
+        uint64_t get_asset_id()
+        {
+            return id & 0xFFFF;
+        }
+
+        uint64_t get_account_id()
+        {
+            return id >> 16;
+        }
+
+        GRAPHENE_SERIALIZE(account, (id)(amount))
     };
 
     typedef graphene::multi_index<N(account), account> account_index;
-
     account_index accounts;
 };
 
