@@ -65,7 +65,7 @@ class redpacket : public contract
     }
 
     // @abi action
-    void open(uint64_t packet_issuer, std::string &sig, uint64_t timestamp)
+    void open(std::string issuer, std::string sig, uint64_t timestamp)
     {
         uint64_t sender = get_trx_sender();
         int64_t now = get_head_block_time();
@@ -73,7 +73,9 @@ class redpacket : public contract
         // graphene_assert(abs(now - timestamp) <= 30, "timestamp exceeds 30s around now");
 
         // check redpacket
-        auto packet_iter = packets.find(packet_issuer);
+        int64_t issuer_id = get_account_id(issuer.c_str(), issuer.size());
+        graphene_assert(issuer_id >= 0, "invalid account_name issuer");
+        auto packet_iter = packets.find(issuer_id);
         graphene_assert(packet_iter != packets.end(), "no redpacket");
 
         // check signature
@@ -82,13 +84,13 @@ class redpacket : public contract
         graphene_assert(ret == 1, "signature not valid");
 
         // check record
-        auto record_iter = records.find(packet_issuer);
+        auto record_iter = records.find(issuer_id);
         if (record_iter == records.end()) {
             records.emplace(sender, [&](auto& o){
-                            o.packet_issuer = packet_issuer;
+                            o.packet_issuer = issuer_id;
                             o.accounts = {};
                             });
-            record_iter = records.find(packet_issuer);
+            record_iter = records.find(issuer_id);
         } else {
             auto act_iter = std::find_if(record_iter->accounts.begin(), record_iter->accounts.end(),
                                     [&](const account& act) { return act.account_id == sender; });
@@ -99,7 +101,7 @@ class redpacket : public contract
         uint64_t current_idx = timestamp % packet_iter->subpackets.size();
         int64_t current_amount = packet_iter->subpackets[current_idx];
         records.modify(record_iter, sender, [&](auto &o) {
-            o.packet_issuer = packet_issuer;
+            o.packet_issuer = issuer_id;
             o.accounts.push_back({sender, current_amount});
         });
         print("got redpacket amount:", current_amount);
