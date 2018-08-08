@@ -169,6 +169,16 @@ class global_api : public context_aware_api
         return context.trx_context.get_trx_origin();
     }
 
+    int64_t get_account_id(array_ptr<char> data, size_t datalen)
+    {
+        std::string account_name(data, datalen);
+        const auto& idx = context.db().get_index_type<account_index>().indices().get<by_name>();
+        auto itr = idx.find(account_name);
+        if (itr != idx.end())
+            return (itr->get_id()).instance;
+        return -1;
+    }
+
 };
 
 class crypto_api : public context_aware_api {
@@ -1485,11 +1495,12 @@ REGISTER_INTRINSICS(context_free_system_api,
 );
 
 REGISTER_INTRINSICS(global_api,
-(get_head_block_num,    int64_t())
-(get_head_block_id,     void(int))
-(get_head_block_time,   int64_t())
-(get_trx_sender,        int64_t())
-(get_trx_origin,        int64_t())
+(get_head_block_num,    int64_t()          )
+(get_head_block_id,     void(int)          )
+(get_head_block_time,   int64_t()          )
+(get_trx_sender,        int64_t()          )
+(get_trx_origin,        int64_t()          )
+(get_account_id,        int64_t(int, int) )
 );
 
 REGISTER_INTRINSICS(crypto_api,
