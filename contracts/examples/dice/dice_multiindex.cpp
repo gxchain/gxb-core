@@ -45,89 +45,85 @@ class dice : public contract
             offer.gameid = 0;
         });
 
-        bool new_game = false;
-        auto matched_offer_itr = offers.begin();
-        for (; matched_offer_itr != offers.end(); ++matched_offer_itr) {
-            if (matched_offer_itr->owner != new_offer_itr->owner && matched_offer_itr->bet == new_offer_itr->bet) {
-                new_game = true;
-                break;
-            }
-        }
+        // Try to find a matching bet
+        auto idx = offers.template get_index<N(bet)>();
+        auto matched_offer_itr = idx.lower_bound((uint64_t) new_offer_itr->bet.amount);
 
-        if(new_game == false) {
+        if (matched_offer_itr == idx.end() || matched_offer_itr->bet != new_offer_itr->bet || matched_offer_itr->owner == new_offer_itr->owner) {
+            // No matching bet found, update player's account
             accounts.modify(cur_player_itr, 0, [&](auto &acnt) {
-                graphene_assert(acnt.balance >= bet, "insufficient balance");
+                gxb_assert(acnt.balance >= bet, "insufficient balance");
                 acnt.balance -= bet;
                 acnt.open_offers++;
             });
-            return;
-        }
-        
-        auto gdice_itr = global_dices.begin();
-        if (gdice_itr == global_dices.end()) {
-            gdice_itr = global_dices.emplace(_self, [&](auto &gdice) {
-                gdice.nextgameid = 0;
+        } else {
+            // Create global game counter if not exists
+            auto gdice_itr = global_dices.begin();
+            if (gdice_itr == global_dices.end()) {
+                gdice_itr = global_dices.emplace(_self, [&](auto &gdice) {
+                    gdice.nextgameid = 0;
+                });
+            }
+
+            // Increment global game counter
+            global_dices.modify(gdice_itr, 0, [&](auto &gdice) {
+                gdice.nextgameid++;
+            });
+
+            // Create a new game
+            auto game_itr = games.emplace(_self, [&](auto &new_game) {
+                new_game.id = gdice_itr->nextgameid;
+                new_game.bet = new_offer_itr->bet;
+                new_game.deadline = 0;
+
+                new_game.player1.commitment = matched_offer_itr->commitment;
+                memset(&new_game.player1.reveal, 0, sizeof(checksum256));
+
+                new_game.player2.commitment = new_offer_itr->commitment;
+                memset(&new_game.player2.reveal, 0, sizeof(checksum256));
+            });
+
+            // Update player's offers
+            idx.modify(matched_offer_itr, 0, [&](auto &offer) {
+                offer.bet.amount = 0;
+                offer.gameid = game_itr->id;
+            });
+
+            offers.modify(new_offer_itr, 0, [&](auto &offer) {
+                offer.bet.amount = 0;
+                offer.gameid = game_itr->id;
+            });
+
+            // Update player's accounts
+            accounts.modify(accounts.find(matched_offer_itr->owner), 0, [&](auto &acnt) {
+                acnt.open_offers--;
+                acnt.open_games++;
+            });
+
+            accounts.modify(cur_player_itr, 0, [&](auto &acnt) {
+                gxb_assert(acnt.balance >= bet, "insufficient balance");
+                acnt.balance -= bet;
+                acnt.open_games++;
             });
         }
-
-        global_dices.modify(gdice_itr, 0, [&](auto &gdice) {
-            gdice.nextgameid++;
-        });
-
-        auto game_itr = games.emplace(_self, [&](auto &new_game) {
-            new_game.id = gdice_itr->nextgameid;
-            new_game.bet = new_offer_itr->bet;
-            new_game.deadline = 0;
-
-            new_game.player1.commitment = matched_offer_itr->commitment;
-            memset(&new_game.player1.reveal, 0, sizeof(checksum256));
-
-            new_game.player2.commitment = new_offer_itr->commitment;
-            memset(&new_game.player2.reveal, 0, sizeof(checksum256));
-        });
-
-        offers.modify(matched_offer_itr, 0, [&](auto &offer) {
-            offer.bet.amount = 0;
-            offer.gameid = game_itr->id;
-        });
-
-        offers.modify(new_offer_itr, 0, [&](auto &offer) {
-            offer.bet.amount = 0;
-            offer.gameid = game_itr->id;
-        });
-
-        accounts.modify(accounts.find(matched_offer_itr->owner), 0, [&](auto &acnt) {
-            acnt.open_offers--;
-            acnt.open_games++;
-        });
-
-        accounts.modify(cur_player_itr, 0, [&](auto &acnt) {
-            graphene_assert(acnt.balance >= bet, "insufficient balance");
-            acnt.balance -= bet;
-            acnt.open_games++;
-        });
     }
 
     //@abi action
     void canceloffer(const checksum256 &commitment)
     {
-        auto offer_it = offers.begin();
-        bool offer_exist = false;
-        for (; offer_it != offers.end(); ++offer_it) {
-            if (0 == memcmp(offer_it->commitment.hash, commitment.hash, 32)) {
-                offer_exist = true;
-                break;
-            }
-        }
+        auto idx = offers.template get_index<N(commitment)>();
+        auto offer_itr = idx.find(offer::get_commitment(commitment));
 
-        if (offer_exist == true) {
-            auto acnt_it = accounts.find(offer_it->owner);
-            accounts.modify(acnt_it, 0, [&](auto &acnt) {
-                acnt.open_offers--;
-                acnt.balance += offer_it->bet;
-            });
-            offers.erase(offer_it);
-        }
+        gxb_assert(offer_itr != idx.end(), "offer does not exists");
+        gxb_assert(offer_itr->gameid == 0, "unable to cancel offer");
+
+        auto acnt_itr = accounts.find(offer_itr->owner);
+        accounts.modify(acnt_itr, 0, [&](auto &acnt) {
+            acnt.open_offers--;
+            acnt.balance += offer_itr->bet;
+        });
+
+        idx.erase(offer_itr);
     }
 
     //@abi action
@@ -135,19 +131,12 @@ class dice : public contract
     {
         assert_sha256((char *) &source, sizeof(source), (const checksum256 *) &commitment);
 
-        auto curr_revealer_offer = offers.begin();
-        bool offer_exist = false;
-        for (; curr_revealer_offer != offers.end(); ++curr_revealer_offer) {
-            if (0 == memcmp(curr_revealer_offer->commitment.hash, commitment.hash, 32)) {
-                offer_exist = true;
-                break;
-            }
-        }
+        auto idx = offers.template get_index<N(commitment)>();
+        auto curr_revealer_offer = idx.find(offer::get_commitment(commitment));
 
-        if(offer_exist == false) {
-            return;
-        }
-        
+        gxb_assert(curr_revealer_offer != idx.end(), "offer not found");
+        gxb_assert(curr_revealer_offer->gameid > 0, "unable to reveal");
+
         auto game_itr = games.find(curr_revealer_offer->gameid);
 
         player curr_reveal = game_itr->player1;
@@ -164,14 +153,7 @@ class dice : public contract
 
             sha256((char *) &game_itr->player1, sizeof(player) * 2, &result);
 
-            auto prev_revealer_offer = offers.begin();
-            bool prev_offer_exist = false;
-            for(;prev_revealer_offer != offers.end();++prev_revealer_offer) {
-                if (0 == memcmp(prev_revealer_offer->commitment.hash, prev_reveal.commitment.hash, 32)) {
-                    prev_offer_exist = true;
-                    break;
-                }
-            }
+            auto prev_revealer_offer = idx.find(offer::get_commitment(prev_reveal.commitment));
 
             int winner = result.hash[1] < result.hash[0] ? 0 : 1;
 
@@ -200,27 +182,16 @@ class dice : public contract
         graphene_assert(game_itr != games.end(), "game not found");
         graphene_assert(game_itr->deadline != 0 && get_head_block_time() > game_itr->deadline, "game not expired");
 
-        auto p1_offer = offers.begin();
-        auto p2_offer = offers.begin();
-        
-        for(;p1_offer!=offers.end();++p1_offer) {
-            if(0 == memcmp(p1_offer->commitment.hash, game_itr->player1.commitment.hash, 32)) {
-                break;
-            }
-        }
-        
-        for(;p2_offer!=offers.end();++p2_offer) {
-            if(0 == memcmp(p2_offer->commitment.hash, game_itr->player2.commitment.hash, 32)) {
-                break;
-            }
-        }
-        
+        auto idx = offers.template get_index<N(commitment)>();
+        auto player1_offer = idx.find(offer::get_commitment(game_itr->player1.commitment));
+        auto player2_offer = idx.find(offer::get_commitment(game_itr->player2.commitment));
+
         if (!is_zero(game_itr->player1.reveal)) {
             graphene_assert(is_zero(game_itr->player2.reveal), "game error");
-            pay_and_clean(*game_itr, *p1_offer, *p2_offer);
+            pay_and_clean(*game_itr, *player1_offer, *player2_offer);
         } else {
             graphene_assert(is_zero(game_itr->player1.reveal), "game error");
-            pay_and_clean(*game_itr, *p2_offer, *p1_offer);
+            pay_and_clean(*game_itr, *player2_offer, *player1_offer);
         }
     }
 
@@ -255,7 +226,7 @@ class dice : public contract
         graphene_assert(itr != accounts.end(), "unknown account");
 
         accounts.modify(itr, 0, [&](auto &acnt) {
-            graphene_assert(acnt.balance >= quantity, "insufficient balance");
+            gxb_assert(acnt.balance >= quantity, "insufficient balance");
             acnt.balance -= quantity;
         });
 
@@ -290,7 +261,9 @@ class dice : public contract
         GRAPHENE_SERIALIZE(offer, (id)(owner)(bet)(commitment)(gameid))
     };
 
-    typedef multi_index<N(offer), offer>
+    typedef multi_index<N(offer), offer,
+                        indexed_by<N(bet), const_mem_fun<offer, uint64_t, &offer::by_bet>>,
+                        indexed_by<N(commitment), const_mem_fun<offer, key256, &offer::by_commitment>>>
         offer_index;
 
     struct player {
@@ -347,6 +320,13 @@ class dice : public contract
     game_index games;
     global_dice_index global_dices;
     account_index accounts;
+
+    bool has_offer(const checksum256 &commitment) const
+    {
+        auto idx = offers.template get_index<N(commitment)>();
+        auto itr = idx.find(offer::get_commitment(commitment));
+        return itr != idx.end();
+    }
 
     bool is_equal(const checksum256 &a, const checksum256 &b) const
     {
