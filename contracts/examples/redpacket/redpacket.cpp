@@ -67,7 +67,7 @@ class redpacket : public contract
     }
 
     // @abi action
-    void open(std::string issuer, std::string sig, uint64_t timestamp)
+    void open(std::string issuer, signature sig, uint64_t timestamp)
     {
         uint64_t sender = get_trx_sender();
         int64_t now = get_head_block_time();
@@ -82,7 +82,7 @@ class redpacket : public contract
 
         // check signature
         std::string s = std::to_string(timestamp);
-        int ret = verify_signature(s.c_str(), s.length(), sig.c_str(), sig.length(), packet_iter->pub_key.c_str(), packet_iter->pub_key.length());
+        int ret = verify_signature(s.c_str(), s.length(), &sig, packet_iter->pub_key.c_str(), packet_iter->pub_key.length());
         graphene_assert(ret == 1, "signature not valid");
 
         // check record
