@@ -1091,6 +1091,14 @@ void set_expiration( const database& db, transaction& tx )
    return;
 }
 
+void set_expiration(const database &db, transaction &tx, uint32_t time_seconds)
+{
+    const chain_parameters &params = db.get_global_properties().parameters;
+    tx.set_reference_block(db.head_block_id());
+    tx.set_expiration(db.head_block_time() + fc::seconds(params.block_interval * (params.maintenance_skip_slots + 1) * 3 + time_seconds));
+    return;
+}
+
 bool _push_block( database& db, const signed_block& b, uint32_t skip_flags /* = 0 */ )
 {
    return db.push_block( b, skip_flags);

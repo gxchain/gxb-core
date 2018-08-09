@@ -376,6 +376,7 @@ signed_block database::_generate_block(
                }
            }
            if (new_block_cpu >= block_cpu_limit) {
+               wlog("posponed due to block cpu limit");
                postponed_tx_count++;
                continue;
            }

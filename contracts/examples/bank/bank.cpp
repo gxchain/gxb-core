@@ -52,12 +52,8 @@ class bank : public contract
     }
 
     // @abi action
-    void withdraw(std::string to_account, std::string symbol, int64_t amount)
+    void withdraw(std::string to_account, contract_asset amount)
     {
-        int64_t asset_id = get_asset_id(symbol.c_str(), symbol.size());
-        graphene_assert(asset_id >= 0, "invalid symbol");
-        contract_asset asset{amount, uint64_t(asset_id)};
-
         int64_t account_id = get_account_id(to_account.c_str(), to_account.size());
         graphene_assert(account_id >= 0, "invalid account_name to_account");
 
@@ -67,11 +63,11 @@ class bank : public contract
 
         int asset_index = 0;
         for (auto asset_it = it->balances.begin(); asset_it != it->balances.end(); ++asset_it) {
-            if ((asset.asset_id) == asset_it->asset_id) {
-                graphene_assert(asset_it->amount >= asset.amount, "balance not enough");
+            if ((amount.asset_id) == asset_it->asset_id) {
+                graphene_assert(asset_it->amount >= amount.amount, "balance not enough");
                 print("contract total amount: ", asset_it->amount, "\n");
-                print("withdraw amount: ", asset.amount, "\n");
-                if (asset_it->amount == asset.amount) {
+                print("withdraw amount: ", amount.amount, "\n");
+                if (asset_it->amount == amount.amount) {
                     accounts.modify(it, 0, [&](auto &o) {
                         o.balances.erase(asset_it);
                     });
@@ -80,7 +76,7 @@ class bank : public contract
                     }
                 } else {
                     accounts.modify(it, 0, [&](auto &o) {
-                        o.balances[asset_index] -= asset;
+                        o.balances[asset_index] -= amount;
                     });
                 }
 
@@ -89,7 +85,7 @@ class bank : public contract
             asset_index++;
         }
 
-        withdraw_asset(_self, account_id, asset.asset_id, asset.amount);
+        withdraw_asset(_self, account_id, amount.asset_id, amount.amount);
     }
 
   private:
