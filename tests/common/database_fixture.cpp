@@ -109,6 +109,7 @@ database_fixture::database_fixture()
       track_account.push_back(track);
       options.insert(std::make_pair("track-account", boost::program_options::variable_value(track_account, false)));
    }
+   options.insert(std::make_pair("partial-operations", boost::program_options::variable_value(false, false)));
 
    ahplugin->plugin_set_app(&app);
    ahplugin->plugin_initialize(options);

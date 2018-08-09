@@ -39,6 +39,7 @@
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/wast_to_wasm.hpp>
+#include <graphene/chain/abi_def.hpp>
 
 #include <graphene/utilities/tempdir.hpp>
 
@@ -134,7 +135,7 @@ BOOST_AUTO_TEST_CASE(contract_test)
 { try {
    ACTOR(alice);
 
-   transfer(account_id_type(), alice_id, asset(10000));
+   transfer(account_id_type(), alice_id, asset(1000000));
    generate_block();
 
    // create contract
@@ -146,8 +147,7 @@ BOOST_AUTO_TEST_CASE(contract_test)
    deploy_op.vm_version = "0";
    auto wasm = graphene::chain::wast_to_wasm(contract_test_wast_code);
    deploy_op.code = bytes(wasm.begin(), wasm.end());
-   deploy_op.code_version = fc::sha256::hash(deploy_op.code);
-   deploy_op.abi = bytes(contract_abi, contract_abi+strlen(contract_abi));
+   deploy_op.abi = fc::json::from_string(contract_abi).as<abi_def>();
    deploy_op.fee = asset(2000);
    trx.operations.push_back(deploy_op);
    set_expiration(db, trx);
@@ -157,16 +157,14 @@ BOOST_AUTO_TEST_CASE(contract_test)
    trx.clear();
 
    // call contract, action hi
-   BOOST_TEST_MESSAGE("contract call test, hi");
    auto& contract_obj = get_account("bob");
-   auto contract_id = static_cast<uint64_t>(contract_obj.id);
-   idump((contract_id));
+   string s = "123";
 
    contract_call_operation op;
    op.account = alice_id;
-   string s = "123";
-   action act {contract_id, N(hi), bytes(s.begin(), s.end())};
-   op.act = act;
+   op.contract_id = contract_obj.id;
+   op.method_name = N(hi);
+   op.data = bytes(s.begin(), s.end());
    op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(op);
    trx.operations.push_back(op);
    set_expiration(db, trx);
@@ -175,62 +173,21 @@ BOOST_AUTO_TEST_CASE(contract_test)
    PUSH_TX(db, trx);
    trx.clear();
 
-   // call contract, action hi
-   BOOST_TEST_MESSAGE("contract call test, bye");
+   // call contract, action hi, deposit asset
    contract_call_operation call_op;
    call_op.account = alice_id;
-   action act2 {contract_id, N(bye), bytes(s.begin(), s.end())};
-   call_op.act = act2;
+   call_op.account = alice_id;
+   call_op.contract_id = contract_obj.id;
+   call_op.amount = share_type(100);
+   call_op.method_name = N(hi);
+   call_op.data = bytes(s.begin(), s.end());
    call_op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(call_op);
    trx.operations.push_back(call_op);
    set_expiration(db, trx);
    sign(trx, alice_private_key);
    idump((trx));
    PUSH_TX(db, trx);
-   trx.clear();
-
-} FC_LOG_AND_RETHROW() }
-
-BOOST_AUTO_TEST_CASE(deposit_contract_test)
-{ try {
-   ACTOR(alice);
-
-   transfer(account_id_type(), alice_id, asset(10000));
-   generate_block();
-
-   // create contract
-   BOOST_TEST_MESSAGE("contract deploy test");
-   contract_deploy_operation deploy_op;
-   deploy_op.account = alice_id;
-   deploy_op.name = "bob";
-   deploy_op.vm_type = "0";
-   deploy_op.vm_version = "0";
-   auto wasm = graphene::chain::wast_to_wasm(contract_test_wast_code);
-   deploy_op.code = bytes(wasm.begin(), wasm.end());
-   deploy_op.code_version = fc::sha256::hash(deploy_op.code);
-   deploy_op.abi = bytes(contract_abi, contract_abi+strlen(contract_abi));
-   deploy_op.fee = asset(2000);
-   trx.operations.push_back(deploy_op);
-   set_expiration(db, trx);
-   sign(trx, alice_private_key);
-   idump((trx));
-   PUSH_TX(db, trx);
-   trx.clear();
-
-   auto& contract_obj = get_account("bob");
-
-   // call contract, action hi
-   BOOST_TEST_MESSAGE("contract deposit test");
-   contract_deposit_operation call_op;
-   call_op.from = alice_id;
-   call_op.to = contract_obj.id;;
-   call_op.amount = asset(2000);
-   call_op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(call_op);
-   trx.operations.push_back(call_op);
-   set_expiration(db, trx);
-   sign(trx, alice_private_key);
-   idump((trx));
-   PUSH_TX(db, trx);
+   BOOST_REQUIRE_EQUAL(get_balance(account_id_type(contract_obj.id)(db), asset_id_type()(db)), 100);
    trx.clear();
 
 } FC_LOG_AND_RETHROW() }

@@ -102,6 +102,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       chain_property_object get_chain_properties()const;
       global_property_object get_global_properties()const;
       data_transaction_commission_percent_t get_commission_percent() const;
+      vm_cpu_limit_t get_cpu_limit() const;
       fc::variant_object get_config()const;
       chain_id_type get_chain_id()const;
       dynamic_global_property_object get_dynamic_global_properties()const;
@@ -114,10 +115,12 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<optional<account_object>> get_accounts(const vector<account_id_type>& account_ids)const;
       std::map<string,full_account> get_full_accounts( const vector<string>& names_or_ids, bool subscribe );
       optional<account_object> get_account_by_name( string name )const;
+      optional<account_object> get_account_by_contract_code(uint64_t code)const;
       vector<account_id_type> get_account_references( account_id_type account_id )const;
       vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
       map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
       uint64_t get_account_count()const;
+      uint64_t get_asset_count() const;
       bool is_account_registered(string name) const;
 
 
@@ -179,6 +182,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Authority / validation
       std::string get_transaction_hex(const signed_transaction& trx)const;
+      std::string serialize_transaction(const signed_transaction& trx) const;
       set<public_key_type> get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const;
       set<public_key_type> get_potential_signatures( const signed_transaction& trx )const;
       set<address> get_potential_address_signatures( const signed_transaction& trx )const;

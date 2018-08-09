@@ -54,10 +54,10 @@ namespace graphene { namespace chain {
       {
          auto it = instantiation_cache.find(code_id);
          if(it == instantiation_cache.end()) {
-//            auto timer_pause = fc::make_scoped_exit([&](){
-//                trx_context.resume_billing_timer();
-//            });
-//            trx_context.pause_billing_timer();
+            auto timer_pause = fc::make_scoped_exit([&](){
+                trx_context.resume_billing_timer();
+            });
+            trx_context.pause_billing_timer();
             IR::Module module;
             try {
                Serialization::MemoryInputStream stream((const U8*)code.data(), code.size());
@@ -122,7 +122,7 @@ namespace graphene { namespace chain {
    BOOST_PP_SEQ_FOR_EACH(_REGISTER_INTRINSIC, CLS, _WRAPPED_SEQ(MEMBERS))
 
 #define _REGISTER_INJECTED_INTRINSIC(R, CLS, INFO)\
-   BOOST_PP_CAT(BOOST_PP_OVERLOAD(_REGISTER_INTRINSIC, _UNWRAP_SEQ INFO) _EXPAND_ARGS(CLS, GXB_INJECTED_MODULE_NAME, INFO), BOOST_PP_EMPTY())
+   BOOST_PP_CAT(BOOST_PP_OVERLOAD(_REGISTER_INTRINSIC, _UNWRAP_SEQ INFO) _EXPAND_ARGS(CLS, GXC_INJECTED_MODULE_NAME, INFO), BOOST_PP_EMPTY())
 
 #define REGISTER_INJECTED_INTRINSICS(CLS, MEMBERS)\
    BOOST_PP_SEQ_FOR_EACH(_REGISTER_INJECTED_INTRINSIC, CLS, _WRAPPED_SEQ(MEMBERS))

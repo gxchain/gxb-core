@@ -33,7 +33,7 @@ public:
    typedef withdraw_permission_create_operation operation_type;
 
    void_result do_evaluate( const operation_type& op );
-   object_id_type do_apply( const operation_type& op );
+   object_id_type do_apply(const operation_type& op, int32_t billed_cpu_time_us = 0);
 };
 
 class withdraw_permission_claim_evaluator : public evaluator<withdraw_permission_claim_evaluator>
@@ -42,7 +42,7 @@ public:
    typedef withdraw_permission_claim_operation operation_type;
 
    void_result do_evaluate( const operation_type& op );
-   void_result do_apply( const operation_type& op );
+   void_result do_apply(const operation_type& op, int32_t billed_cpu_time_us = 0);
 };
 
 class withdraw_permission_update_evaluator : public evaluator<withdraw_permission_update_evaluator>
@@ -51,7 +51,7 @@ public:
    typedef withdraw_permission_update_operation operation_type;
 
    void_result do_evaluate( const operation_type& op );
-   void_result do_apply( const operation_type& op );
+   void_result do_apply(const operation_type& op, int32_t billed_cpu_time_us = 0);
 };
 
 class withdraw_permission_delete_evaluator : public evaluator<withdraw_permission_delete_evaluator>
@@ -60,7 +60,7 @@ public:
    typedef withdraw_permission_delete_operation operation_type;
 
    void_result do_evaluate( const operation_type& op );
-   void_result do_apply( const operation_type& op );
+   void_result do_apply(const operation_type& op, int32_t billed_cpu_time_us = 0);
 };
 
 } } // graphene::chain

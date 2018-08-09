@@ -47,7 +47,7 @@ database::~database()
    clear_pending();
 }
 
-void database::reindex( fc::path data_dir )
+void database::reindex(fc::path data_dir, bool fast_replay)
 { try {
    auto last_block = _block_id_to_block.last();
    if( !last_block ) {
@@ -76,7 +76,9 @@ void database::reindex( fc::path data_dir )
       if (i % 1000 == 0)
       {
           // sleep 100ms for every 1000 block
-          fc::usleep(fc::milliseconds(100));
+          if (!fast_replay) {
+              fc::usleep(fc::milliseconds(100));
+          }
           std::cerr << "   " << double(i * 100) / last_block_num << "%   " << i << " of " << last_block_num << "   \n";
       }
       if( i == flush_point )
@@ -143,7 +145,8 @@ void database::wipe(const fc::path& data_dir, bool include_blocks)
 void database::open(
    const fc::path& data_dir,
    std::function<genesis_state_type()> genesis_loader,
-   const std::string& db_version)
+   const std::string& db_version,
+   bool fast_replay)
 {
    try
    {
@@ -178,7 +181,7 @@ void database::open(
          FC_ASSERT( *last_block >= head_block_id(),
                     "last block ID does not match current chain state",
                     ("last_block->id", last_block)("head_block_id",head_block_num()) );
-         reindex( data_dir );
+         reindex(data_dir, fast_replay);
       }
       _opened = true;
    }

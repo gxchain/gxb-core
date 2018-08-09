@@ -34,6 +34,6 @@ namespace graphene { namespace chain {
          typedef custom_operation operation_type;
 
          void_result do_evaluate( const custom_operation& o ){ return void_result(); }
-         void_result do_apply( const custom_operation& o ){ return void_result(); }
+         void_result do_apply(const custom_operation& o, uint32_t billed_cpu_time_us = 0){ return void_result(); }
    };
 } }

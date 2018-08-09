@@ -23,14 +23,14 @@ class binaryen_instantiated_module : public wasm_instantiated_module_interface {
 
       void apply(apply_context& context) override {
          LiteralList args = {Literal(uint64_t(context.receiver)),
-	                     Literal(uint64_t(context.act.account)),
-                             Literal(uint64_t(context.act.name))};
-         dlog("binaryen apply");
+	                     Literal(uint64_t(context.act.contract_id)),
+                             Literal(uint64_t(context.act.method_name))};
+         idump((context.receiver)(context.act.contract_id)(context.act.method_name));
          call("apply", args, context);
       }
 
    private:
-      linear_memory_type&        _shared_linear_memory;      
+      linear_memory_type&        _shared_linear_memory;
       std::vector<uint8_t>       _initial_memory;
       call_indirect_table_type   _table;
       import_lut_type            _import_lut;

@@ -95,7 +95,8 @@ namespace graphene { namespace chain {
           void open(
              const fc::path& data_dir,
              std::function<genesis_state_type()> genesis_loader,
-             const std::string& db_version );
+             const std::string& db_version,
+             bool fast_replay = false);
 
          /**
           * @brief Rebuild object graph from block history and open detabase
@@ -103,7 +104,7 @@ namespace graphene { namespace chain {
           * This method may be called after or instead of @ref database::open, and will rebuild the object graph by
           * replaying blockchain history. When this method exits successfully, the database will be open.
           */
-         void reindex(fc::path data_dir);
+         void reindex(fc::path data_dir, bool fast_replay = false);
 
          /**
           * @brief wipe Delete database from disk, and potentially the raw chain as well.
@@ -260,6 +261,7 @@ namespace graphene { namespace chain {
          const chain_property_object&           get_chain_properties()const;
          const global_property_object&          get_global_properties()const;
          const data_transaction_commission_percent_t          get_commission_percent() const;
+         const vm_cpu_limit_t                   get_cpu_limit() const;
          const dynamic_global_property_object&  get_dynamic_global_properties()const;
          const node_property_object&            get_node_properties()const;
          const fee_schedule&                    current_fee_schedule()const;
@@ -429,11 +431,12 @@ namespace graphene { namespace chain {
        public:
          // these were formerly private, but they have a fairly well-defined API, so let's make them public
          void                  apply_block( const signed_block& next_block, uint32_t skip = skip_nothing );
-         processed_transaction apply_transaction( const signed_transaction& trx, uint32_t skip = skip_nothing );
-         operation_result      apply_operation( transaction_evaluation_state& eval_state, const operation& op );
-      private:
+         processed_transaction apply_transaction(const signed_transaction &trx, uint32_t skip = skip_nothing, const vector<operation_result> &operation_results = {});
+         operation_result      apply_operation(transaction_evaluation_state &eval_state, const operation &op, uint32_t billed_cpu_time_us = 0);
+
+       private:
          void                  _apply_block( const signed_block& next_block );
-         processed_transaction _apply_transaction( const signed_transaction& trx );
+         processed_transaction _apply_transaction(const signed_transaction &trx, const vector<operation_result> &operation_results = {});
 
          ///Steps involved in applying a new block
          ///@{

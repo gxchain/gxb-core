@@ -168,6 +168,11 @@ data_transaction_commission_percent_t database_api::get_commission_percent() con
   return my->get_commission_percent();
 }
 
+vm_cpu_limit_t database_api::get_cpu_limit() const
+{
+    return my->get_cpu_limit();
+}
+
 fc::variant_object database_api::get_config()const
 {
    return my->get_config();
@@ -244,6 +249,11 @@ map<string,account_id_type> database_api::lookup_accounts(const string& lower_bo
 uint64_t database_api::get_account_count()const
 {
    return my->get_account_count();
+}
+
+uint64_t database_api::get_asset_count() const
+{
+   return my->get_asset_count();
 }
 
 map<account_id_type, uint64_t> database_api::list_data_transaction_complain_requesters(fc::time_point_sec start_date_time, fc::time_point_sec end_date_time, uint8_t limit) const
@@ -526,6 +536,11 @@ vector<variant> database_api::lookup_vote_ids( const vector<vote_id_type>& votes
 std::string database_api::get_transaction_hex(const signed_transaction& trx)const
 {
    return my->get_transaction_hex( trx );
+}
+
+std::string database_api::serialize_transaction(const signed_transaction& trx) const
+{
+    return my->serialize_transaction(trx);
 }
 
 set<public_key_type> database_api::get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const

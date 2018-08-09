@@ -28,7 +28,7 @@ void_result data_market_category_create_evaluator::do_evaluate( const data_marke
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type data_market_category_create_evaluator::do_apply( const data_market_category_create_operation& op )
+object_id_type data_market_category_create_evaluator::do_apply(const data_market_category_create_operation& op, uint32_t billed_cpu_time_us)
 { try {
     const auto& new_category_object = db().create<data_market_category_object>( [&]( data_market_category_object& obj ) {
        dlog("data_market_category_create do_apply");
@@ -49,7 +49,7 @@ void_result data_market_category_update_evaluator::do_evaluate( const data_marke
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result data_market_category_update_evaluator::do_apply( const data_market_category_update_operation& op )
+void_result data_market_category_update_evaluator::do_apply(const data_market_category_update_operation& op, uint32_t billed_cpu_time_us)
 {
     try {
         database& _db = db();

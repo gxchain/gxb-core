@@ -72,7 +72,7 @@ namespace graphene { namespace chain { namespace wasm_injections {
             int actual_index;
             get_next_indices( module, index, actual_index );
             registered_injected.emplace( func_name, index );
-            decltype(module.functions.imports) new_import = { {{func_type_index}, GXB_INJECTED_MODULE_NAME, std::move(func_name)} };
+            decltype(module.functions.imports) new_import = { {{func_type_index}, GXC_INJECTED_MODULE_NAME, std::move(func_name)} };
             // prepend to the head of the imports
             module.functions.imports.insert( module.functions.imports.begin()+(registered_injected.size()-1), new_import.begin(), new_import.end() ); 
             injected_index_mapping.emplace( index, actual_index ); 

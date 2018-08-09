@@ -40,7 +40,7 @@ namespace graphene { namespace chain {
       virtual ~generic_evaluator(){}
 
       virtual int get_type()const = 0;
-      virtual operation_result start_evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply);
+      virtual operation_result start_evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply, uint32_t billed_cpu_time_us);
 
       /**
        * @note derived classes should ASSUME that the default validation that is
@@ -48,7 +48,7 @@ namespace graphene { namespace chain {
        * not perform these extra checks.
        */
       virtual operation_result evaluate(const operation& op) = 0;
-      virtual operation_result apply(const operation& op) = 0;
+      virtual operation_result apply(const operation& op, uint32_t billed_cpu_time_us = 0) = 0;
 
       /**
        * Routes the fee to where it needs to go.  The default implementation
@@ -123,17 +123,17 @@ namespace graphene { namespace chain {
    {
    public:
       virtual ~op_evaluator(){}
-      virtual operation_result evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply) = 0;
+      virtual operation_result evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply, uint32_t billed_cpu_time_us) = 0;
    };
 
    template<typename T>
    class op_evaluator_impl : public op_evaluator
    {
    public:
-      virtual operation_result evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply = true) override
+      virtual operation_result evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply = true, uint32_t billed_cpu_time_us = 0) override
       {
          T eval;
-         return eval.start_evaluate(eval_state, op, apply);
+         return eval.start_evaluate(eval_state, op, apply, billed_cpu_time_us);
       }
    };
 
@@ -149,7 +149,9 @@ namespace graphene { namespace chain {
          const auto& op = o.get<typename DerivedEvaluator::operation_type>();
          eval->prepare_fee(op.fee_payer(), op.fee, o);
          //head_block_time later than HRADFORK_1001_TIME we use pocs caculator fee, so the fee may be less than required_fee
-         if (!trx_state->skip_fee_schedule_check && o.which() != operation::tag<pay_data_transaction_operation>::value) {
+         if (!trx_state->skip_fee_schedule_check
+                 && (o.which() != operation::tag<pay_data_transaction_operation>::value
+                     || o.which() != operation::tag<contract_call_operation>::value)) {
             share_type required_fee = calculate_fee_for_operation(op);
             GRAPHENE_ASSERT( core_fee_paid >= required_fee,
                        insufficient_fee,
@@ -159,7 +161,7 @@ namespace graphene { namespace chain {
          return eval->do_evaluate(op);
       }
 
-      virtual operation_result apply(const operation& o) final override
+      virtual operation_result apply(const operation& o, uint32_t billed_cpu_time_us) final override
       {
          auto* eval = static_cast<DerivedEvaluator*>(this);
          const auto& op = o.get<typename DerivedEvaluator::operation_type>();
@@ -167,7 +169,7 @@ namespace graphene { namespace chain {
          convert_fee();
          pay_fee();
 
-         auto result = eval->do_apply(op);
+         auto result = eval->do_apply(op, billed_cpu_time_us);
 
          db_adjust_balance(op.fee_payer(), -fee_from_account);
 

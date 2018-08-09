@@ -163,6 +163,11 @@ class database_api
       data_transaction_commission_percent_t get_commission_percent() const;
 
       /**
+       *  @brief Retrieve vm cpu_limit
+       */
+      vm_cpu_limit_t get_cpu_limit() const;
+
+      /**
        * @brief Retrieve compile-time constants
        */
       fc::variant_object get_config()const;
@@ -283,6 +288,11 @@ class database_api
        * @brief Get the total number of accounts registered with the blockchain
        */
       uint64_t get_account_count()const;
+
+      /**
+       * @brief Get the total number of assets registered with the blockchain
+       */
+      uint64_t get_asset_count() const;
 
       /**
       * @brief get_data_transaction_product_costs
@@ -610,6 +620,9 @@ class database_api
       /// @brief Get a hexdump of the serialized binary form of a transaction
       std::string get_transaction_hex(const signed_transaction& trx)const;
 
+      /// @brief Get a hexdump of the serialized binary form of a transaction
+      std::string serialize_transaction(const signed_transaction& tx) const;
+
       /**
        *  This API will take a partially signed transaction and a set of public keys that the owner has the ability to sign for
        *  and return the minimal subset of public keys that should add signatures to the transaction.
@@ -805,6 +818,7 @@ FC_API(graphene::app::database_api,
    (get_objects)
    (get_table_objects)
    (serialize_contract_call_args)
+   (serialize_transaction)
    // Subscriptions
    (set_subscribe_callback)
    (set_data_transaction_subscribe_callback)
@@ -840,6 +854,7 @@ FC_API(graphene::app::database_api,
    (lookup_account_names)
    (lookup_accounts)
    (get_account_count)
+   (get_asset_count)
    (is_account_registered)
 
    // statistic

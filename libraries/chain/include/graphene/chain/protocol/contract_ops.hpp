@@ -18,25 +18,24 @@
  */
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
-#include <graphene/chain/protocol/ext.hpp>
 #include <graphene/chain/action.hpp>
+#include <graphene/chain/abi_def.hpp>
 
 namespace graphene { namespace chain {
 struct contract_deploy_operation : public base_operation {
     struct fee_parameters_type {
-        uint64_t fee = 1000 * GRAPHENE_BLOCKCHAIN_PRECISION;
+        uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
         uint64_t price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
     };
 
     asset                           fee;
     fc::string                      name;
     account_id_type                 account;
-
     fc::string                      vm_type;
     fc::string                      vm_version;
     bytes                           code;
-    digest_type                     code_version;
-    bytes                           abi;
+    abi_def                         abi;
+    extensions_type                 extensions;
 
     account_id_type fee_payer() const
     {
@@ -47,6 +46,7 @@ struct contract_deploy_operation : public base_operation {
     {
         FC_ASSERT(fee.amount >= 0, "fee.amount < 0");
         FC_ASSERT(is_valid_name(name), "contract name is invalid");
+        FC_ASSERT(code.size() > 0, "contract code cannot be empty");
     }
 
     share_type calculate_fee(const fee_parameters_type &k) const
@@ -60,12 +60,17 @@ struct contract_deploy_operation : public base_operation {
 
 struct contract_call_operation : public base_operation {
     struct fee_parameters_type {
-        uint64_t fee = 0 * GRAPHENE_BLOCKCHAIN_PRECISION;
+        uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION / 100;
+        uint64_t price_per_kbyte_ram = 10 * GRAPHENE_BLOCKCHAIN_PRECISION;
+        uint64_t price_per_ms_cpu = 0;
     };
 
-    account_id_type                         account;
     asset                                   fee;
-    action                                  act;
+    account_id_type                         account;
+    account_id_type                         contract_id;
+    fc::optional<asset>                     amount;
+    action_name                             method_name;
+    bytes                                   data;
     extensions_type                         extensions;
 
     account_id_type fee_payer() const { return account; }
@@ -73,37 +78,12 @@ struct contract_call_operation : public base_operation {
     void validate() const
     {
         FC_ASSERT(fee.amount >= 0);
-        FC_ASSERT(act.data.size() >= 0);
+        FC_ASSERT(data.size() >= 0);
     }
 
     share_type calculate_fee(const fee_parameters_type &k) const
     {
-        return k.fee;
-    }
-};
-
-struct contract_deposit_operation : public base_operation {
-    struct fee_parameters_type {
-        uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
-    };
-
-    asset               fee;
-    account_id_type     from;
-    account_id_type     to;
-    asset               amount;
-    extensions_type     extensions;
-
-    account_id_type fee_payer() const { return from; }
-
-    void validate() const
-    {
-        FC_ASSERT(fee.amount >= 0);
-        FC_ASSERT(from != to);
-        FC_ASSERT(amount.amount > 0);
-    }
-
-    share_type calculate_fee(const fee_parameters_type &k) const
-    {
+        // just return basic fee, real fee will be calculated after runing
         return k.fee;
     }
 };
@@ -119,15 +99,16 @@ FC_REFLECT(graphene::chain::contract_deploy_operation,
             (vm_type)
             (vm_version)
             (code)
-            (code_version)
-            (abi))
-
-FC_REFLECT(graphene::chain::contract_call_operation::fee_parameters_type, (fee))
-FC_REFLECT(graphene::chain::contract_call_operation,
-            (account)
-            (fee)
-            (act)
+            (abi)
             (extensions))
 
-FC_REFLECT(graphene::chain::contract_deposit_operation::fee_parameters_type, (fee))
-FC_REFLECT(graphene::chain::contract_deposit_operation, (fee)(from)(to)(amount)(extensions))
+FC_REFLECT(graphene::chain::contract_call_operation::fee_parameters_type,
+            (fee)(price_per_kbyte_ram)(price_per_ms_cpu))
+FC_REFLECT(graphene::chain::contract_call_operation,
+            (fee)
+            (account)
+            (contract_id)
+            (amount)
+            (method_name)
+            (data)
+            (extensions))

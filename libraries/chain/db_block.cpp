@@ -1,4 +1,5 @@
 /*
+ *
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
  *
  * The MIT License
@@ -36,6 +37,8 @@
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/evaluator.hpp>
+
+#include <graphene/chain/protocol/contract_receipt.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 
@@ -316,8 +319,7 @@ signed_block database::_generate_block(
    witness_id_type witness_id,
    const fc::ecc::private_key& block_signing_private_key
    )
-{
-   try {
+{ try {
    uint32_t skip = get_node_properties().skip_flags;
    uint32_t slot_num = get_slot_at_time( when );
    FC_ASSERT( slot_num > 0 );
@@ -351,41 +353,48 @@ signed_block database::_generate_block(
    _pending_tx_session.reset();
    _pending_tx_session = _undo_db.start_undo_session();
 
+   uint64_t block_cpu_limit = get_cpu_limit().block_cpu_limit;
+   uint64_t new_block_cpu = 0;
    uint64_t postponed_tx_count = 0;
    // pop pending state (reset to head block state)
-   for( const processed_transaction& tx : _pending_tx )
-   {
-      size_t new_total_size = total_block_size + fc::raw::pack_size( tx );
+   for (const processed_transaction &tx : _pending_tx) {
+       size_t new_total_size = total_block_size + fc::raw::pack_size(tx);
 
-      // postpone transaction if it would make block too big
-      if( new_total_size >= maximum_block_size )
-      {
-         postponed_tx_count++;
-         continue;
-      }
+       // postpone transaction if it would make block too big
+       if (new_total_size >= maximum_block_size || new_block_cpu >= block_cpu_limit) {
+           postponed_tx_count++;
+           continue;
+       }
 
-      try
-      {
-         auto temp_session = _undo_db.start_undo_session();
-         processed_transaction ptx = _apply_transaction( tx );
-         temp_session.merge();
+       try {
+           auto temp_session = _undo_db.start_undo_session();
+           processed_transaction ptx = _apply_transaction(tx);
+           // check block cpu limit
+           for (const auto op_result : ptx.operation_results) {
+               if (op_result.which() == operation_result::tag<contract_receipt>::value) {
+                   new_block_cpu += op_result.get<contract_receipt>().billed_cpu_time_us;
+               }
+           }
+           if (new_block_cpu >= block_cpu_limit) {
+               postponed_tx_count++;
+               continue;
+           }
 
-         // We have to recompute pack_size(ptx) because it may be different
-         // than pack_size(tx) (i.e. if one or more results increased
-         // their size)
-         total_block_size += fc::raw::pack_size( ptx );
-         pending_block.transactions.push_back( ptx );
-      }
-      catch ( const fc::exception& e )
-      {
-         // Do nothing, transaction will not be re-applied
-         wlog( "Transaction was not processed while generating block due to ${e}", ("e", e) );
-         wlog( "The transaction was ${t}", ("t", tx) );
-      }
+           temp_session.merge();
+
+           // We have to recompute pack_size(ptx) because it may be different
+           // than pack_size(tx) (i.e. if one or more results increased
+           // their size)
+           total_block_size += fc::raw::pack_size(ptx);
+           pending_block.transactions.push_back(ptx);
+       } catch (const fc::exception &e) {
+           // Do nothing, transaction will not be re-applied
+           wlog("Transaction was not processed while generating block due to ${e}", ("e", e));
+           wlog("The transaction was ${t}", ("t", tx));
+       }
    }
-   if( postponed_tx_count > 0 )
-   {
-      wlog( "Postponed ${n} transactions due to block size limit", ("n", postponed_tx_count) );
+   if (postponed_tx_count > 0) {
+       wlog("Postponed ${n} transactions due to block size limit or block cpu limit", ("n", postponed_tx_count));
    }
 
    _pending_tx_session.reset();
@@ -402,19 +411,18 @@ signed_block database::_generate_block(
    pending_block.witness = witness_id;
    // dlog("packaged block: ${pending_block}", ("pending_block", pending_block));
 
-   if( !(skip & skip_witness_signature) )
-      pending_block.sign( block_signing_private_key );
+   if (!(skip & skip_witness_signature))
+       pending_block.sign(block_signing_private_key);
 
    // TODO:  Move this to _push_block() so session is restored.
-   if( !(skip & skip_block_size_check) )
-   {
-      FC_ASSERT( fc::raw::pack_size(pending_block) <= get_global_properties().parameters.maximum_block_size );
+   if (!(skip & skip_block_size_check)) {
+       FC_ASSERT(fc::raw::pack_size(pending_block) <= get_global_properties().parameters.maximum_block_size);
    }
 
-   push_block( pending_block, skip );
+   push_block(pending_block, skip);
 
    return pending_block;
-} FC_CAPTURE_AND_RETHROW( (witness_id) ) }
+} FC_CAPTURE_AND_RETHROW((witness_id)) }
 
 /**
  * Removes the most recent block from the database and
@@ -513,9 +521,20 @@ void database::_apply_block( const signed_block& next_block )
        * for transactions when validating broadcast transactions or
        * when building a block.
        */
-      apply_transaction( trx, skip );
+      apply_transaction(trx, skip, trx.operation_results);
       ++_current_trx_in_block;
    }
+
+   // check block cpu limit
+   uint64_t block_cpu_time_us = 0;
+   for (const auto &trx : next_block.transactions) {
+       for (const auto op_result : trx.operation_results) {
+           if (op_result.which() == operation_result::tag<contract_receipt>::value) {
+               block_cpu_time_us += op_result.get<contract_receipt>().billed_cpu_time_us;
+           }
+       }
+   }
+   FC_ASSERT(block_cpu_time_us <= get_cpu_limit().block_cpu_limit, "block cpu time exceed global block limit");
 
    update_global_dynamic_data(next_block);
    update_signing_witness(signing_witness, next_block);
@@ -552,17 +571,17 @@ void database::_apply_block( const signed_block& next_block )
 
 
 
-processed_transaction database::apply_transaction(const signed_transaction& trx, uint32_t skip)
+processed_transaction database::apply_transaction(const signed_transaction& trx, uint32_t skip, const vector<operation_result> &operation_results)
 {
    processed_transaction result;
    detail::with_skip_flags( *this, skip, [&]()
    {
-      result = _apply_transaction(trx);
+      result = _apply_transaction(trx, operation_results);
    });
    return result;
 }
 
-processed_transaction database::_apply_transaction(const signed_transaction& trx)
+processed_transaction database::_apply_transaction(const signed_transaction& trx, const vector<operation_result> &operation_results)
 { try {
    uint32_t skip = get_node_properties().skip_flags;
 
@@ -618,10 +637,21 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    //Finally process the operations
    processed_transaction ptrx(trx);
    _current_op_in_trx = 0;
-   for( const auto& op : ptrx.operations )
-   {
-      eval_state.operation_results.emplace_back(apply_operation(eval_state, op));
-      ++_current_op_in_trx;
+   for (uint16_t i = 0; i < ptrx.operations.size(); ++i) {
+       const auto &op = ptrx.operations.at(i);
+       uint32_t billed_cpu_time_us = 0;
+       if (i < operation_results.size()) {
+           const auto &op_result = operation_results.at(i);
+           // get billed_cpu_time_us
+           if (op_result.which() == operation_result::tag<contract_receipt>::value) {
+               billed_cpu_time_us = op_result.get<contract_receipt>().billed_cpu_time_us;
+               idump((billed_cpu_time_us));
+           }
+       }
+
+       // vector<operation_result> operation_results;
+       eval_state.operation_results.emplace_back(apply_operation(eval_state, op, billed_cpu_time_us));
+       ++_current_op_in_trx;
    }
    ptrx.operation_results = std::move(eval_state.operation_results);
 
@@ -633,7 +663,7 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    return ptrx;
 } FC_CAPTURE_AND_RETHROW( (trx) ) }
 
-operation_result database::apply_operation(transaction_evaluation_state& eval_state, const operation& op)
+operation_result database::apply_operation(transaction_evaluation_state& eval_state, const operation& op, uint32_t billed_cpu_time_us)
 { try {
    int i_which = op.which();
    uint64_t u_which = uint64_t( i_which );
@@ -645,7 +675,7 @@ operation_result database::apply_operation(transaction_evaluation_state& eval_st
    if( !eval )
       assert( "No registered evaluator for this operation" && false );
    auto op_id = push_applied_operation( op );
-   auto result = eval->evaluate( eval_state, op, true );
+   auto result = eval->evaluate(eval_state, op, true, billed_cpu_time_us);
    set_applied_operation_result( op_id, result );
    return result;
 } FC_CAPTURE_AND_RETHROW( (op) ) }

@@ -6,11 +6,11 @@ ARGS=""
 # Translate environmental variables
 if [[ "$bool_wallet" == "true" ]] || [[ -z "$bool_wallet" ]]; then
     APPPATH+="/cli_wallet/cli_wallet"
-    ARGS+=" --enable-rpc-log"
+    ARGS+=""
     if [[ ! -z "$ws_server" ]]; then
         ARGS+=" -s${ws_server}"
     fi
-    
+
     if [[ ! -z "$rpc_endpoint" ]]; then
         ARGS+=" -r${rpc_endpoint}"
     fi
@@ -32,7 +32,7 @@ elif [[ "$bool_wallet" == "false" ]]
     if [[ ! -z "$rpc_endpoint" ]]; then
         ARGS+=" --rpc-endpoint=${rpc_endpoint}"
     fi
-    
+
     if [[ ! -z "$witness_id" ]]; then
         ARGS+=" --witness-id=${witness_id}"
     fi
@@ -53,10 +53,6 @@ elif [[ "$bool_wallet" == "false" ]]
         ARGS+=" --replay-blockchain"
     elif [[ "$replay" == "false" ]]; then
         ARGS+=" --resync-blockchain"
-    fi
-
-    if [[ "$log_file" == "true" ]]; then
-        ARGS+=" --log-file"
     fi
 fi
 

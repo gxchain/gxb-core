@@ -79,7 +79,7 @@ struct worker_init_visitor
 
 
 
-object_id_type worker_create_evaluator::do_apply(const worker_create_evaluator::operation_type& o)
+object_id_type worker_create_evaluator::do_apply(const worker_create_evaluator::operation_type& o, int32_t billed_cpu_time_us)
 { try {
    database& d = db();
    vote_id_type for_id, against_id;

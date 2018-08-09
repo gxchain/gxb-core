@@ -1,0 +1,44 @@
+FROM ubuntu:14.04
+MAINTAINER GXS
+
+ENV LANG=en_US.UTF-8
+
+RUN \
+    apt-get update -y && \
+    apt-get install -y \
+    software-properties-common wget make python-dev \
+    libbz2-dev libdb++-dev libdb-dev libssl-dev \
+    openssl libreadline-dev autoconf libtool \
+    git ntp doxygen
+
+RUN \
+    apt-add-repository "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-4.0 main" && \
+    apt-get update -y && \
+    apt-get install -y --force-yes clang-4.0 lldb-4.0 libclang-4.0-dev
+
+RUN \
+   cd /tmp && wget https://cmake.org/files/v3.11/cmake-3.11.0-Linux-x86_64.sh && \
+   mkdir -p /opt/cmake && chmod +x /tmp/cmake-3.11.0-Linux-x86_64.sh && \
+   bash /tmp/cmake-3.11.0-Linux-x86_64.sh --prefix=/opt/cmake --skip-license && \
+   ln -sfT /opt/cmake/bin/cmake /usr/local/bin/cmake
+
+RUN \
+    apt-get update -y && \
+    apt-get install -y gcc g++
+
+RUN \
+   wget https://sourceforge.net/projects/boost/files/boost/1.67.0/boost_1_67_0.tar.gz/download -O  boost_1_67_0.tar.gz && \
+   tar -zxvf boost_1_67_0.tar.gz && cd boost_1_67_0 && chmod +x bootstrap.sh && \
+   ./bootstrap.sh --prefix=/usr && \
+   ./b2 --buildtype=complete install
+
+RUN \
+   mkdir  ~/wasm-compiler && cd ~/wasm-compiler && \
+   git clone --depth 1 --single-branch --branch release_40 https://github.com/llvm-mirror/llvm.git && \
+   cd llvm/tools && \
+   git clone --depth 1 --single-branch --branch release_40 https://github.com/llvm-mirror/clang.git && \
+   cd .. && mkdir -p build && cd build && \
+   cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=~/opt/wasm -DLLVM_TARGETS_TO_BUILD= -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly -DCMAKE_BUILD_TYPE=Release .. && \
+   make -j4 install
+
+

@@ -88,6 +88,7 @@ bool graphene::chain::signed_transaction::validate_signee(const fc::ecc::public_
     auto tx = *this;
     tx.signatures.clear();
     auto digest = tx.sig_digest(chain_id);
+    idump((expected_signee));
 
     for (const auto& sig : signatures) {
         if (fc::ecc::public_key(sig, digest, true) == expected_signee) {

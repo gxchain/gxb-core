@@ -21,21 +21,6 @@ APIs are separated into two categories, namely
 2. [Document For Exchange(en)](https://github.com/gxchain/gxb-core/wiki/Instruction-for-exchanges)
 
 
-#### Get Account History With Wallet API
-The method ```get_irreversible_account_historys``` returns irreversible account history with txID.
-In order to interface with the wallet, you need to run the CLI Wallet.
-Use cli_wallet command:
-```
-unlocked >>> get_irreversible_account_historys <ACCOUNT> [<operation id>] <start> <limit>
-
-```
-
-Using an HTTP client such as curl:
-```
-$ curl -d '{"jsonrpc": "2.0", "method": "get_irreversible_account_historys", "params": ["1.2.17",[],1,100], "id": 1}' http://127.0.0.1:8091/rpc
-
-```
-
 ## Getting Started
 ---------------
 
@@ -79,9 +64,13 @@ If you send private keys over this connection, `rpc-endpoint` should be bound to
 Use `help` to see all available wallet commands.
 
 
-## Need Help ?
+## Support
 ---------------
 Report bugs, issues using [GitHub issues](https://github.com/gxchain/gxb-core/issues/new).
+
+Technical support is also available in the [GXS forum](https://forum.gxb.io/category/3/for-developers-%E5%BC%80%E5%8F%91%E8%80%85%E4%B8%93%E5%8C%BA)
+
+
 
 ## License
 ---------------

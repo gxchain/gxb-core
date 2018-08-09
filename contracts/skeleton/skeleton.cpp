@@ -1,23 +1,25 @@
-#include <gxblib/gxb.hpp>
+#include <graphenelib/contract.hpp>
+#include <graphenelib/dispatcher.hpp>
+#include <graphenelib/print.hpp>
+#include <graphenelib/types.h>
 
-using namespace gxblib;
 using namespace graphene;
 
-class skeleton : public graphene::contract {
+class skeleton : public contract
+{
   public:
-      using contract::contract;
+    skeleton(uint64_t id)
+        : contract(id)
+    {
+    }
 
-      /// @abi action
-      void hi(account_name user) {
-          print("Hello, ", user);
-      }
-
-      /// @abi action
-      void bye(account_name user) {
-          for (int i =0; i < 2; ++i) {
-              print("Bye, ", user);
-          }
-      }
+    /// @abi action
+    void hi(std::string user)
+    {
+        for (int i = 0; i < 2; ++i) {
+            print("hi, ", user, "\n");
+        }
+    }
 };
 
-GXB_ABI(skeleton, (subbalance)(addbalance)(hi)(bye))
+GRAPHENE_ABI(skeleton, (hi))

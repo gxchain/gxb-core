@@ -187,13 +187,9 @@ int main(int argc, char** argv) {
             }
             out_cfg << "\n";
          }
-
-      if (options.count("log-file"))
          write_default_logging_config_to_stream(out_cfg, true);
-      else
-         write_default_logging_config_to_stream(out_cfg, false);
-
          out_cfg.close();
+
          // read the default logging config we just wrote out to the file and start using it
          fc::optional<fc::logging_config> logging_config = load_logging_config_from_ini_file(config_ini_path);
          if (logging_config)

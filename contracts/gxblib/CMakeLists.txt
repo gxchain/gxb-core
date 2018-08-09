@@ -1,4 +1,0 @@
-add_wast_library(TARGET gxblib
-  INCLUDE_FOLDERS "${STANDARD_INCLUDE_FOLDERS}" ${CMAKE_SOURCE_DIR}/externals/magic_get/include
-  DESTINATION_FOLDER ${CMAKE_CURRENT_BINARY_DIR}
-)
