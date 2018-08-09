@@ -70,8 +70,6 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
 
 void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operation &op)
 { try {
-    FC_ASSERT(false, "contract deploy disabled");;
-
     database &d = db();
 
     // check contract name
