@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(contract_block_cpu_limit_test)
 { try {
     ACTOR(alice);
 
-    transfer(account_id_type(), alice_id, asset(1000000));
+    transfer(account_id_type(), alice_id, asset(1000000000));
     generate_block();
 
     // create contract
@@ -219,17 +219,29 @@ BOOST_AUTO_TEST_CASE(contract_block_cpu_limit_test)
 
     // call contract, action hi
     auto& contract_obj = get_account("bob");
-    string s = "123";
+    
+    //call_contract nathan abkax55152 {"amount":10000000,"asset_id":1.3.0} issue "{\"pubkey\":\"GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b\",\"number\":10}" GXC true
+    //string data = "3547584338317a346336674548773537547848665a797a6a413532646a5a7a594758374b4e38734a516344796736796974776f7635620a00000000000000";
+    string data = "5GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b\x0a\x00\x00\x00\x00\x00\x00\x00";
 
-    contract_call_operation op;
-    op.account = alice_id;
-    op.contract_id = contract_obj.id;
-    op.method_name = N(hi);
-    op.data = bytes(s.begin(), s.end());
-    op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(op);
+    contract_call_operation issue_op;
+    issue_op.account = alice_id;
+    issue_op.contract_id = contract_obj.id;
+    issue_op.method_name = N(issue);
+    issue_op.amount = asset{10000000};
+    issue_op.data = bytes(data.begin(), data.end());
+    issue_op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(issue_op);
+    
+    contract_call_operation close_op;
+    close_op.account = alice_id;
+    close_op.contract_id = contract_obj.id;
+    close_op.method_name = N(close);
+    close_op.data = bytes{};
+    close_op.fee = db.get_global_properties().parameters.current_fees->calculate_fee(close_op);
     for (size_t i = 0; i < 300; ++i) {
         trx.clear();
-        trx.operations.push_back(op);
+        trx.operations.push_back(issue_op);
+        trx.operations.push_back(close_op);
         set_expiration(db, trx, i);
         sign(trx, alice_private_key);
         PUSH_TX(db, trx);
