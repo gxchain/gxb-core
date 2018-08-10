@@ -19,10 +19,10 @@ class linear_vesting_asset : public contract
     }
 
     /// @abi action
-    void vesting_create(uint64_t to, int64_t lock_duration, int64_t release_duration)
+    void vestingcreate(uint64_t to, int64_t lock_duration, int64_t release_duration)
     {
         contract_asset ast{get_action_asset_amount(), get_action_asset_id()};
-        uint64_t pk = vesting_rule::get_primary_key_by_account_and_asset(to, ast.asset_id);
+        uint64_t pk = vestingrule::get_primary_key_by_account_and_asset(to, ast.asset_id);
         auto lr = vesting_rules.find(pk);
         graphene_assert(lr == vesting_rules.end(), "have been locked, can only lock one time");
 
@@ -42,9 +42,9 @@ class linear_vesting_asset : public contract
     }
 
     /// @abi action
-    void vesting_withdraw(uint64_t who, uint64_t asset_id)
+    void vestingclaim(uint64_t who, uint64_t asset_id)
     {
-        uint64_t pk = vesting_rule::get_primary_key_by_account_and_asset(who, asset_id);
+        uint64_t pk = vestingrule::get_primary_key_by_account_and_asset(who, asset_id);
         auto lr = vesting_rules.find(pk);
         graphene_assert(lr != vesting_rules.end(), "have no locked asset, no vesting_rule");
 
@@ -185,8 +185,8 @@ class linear_vesting_asset : public contract
     };
     typedef graphene::multi_index<N(account), account> account_index;
 
-    //@abi table vesting_rule i64
-    struct vesting_rule {
+    //@abi table vestingrule i64
+    struct vestingrule {
         uint64_t id;                //id=get_primary_key_by_account_and_asset(account_id, asset_id)
         uint64_t account_id;        //某个合约参与者的账号
         int64_t lock_time_point;    //锁定开始时间
@@ -204,14 +204,14 @@ class linear_vesting_asset : public contract
             return (uint64_t)(account_id << 32 | (asset_id & 0xFFFFFFFF));
         }
 
-        GRAPHENE_SERIALIZE(vesting_rule, (id)(account_id)(lock_time_point)(lock_duration)(release_time_point)(release_duration)(asset_id)(asset_amount)(released_amount))
+        GRAPHENE_SERIALIZE(vestingrule, (id)(account_id)(lock_time_point)(lock_duration)(release_time_point)(release_duration)(asset_id)(asset_amount)(released_amount))
     };
 
-    typedef graphene::multi_index<N(vesting_rule), vesting_rule> vesting_index;
+    typedef graphene::multi_index<N(vestingrule), vestingrule> vesting_index;
 
   private:
     account_index       accounts;
     vesting_index       vesting_rules;
 };
 
-GRAPHENE_ABI(linear_vesting_asset, (vesting_create)(vesting_withdraw))
+GRAPHENE_ABI(linear_vesting_asset, (vestingcreate)(vestingclaim))
