@@ -39,7 +39,7 @@ class redpacket : public contract
         int64_t block_num = get_head_block_num();
         vector<int> shares;
         int64_t shares_sum = 0;
-        
+
         std::string random_str = pubkey + std::to_string(number) + std::to_string(block_num);
         checksum160 sum160;
         ripemd160(const_cast<char *>(random_str.c_str()), random_str.length(), &sum160);
