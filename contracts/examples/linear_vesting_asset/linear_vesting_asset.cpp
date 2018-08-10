@@ -19,6 +19,7 @@ class linear_vesting_asset : public contract
     }
 
     /// @abi action
+    /// @abi payable
     void vestingcreate(uint64_t to, int64_t lock_duration, int64_t release_duration)
     {
         contract_asset ast{get_action_asset_amount(), get_action_asset_id()};
