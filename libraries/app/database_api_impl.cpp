@@ -593,7 +593,7 @@ map<string,account_id_type> database_api_impl::lookup_accounts(const string& low
 uint64_t database_api_impl::get_transaction_count() const
 {
     auto next_id = _db.get_index_type<transaction_index>().get_next_id().instance();
-    return next_id > 0 next_id - 1 : 0;
+    return next_id > 0 ? next_id - 1 : 0;
 }
 
 uint64_t database_api_impl::get_account_count() const
