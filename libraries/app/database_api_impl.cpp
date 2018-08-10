@@ -40,6 +40,7 @@
 #include <graphene/chain/abi_serializer.hpp>
 #include <graphene/chain/transaction_context.hpp>
 #include <graphene/chain/apply_context.hpp>
+#include <graphene/chain/transaction_object.hpp>
 
 #include <cctype>
 
@@ -589,12 +590,19 @@ map<string,account_id_type> database_api_impl::lookup_accounts(const string& low
    return result;
 }
 
-uint64_t database_api_impl::get_account_count()const
+uint64_t database_api_impl::get_transaction_count() const
+{
+    auto next_id = _db.get_index_type<transaction_index>().get_next_id();
+    idump((next_id));
+    return next_id.instance() - 1;
+}
+
+uint64_t database_api_impl::get_account_count() const
 {
    return _db.get_index_type<account_index>().indices().size();
 }
 
-uint64_t database_api_impl::get_asset_count()const
+uint64_t database_api_impl::get_asset_count() const
 {
    return _db.get_index_type<asset_index>().indices().size();
 }

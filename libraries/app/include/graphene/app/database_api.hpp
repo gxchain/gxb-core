@@ -285,6 +285,11 @@ class database_api
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
 
       /**
+       * @brief Get the total number of transactions of the blockchain
+       */
+      uint64_t get_transaction_count() const;
+
+      /**
        * @brief Get the total number of accounts registered with the blockchain
        */
       uint64_t get_account_count()const;
@@ -853,6 +858,7 @@ FC_API(graphene::app::database_api,
    (get_account_references)
    (lookup_account_names)
    (lookup_accounts)
+   (get_transaction_count)
    (get_account_count)
    (get_asset_count)
    (is_account_registered)

@@ -246,6 +246,11 @@ map<string,account_id_type> database_api::lookup_accounts(const string& lower_bo
    return my->lookup_accounts( lower_bound_name, limit );
 }
 
+uint64_t database_api::get_transaction_count() const
+{
+   return my->get_transaction_count();
+}
+
 uint64_t database_api::get_account_count()const
 {
    return my->get_account_count();

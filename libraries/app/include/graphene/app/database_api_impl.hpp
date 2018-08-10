@@ -119,7 +119,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<account_id_type> get_account_references( account_id_type account_id )const;
       vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
       map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
-      uint64_t get_account_count()const;
+      uint64_t get_transaction_count() const;
+      uint64_t get_account_count() const;
       uint64_t get_asset_count() const;
       bool is_account_registered(string name) const;
 
