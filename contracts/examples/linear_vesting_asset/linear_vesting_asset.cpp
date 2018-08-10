@@ -8,61 +8,25 @@
 
 using namespace graphene;
 
-class skeleton : public contract
+class linear_vesting_asset : public contract
 {
-  private:
-    //@abi table account i64
-    struct account {
-        uint64_t owner;
-        std::vector<contract_asset> assets;
-
-        uint64_t primary_key() const { return owner; }
-
-        GRAPHENE_SERIALIZE(account, (owner)(assets))
-    };
-
-    //@abi table lockrule i64
-    struct lockrule {
-        uint64_t id;                //id=get_primary_key_by_account_and_asset(account_id, asset_id)
-        uint64_t account_id;        //某个合约参与者的账号
-        int64_t lock_time_point;    //锁定开始时间
-        int64_t lock_duration;      //锁定多久开始释放
-        int64_t release_time_point; //释放开始时间
-        int64_t release_duration;   //释放多久全部释放完毕
-        uint64_t asset_id;          //资产id
-        int64_t asset_amount;       //总共锁定多少资产
-        int64_t released_amount;    //总共已经释放了多少资产
-
-        uint64_t primary_key() const { return id; }
-
-        static inline uint64_t get_primary_key_by_account_and_asset(uint64_t account_id, uint64_t asset_id)
-        {
-            return (uint64_t)(account_id << 32 | (asset_id & 0xFFFFFFFF));
-        }
-
-        GRAPHENE_SERIALIZE(lockrule, (id)(account_id)(lock_time_point)(lock_duration)(release_time_point)(release_duration)(asset_id)(asset_amount)(released_amount))
-    };
-
-    typedef graphene::multi_index<N(account), account> account_index;
-    typedef graphene::multi_index<N(lockrule), lockrule> lockrule_index;
-
   public:
-    skeleton(uint64_t n)
+    linear_vesting_asset(uint64_t n)
         : contract(n)
         , accounts(_self, _self)
-        , lockrules(_self, _self)
+        , vesting_rules(_self, _self)
     {
     }
 
     /// @abi action
-    void lockasset(uint64_t to, int64_t lock_duration, int64_t release_duration)
+    void vesting_create(uint64_t to, int64_t lock_duration, int64_t release_duration)
     {
         contract_asset ast{get_action_asset_amount(), get_action_asset_id()};
-        uint64_t pk = lockrule::get_primary_key_by_account_and_asset(to, ast.asset_id);
-        auto lr = lockrules.find(pk);
-        graphene_assert(lr == lockrules.end(), "have been locked, can only lock one time");
+        uint64_t pk = vesting_rule::get_primary_key_by_account_and_asset(to, ast.asset_id);
+        auto lr = vesting_rules.find(pk);
+        graphene_assert(lr == vesting_rules.end(), "have been locked, can only lock one time");
 
-        lockrules.emplace(pk, [&](auto &a) {
+        vesting_rules.emplace(pk, [&](auto &a) {
             a.account_id = to;
             a.lock_time_point = get_head_block_time();
             a.lock_duration = lock_duration;
@@ -78,11 +42,11 @@ class skeleton : public contract
     }
 
     /// @abi action
-    void tryrelease(uint64_t who, uint64_t asset_id)
+    void vesting_withdraw(uint64_t who, uint64_t asset_id)
     {
-        uint64_t pk = lockrule::get_primary_key_by_account_and_asset(who, asset_id);
-        auto lr = lockrules.find(pk);
-        graphene_assert(lr != lockrules.end(), "have no locked asset, no lockrule");
+        uint64_t pk = vesting_rule::get_primary_key_by_account_and_asset(who, asset_id);
+        auto lr = vesting_rules.find(pk);
+        graphene_assert(lr != vesting_rules.end(), "have no locked asset, no vesting_rule");
 
         uint64_t now = get_head_block_time();
         if (now <= lr->release_time_point) {
@@ -109,13 +73,13 @@ class skeleton : public contract
         subbalance(who, a);
         withdraw_asset(_self, who, a.asset_id, a.amount);
 
-        lockrules.modify(lr, 0, [&](auto &l) {
+        vesting_rules.modify(lr, 0, [&](auto &l) {
             l.released_amount += should_release_amount;
         });
 
         if (lr->released_amount == lr->asset_amount) {
             print("release finished");
-            lockrules.erase(lr);
+            vesting_rules.erase(lr);
         }
     }
 
@@ -210,8 +174,44 @@ class skeleton : public contract
     }
 
   private:
-    account_index accounts;
-    lockrule_index lockrules;
+    //@abi table account i64
+    struct account {
+        uint64_t owner;
+        std::vector<contract_asset> assets;
+
+        uint64_t primary_key() const { return owner; }
+
+        GRAPHENE_SERIALIZE(account, (owner)(assets))
+    };
+    typedef graphene::multi_index<N(account), account> account_index;
+
+    //@abi table vesting_rule i64
+    struct vesting_rule {
+        uint64_t id;                //id=get_primary_key_by_account_and_asset(account_id, asset_id)
+        uint64_t account_id;        //某个合约参与者的账号
+        int64_t lock_time_point;    //锁定开始时间
+        int64_t lock_duration;      //锁定多久开始释放
+        int64_t release_time_point; //释放开始时间
+        int64_t release_duration;   //释放多久全部释放完毕
+        uint64_t asset_id;          //资产id
+        int64_t asset_amount;       //总共锁定多少资产
+        int64_t released_amount;    //总共已经释放了多少资产
+
+        uint64_t primary_key() const { return id; }
+
+        static inline uint64_t get_primary_key_by_account_and_asset(uint64_t account_id, uint64_t asset_id)
+        {
+            return (uint64_t)(account_id << 32 | (asset_id & 0xFFFFFFFF));
+        }
+
+        GRAPHENE_SERIALIZE(vesting_rule, (id)(account_id)(lock_time_point)(lock_duration)(release_time_point)(release_duration)(asset_id)(asset_amount)(released_amount))
+    };
+
+    typedef graphene::multi_index<N(vesting_rule), vesting_rule> vesting_index;
+
+  private:
+    account_index       accounts;
+    vesting_index       vesting_rules;
 };
 
-GRAPHENE_ABI(skeleton, (lockasset)(tryrelease))
+GRAPHENE_ABI(linear_vesting_asset, (vesting_create)(vesting_withdraw))
