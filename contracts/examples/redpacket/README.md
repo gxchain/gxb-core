@@ -1,11 +1,11 @@
 redpacket 合约
 ---------
 
-redpacket 合约是一个红包合约，提供了发行红包(issue)、打开红包(open) 和关闭红包(close)方法。
+redpacket 合约是一个口令红包合约，提供了发行红包(issue)、打开红包(open) 和关闭红包(close)方法。
 
 任意一个帐户都可以调用issue方法发行一个红包, 在红包未全部打开之前，可以调用close方法关闭自己发行的红包。
 
-打开红包(open)需要知道红包发行的提供的红包私钥。
+打开红包(open)需要知道红包发行的提供的红包口令。
 
 #### 合约编译
 
@@ -39,7 +39,7 @@ unlocked >>> deploy_contract redpacket nathan 0 0 ./contracts/examples/redpacket
 1. 发行红包
 ```
 // 使用nathan帐户，发行一个红包， 红包公钥为GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b， 金额总量为100 GXS(链上为大数，需要乘以10万)， 数量为5个
-unlocked >>> call_contract nathan redpacket {"amount":10000000,"asset_id":1.3.1} issue "{\"pubkey\":\"GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b\",\"number\":5}" GXS true
+unlocked >>> call_contract nathan redpacket {"amount":10000000,"asset_id":1.3.1} issue "{\"random_token\":\"GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b\",\"number\":5}" GXS true
 ```
 
 2. 发行红包后，查询redpacket合约的帐户余额
@@ -52,8 +52,8 @@ unlocked >>> list_account_balances redpacket
 // 使用nathan帐户打开一个红包
 // 合约名redpacket
 // 打开红包的合约方法名 open
-// json为redpacket合约abi约定的参数， 其中issue为发行红包的帐户名, timestamp为当前时间，sig为签名(使用红包发起人提供的私钥，对timestamp进行签名, cli_wallet提供了sign_string方法)
-unlocked >>> call_contract nathan redpacket null open "{\"issuer\":\"nathan\",\"sig\":\"20217c7a2c9f00b886ba029c65bb0338407a292db97eb0937b7e8a50b19f70fbfd1dd1bec9f861f616a850a6a8cb955ba870e8750ef145ae33b9c05cced8b033eb\",\"timestamp\":456}" GXS true
+// json为redpacket合约abi约定的参数， 其中issue为发行红包的帐户名，account_signature为签名(使用红包发起人提供的口令，对timestamp进行签名, cli_wallet提供了sign_string方法)
+unlocked >>> call_contract nathan redpacket null open "{\"issuer\":\"nathan\",\"account_signature\":\"20217c7a2c9f00b886ba029c65bb0338407a292db97eb0937b7e8a50b19f70fbfd1dd1bec9f861f616a850a6a8cb955ba870e8750ef145ae33b9c05cced8b033eb\"}" GXS true
 
 ```
 
@@ -71,7 +71,7 @@ unlocked >>> get_contract_tables redpacket
 unlocked >>> get_table_objects redpacket packet
 [{
     "issuer": 17,
-    "pub_key": "GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b",
+    "encoded_token": "GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b",
     "total_amount": {
       "amount": 10000000,
       "asset_id": 0
@@ -111,7 +111,7 @@ unlocked >>> get_table_objects redpacket record
 unlocked >>> call_contract nathan redpacket null close "{}" GXS true
 ```
 
-本次演示使用的公私钥对
+本次演示使用的口令对
 ```
 pubkey:"GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b"
 wifkey:"5J9vj4XiwVQ2HNr22uFrxgaaerqrPN7xZQER9z2hwSPeWdbMKBM"
