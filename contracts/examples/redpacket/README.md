@@ -38,7 +38,7 @@ unlocked >>> deploy_contract redpacket nathan 0 0 ./contracts/examples/redpacket
 
 1. 发行红包
 ```
-// 使用nathan帐户，发行一个红包， 红包公钥为GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b， 金额总量为100 GXS(链上为大数，需要乘以10万)， 数量为5个
+// 使用nathan帐户，发行一个红包， 随机生成的红包口令为GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b， 金额总量为100 GXS(链上为大数，需要乘以10万)， 数量为5个
 unlocked >>> call_contract nathan redpacket {"amount":10000000,"asset_id":1.3.1} issue "{\"random_token\":\"GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b\",\"number\":5}" GXS true
 ```
 
