@@ -12,6 +12,7 @@
 #include<cmath>
 
 using namespace graphene;
+using account_signature = signature;
 
 class redpacket : public contract
 {

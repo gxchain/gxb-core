@@ -48,7 +48,6 @@ struct ALIGNED(checksum512) {
 
 typedef struct checksum256      transaction_id_type;
 typedef struct checksum256      block_id_type;
-typedef struct signature        account_signature;
 
 #ifdef __cplusplus
 } /// extern "C"
