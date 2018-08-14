@@ -22,7 +22,7 @@ class dice : public contract
         : contract(self)
         , offers(_self, _self)
         , games(_self, _self)
-        , globaldices(_self, _self)
+        , global_dices(_self, _self)
         , accounts(_self, _self)
     {
     }
@@ -123,14 +123,14 @@ class dice : public contract
             return;
         }
 
-        auto gdice_it = globaldices.begin();
-        if (gdice_it == globaldices.end()) {
-            gdice_it = globaldices.emplace(0, [&](auto &o) {
+        auto gdice_it = global_dices.begin();
+        if (gdice_it == global_dices.end()) {
+            gdice_it = global_dices.emplace(0, [&](auto &o) {
                 o.nextgameid = 0;
             });
         }
 
-        globaldices.modify(gdice_it, 0, [&](auto &o) {
+        global_dices.modify(gdice_it, 0, [&](auto &o) {
             o.nextgameid++;
         });
 
@@ -248,11 +248,11 @@ class dice : public contract
   private:
     //@abi table offer i64
     struct offer {
-        uint64_t id;
-        uint64_t owner;
-        contract_asset bet;
-        checksum256 commitment;
-        uint64_t gameid = 0;
+        uint64_t        id;
+        uint64_t        owner;
+        contract_asset  bet;
+        checksum256     commitment;
+        uint64_t        gameid = 0;
 
         uint64_t primary_key() const { return id; }
 
@@ -262,19 +262,19 @@ class dice : public contract
     typedef multi_index<N(offer), offer> offer_index;
 
     struct player {
-        checksum256 commitment;
-        checksum256 reveal;
+        checksum256     commitment;
+        checksum256     reveal;
 
         GRAPHENE_SERIALIZE(player, (commitment)(reveal))
     };
 
     //@abi table game i64
     struct game {
-        uint64_t id;
-        contract_asset bet;
-        int64_t deadline;
-        player player1;
-        player player2;
+        uint64_t        id;
+        contract_asset  bet;
+        int64_t         deadline;
+        player          player1;
+        player          player2;
 
         uint64_t primary_key() const { return id; }
 
@@ -283,24 +283,24 @@ class dice : public contract
 
     typedef multi_index<N(game), game> game_index;
 
-    //@abi table globaldice i64
-    struct globaldice {
-        uint64_t id = 0;
-        uint64_t nextgameid = 0;
+    //@abi table global_dice i64
+    struct global_dice {
+        uint64_t    id = 0;
+        uint64_t    nextgameid = 0;
 
         uint64_t primary_key() const { return id; }
 
-        GRAPHENE_SERIALIZE(globaldice, (id)(nextgameid))
+        GRAPHENE_SERIALIZE(global_dice, (id)(nextgameid))
     };
 
-    typedef multi_index<N(globaldice), globaldice> globaldice_index;
+    typedef multi_index<N(global_dice), global_dice> global_dice_index;
 
     //@abi table account i64
     struct account {
-        uint64_t owner;
-        contract_asset balance;
-        uint32_t open_offers = 0;
-        uint32_t open_games = 0;
+        uint64_t        owner;
+        contract_asset  balance;
+        uint32_t        open_offers = 0;
+        uint32_t        open_games = 0;
 
         bool is_empty() const { return !(balance.amount | open_offers | open_games); }
 
@@ -311,10 +311,10 @@ class dice : public contract
 
     typedef multi_index<N(account), account> account_index;
 
-    offer_index offers;
-    game_index games;
-    globaldice_index globaldices;
-    account_index accounts;
+    offer_index         offers;
+    game_index          games;
+    global_dice_index   global_dices;
+    account_index       accounts;
 
     bool is_equal(const checksum256 &a, const checksum256 &b) const
     {

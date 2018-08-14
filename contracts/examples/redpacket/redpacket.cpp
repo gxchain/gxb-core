@@ -25,7 +25,7 @@ class redpacket : public contract
 
     // @abi action
     // @abi payable
-    void issue(std::string pubkey, uint64_t number)
+    void issue(std::string random_token, uint64_t number)
     {
         int64_t total_amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
@@ -40,7 +40,7 @@ class redpacket : public contract
         vector<int> shares;
         int64_t shares_sum = 0;
 
-        std::string random_str = pubkey + std::to_string(number) + std::to_string(block_num);
+        std::string random_str = random_token + std::to_string(number) + std::to_string(block_num);
         checksum160 sum160;
         ripemd160(const_cast<char *>(random_str.c_str()), random_str.length(), &sum160);
         for (int i = 0; i < number; i++) {
@@ -52,7 +52,7 @@ class redpacket : public contract
 
         packets.emplace(owner, [&](auto &o) {
             o.issuer = owner;
-            o.pub_key = pubkey;
+            o.encoded_token = random_token;
             o.total_amount = contract_asset{total_amount, asset_id};
             o.number = number;
             int64_t share_used_sum = 0;
@@ -67,12 +67,10 @@ class redpacket : public contract
     }
 
     // @abi action
-    void open(std::string issuer, signature sig, uint64_t timestamp)
+    void open(std::string issuer, signature account_signature)
     {
         uint64_t sender = get_trx_sender();
         int64_t now = get_head_block_time();
-        // check timestamp
-        // graphene_assert(abs(now - timestamp) <= 30, "timestamp exceeds 30s around now");
 
         // check redpacket
         int64_t issuer_id = get_account_id(issuer.c_str(), issuer.size());
@@ -81,8 +79,8 @@ class redpacket : public contract
         graphene_assert(packet_iter != packets.end(), "no redpacket");
 
         // check signature
-        std::string s = std::to_string(timestamp);
-        int ret = verify_signature(s.c_str(), s.length(), &sig, packet_iter->pub_key.c_str(), packet_iter->pub_key.length());
+        std::string s = std::to_string(sender);
+        int ret = verify_signature(s.c_str(), s.length(), &account_signature, packet_iter->encoded_token.c_str(), packet_iter->encoded_token.length());
         graphene_assert(ret == 1, "signature not valid");
 
         // check record
@@ -150,14 +148,14 @@ class redpacket : public contract
     //@abi table packet i64
     struct packet {
         uint64_t                issuer;
-        std::string             pub_key;
+        std::string             encoded_token;
         contract_asset          total_amount;
         uint32_t                number;
         vector<int64_t>         subpackets;
 
         uint64_t primary_key() const { return issuer; }
 
-        GRAPHENE_SERIALIZE(packet, (issuer)(pub_key)(total_amount)(number)(subpackets))
+        GRAPHENE_SERIALIZE(packet, (issuer)(encoded_token)(total_amount)(number)(subpackets))
     };
     typedef graphene::multi_index<N(packet), packet> packet_index;
 
