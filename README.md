@@ -3,7 +3,6 @@
 
 GXB-Core is the GXChain implementation and command-line interface.
 Current binary version of the GXB-Core software for ubuntu 14.04 LTS, see [here](https://github.com/gxchain/gxb-core/releases).
-Visit [gxb.io](https://gxs.gxb.io/en/) to learn about GXB.
 
 ## API Document
 APIs are separated into two categories, namely
@@ -39,7 +38,7 @@ the blockchain.
 
 After starting the witness node, in a separate terminal you can run cli_wallet:
 ```
-    ./programs/cli_wallet/cli_wallet -s ws://127.0.0.1:8090
+ ./programs/cli_wallet/cli_wallet -s ws://127.0.0.1:8090
 ```
 Set your inital password:
 ```
@@ -48,21 +47,59 @@ locked >>> unlock <PASSWORD>
 ```
 To import your wif_key(active key):
 ```
-    unlocked >>> import_key <ACCOUNT NAME> [<WIF_KEY>] true
+unlocked >>> import_key <ACCOUNT NAME> [<WIF_KEY>] true
 ```
 Import balances:
 ```
-    unlocked >>> import_balance <ACCOUNT NAME> [<WIF_KEY>] true
+unlocked >>> import_balance <ACCOUNT NAME> [<WIF_KEY>] true
 ```
 Transferring Currency:
 ```
-    unlocked >>> transfer <FROM ACCOUNT> <TO ACCOUNT> 100 GXC "" true
+unlocked >>> transfer <FROM ACCOUNT> <TO ACCOUNT> 100 GXC "" true
 ```
 
 If you send private keys over this connection, `rpc-endpoint` should be bound to localhost for security.
 
 Use `help` to see all available wallet commands.
 
+## Smart Contract Getting Started
+---------------
+
+#### Create Contract
+
+create contract use gxx:
+```
+gxx -n helloworld
+```
+
+build contract:
+```
+gxx -g helloworld/helloworld.abi helloworld/helloworld.cpp
+```
+
+generate wast:
+```
+gxx -o helloworld/helloworld.wast helloworld/helloworld.cpp
+```
+
+generate abi:
+```
+gxx -g helloworld/helloworld.abi helloworld/helloworld.cpp
+```
+
+
+#### Deploy Contract
+You can deploy and call contract with cli_wallet.
+
+```
+unlocked >>> deploy_contract helloworld nathan 0 0 ./helloworld GXS true
+```
+
+#### Call Contract
+```
+unlocked >>> call_contract nathan helloworld null hi "{\"user\":\"albert\"}" GXS true
+
+```
 
 ## Support
 ---------------
