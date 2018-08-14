@@ -38,7 +38,7 @@ the blockchain.
 
 After starting the witness node, in a separate terminal you can run cli_wallet:
 ```
-    ./programs/cli_wallet/cli_wallet -s ws://127.0.0.1:8090
+ ./programs/cli_wallet/cli_wallet -s ws://127.0.0.1:8090
 ```
 Set your inital password:
 ```
@@ -47,15 +47,15 @@ locked >>> unlock <PASSWORD>
 ```
 To import your wif_key(active key):
 ```
-    unlocked >>> import_key <ACCOUNT NAME> [<WIF_KEY>] true
+unlocked >>> import_key <ACCOUNT NAME> [<WIF_KEY>] true
 ```
 Import balances:
 ```
-    unlocked >>> import_balance <ACCOUNT NAME> [<WIF_KEY>] true
+unlocked >>> import_balance <ACCOUNT NAME> [<WIF_KEY>] true
 ```
 Transferring Currency:
 ```
-    unlocked >>> transfer <FROM ACCOUNT> <TO ACCOUNT> 100 GXC "" true
+unlocked >>> transfer <FROM ACCOUNT> <TO ACCOUNT> 100 GXC "" true
 ```
 
 If you send private keys over this connection, `rpc-endpoint` should be bound to localhost for security.
