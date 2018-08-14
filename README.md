@@ -3,7 +3,6 @@
 
 GXB-Core is the GXChain implementation and command-line interface.
 Current binary version of the GXB-Core software for ubuntu 14.04 LTS, see [here](https://github.com/gxchain/gxb-core/releases).
-Visit [gxb.io](https://gxs.gxb.io/en/) to learn about GXB.
 
 ## API Document
 APIs are separated into two categories, namely
@@ -63,6 +62,44 @@ If you send private keys over this connection, `rpc-endpoint` should be bound to
 
 Use `help` to see all available wallet commands.
 
+## Smart Contract Getting Started
+---------------
+
+#### Create Contract
+
+create contract use gxx:
+```
+gxx -n helloworld
+```
+
+build contract:
+```
+gxx -g helloworld/helloworld.abi helloworld/helloworld.cpp
+```
+
+generate wast:
+```
+gxx -o helloworld/helloworld.wast helloworld/helloworld.cpp
+```
+
+generate abi:
+```
+gxx -g helloworld/helloworld.abi helloworld/helloworld.cpp
+```
+
+
+#### Deploy Contract
+You can deploy and call contract with cli_wallet.
+
+```
+unlocked >>> deploy_contract helloworld nathan 0 0 ./helloworld GXS true
+```
+
+#### Call Contract
+```
+unlocked >>> call_contract nathan helloworld null hi "{\"user\":\"albert\"}" GXS true
+
+```
 
 ## Support
 ---------------
