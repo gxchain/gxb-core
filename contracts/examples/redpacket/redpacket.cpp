@@ -25,7 +25,7 @@ class redpacket : public contract
 
     // @abi action
     // @abi payable
-    void issue(std::string random_token, uint64_t number)
+    void issue(random_token encoded_token, uint64_t number)
     {
         int64_t total_amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
@@ -40,7 +40,7 @@ class redpacket : public contract
         vector<int> shares;
         int64_t shares_sum = 0;
 
-        std::string random_str = random_token + std::to_string(number) + std::to_string(block_num);
+        std::string random_str = encoded_token + std::to_string(number) + std::to_string(block_num);
         checksum160 sum160;
         ripemd160(const_cast<char *>(random_str.c_str()), random_str.length(), &sum160);
         for (int i = 0; i < number; i++) {
@@ -52,7 +52,7 @@ class redpacket : public contract
 
         packets.emplace(owner, [&](auto &o) {
             o.issuer = owner;
-            o.encoded_token = random_token;
+            o.encoded_token = encoded_token;
             o.total_amount = contract_asset{total_amount, asset_id};
             o.number = number;
             int64_t share_used_sum = 0;
@@ -67,7 +67,7 @@ class redpacket : public contract
     }
 
     // @abi action
-    void open(std::string issuer, signature account_signature)
+    void open(std::string issuer, account_signature sig)
     {
         uint64_t sender = get_trx_sender();
         int64_t now = get_head_block_time();
@@ -80,7 +80,7 @@ class redpacket : public contract
 
         // check signature
         std::string s = std::to_string(sender);
-        int ret = verify_signature(s.c_str(), s.length(), &account_signature, packet_iter->encoded_token.c_str(), packet_iter->encoded_token.length());
+        int ret = verify_signature(s.c_str(), s.length(), &sig, packet_iter->encoded_token.c_str(), packet_iter->encoded_token.length());
         graphene_assert(ret == 1, "signature not valid");
 
         // check record
