@@ -101,6 +101,8 @@ unlocked >>> call_contract nathan helloworld null hi "{\"user\":\"albert\"}" GXS
 
 ```
 
+Smart Contract QuickStart for testnet, see [here](https://github.com/gxchain/Technical-Documents/blob/master/gxchain_contract_start.md)
+
 ## Support
 ---------------
 Report bugs, issues using [GitHub issues](https://github.com/gxchain/gxb-core/issues/new).
