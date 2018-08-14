@@ -40,7 +40,7 @@ class redpacket : public contract
         vector<int> shares;
         int64_t shares_sum = 0;
 
-        std::string random_str = std::string(encoded_token) + std::to_string(number) + std::to_string(block_num);
+        std::string random_str = std::string(encoded_token.data) + std::to_string(number) + std::to_string(block_num);
         checksum160 sum160;
         ripemd160(const_cast<char *>(random_str.c_str()), random_str.length(), &sum160);
         for (int i = 0; i < number; i++) {
@@ -52,7 +52,7 @@ class redpacket : public contract
 
         packets.emplace(owner, [&](auto &o) {
             o.issuer = owner;
-            o.encoded_token = std::string(encoded_token);
+            o.encoded_token = std::string(encoded_token.data);
             o.total_amount = contract_asset{total_amount, asset_id};
             o.number = number;
             int64_t share_used_sum = 0;
@@ -70,7 +70,6 @@ class redpacket : public contract
     void open(std::string issuer, account_signature sig)
     {
         uint64_t sender = get_trx_sender();
-        int64_t now = get_head_block_time();
 
         // check redpacket
         int64_t issuer_id = get_account_id(issuer.c_str(), issuer.size());
@@ -98,7 +97,7 @@ class redpacket : public contract
         }
 
         // update records
-        uint64_t current_idx = timestamp % packet_iter->subpackets.size();
+        int64_t current_idx = (sender + get_head_block_time()) % packet_iter->subpackets.size();
         int64_t current_amount = packet_iter->subpackets[current_idx];
         records.modify(record_iter, sender, [&](auto &o) {
             o.packet_issuer = issuer_id;
