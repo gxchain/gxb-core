@@ -27,7 +27,7 @@ typedef uint16_t weight_type;
 #define ALIGNED(X) __attribute__ ((aligned (16))) X
 
 struct public_key {
-   char data[34];
+   char data[33];
 };
 
 struct signature {
