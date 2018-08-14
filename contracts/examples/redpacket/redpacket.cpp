@@ -25,7 +25,7 @@ class redpacket : public contract
 
     // @abi action
     // @abi payable
-    void issue(random_token encoded_token, uint64_t number)
+    void issue(public_key encoded_token, uint64_t number)
     {
         int64_t total_amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
@@ -40,7 +40,7 @@ class redpacket : public contract
         vector<int> shares;
         int64_t shares_sum = 0;
 
-        std::string random_str = encoded_token + std::to_string(number) + std::to_string(block_num);
+        std::string random_str = std::string(encoded_token) + std::to_string(number) + std::to_string(block_num);
         checksum160 sum160;
         ripemd160(const_cast<char *>(random_str.c_str()), random_str.length(), &sum160);
         for (int i = 0; i < number; i++) {
@@ -52,7 +52,7 @@ class redpacket : public contract
 
         packets.emplace(owner, [&](auto &o) {
             o.issuer = owner;
-            o.encoded_token = encoded_token;
+            o.encoded_token = std::string(encoded_token);
             o.total_amount = contract_asset{total_amount, asset_id};
             o.number = number;
             int64_t share_used_sum = 0;
