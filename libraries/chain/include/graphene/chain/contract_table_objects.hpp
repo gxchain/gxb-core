@@ -92,6 +92,9 @@ struct secondary_index {
     public:
       typedef SecondaryKey secondary_key_type;
 
+      static const uint8_t space_id = implementation_ids;
+      static const uint8_t type_id  = ObjectTypeId;
+
       table_id      t_id;
       uint64_t      primary_key;
       account_name  payer = 0;
@@ -183,3 +186,33 @@ FC_REFLECT_DERIVED(graphene::chain::key_value_object, (graphene::db::object),
                   (primary_key)
                   (payer)
                   (value))
+
+FC_REFLECT_DERIVED(graphene::chain::index64_object, (graphene::db::object),
+                  (t_id)
+                  (primary_key)
+                  (payer)
+                  (secondary_key))
+
+FC_REFLECT_DERIVED(graphene::chain::index128_object, (graphene::db::object),
+                  (t_id)
+                  (primary_key)
+                  (payer)
+                  (secondary_key))
+
+FC_REFLECT_DERIVED(graphene::chain::index256_object, (graphene::db::object),
+                  (t_id)
+                  (primary_key)
+                  (payer)
+                  (secondary_key))
+
+FC_REFLECT_DERIVED(graphene::chain::index_double_object, (graphene::db::object),
+                  (t_id)
+                  (primary_key)
+                  (payer)
+                  (secondary_key))
+
+FC_REFLECT_DERIVED(graphene::chain::index_long_double_object, (graphene::db::object),
+                  (t_id)
+                  (primary_key)
+                  (payer)
+                  (secondary_key))
