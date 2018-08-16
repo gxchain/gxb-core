@@ -33,25 +33,26 @@ namespace graphene { namespace chain {
  */
 bool is_valid_symbol( const string& symbol )
 {
+    static const std::locale& loc = std::locale::classic();
     if( symbol.size() < GRAPHENE_MIN_ASSET_SYMBOL_LENGTH )
         return false;
 
     if( symbol.substr(0,3) == "BIT" ) 
-       return false;
+        return false;
 
     if( symbol.size() > GRAPHENE_MAX_ASSET_SYMBOL_LENGTH )
         return false;
 
-    if( !isalpha( symbol.front() ) )
+    if( !isalpha( symbol.front(), loc ) )
         return false;
 
-    if( !isalpha( symbol.back() ) )
+    if( !isalnum( symbol.back(), loc ) )
         return false;
 
     bool dot_already_present = false;
     for( const auto c : symbol )
     {
-        if( (isalpha( c ) && isupper( c )) || isdigit(c) )
+        if( (isalpha( c, loc ) && isupper( c, loc )) || isdigit( c, loc ) )
             continue;
 
         if( c == '.' )
