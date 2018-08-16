@@ -230,7 +230,7 @@ namespace graphene { namespace chain { namespace wasm_injections {
       static constexpr bool post = false;
       static void init() { fcnt = 0; }
       static void accept( wasm_ops::instr* inst, wasm_ops::visitor_arg& arg ) {
-         size_t inst_idx = checktime_block_type::block_stack.top();
+//         size_t inst_idx = checktime_block_type::block_stack.top();
          fcnt = instruction_counter::tcnt - instruction_counter::bcnt;
       }
       static size_t fcnt;

@@ -54,7 +54,7 @@ inline array_ptr<T> array_ptr_impl (running_instance_context& ctx, U32 ptr, size
    if (ptr >= mem_total || length > (mem_total - ptr) / sizeof(T))
       Runtime::causeException(Exception::Cause::accessViolation);
    
-   T* ret_ptr = (T*)(getMemoryBaseAddress(mem) + ptr);
+//   T* ret_ptr = (T*)(getMemoryBaseAddress(mem) + ptr);
 
    return array_ptr<T>((T*)(getMemoryBaseAddress(mem) + ptr));
 }
