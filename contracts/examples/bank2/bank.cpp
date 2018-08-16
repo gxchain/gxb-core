@@ -3,7 +3,6 @@
 #include <graphenelib/dispatcher.hpp>
 #include <graphenelib/global.h>
 #include <graphenelib/multi_index.hpp>
-#include <graphenelib/print.hpp>
 #include <vector>
 
 using namespace graphene;
@@ -28,13 +27,11 @@ class bank : public contract
         uint64_t pk = account::gen_id(owner, asset_id);
         auto it = accounts.find(pk);
         if (it == accounts.end()) {
-            print("record not exist, to add");
             accounts.emplace(pk, [&](auto &o) {
                 o.id = pk;
                 o.amount = asset_amount;
             });
         } else {
-            print("account_id:", owner, "asset_id:", asset_id, " record exist, to update");
             accounts.modify(it, 0, [&](auto &o) {
                 o.amount += asset_amount;
             });
@@ -54,10 +51,8 @@ class bank : public contract
         graphene_assert(it->amount >= amount, "balance not enough");
 
         if (it->amount == amount) {
-            print("withdraw all, to delete the record");
             accounts.erase(it);
         } else {
-            print("withdraw part, to udpate");
             accounts.modify(it, 0, [&](auto &o) {
                 o.amount -= amount;
             });
