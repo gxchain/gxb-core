@@ -47,7 +47,7 @@ class linear_vesting_asset : public contract
     {
         uint64_t pk = vestingrule::get_primary_key_by_account_and_asset(who, asset_id);
         auto lr = vesting_rules.find(pk);
-        graphene_assert(lr != vesting_rules.end(), "have no locked asset, no vesting_rule");
+        graphene_assert(lr != vesting_rules.end(), "current account have no locked asset");
 
         uint64_t now = get_head_block_time();
         graphene_assert(now > lr->release_time_point, "within lock duration, can not release");
