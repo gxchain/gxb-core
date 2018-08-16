@@ -198,8 +198,6 @@ class apply_context {
             int store(uint64_t scope, uint64_t table, const account_name &payer,
                       uint64_t id, secondary_key_proxy_const_type value)
             {
-               // FC_ASSERT( payer != account_name(), "must specify a valid account to pay for new record" );
-
                auto &tab = const_cast<table_id_object&>(context.find_or_create_table(context.receiver, scope, table, payer));
 
                const auto &obj = context._db->create<ObjectType>([&](auto &o) {
@@ -213,8 +211,6 @@ class apply_context {
                    ++t.count;
                });
 
-               // context.update_db_usage
-
                itr_cache.cache_table(tab);
                return itr_cache.add(obj);
             }
@@ -222,7 +218,6 @@ class apply_context {
             void remove(int iterator)
             {
                 const auto &obj = itr_cache.get(iterator);
-                // context.update_db_usage
 
                 const auto &table_obj = itr_cache.get_table(obj.t_id);
                 FC_ASSERT(table_obj.code == context.receiver, "db access violation");
@@ -245,10 +240,6 @@ class apply_context {
 
                 const auto &table_obj = itr_cache.get_table(obj.t_id);
                 FC_ASSERT(table_obj.code == context.receiver, "db access violation");
-
-                // if( payer == account_name() ) payer = obj.payer;
-
-                // context.update_db_usage
 
                 context._db->modify(obj, [&](ObjectType &o) {
                     secondary_key_helper_t::set(o.secondary_key, secondary);
