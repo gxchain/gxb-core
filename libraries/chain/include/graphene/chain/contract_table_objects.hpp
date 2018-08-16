@@ -129,6 +129,7 @@ struct secondary_index {
 typedef secondary_index<uint64_t, index64_object_type>::index_object index64_object;
 typedef secondary_index<uint64_t, index64_object_type>::index_index index64_index;
 
+/*
 typedef secondary_index<uint128_t, index128_object_type>::index_object index128_object;
 typedef secondary_index<uint128_t, index128_object_type>::index_index index128_index;
 
@@ -157,6 +158,7 @@ typedef secondary_index<float64_t,index_double_object_type,soft_double_less>::in
 
 typedef secondary_index<float128_t,index_long_double_object_type,soft_long_double_less>::index_object  index_long_double_object;
 typedef secondary_index<float128_t,index_long_double_object_type,soft_long_double_less>::index_index   index_long_double_index;
+*/
 
 
 
@@ -169,10 +171,10 @@ struct get_gph_index_type {};
     template<> struct get_gph_index_type<OBJECT_TYPE> { typedef INDEX_TYPE type; };
 
 GPH_SET_INDEX_TYPE(graphene::chain::index64_object, graphene::chain::index64_index)
-GPH_SET_INDEX_TYPE(graphene::chain::index128_object, graphene::chain::index128_index)
-GPH_SET_INDEX_TYPE(graphene::chain::index256_object, graphene::chain::index256_index)
-GPH_SET_INDEX_TYPE(graphene::chain::index_double_object, graphene::chain::index_double_index)
-GPH_SET_INDEX_TYPE(graphene::chain::index_long_double_object, graphene::chain::index_long_double_index)
+// GPH_SET_INDEX_TYPE(graphene::chain::index128_object, graphene::chain::index128_index)
+// GPH_SET_INDEX_TYPE(graphene::chain::index256_object, graphene::chain::index256_index)
+// GPH_SET_INDEX_TYPE(graphene::chain::index_double_object, graphene::chain::index_double_index)
+// GPH_SET_INDEX_TYPE(graphene::chain::index_long_double_object, graphene::chain::index_long_double_index)
 
 FC_REFLECT_DERIVED(graphene::chain::table_id_object, (graphene::db::object),
                    (code)
@@ -193,6 +195,7 @@ FC_REFLECT_DERIVED(graphene::chain::index64_object, (graphene::db::object),
                   (payer)
                   (secondary_key))
 
+/*
 FC_REFLECT_DERIVED(graphene::chain::index128_object, (graphene::db::object),
                   (t_id)
                   (primary_key)
@@ -216,3 +219,4 @@ FC_REFLECT_DERIVED(graphene::chain::index_long_double_object, (graphene::db::obj
                   (primary_key)
                   (payer)
                   (secondary_key))
+*/
