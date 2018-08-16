@@ -50,10 +50,7 @@ class linear_vesting_asset : public contract
         graphene_assert(lr != vesting_rules.end(), "have no locked asset, no vesting_rule");
 
         uint64_t now = get_head_block_time();
-        if (now <= lr->release_time_point) {
-            print("within lock duration, can not release", "\n");
-            return;
-        }
+        graphene_assert(now > lr->release_time_point, "within lock duration, can not release");
 
         auto who_it = accounts.find(who);
         graphene_assert(who_it != accounts.end(), "have no locked asset, no asset");
@@ -61,25 +58,20 @@ class linear_vesting_asset : public contract
         int percentage = (now - lr->release_time_point) * 100 / lr->release_duration;
         if (percentage > 100)
             percentage = 100;
-        print("percentage=", percentage, "\n");
 
-        int64_t should_release_amount = (int64_t)(1.0f * lr->asset_amount * percentage / 100);
-        should_release_amount = should_release_amount - lr->released_amount;
-        if (should_release_amount <= 0) {
-            print("release amount reach max");
-            return;
-        }
+        int64_t vested_amount = (int64_t)(1.0f * lr->asset_amount * percentage / 100);
+        vested_amount = vested_amount - lr->released_amount;
+        graphene_assert(vested_amount > 0, "vested amount < -");
 
-        contract_asset a{should_release_amount, asset_id};
+        contract_asset a{vested_amount, asset_id};
         subbalance(who, a);
         withdraw_asset(_self, who, a.asset_id, a.amount);
 
         vesting_rules.modify(lr, 0, [&](auto &l) {
-            l.released_amount += should_release_amount;
+            l.released_amount += vested_amount;
         });
 
         if (lr->released_amount == lr->asset_amount) {
-            print("release finished");
             vesting_rules.erase(lr);
         }
     }
@@ -88,14 +80,10 @@ class linear_vesting_asset : public contract
     void subbalance(uint64_t owner, contract_asset value)
     {
         auto it = accounts.find(owner);
-        if (it == accounts.end()) {
-            print("account not found\n");
-            return;
-        }
+        graphene_assert(it != accounts.end(), "account not found");
 
         int asset_index = 0;
         for (auto asset_it = it->assets.begin(); asset_it != it->assets.end(); ++asset_it) {
-            print("asset.id=", asset_it->asset_id, ", asset.amount=", asset_it->amount, "\n");
             if (asset_it->asset_id == value.asset_id) {
                 if (asset_it->amount == value.amount) {
                     accounts.modify(it, owner, [&](auto &a) {
@@ -124,14 +112,11 @@ class linear_vesting_asset : public contract
     {
         auto it = accounts.find(owner);
         if (it == accounts.end()) {
-            print("owner not exist, to add owner\n");
             accounts.emplace(owner, [&](auto &a) {
-                print("addbalance, owner: ", owner, ", asset_id: ", value.asset_id, ", amount: ", value.amount, "\n");
                 a.owner = owner;
                 a.assets.emplace_back(value);
             });
         } else {
-            print("owner exist, to modify\n");
             bool asset_exist = false;
             int asset_index = 0;
             for (auto asset_it = it->assets.begin(); asset_it != it->assets.end(); ++asset_it) {
@@ -148,7 +133,6 @@ class linear_vesting_asset : public contract
             }
 
             if (!asset_exist) {
-                print("asset not exist, to add asset\n");
                 accounts.modify(it, 0, [&](auto &a) {
                     a.assets.reserve(a.assets.size() + 1);
                     a.assets.emplace_back(value);
@@ -161,7 +145,6 @@ class linear_vesting_asset : public contract
     {
         auto it = accounts.find(owner);
         if (it == accounts.end()) {
-            print("account not found\n");
             return 0;
         }
 
