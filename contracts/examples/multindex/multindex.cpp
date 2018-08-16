@@ -7,6 +7,8 @@ using namespace graphene;
 
 class multindex : public contract
 {
+    struct offer;
+
   public:
     multindex(uint64_t id)
         : contract(id)
@@ -15,13 +17,14 @@ class multindex : public contract
     }
 
     //@abi action
-    void additem(uint64_t i1)
+    void additem(uint64_t i1, uint64_t i2)
     {
         uint64_t pk = offers.available_primary_key();
         print("pk=", pk);
         offers.emplace(0, [&](auto &o) {
             o.id = pk;
-            o.i1 = i1;
+            o.idx1 = i1;
+            o.idx2 = i2;
         });
     }
 
@@ -30,38 +33,60 @@ class multindex : public contract
     {
         auto it = offers.find(key);
         if (it != offers.end()) {
-            print("item:", it->id, ", ", it->i1);
+            print("item:", it->id, ", ", it->idx1);
         }
     }
 
     //@abi action
-    void getbyi1(uint64_t key)
+    void getbyidx1(uint64_t key)
     {
-        auto idx = offers.template get_index<N(i1)>();
+        auto idx = offers.template get_index<N(idx1)>();
         auto matched_offer_itr = idx.lower_bound(key);
         if (matched_offer_itr != idx.end()) {
-            print("matched_offer_itr:", matched_offer_itr->id);
+            dump_item(*matched_offer_itr);
         }
+    }
+
+    //@abi action
+    void getbyidx2(uint64_t key)
+    {
+        auto idx = offers.template get_index<N(idx2)>();
+        auto matched_offer_itr = idx.lower_bound(key);
+        if (matched_offer_itr != idx.end()) {
+            dump_item(*matched_offer_itr);
+        }
+    }
+
+  private:
+    void dump_item(const offer &o)
+    {
+        print("offer.id:", o.id, "\n");
+        print("offer.idx1:", o.idx1, "\n");
+        print("offer.idx2:", o.idx2, "\n");
     }
 
   private:
     //@abi table offer i64
     struct offer {
         uint64_t id;
-        uint64_t i1;
+        uint64_t idx1;
+        uint64_t idx2;
 
         uint64_t primary_key() const { return id; }
 
-        uint64_t by_i1() const { return i1; }
+        uint64_t by_index1() const { return idx1; }
 
-        GRAPHENE_SERIALIZE(offer, (id)(i1))
+        uint64_t by_index2() const { return idx2; }
+
+        GRAPHENE_SERIALIZE(offer, (id)(idx1)(idx2))
     };
 
     typedef multi_index<N(offer), offer,
-                        indexed_by<N(i1), const_mem_fun<offer, uint64_t, &offer::by_i1>>>
+                        indexed_by<N(idx1), const_mem_fun<offer, uint64_t, &offer::by_index1>>,
+                        indexed_by<N(idx2), const_mem_fun<offer, uint64_t, &offer::by_index2>>>
         offer_index;
 
     offer_index offers;
 };
 
-GRAPHENE_ABI(multindex, (additem)(getbypk)(getbyi1))
+GRAPHENE_ABI(multindex, (additem)(getbypk)(getbyidx1)(getbyidx2))
