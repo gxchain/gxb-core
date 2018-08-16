@@ -481,10 +481,6 @@ class apply_context {
          , amount(amnt)
          , receiver(a.contract_id)
          , idx64(*this)
-         // , idx128(*this)
-         // , idx256(*this)
-         // , idx_double(*this)
-         // , idx_long_double(*this)
      {
          reset_console();
       }
@@ -500,10 +496,6 @@ class apply_context {
       uint64_t                      receiver;
 
       gph_generic_index<index64_object>                                  idx64;
-      // gph_generic_index<index128_object>                                 idx128;
-      // gph_generic_index<index256_object, uint128_t*, const uint128_t*>   idx256;
-      // gph_generic_index<index_double_object>                             idx_double;
-      // gph_generic_index<index_long_double_object>                        idx_long_double;
 
    private:
       iterator_cache<key_value_object>    keyval_cache;
