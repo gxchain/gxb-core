@@ -129,39 +129,6 @@ struct secondary_index {
 typedef secondary_index<uint64_t, index64_object_type>::index_object index64_object;
 typedef secondary_index<uint64_t, index64_object_type>::index_index index64_index;
 
-/*
-typedef secondary_index<uint128_t, index128_object_type>::index_object index128_object;
-typedef secondary_index<uint128_t, index128_object_type>::index_index index128_index;
-
-typedef std::array<uint128_t, 2> key256_t;
-typedef secondary_index<key256_t, index256_object_type>::index_object index256_object;
-typedef secondary_index<key256_t, index256_object_type>::index_index index256_index;
-
-struct soft_double_less
-{
-    bool operator()(const float64_t &lhs, const float64_t &rhs) const
-    {
-        return f64_lt(lhs, rhs);
-    }
-};
-
-struct soft_long_double_less
-{
-    bool operator()(const float128_t lhs, const float128_t &rhs) const
-    {
-        return f128_lt(lhs, rhs);
-    }
-};
-
-typedef secondary_index<float64_t, index_double_object_type, soft_double_less>::index_object index_double_object;
-typedef secondary_index<float64_t,index_double_object_type,soft_double_less>::index_index   index_double_index;
-
-typedef secondary_index<float128_t,index_long_double_object_type,soft_long_double_less>::index_object  index_long_double_object;
-typedef secondary_index<float128_t,index_long_double_object_type,soft_long_double_less>::index_index   index_long_double_index;
-*/
-
-
-
 } }  // namespace graphene::chain
 
 template<typename T>
@@ -171,10 +138,6 @@ struct get_gph_index_type {};
     template<> struct get_gph_index_type<OBJECT_TYPE> { typedef INDEX_TYPE type; };
 
 GPH_SET_INDEX_TYPE(graphene::chain::index64_object, graphene::chain::index64_index)
-// GPH_SET_INDEX_TYPE(graphene::chain::index128_object, graphene::chain::index128_index)
-// GPH_SET_INDEX_TYPE(graphene::chain::index256_object, graphene::chain::index256_index)
-// GPH_SET_INDEX_TYPE(graphene::chain::index_double_object, graphene::chain::index_double_index)
-// GPH_SET_INDEX_TYPE(graphene::chain::index_long_double_object, graphene::chain::index_long_double_index)
 
 FC_REFLECT_DERIVED(graphene::chain::table_id_object, (graphene::db::object),
                    (code)
@@ -194,29 +157,3 @@ FC_REFLECT_DERIVED(graphene::chain::index64_object, (graphene::db::object),
                   (primary_key)
                   (payer)
                   (secondary_key))
-
-/*
-FC_REFLECT_DERIVED(graphene::chain::index128_object, (graphene::db::object),
-                  (t_id)
-                  (primary_key)
-                  (payer)
-                  (secondary_key))
-
-FC_REFLECT_DERIVED(graphene::chain::index256_object, (graphene::db::object),
-                  (t_id)
-                  (primary_key)
-                  (payer)
-                  (secondary_key))
-
-FC_REFLECT_DERIVED(graphene::chain::index_double_object, (graphene::db::object),
-                  (t_id)
-                  (primary_key)
-                  (payer)
-                  (secondary_key))
-
-FC_REFLECT_DERIVED(graphene::chain::index_long_double_object, (graphene::db::object),
-                  (t_id)
-                  (primary_key)
-                  (payer)
-                  (secondary_key))
-*/
