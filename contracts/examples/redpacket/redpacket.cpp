@@ -58,7 +58,6 @@ class redpacket : public contract
             int64_t share_used_sum = 0;
             for (int i = 0; i < number - 1; i++) {
                 int64_t share_amount = total_amount * shares[i] / shares_sum;
-                // print("share: ", shares[i], ", share_amount: ", share_amount,  "\n");
                 o.subpackets.emplace_back(share_amount);
                 share_used_sum += share_amount;
             }
@@ -71,8 +70,6 @@ class redpacket : public contract
     {
         uint64_t sender = get_trx_sender();
         int64_t now = get_head_block_time();
-        // check timestamp
-        // graphene_assert(abs(now - timestamp) <= 30, "timestamp exceeds 30s around now");
 
         // check redpacket
         int64_t issuer_id = get_account_id(issuer.c_str(), issuer.size());
@@ -134,7 +131,6 @@ class redpacket : public contract
         for (uint64_t subpacket : packet_iter->subpackets) {
             left_amount += subpacket;
         }
-        print("withdraw amount:", left_amount);
         packets.erase(packet_iter);
 
         // remove records
