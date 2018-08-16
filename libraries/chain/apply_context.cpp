@@ -80,7 +80,7 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, c
     const auto &tab = find_or_create_table(code, scope, table, payer);
     auto tableid = tab.id;
 
-    // assert payer
+    // TODO: assert payer
 
     const auto& new_obj = _db->create<key_value_object>([&](key_value_object& o) {
         o.t_id = tableid;
@@ -92,7 +92,6 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, c
 
     // update_db_usage
     update_ram_usage((int64_t)(buffer_size + config::billable_size_v<key_value_object>));
-    // dlog("db_store_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", buffer_size + config::billable_size_v<key_value_object>)("n", ram_usage));
 
     keyval_cache.cache_table(tab);
     return keyval_cache.add(new_obj);
@@ -263,21 +262,16 @@ const table_id_object &apply_context::find_or_create_table(uint64_t code, name s
         return *existing_tid;
    }
 
-   // update_db_usage
-
    return _db->create<table_id_object>([&](table_id_object &t_id){
       t_id.code = code;
       t_id.scope = scope;
       t_id.table = table;
       t_id.payer = payer;
-      dlog("when store code=${code}", ("code", t_id.code));
    });
 }
 
 void apply_context::remove_table(const table_id_object &tid)
 {
-    // update_db_usage
-
     _db->remove(tid);
 }
 
