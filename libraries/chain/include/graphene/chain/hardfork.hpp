@@ -44,10 +44,6 @@
 #ifndef HARDFORK_385_TIME
 #define HARDFORK_385_TIME (fc::time_point_sec( 1445558400 ))
 #endif
-// #409 Allow creation of sub-assets
-#ifndef HARDFORK_409_TIME
-#define HARDFORK_409_TIME (fc::time_point_sec( 1446652800 ))
-#endif
 // #413 Add operation to claim asset fees
 #ifndef HARDFORK_413_TIME
 #define HARDFORK_413_TIME (fc::time_point_sec( 1446652800 ))
