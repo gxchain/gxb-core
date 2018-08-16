@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE( db_store_i64_undo )
    try {
       database db;
       auto ses = db._undo_db.start_undo_session();
-      auto cpu_param = db.get_cpu_limit();
+      auto cpu_param = vm_cpu_limit_t();
 
       const contract_call_operation op;
       transaction_context trx_context(db, account_id_type().instance, cpu_param.trx_cpu_limit);
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE( db_store_i64_commit )
    try {
       database db;
       auto ses = db._undo_db.start_undo_session();
-      auto cpu_param = db.get_cpu_limit();
+      auto cpu_param = vm_cpu_limit_t();
 
       const contract_call_operation op;
       transaction_context trx_context(db, account_id_type().instance, cpu_param.trx_cpu_limit);
