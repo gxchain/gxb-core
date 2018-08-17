@@ -18,7 +18,7 @@ class riddle : public contract
     }
 
     /// @abi action
-    void issue(std::string question, std::string hashed_answer)
+    void issue(const std::string& question, const checksum256& hashed_answer)
     {
         uint64_t owner = get_trx_sender();
         records.emplace(owner, [&](auto &p) {
@@ -29,7 +29,7 @@ class riddle : public contract
     }
 
     /// @abi action
-    void reveal(std::string issuer, std::string answer)
+    void reveal(const std::string& issuer, const std::string& answer)
     {
         int64_t issuer_id = get_account_id(issuer.c_str(), issuer.size());
         graphene_assert(issuer_id >= 0, "issuer not exist");
@@ -38,14 +38,26 @@ class riddle : public contract
 
         checksum256 hashed_answer;
         sha256(const_cast<char *>(answer.c_str()), answer.length(), &hashed_answer);
-        auto ans = std::string(hashed_answer.hash, hashed_answer.hash + 32);
-        print("hashed_answer, ", ans, "\n");
 
-        if (ans == iter->hashed_answer) {
-            print("success!");
+        auto tmp = iter->hashed_answer;
+        if (my_memcmp(&hashed_answer, &tmp, sizeof(checksum256))) {
+            print("success! ", "\n");
             records.erase(iter);
             return;
         }
+    }
+  private:
+
+    bool my_memcmp(void *s1, void *s2, uint32_t n)
+    {
+        unsigned char *c1 = (unsigned char *)s1;
+        unsigned char *c2 = (unsigned char *)s2;
+        for (uint32_t i = 0; i < n; ++i) {
+            if (c1[i] != c2[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
   private:
@@ -53,7 +65,7 @@ class riddle : public contract
     struct record {
         uint64_t            issuer;
         std::string         question;
-        std::string         hashed_answer;
+        checksum256         hashed_answer;
 
         uint64_t primary_key() const { return issuer; }
 
