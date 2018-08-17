@@ -1,3 +1,4 @@
+#include <graphenelib/graphene.hpp>
 #include <graphenelib/contract.hpp>
 #include <graphenelib/dispatcher.hpp>
 #include <graphenelib/print.hpp>
