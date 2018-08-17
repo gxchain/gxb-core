@@ -39,7 +39,7 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
 {
     auto cpu_param = db.get_cpu_limit();
 
-    fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(cpu_param.trx_cpu_limit) : fc::microseconds::maximum();
+    fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(cpu_param.trx_cpu_limit) : fc::days(1);
     transaction_context trx_context(db, op.fee_payer().instance, max_trx_cpu_us);
     action act{op.contract_id, op.method_name, op.data};
     apply_context ctx{db, trx_context, act, op.amount};
