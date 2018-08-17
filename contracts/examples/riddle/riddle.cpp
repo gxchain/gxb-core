@@ -39,25 +39,12 @@ class riddle : public contract
         checksum256 hashed_answer;
         sha256(const_cast<char *>(answer.c_str()), answer.length(), &hashed_answer);
 
-        auto tmp = iter->hashed_answer;
-        if (my_memcmp(&hashed_answer, &tmp, sizeof(checksum256))) {
-            print("success! ", "\n");
+        if (iter->hashed_answer == hashed_answer) {
+            print("reveal success! \n");
             records.erase(iter);
-            return;
+        } else {
+            print("answer is wrong! \n");
         }
-    }
-  private:
-
-    bool my_memcmp(void *s1, void *s2, uint32_t n)
-    {
-        unsigned char *c1 = (unsigned char *)s1;
-        unsigned char *c2 = (unsigned char *)s2;
-        for (uint32_t i = 0; i < n; ++i) {
-            if (c1[i] != c2[i]) {
-                return false;
-            }
-        }
-        return true;
     }
 
   private:
