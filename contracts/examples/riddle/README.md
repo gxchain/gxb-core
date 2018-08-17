@@ -72,6 +72,6 @@ unlocked >>> call_contract nathan riddle null reveal "{\"issuer\":\"nathan\", \"
 4. 合约存储表
 
 ```
-unlocked >>> get_contract_tables redpacket
+unlocked >>> get_table_objects riddle record
 []
 ```
