@@ -30,43 +30,50 @@ gxx -g contracts/examples/riddle/riddle.abi contracts/examples/riddle/riddle.cpp
 
 ##### 部署合约
 
-```
+```shell
 // 这里使用nathan帐户部署合约，部署的合约名为riddle
-unlocked >>> deploy_contract redpacket nathan 0 0 ./contracts/examples/riddle GXS true
+unlocked >>> deploy_contract riddle nathan 0 0 ./contracts/examples/riddle GXS true
 ```
 
 ##### 调用合约
 
-1. 发起谜题
+1. 发起谜题, 使用nathan帐户，发起一个谜题，问题："1 + 2 = ?"  答案： "I don't know." 
 
+```shell
+字符串生成sha256 命令行：
+# echo -n "I don't know." | shasum -a 256
+810d7c3ca6aa6411102588f8636833035138a35f32f5e7b2df96d2ab2dc4d660
 ```
-// 使用nathan帐户，发起一个谜题，问题："1 + 2 = ?"  答案： "I don't know." 答案的sha256为""
-unlocked >>> 
+
+```shell
+// 发起谜题
+call_contract nathan riddle null issue "{\"question\":\"1 + 2 = ?\", \"hashed_answer\":\"810d7c3ca6aa6411102588f8636833035138a35f32f5e7b2df96d2ab2dc4d660\"}" GXS true
 ```
 
 1. 查询riddle合约的存储表
 
 ```
-unlocked >>> 
+unlocked >>> get_table_objects riddle record
+[{
+    "issuer": 17,
+    "question": "1 + 2 = ?",
+    "hashed_answer": "810d7c3ca6aa6411102588f8636833035138a35f32f5e7b2df96d2ab2dc4d660"
+  }
+]
 ```
 
 1. 解开谜题
 
 ```
 // 使用nathan帐户解谜
-
-unlocked >>> 
-
+unlocked >>> call_contract nathan riddle null reveal "{\"issuer\":\"nathan\", \"answer\":\"I don't know.\"}" GXS true
 ```
 
-1. 列出合约所有的存储表
+1. 合约存储表
 
 ```
 unlocked >>> get_contract_tables redpacket
-[
-  "packet",
-  "record"
-]
+[]
 ```
 
 
