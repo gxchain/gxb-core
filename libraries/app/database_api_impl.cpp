@@ -1544,7 +1544,7 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
        if (op.which() == operation::tag<contract_call_operation>::value) {
            auto tmp_session = _db._undo_db.start_undo_session();
            contract_call_operation &opr = op.get<contract_call_operation>();
-           transaction_context trx_context(_db, opr.fee_payer().instance, _db.get_cpu_limit().trx_cpu_limit);
+           transaction_context trx_context(_db, opr.fee_payer().instance, fc::microseconds(_db.get_cpu_limit().trx_cpu_limit));
            action act{opr.contract_id, opr.method_name, opr.data};
            apply_context ctx{_db, trx_context, act, opr.amount};
            ctx.exec();

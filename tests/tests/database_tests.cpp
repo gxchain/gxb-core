@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE( db_store_i64_undo )
       auto cpu_param = vm_cpu_limit_t();
 
       const contract_call_operation op;
-      transaction_context trx_context(db, account_id_type().instance, cpu_param.trx_cpu_limit);
+      transaction_context trx_context(db, account_id_type().instance, fc::microseconds(cpu_param.trx_cpu_limit));
       apply_context ctx{db, trx_context, {account_id_type(), N(hi), {}}, optional<asset>()};
       auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
 
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE( db_store_i64_commit )
       auto cpu_param = vm_cpu_limit_t();
 
       const contract_call_operation op;
-      transaction_context trx_context(db, account_id_type().instance, cpu_param.trx_cpu_limit);
+      transaction_context trx_context(db, account_id_type().instance, fc::microseconds(cpu_param.trx_cpu_limit));
       apply_context ctx{db, trx_context, {account_id_type(), N(hi), {}}, optional<asset>()};
       auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
 
