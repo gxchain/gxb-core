@@ -9,9 +9,14 @@ namespace graphene { namespace chain {
         _db(&d),
         trx_origin(origin),
         start(fc::time_point::now()),
-        _deadline(start + max_trx_cpu_us),
         transaction_cpu_usage_us(0)
    {
+       if (max_trx_cpu_us == fc::microseconds::maximum()) {
+            _deadline = fc::time_point::maximum();
+       }
+       else {
+           _deadline = start + max_trx_cpu_us;
+       }
    }
 
    void transaction_context::pause_billing_timer() {
