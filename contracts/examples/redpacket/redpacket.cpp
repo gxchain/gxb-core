@@ -27,6 +27,13 @@ class redpacket : public contract
     // @abi payable
     void issue(std::string pubkey, uint64_t number)
     {
+        // check publick key
+        // TODO
+        std::string prefix("GXC");
+        const size_t prefix_len = prefix.size();
+        graphene_assert(pubkey.size() > prefix_len, "invalid public key");
+        graphene_assert(pubkey.substr(0, prefix_len) == prefix, "invalid public key");
+
         int64_t total_amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
         uint64_t owner = get_trx_sender();
