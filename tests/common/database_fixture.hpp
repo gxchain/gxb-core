@@ -57,7 +57,8 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
    trx.clear(); \
    trx.operations.push_back(op); \
    op.field = temp; \
-   db.push_transaction( trx, ~0 ); \
+   set_expiration(db, trx); \
+   db.push_transaction(trx, ~0); \
 }
 
 #define GRAPHENE_REQUIRE_THROW( expr, exc_type )          \
@@ -112,6 +113,7 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
    op.field = value; \
    trx.clear(); \
    trx.operations.push_back(op); \
+   set_expiration(db, trx); \
    op.field = bak; \
    GRAPHENE_REQUIRE_THROW(db.push_transaction(trx, ~0), exc_type); \
 }
