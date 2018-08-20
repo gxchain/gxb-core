@@ -24,9 +24,18 @@ namespace graphene {
    bool operator<(const fixed_key<Size> &c1, const fixed_key<Size> &c2);
 
     /**
-    *  @defgroup fixed_key fixed size key sorted lexicographically
+    *  @defgroup fixed_key Fixed Size Key
+    *  @brief Fixed size key sorted lexicographically for Multi Index Table
     *  @ingroup types
-    * @{
+    *  @{
+    */
+
+   /**
+    *  Fixed size key sorted lexicographically for Multi Index Table
+    *
+    *  @brief Fixed size key sorted lexicographically for Multi Index Table
+    *  @tparam Size - Size of the fixed_key object
+    *  @ingroup types
     */
    template<size_t Size>
    class fixed_key {
@@ -52,7 +61,7 @@ namespace graphene {
                    continue;
                }
 
-               // graphene_assert( sub_words_left == 1, "unexpected error in fixed_key constructor" );
+               graphene_assert( sub_words_left == 1, "unexpected error in fixed_key constructor" );
                temp_word |= static_cast<word_t>(w);
                sub_words_left = num_sub_words;
 
@@ -71,7 +80,20 @@ namespace graphene {
 
          typedef uint128_t word_t;
 
+         /**
+          * Get number of words contained in this fixed_key object. A word is defined to be 16 bytes in size
+          *
+          * @brief Get number of words contained in this fixed_key object
+          */
+
          static constexpr size_t num_words() { return (Size + sizeof(word_t) - 1) / sizeof(word_t); }
+
+         /**
+          * Get number of padded bytes contained in this fixed_key object. Padded bytes are the remaining bytes
+          * inside the fixed_key object after all the words are allocated
+          *
+          * @brief Get number of padded bytes contained in this fixed_key object
+          */
          static constexpr size_t padded_bytes() { return num_words() * sizeof(word_t) - Size; }
 
          /**
@@ -92,6 +114,12 @@ namespace graphene {
            std::copy(arr.begin(), arr.end(), _data.begin());
          }
 
+         /**
+         * @brief Constructor to fixed_key object from std::array of num_words() words
+         *
+         * @details Constructor to fixed_key object from std::array of num_words() words
+         * @param arr - Source data
+         */
          template<typename Word, size_t NumWords,
                   typename Enable = typename std::enable_if<std::is_integral<Word>::value &&
                                                              !std::is_same<Word, bool>::value &&
@@ -105,6 +133,15 @@ namespace graphene {
             set_from_word_sequence(arr, *this);
          }
 
+         /**
+         * @brief Create a new fixed_key object from a sequence of words
+         *
+         * @details Create a new fixed_key object from a sequence of words
+         * @tparam FirstWord - The type of the first word in the sequence
+         * @tparam Rest - THe type of the remaining words in the sequence
+         * @param first_word - The first word in the sequence
+         * @param rest - The remaining words in the sequence
+         */
          template<typename FirstWord, typename... Rest>
          static
          fixed_key<Size>
@@ -124,13 +161,36 @@ namespace graphene {
             return key;
          }
 
+         /**
+          * Get the contained std::array
+          * @brief Get the contained std::array
+          */
          const auto& get_array()const { return _data; }
 
+         /**
+          * Get the underlying data of the contained std::array
+          * @brief Get the underlying data of the contained std::array
+          */
          auto data() { return _data.data(); }
+
+         /**
+          * Get the underlying data of the contained std::array
+          * @brief Get the underlying data of the contained std::array
+          */
          auto data()const { return _data.data(); }
 
+         /**
+          * Get the size of the contained std::array
+          * @brief Get the size of the contained std::array
+          */
          auto size()const { return _data.size(); }
 
+
+         /**
+          * Extract the contained data as an array of bytes
+          * @brief Extract the contained data as an array of bytes
+          * @return - the extracted data as array of bytes
+          */
          std::array<uint8_t, Size> extract_as_byte_array()const {
             std::array<uint8_t, Size> arr;
 
@@ -174,6 +234,8 @@ namespace graphene {
     * @brief Compares two fixed_key variables c1 and c2
     *
     * @details Lexicographically compares two fixed_key variables c1 and c2
+    * @param c1 - First fixed_key object to compare
+    * @param c2 - Second fixed_key object to compare
     * @return if c1 == c2, return true, otherwise false
     */
    template<size_t Size>
@@ -185,6 +247,8 @@ namespace graphene {
     * @brief Compares two fixed_key variables c1 and c2
     *
     * @details Lexicographically compares two fixed_key variables c1 and c2
+    * @param c1 - First fixed_key object to compare
+    * @param c2 - Second fixed_key object to compare
     * @return if c1 != c2, return true, otherwise false
     */
    template<size_t Size>
@@ -196,6 +260,8 @@ namespace graphene {
     * @brief Compares two fixed_key variables c1 and c2
     *
     * @details Lexicographically compares two fixed_key variables c1 and c2
+    * @param c1 - First fixed_key object to compare
+    * @param c2 - Second fixed_key object to compare
     * @return if c1 > c2, return true, otherwise false
     */
    template<size_t Size>
@@ -207,6 +273,8 @@ namespace graphene {
     * @brief Compares two fixed_key variables c1 and c2
     *
     * @details Lexicographically compares two fixed_key variables c1 and c2
+    * @param c1 - First fixed_key object to compare
+    * @param c2 - Second fixed_key object to compare
     * @return if c1 < c2, return true, otherwise false
     */
    template<size_t Size>
