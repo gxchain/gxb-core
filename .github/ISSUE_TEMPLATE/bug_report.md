@@ -33,3 +33,6 @@ If applicable, add screenshots to help explain your problem.
 
 **Additional context**
 Add any other context about the problem here.
+
+**Your GXChain Wallet Account**
+Please leave your GXChain wallet account for bug bounty .
