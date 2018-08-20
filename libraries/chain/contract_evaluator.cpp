@@ -126,7 +126,6 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
         FC_ASSERT(iter->payable, "method_name ${m} not payable", ("m", op.method_name));
     }
 
-
     // check balance
     if (op.amount.valid()) {
         FC_ASSERT(op.amount->amount > 0, "amount > 0");
