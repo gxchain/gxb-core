@@ -2,6 +2,9 @@
 linear_vesting_asset合约
 -------------
 
+线性解冻资产合约，可能通过vestingcreate方法向某一帐户(A)转帐，同时设置冻结时间(lock_duration)和释放时间(release_duration)，即经过lock_duration 秒后，资产开始解冻，经过release_duration秒后，A帐户可以调用vestingclaim方法，将资产全部取出。
+
+
 #### 编译合约
 生成wast:
 ```
