@@ -54,7 +54,8 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 { \
    const auto temp = op.field; \
    op.field = value; \
-   trx.operations.back() = op; \
+   trx.clear(); \
+   trx.operations.push_back(op); \
    op.field = temp; \
    db.push_transaction( trx, ~0 ); \
 }
@@ -109,7 +110,8 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 { \
    auto bak = op.field; \
    op.field = value; \
-   trx.operations.back() = op; \
+   trx.clear(); \
+   trx.operations.push_back(op); \
    op.field = bak; \
    GRAPHENE_REQUIRE_THROW(db.push_transaction(trx, ~0), exc_type); \
 }
