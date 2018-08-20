@@ -3,6 +3,7 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/wast_to_wasm.hpp>
+#include <graphene/chain/hardfork.hpp>
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
@@ -20,7 +21,7 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
 { try {
    ACTOR(alice);
    transfer(account_id_type(), alice_id, asset(10000000));
-   generate_block();
+   generate_blocks(HARDFORK_1006_TIME);
 
     // nested loops
    contract_deploy_operation op;
