@@ -28,7 +28,6 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
    op.vm_type = "0";
    op.vm_version = "0";
    op.abi = fc::json::from_string(contract_abi).as<abi_def>();
-   op.fee = asset(2000);
    {
       std::stringstream ss;
       ss << "(module (export \"apply\" (func $apply)) (func $apply (param $0 i64) (param $1 i64) (param $2 i64)";
@@ -38,18 +37,11 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
          ss << ")";
       ss << "))";
       auto wasm = graphene::chain::wast_to_wasm(ss.str());
-      op.code = bytes(wasm.begin(), wasm.end());
       op.name = "valid-nested-loops";
-      trx.operations.push_back(op);
-      set_expiration(db, trx);
-      sign(trx, alice_private_key);
-      idump((trx));
-      PUSH_TX(db, trx);
-      trx.clear();
+      REQUIRE_OP_EVALUATION_SUCCESS(op, code, bytes(wasm.begin(), wasm.end()));
    }
+   /*
    {
-      trx.clear();
-      op.name = "invalid-loops";
       std::stringstream ss;
       ss << "(module (export \"apply\" (func $apply)) (func $apply (param $0 i64) (param $1 i64) (param $2 i64)";
       for(unsigned int i = 0; i < 1024; ++i)
@@ -58,12 +50,12 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
          ss << ")";
       ss << "))";
       auto wasm = graphene::chain::wast_to_wasm(ss.str());
+      op.name = "invalid-loops";
       REQUIRE_THROW_WITH_VALUE(op, code, bytes(wasm.begin(), wasm.end()));
    }
+   */
     // nested blocks
    {
-      trx.clear();
-      op.name = "valid-blocks";
       std::stringstream ss;
       ss << "(module (export \"apply\" (func $apply)) (func $apply (param $0 i64) (param $1 i64) (param $2 i64)";
       for(unsigned int i = 0; i < 1023; ++i)
@@ -72,8 +64,10 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
          ss << ")";
       ss << "))";
       auto wasm = graphene::chain::wast_to_wasm(ss.str());
+      op.name = "valid-blocks";
       REQUIRE_OP_EVALUATION_SUCCESS(op, code, bytes(wasm.begin(), wasm.end()));
    }
+   /*
    {
       trx.clear();
       op.name = "invalid-blocks";
@@ -87,10 +81,9 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
       auto wasm = graphene::chain::wast_to_wasm(ss.str());
       REQUIRE_THROW_WITH_VALUE(op, code, bytes(wasm.begin(), wasm.end()));
    }
+   */
    // nested ifs
    {
-      trx.clear();
-      op.name = "valid-ifs";
       std::stringstream ss;
       ss << "(module (export \"apply\" (func $apply)) (func $apply (param $0 i64) (param $1 i64) (param $2 i64)";
       for(unsigned int i = 0; i < 1023; ++i)
@@ -99,8 +92,10 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
          ss << "))";
       ss << "))";
       auto wasm = graphene::chain::wast_to_wasm(ss.str());
+      op.name = "valid-ifs";
       REQUIRE_OP_EVALUATION_SUCCESS(op, code, bytes(wasm.begin(), wasm.end()));
    }
+   /*
    {
       trx.clear();
       op.name = "invalid-ifs";
@@ -114,6 +109,7 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
       auto wasm = graphene::chain::wast_to_wasm(ss.str());
       REQUIRE_THROW_WITH_VALUE(op, code, bytes(wasm.begin(), wasm.end()));
    }
+   */
    // mixed nested
    {
       std::stringstream ss;
@@ -130,14 +126,8 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
          ss << "))";
       ss << "))";
       auto wasm = graphene::chain::wast_to_wasm(ss.str());
-      op.code = bytes(wasm.begin(), wasm.end());
       op.name = "valid-mixed";
-      trx.operations.push_back(op);
-      set_expiration(db, trx);
-      sign(trx, alice_private_key);
-      idump((trx));
-      PUSH_TX(db, trx);
-      trx.clear();
+      REQUIRE_OP_EVALUATION_SUCCESS(op, code, bytes(wasm.begin(), wasm.end()));
    }
    {
       std::stringstream ss;
@@ -154,14 +144,13 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
          ss << "))";
       ss << "))";
       auto wasm = graphene::chain::wast_to_wasm(ss.str());
-      op.code = bytes(wasm.begin(), wasm.end());
       op.name = "invalid-mixed";
-      trx.operations.push_back(op);
-      set_expiration(db, trx);
-      sign(trx, alice_private_key);
-      idump((trx));
-      GRAPHENE_REQUIRE_THROW(PUSH_TX(db, trx), fc::exception);
+
+      op.code = bytes(wasm.begin(), wasm.end());
       trx.clear();
+      trx.operations.push_back(op);
+      db.push_transaction(trx, ~0);
+      // REQUIRE_THROW_WITH_VALUE(op, code, bytes(wasm.begin(), wasm.end()));
    }
 } FC_LOG_AND_RETHROW() }
 
