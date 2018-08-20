@@ -83,7 +83,7 @@ void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operati
     FC_ASSERT(op.abi.actions.size() > 0, "contract has no actions");
 
     // validate wasm code
-    if (d.head_block_time() > HARDFORK_516_TIME) {
+    if (d.head_block_time() > HARDFORK_1006_TIME) {
         wasm_interface::validate(op.code);
     }
 
