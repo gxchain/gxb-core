@@ -13,6 +13,8 @@
 
 using namespace graphene;
 
+static const uint64_t redpacket_asset_id = 0;//GXC
+
 class redpacket : public contract
 {
   public:
@@ -36,6 +38,7 @@ class redpacket : public contract
 
         int64_t total_amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
+        graphene_assert(redpacket_asset_id == asset_id, "not supported asset");
         uint64_t owner = get_trx_sender();
 
         auto packet_it = packets.find(owner);
@@ -182,8 +185,8 @@ class redpacket : public contract
     };
     typedef graphene::multi_index<N(record), record> record_index;
 
-    packet_index        packets;
-    record_index        records;
+    packet_index            packets;
+    record_index            records;
 };
 
 GRAPHENE_ABI(redpacket, (issue)(open)(close))
