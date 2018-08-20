@@ -40,7 +40,6 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
       op.name = "valid-nested-loops";
       REQUIRE_OP_EVALUATION_SUCCESS(op, code, bytes(wasm.begin(), wasm.end()));
    }
-   /*
    {
       std::stringstream ss;
       ss << "(module (export \"apply\" (func $apply)) (func $apply (param $0 i64) (param $1 i64) (param $2 i64)";
@@ -53,7 +52,6 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
       op.name = "invalid-loops";
       REQUIRE_THROW_WITH_VALUE(op, code, bytes(wasm.begin(), wasm.end()));
    }
-   */
     // nested blocks
    {
       std::stringstream ss;
@@ -67,10 +65,7 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
       op.name = "valid-blocks";
       REQUIRE_OP_EVALUATION_SUCCESS(op, code, bytes(wasm.begin(), wasm.end()));
    }
-   /*
    {
-      trx.clear();
-      op.name = "invalid-blocks";
       std::stringstream ss;
       ss << "(module (export \"apply\" (func $apply)) (func $apply (param $0 i64) (param $1 i64) (param $2 i64)";
       for(unsigned int i = 0; i < 1024; ++i)
@@ -79,9 +74,9 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
          ss << ")";
       ss << "))";
       auto wasm = graphene::chain::wast_to_wasm(ss.str());
+      op.name = "invalid-blocks";
       REQUIRE_THROW_WITH_VALUE(op, code, bytes(wasm.begin(), wasm.end()));
    }
-   */
    // nested ifs
    {
       std::stringstream ss;
@@ -95,10 +90,7 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
       op.name = "valid-ifs";
       REQUIRE_OP_EVALUATION_SUCCESS(op, code, bytes(wasm.begin(), wasm.end()));
    }
-   /*
    {
-      trx.clear();
-      op.name = "invalid-ifs";
       std::stringstream ss;
       ss << "(module (export \"apply\" (func $apply)) (func $apply (param $0 i64) (param $1 i64) (param $2 i64)";
       for(unsigned int i = 0; i < 1024; ++i)
@@ -107,9 +99,9 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
          ss << "))";
       ss << "))";
       auto wasm = graphene::chain::wast_to_wasm(ss.str());
+      op.name = "invalid-ifs";
       REQUIRE_THROW_WITH_VALUE(op, code, bytes(wasm.begin(), wasm.end()));
    }
-   */
    // mixed nested
    {
       std::stringstream ss;
@@ -145,12 +137,7 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
       ss << "))";
       auto wasm = graphene::chain::wast_to_wasm(ss.str());
       op.name = "invalid-mixed";
-
-      op.code = bytes(wasm.begin(), wasm.end());
-      trx.clear();
-      trx.operations.push_back(op);
-      db.push_transaction(trx, ~0);
-      // REQUIRE_THROW_WITH_VALUE(op, code, bytes(wasm.begin(), wasm.end()));
+      REQUIRE_THROW_WITH_VALUE(op, code, bytes(wasm.begin(), wasm.end()));
    }
 } FC_LOG_AND_RETHROW() }
 
