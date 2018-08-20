@@ -97,21 +97,6 @@ namespace _multi_index_detail {
    WRAP_SECONDARY_SIMPLE_TYPE(idx64,  uint64_t)
    MAKE_TRAITS_FOR_ARITHMETIC_SECONDARY_KEY(uint64_t)
 
-   WRAP_SECONDARY_SIMPLE_TYPE(idx128, uint128_t)
-   MAKE_TRAITS_FOR_ARITHMETIC_SECONDARY_KEY(uint128_t)
-
-   WRAP_SECONDARY_SIMPLE_TYPE(idx_double, double)
-   MAKE_TRAITS_FOR_ARITHMETIC_SECONDARY_KEY(double)
-
-   WRAP_SECONDARY_SIMPLE_TYPE(idx_long_double, long double)
-   MAKE_TRAITS_FOR_ARITHMETIC_SECONDARY_KEY(long double)
-
-   WRAP_SECONDARY_ARRAY_TYPE(idx256, key256)
-   template<>
-   struct secondary_key_traits<key256> {
-      static constexpr key256 lowest() { return key256(); }
-   };
-
 }
 
 template<uint64_t IndexName, typename Extractor>
