@@ -8,7 +8,7 @@
 
 using namespace graphene;
 
-static const uint64_t redpacket_asset_id = 0;//GXC
+static const uint64_t redpacket_asset_id = 1;//GXS
 
 class linear_vesting_asset : public contract
 {
