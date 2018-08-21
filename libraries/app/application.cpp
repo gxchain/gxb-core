@@ -394,6 +394,9 @@ namespace detail {
              ilog("All transaction signatures will be validated");
              _force_validate = true;
          }
+         
+         if(_options->count("contracts-console"))
+             _chain_db->set_contract_log_to_console(_options->at("contracts-console").as<bool>());
 
          if (_options->count("api-access")) {
 

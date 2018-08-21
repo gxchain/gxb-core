@@ -28,18 +28,19 @@ void apply_context::exec_one()
         }
    } FC_CAPTURE_AND_RETHROW((_pending_console_output.str()));
 
-   auto console = _pending_console_output.str();
-   auto prefix = fc::format_string(
-                                   "\n[(${a},${n})->${r}] ",
-                                   fc::mutable_variant_object()
-                                   ("a", account_id_type(act.contract_id))
-                                   ("n", act.method_name)
-                                   ("r", account_id_type(receiver)));
-
-   dlog(prefix + "CONSOLE OUTPUT BEGIN =====================\n"
-           + console + "\n"
-           + prefix + "CONSOLE OUTPUT END =====================" );
-
+   if(contract_log_to_console) {
+       auto console = _pending_console_output.str();
+       auto prefix = fc::format_string(
+                                       "\n[(${a},${n})->${r}] ",
+                                       fc::mutable_variant_object()
+                                       ("a", account_id_type(act.contract_id))
+                                       ("n", act.method_name)
+                                       ("r", account_id_type(receiver)));
+    
+       dlog(prefix + "CONSOLE OUTPUT BEGIN =====================\n"
+               + console + "\n"
+               + prefix + "CONSOLE OUTPUT END =====================" );
+   }
    reset_console();
    auto end = fc::time_point::now();
    dlog("elapsed ${n}", ("n", end - start));
@@ -56,8 +57,10 @@ void apply_context::exec()
 
 void apply_context::reset_console()
 {
-    _pending_console_output = std::ostringstream();
-    _pending_console_output.setf(std::ios::scientific, std::ios::floatfield);
+    if (contract_log_to_console) {
+        _pending_console_output = std::ostringstream();
+        _pending_console_output.setf(std::ios::scientific, std::ios::floatfield);
+    }
 }
 
 void apply_context::execute_inline(action &&a)
