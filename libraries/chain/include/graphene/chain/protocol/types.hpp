@@ -121,7 +121,7 @@ namespace graphene { namespace chain {
 
    // vm execution cpu limit
    struct vm_cpu_limit_t {
-       uint32_t trx_cpu_limit = 10000; // 10 ms
+       uint32_t trx_cpu_limit = 20000; // 20 ms
        uint32_t block_cpu_limit = 800000; // 800 ms
    };
 
