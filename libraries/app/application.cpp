@@ -386,7 +386,6 @@ namespace detail {
          if (_options->count("fast-replay")) {
              fast_replay = true;
          }
-
          try {
              _chain_db->open(_data_dir / "blockchain", initial_state, GRAPHENE_CURRENT_DB_VERSION, fast_replay);
          } catch (const fc::exception &e) {
@@ -398,9 +397,10 @@ namespace detail {
              ilog("All transaction signatures will be validated");
              _force_validate = true;
          }
-         
-         if(_options->count("contracts-console"))
-             _chain_db->set_contract_log_to_console(_options->at("contracts-console").as<bool>());
+
+         if (_options->count("contracts-console")) {
+             _chain_db->set_contract_log_to_console(true);
+         }
 
          if (_options->count("api-access")) {
 
