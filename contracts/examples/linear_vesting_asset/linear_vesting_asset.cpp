@@ -8,6 +8,8 @@
 
 using namespace graphene;
 
+static const uint64_t contract_asset_id = 1;//GXS
+
 class linear_vesting_asset : public contract
 {
   public:
@@ -21,7 +23,8 @@ class linear_vesting_asset : public contract
     /// @abi payable
     void vestingcreate(std::string to, int64_t lock_duration, int64_t release_duration)
     {
-        contract_asset ast{get_action_asset_amount(), get_action_asset_id()};
+        graphene_assert(contract_asset_id == get_action_asset_id(), "not supported asset");
+        contract_asset ast{get_action_asset_amount(), contract_asset_id};
 
         int64_t to_account_id = get_account_id(to.c_str(), to.size());
         graphene_assert(to_account_id >= 0, "invalid account_name to");
@@ -32,7 +35,6 @@ class linear_vesting_asset : public contract
         vestingrules.emplace(0, [&](auto &o) {
             o.account_id = to_account_id;
 
-            o.asset_id = ast.asset_id;
             o.vesting_amount = ast.amount;
             o.vested_amount = 0;
 
@@ -63,7 +65,7 @@ class linear_vesting_asset : public contract
         vested_amount = vested_amount - lr->vested_amount;
         graphene_assert(vested_amount > 0, "vested amount must > 0");
 
-        withdraw_asset(_self, who_account_id, lr->asset_id, vested_amount);
+        withdraw_asset(_self, who_account_id, contract_asset_id, vested_amount);
 
         vestingrules.modify(lr, 0, [&](auto &o) {
             o.vested_amount += vested_amount;
@@ -79,7 +81,6 @@ class linear_vesting_asset : public contract
     struct vestingrule {
         uint64_t account_id;
 
-        uint64_t asset_id;          //资产id
         int64_t vesting_amount;     //初始锁定资产
         int64_t vested_amount;      //已释放资产
 
@@ -91,7 +92,7 @@ class linear_vesting_asset : public contract
         uint64_t primary_key() const { return account_id; }
 
         GRAPHENE_SERIALIZE(vestingrule,
-                           (account_id)(asset_id)(vesting_amount)(vested_amount)(lock_time_point)(lock_duration)(release_time_point)(release_duration))
+                           (account_id)(vesting_amount)(vested_amount)(lock_time_point)(lock_duration)(release_time_point)(release_duration))
     };
 
     typedef graphene::multi_index<N(vestingrule), vestingrule> vestingrule_index;
