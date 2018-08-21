@@ -41,7 +41,7 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     int32_t witness_cpu_limit = db.get_max_trx_cpu_time();
     int32_t gpo_cpu_limit = db.get_cpu_limit().trx_cpu_limit;
     fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(std::min(witness_cpu_limit, gpo_cpu_limit)) : fc::days(1);
-    dlog("max_trx_cpu_time ${a}, cpu_limit ${b}, min ${c}", ("a", db.get_max_trx_cpu_time())("b", db.get_cpu_limit().trx_cpu_limit)("c", max_trx_cpu_us));
+    dlog("max_trx_cpu_time ${a}, cpu_limit ${b}, real cpu limit ${c}", ("a", db.get_max_trx_cpu_time())("b", db.get_cpu_limit().trx_cpu_limit)("c", max_trx_cpu_us));
 
     transaction_context trx_context(db, op.fee_payer().instance, max_trx_cpu_us);
     action act{op.contract_id, op.method_name, op.data};
