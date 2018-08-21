@@ -92,7 +92,7 @@ void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operati
     }
 
     return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW((op.name)(op.account)(op.fee)(op.vm_type)(op.vm_version)(op.abi)) }
 
 object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operation &op, uint32_t billed_cpu_time_us)
 { try {
@@ -114,7 +114,7 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
             });
 
     return new_acnt_object.id;
-} FC_CAPTURE_AND_RETHROW((op)) }
+} FC_CAPTURE_AND_RETHROW((op.name)(op.account)(op.fee)(op.vm_type)(op.vm_version)(op.abi)) }
 
 void_result contract_call_evaluator::do_evaluate(const contract_call_operation &op)
 { try {
