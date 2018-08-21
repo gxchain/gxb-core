@@ -32,14 +32,17 @@
 #include <graphene/chain/wast_to_wasm.hpp>
 #include <graphene/chain/abi_serializer.hpp>
 
+#include <algorithm>
 
 namespace graphene { namespace chain {
 
 contract_receipt contract_call_evaluator::contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
 {
-    auto cpu_param = db.get_cpu_limit();
+    int32_t witness_cpu_limit = db.get_max_trx_cpu_time();
+    int32_t gpo_cpu_limit = db.get_cpu_limit().trx_cpu_limit;
+    fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(std::min(witness_cpu_limit, gpo_cpu_limit)) : fc::days(1);
+    dlog("max_trx_cpu_time ${a}, cpu_limit ${b}, real cpu limit ${c}", ("a", db.get_max_trx_cpu_time())("b", db.get_cpu_limit().trx_cpu_limit)("c", max_trx_cpu_us));
 
-    fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(cpu_param.trx_cpu_limit) : fc::days(1);
     transaction_context trx_context(db, op.fee_payer().instance, max_trx_cpu_us);
     action act{op.contract_id, op.method_name, op.data};
     apply_context ctx{db, trx_context, act, op.amount};
@@ -64,7 +67,8 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     asset fee = asset(ram_fee.to_uint64() + cpu_fee.to_uint64(), asset_id_type()) * asset_obj.options.core_exchange_rate;
     fee_from_account += fee;
     dlog("ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
-            ("rf",ram_fee.to_uint64())("cf",cpu_fee.to_uint64())("ru",ctx.get_ram_usage())("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
+            ("rf",ram_fee.to_uint64())("cf",cpu_fee.to_uint64())("ru",ctx.get_ram_usage())
+            ("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
 
     contract_receipt receipt{cpu_time_us, ram_usage_bs, fee_from_account};
     return receipt;
@@ -136,7 +140,8 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
         bool insufficient_balance = d.get_balance(op.account(d), asset_type).amount >= op.amount->amount;
         FC_ASSERT(insufficient_balance,
                   "insufficient balance: ${balance}, unable to deposit '${total_transfer}' from account '${a}' to '${t}'",
-                  ("a", op.account)("t", contract_obj.id)("total_transfer", d.to_pretty_string(op.amount->amount))("balance", d.to_pretty_string(d.get_balance(op.account(d), asset_type))));
+                  ("a", op.account)("t", contract_obj.id)("total_transfer", d.to_pretty_string(op.amount->amount))
+                  ("balance", d.to_pretty_string(d.get_balance(op.account(d), asset_type))));
     }
 
     return void_result();

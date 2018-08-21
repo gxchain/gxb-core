@@ -71,6 +71,7 @@ void witness_plugin::plugin_set_program_options(
          ("required-participation", bpo::bool_switch()->notifier([this](int e){_required_witness_participation = uint32_t(e*GRAPHENE_1_PERCENT);}), "Percent of witnesses (0-99) that must be participating in order to produce blocks")
          ("witness-id,w", bpo::value<vector<string>>()->composing()->multitoken(),
           ("ID of witness controlled by this node (e.g. " + witness_id_example + ", quotes are required, may specify multiple times)").c_str())
+         ("max-transaction-time", bpo::value<int32_t>()->default_value(5000))
          ("private-key", bpo::value<vector<string>>()->composing()->multitoken()->
           DEFAULT_VALUE_VECTOR(std::make_pair(chain::public_key_type(default_priv_key.get_public_key()), graphene::utilities::key_to_wif(default_priv_key))),
           "Tuple of [PublicKey, WIF private key] (may specify multiple times)")
