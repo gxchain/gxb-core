@@ -394,6 +394,9 @@ namespace detail {
              ilog("All transaction signatures will be validated");
              _force_validate = true;
          }
+         
+         if(_options->count("contracts-console"))
+             _chain_db->set_contract_log_to_console(_options->at("contracts-console").as<bool>());
 
          if (_options->count("api-access")) {
 
@@ -935,6 +938,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("log-file", "Output result to log file, not console, only works when config.ini not exists")
          ("genesis-timestamp", bpo::value<uint32_t>(), "Replace timestamp from genesis.json with current time plus this many seconds (experts only!)")
          ("version,v", "Display version information")
+         ("contracts-console", bpo::value<bool>()->default_value(false), "contract log to console flag")
          ;
    command_line_options.add(_cli_options);
    configuration_file_options.add(_cfg_options);

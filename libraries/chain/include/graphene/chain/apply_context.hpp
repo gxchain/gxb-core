@@ -473,8 +473,9 @@ class apply_context {
          , receiver(a.contract_id)
          , idx64(*this)
      {
+         contract_log_to_console = _db->get_contract_log_to_console();
          reset_console();
-      }
+     }
 
    public:
       database &db() const { assert(_db); return *_db; }
@@ -491,6 +492,7 @@ class apply_context {
    private:
       iterator_cache<key_value_object>    keyval_cache;
       vector<action>                      _inline_actions; ///< queued inline messages
+      bool                                contract_log_to_console;
 
    /// Execution methods:
    public:
@@ -526,19 +528,26 @@ class apply_context {
 
       template<typename T>
       void console_append(T val) {
-          _pending_console_output << val;
+          if(contract_log_to_console)
+              _pending_console_output << val;
       }
 
-      template<typename T, typename ...Ts>
-      void console_append(T val, Ts ...rest) {
+      template <typename T, typename... Ts>
+      void console_append(T val, Ts... rest)
+      {
+          if (!contract_log_to_console)
+              return;
           console_append(val);
           console_append(rest...);
       };
 
-      inline void console_append_formatted(const string& fmt, const variant_object& vo) {
-          console_append(fc::format_string(fmt, vo));
+      inline void console_append_formatted(const string &fmt, const variant_object &vo)
+      {
+          if (contract_log_to_console)
+              console_append(fc::format_string(fmt, vo));
       }
-   public:
+
+    public:
       uint64_t get_ram_usage() const {
           return ram_usage;
       }
