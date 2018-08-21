@@ -8,7 +8,7 @@
 
 using namespace graphene;
 
-static const uint64_t redpacket_asset_id = 1;//GXS
+static const uint64_t contract_asset_id = 1;//GXS
 
 class linear_vesting_asset : public contract
 {
@@ -23,8 +23,8 @@ class linear_vesting_asset : public contract
     /// @abi payable
     void vestingcreate(std::string to, int64_t lock_duration, int64_t release_duration)
     {
-        graphene_assert(redpacket_asset_id == get_action_asset_id(), "not supported asset");
-        contract_asset ast{get_action_asset_amount(), redpacket_asset_id};
+        graphene_assert(contract_asset_id == get_action_asset_id(), "not supported asset");
+        contract_asset ast{get_action_asset_amount(), contract_asset_id};
 
         int64_t to_account_id = get_account_id(to.c_str(), to.size());
         graphene_assert(to_account_id >= 0, "invalid account_name to");
@@ -65,7 +65,7 @@ class linear_vesting_asset : public contract
         vested_amount = vested_amount - lr->vested_amount;
         graphene_assert(vested_amount > 0, "vested amount must > 0");
 
-        withdraw_asset(_self, who_account_id, redpacket_asset_id, vested_amount);
+        withdraw_asset(_self, who_account_id, contract_asset_id, vested_amount);
 
         vestingrules.modify(lr, 0, [&](auto &o) {
             o.vested_amount += vested_amount;
