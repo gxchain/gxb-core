@@ -98,7 +98,6 @@ namespace graphene { namespace chain {
    using permission_name  = name;
    using table_name       = name;
 
-//   using int128_t            = boost::multiprecision::int128_t;
    using int128_t            = __int128;
 
    using checksum256_type    = fc::sha256;
@@ -122,8 +121,8 @@ namespace graphene { namespace chain {
 
    // vm execution cpu limit
    struct vm_cpu_limit_t {
-       uint64_t trx_cpu_limit = 10000; // 10 ms
-       uint64_t block_cpu_limit = 500000; // 500 ms
+       uint32_t trx_cpu_limit = 10000; // 10 ms
+       uint32_t block_cpu_limit = 800000; // 800 ms
    };
 
    struct operation_ext_copyright_hash_t {

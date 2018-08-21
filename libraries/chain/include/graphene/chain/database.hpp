@@ -139,6 +139,10 @@ namespace graphene { namespace chain {
          const flat_map<uint32_t,block_id_type> get_checkpoints()const { return _checkpoints; }
          bool before_last_checkpoint()const;
 
+         // set / get max_trx_cpu_time
+         void set_max_trx_cpu_time(int32_t max_trx_cpu_time) { _max_trx_cpu_time = max_trx_cpu_time; }
+         const int32_t  get_max_trx_cpu_time() { return _max_trx_cpu_time; };
+
          bool push_block( const signed_block& b, uint32_t skip = skip_nothing );
          processed_transaction push_transaction( const signed_transaction& trx, uint32_t skip = skip_nothing );
          bool _push_block( const signed_block& b );
@@ -509,6 +513,9 @@ namespace graphene { namespace chain {
          uint64_t                          _total_voting_stake;
 
          flat_map<uint32_t,block_id_type>  _checkpoints;
+
+         // max transaction cpu time, configured by config.ini
+         int32_t                           _max_trx_cpu_time;
 
          node_property_object              _node_property_object;
 
