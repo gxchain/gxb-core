@@ -70,10 +70,10 @@ unlocked >>> get_table_objects bank account
 
 ```
 // 提现到nathan帐户
-unlocked >>> call_contract nathan bank null withdraw "{\"to_account\":\"nathan\", \"amount\":{\"asset_id\": 1.3.1, \"amount\":100000}}" GXS true
+unlocked >>> call_contract nathan bank null withdraw "{\"to_account\":\"nathan\", \"amount\":{\"asset_id\": 1, \"amount\":100000}}" GXS true
 
 // 提现到init0帐户
-unlocked >>> call_contract nathan bank null withdraw "{\"to_account\":\"init0\", \"amount\":{\"asset_id\": 1.3.1, \"amount\":100000}}" GXS true
+unlocked >>> call_contract nathan bank null withdraw "{\"to_account\":\"init0\", \"amount\":{\"asset_id\": 1, \"amount\":100000}}" GXS true
 
 ```
 
