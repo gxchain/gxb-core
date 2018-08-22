@@ -402,8 +402,11 @@ namespace detail {
              _chain_db->set_contract_log_to_console(true);
          }
 
-         if (_options->count("api-access")) {
+         if (_options->count("rpc-mock-calc-fee")) {
+             _chain_db->set_rpc_mock_calc_fee(true);
+         }
 
+         if (_options->count("api-access")) {
              if (fc::exists(_options->at("api-access").as<boost::filesystem::path>())) {
                  _apiaccess = fc::json::from_file(_options->at("api-access").as<boost::filesystem::path>()).as<api_access>();
                  ilog("Using api access file from ${path}",
@@ -943,6 +946,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("genesis-timestamp", bpo::value<uint32_t>(), "Replace timestamp from genesis.json with current time plus this many seconds (experts only!)")
          ("version,v", "Display version information")
          ("contracts-console", "print contract's output to console")
+         ("rpc-mock-calc-fee", "rec-server mock caculate required fees, default fasle")
          ;
    command_line_options.add(_cli_options);
    configuration_file_options.add(_cfg_options);

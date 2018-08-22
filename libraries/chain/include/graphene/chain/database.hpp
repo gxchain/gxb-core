@@ -269,6 +269,8 @@ namespace graphene { namespace chain {
 
          const bool                             get_contract_log_to_console() const { return contract_log_to_console; }
          void                                   set_contract_log_to_console(bool log_switch) { contract_log_to_console = log_switch; }
+         const bool                             get_rpc_mock_calc_fee() const { return rpc_mock_calc_fee; }
+         void                                   set_rpc_mock_calc_fee(bool mock) { rpc_mock_calc_fee = mock; }
          const dynamic_global_property_object&  get_dynamic_global_properties()const;
          const node_property_object&            get_node_properties()const;
          const fee_schedule&                    current_fee_schedule()const;
@@ -531,6 +533,7 @@ namespace graphene { namespace chain {
           */
          bool                              _opened = false;
          bool                              contract_log_to_console = false;
+         bool                              rpc_mock_calc_fee = false;
    };
 
    namespace detail
