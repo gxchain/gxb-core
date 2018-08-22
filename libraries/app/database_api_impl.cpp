@@ -1524,24 +1524,46 @@ struct get_required_fees_helper
    uint32_t current_recursion = 0;
 };
 
+
 vector< fc::variant > database_api_impl::get_required_fees( const vector<operation>& ops, asset_id_type id )const
 {
+   vector< fc::variant > result(ops.size());
+   
+   const asset_object& a = id(_db);
+   get_required_fees_helper helper(
+                                   _db.current_fee_schedule(),
+                                   a.options.core_exchange_rate,
+                                   GET_REQUIRED_FEES_MAX_RECURSION
+                                  );
+   
    vector< operation > _ops = ops;
    //
    // we copy the ops because we need to mutate an operation to reliably
    // determine its fee, see #435
    //
+    
+   bool mock_calc_fee = _db.get_rpc_mock_calc_fee(); //just mock contract call operations
+   if(mock_calc_fee) {
+       const asset mock_asset{0, id};
+       fc::variant mock_fee;
+       fc::to_variant(mock_asset, mock_fee);
+       
+       for( operation& op : _ops )
+       {
+           if (op.which() == operation::tag<contract_call_operation>::value) {
+               result.push_back(mock_fee);
+           } else {
+               result.push_back(helper.set_op_fees(op));
+          }
+       }
+       
+       return result;
+   }
 
-   vector< fc::variant > result;
-   result.reserve(ops.size());
-   const asset_object& a = id(_db);
-   get_required_fees_helper helper(
-      _db.current_fee_schedule(),
-      a.options.core_exchange_rate,
-      GET_REQUIRED_FEES_MAX_RECURSION );
    for( operation& op : _ops )
    {
        if (op.which() == operation::tag<contract_call_operation>::value) {
+           
            auto tmp_session = _db._undo_db.start_undo_session();
            contract_call_operation &opr = op.get<contract_call_operation>();
            transaction_context trx_context(_db, opr.fee_payer().instance, fc::microseconds(_db.get_cpu_limit().trx_cpu_limit));
