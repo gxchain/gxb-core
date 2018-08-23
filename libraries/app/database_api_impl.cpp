@@ -131,7 +131,7 @@ static void copy_inline_row(const key_value_object& obj, vector<char>& data) {
 }
 
 fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope, uint64_t table) const
-{
+{ try {
     fc::variants result;
 
     const auto &account_obj = get_account_by_contract_code(code);
@@ -159,6 +159,8 @@ fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope,
         }
     }
     return result;
+    }
+    FC_CAPTURE_AND_RETHROW((code)(scope)(table))
 }
 
 bytes database_api_impl::serialize_contract_call_args(string contract, string method, string json_args) const
