@@ -52,7 +52,7 @@ class dice : public contract
         if (matched_offer_itr == idx.end() || matched_offer_itr->bet != new_offer_itr->bet || matched_offer_itr->owner == new_offer_itr->owner) {
             // No matching bet found, update player's account
             accounts.modify(cur_player_itr, 0, [&](auto &acnt) {
-                gxb_assert(acnt.balance >= bet, "insufficient balance");
+                graphene_assert(acnt.balance >= bet, "insufficient balance");
                 acnt.balance -= bet;
                 acnt.open_offers++;
             });
@@ -101,7 +101,7 @@ class dice : public contract
             });
 
             accounts.modify(cur_player_itr, 0, [&](auto &acnt) {
-                gxb_assert(acnt.balance >= bet, "insufficient balance");
+                graphene_assert(acnt.balance >= bet, "insufficient balance");
                 acnt.balance -= bet;
                 acnt.open_games++;
             });
@@ -114,8 +114,8 @@ class dice : public contract
         auto idx = offers.template get_index<N(commitment)>();
         auto offer_itr = idx.find(offer::get_commitment(commitment));
 
-        gxb_assert(offer_itr != idx.end(), "offer does not exists");
-        gxb_assert(offer_itr->gameid == 0, "unable to cancel offer");
+        graphene_assert(offer_itr != idx.end(), "offer does not exists");
+        graphene_assert(offer_itr->gameid == 0, "unable to cancel offer");
 
         auto acnt_itr = accounts.find(offer_itr->owner);
         accounts.modify(acnt_itr, 0, [&](auto &acnt) {
@@ -134,8 +134,8 @@ class dice : public contract
         auto idx = offers.template get_index<N(commitment)>();
         auto curr_revealer_offer = idx.find(offer::get_commitment(commitment));
 
-        gxb_assert(curr_revealer_offer != idx.end(), "offer not found");
-        gxb_assert(curr_revealer_offer->gameid > 0, "unable to reveal");
+        graphene_assert(curr_revealer_offer != idx.end(), "offer not found");
+        graphene_assert(curr_revealer_offer->gameid > 0, "unable to reveal");
 
         auto game_itr = games.find(curr_revealer_offer->gameid);
 
@@ -226,7 +226,7 @@ class dice : public contract
         graphene_assert(itr != accounts.end(), "unknown account");
 
         accounts.modify(itr, 0, [&](auto &acnt) {
-            gxb_assert(acnt.balance >= quantity, "insufficient balance");
+            graphene_assert(acnt.balance >= quantity, "insufficient balance");
             acnt.balance -= quantity;
         });
 
