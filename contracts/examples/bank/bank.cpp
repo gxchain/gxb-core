@@ -49,6 +49,7 @@ class bank : public contract
     {
         int64_t account_id = get_account_id(to_account.c_str(), to_account.size());
         graphene_assert(account_id >= 0, "invalid account_name to_account");
+        graphene_assert(amount.amount > 0, "invalid amount");
 
         uint64_t owner = get_trx_sender();
         auto it = accounts.find(owner);
