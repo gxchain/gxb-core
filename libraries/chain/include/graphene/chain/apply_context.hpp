@@ -233,6 +233,7 @@ class apply_context {
             void remove(int iterator)
             {
                 const auto &obj = itr_cache.get(iterator);
+                context.update_ram_usage(obj.payer, -(config::billable_size_v<ObjectType>));
 
                 const auto &table_obj = itr_cache.get_table(obj.t_id);
                 FC_ASSERT(table_obj.code == context.receiver, "db access violation");
