@@ -18,7 +18,7 @@ static void throwIfNotValidUTF8(const std::string& string)
 		throw FatalSerializationException("invalid UTF-8 encoding");
 	}
 }
-	
+
 // These serialization functions need to be declared in the IR namespace for the array serializer in the Serialization namespace to find them.
 namespace IR
 {
@@ -52,7 +52,7 @@ namespace IR
 			serializeVarInt7(stream,encodedValueType);
 		}
 	}
-	
+
 	template<typename Stream>
 	void serialize(Stream& stream,SizeConstraints& sizeConstraints,bool hasMax)
 	{
@@ -60,7 +60,7 @@ namespace IR
 		if(hasMax) { serializeVarUInt32(stream,sizeConstraints.max); }
 		else if(Stream::isInput) { sizeConstraints.max = UINT64_MAX; }
 	}
-	
+
 	template<typename Stream>
 	void serialize(Stream& stream,TableElementType& elementType)
 	{
@@ -71,7 +71,7 @@ namespace IR
 	void serialize(Stream& stream,TableType& tableType)
 	{
 		serialize(stream,tableType.elementType);
-		
+
 		Uptr flags = 0;
 		if(!Stream::isInput && tableType.size.max != UINT64_MAX) { flags |= 0x01; }
 		#if ENABLE_THREADING_PROTOTYPE
@@ -107,7 +107,7 @@ namespace IR
 		serializeVarUInt1(stream,isMutable);
 		if(Stream::isInput) { globalType.isMutable = isMutable != 0; }
 	}
-	
+
 	template<typename Stream>
 	void serialize(Stream& stream,ObjectKind& kind)
 	{
@@ -138,7 +138,7 @@ namespace IR
 		}
 		serializeConstant(stream,"expected end opcode",(U8)Opcode::end);
 	}
-	
+
 	template<typename Stream>
 	void serialize(Stream& stream,TableDef& tableDef)
 	{
@@ -179,7 +179,7 @@ namespace WASM
 {
 	using namespace IR;
 	using namespace Serialization;
-	
+
 	enum
 	{
 		magicNumber=0x6d736100, // "\0asm"
@@ -202,7 +202,7 @@ namespace WASM
 		functionDefinitions = 10,
 		data = 11
 	};
-	
+
 	FORCEINLINE void serialize(InputStream& stream,Opcode& opcode)
 	{
 		opcode = (Opcode)0;
@@ -222,10 +222,10 @@ namespace WASM
 			serializeNativeValue(stream,*(((U8*)&opcode) + 0));
 		}
 	}
-	
+
 	template<typename Stream>
 	void serialize(Stream& stream,NoImm&,const FunctionDef&) {}
-	
+
 	template<typename Stream>
 	void serialize(Stream& stream,ControlStructureImm& imm,const FunctionDef&)
 	{
@@ -259,7 +259,7 @@ namespace WASM
 	template<typename Stream>
 	void serialize(Stream& stream,LiteralImm<I32>& imm,const FunctionDef&)
 	{ serializeVarInt32(stream,imm.value); }
-	
+
 	template<typename Stream>
 	void serialize(Stream& stream,LiteralImm<I64>& imm,const FunctionDef&)
 	{ serializeVarInt64(stream,imm.value); }
@@ -299,7 +299,7 @@ namespace WASM
 		{
 			serializeNativeValue(stream,v128);
 		}
-	
+
 		template<Uptr numLanes>
 		void serialize(InputStream& stream,BoolVector<numLanes>& boolVector)
 		{
@@ -310,7 +310,7 @@ namespace WASM
 				boolVector.b[index] = (mask & (U64(1) << index)) != 0;
 			}
 		}
-	
+
 		template<Uptr numLanes>
 		void serialize(OutputStream& stream,BoolVector<numLanes>& boolVector)
 		{
@@ -340,7 +340,7 @@ namespace WASM
 	#if ENABLE_THREADING_PROTOTYPE
 		template<typename Stream>
 		void serialize(Stream& stream,LaunchThreadImm& imm,const FunctionDef&) {}
-		
+
 		template<typename Stream,Uptr naturalAlignmentLog2>
 		void serialize(Stream& stream,AtomicLoadOrStoreImm<naturalAlignmentLog2>& imm,const FunctionDef&)
 		{
@@ -348,11 +348,11 @@ namespace WASM
 			serializeVarUInt32(stream,imm.offset);
 		}
 	#endif
-		
+
 	template<typename Stream,typename Value>
 	void serialize(Stream& stream,LiteralImm<Value>& imm,const FunctionDef&)
 	{ serialize(stream,imm.value); }
-		
+
 	template<typename SerializeSection>
 	void serializeSection(OutputStream& stream,SectionType type,SerializeSection serializeSectionBody)
 	{
@@ -387,13 +387,13 @@ namespace WASM
 		serialize(stream,sectionBytes);
 		if( !sectionStream.capacity() ) throw FatalSerializationException( "empty section" );
 	}
-	
+
 	void serialize(InputStream& stream,UserSection& userSection)
 	{
 		serializeConstant(stream,"expected user section (section ID 0)",(U8)SectionType::user);
 		Uptr numSectionBytes = 0;
 		serializeVarUInt32(stream,numSectionBytes);
-		
+
 		MemoryInputStream sectionStream(stream.advance(numSectionBytes),numSectionBytes);
 		serialize(sectionStream,userSection.name);
 		throwIfNotValidUTF8(userSection.name);
@@ -407,7 +407,7 @@ namespace WASM
 		Uptr num;
 		ValueType type;
 	};
-	
+
 	template<typename Stream>
 	void serialize(Stream& stream,LocalSet& localSet)
 	{
@@ -477,31 +477,32 @@ namespace WASM
 		std::vector<U8> bodyBytes = bodyStream.getBytes();
 		serialize(sectionStream,bodyBytes);
 	}
-	
+
 	void serializeFunctionBody(InputStream& sectionStream,Module& module,FunctionDef& functionDef)
 	{
 		Uptr numBodyBytes = 0;
 		serializeVarUInt32(sectionStream,numBodyBytes);
 
 		MemoryInputStream bodyStream(sectionStream.advance(numBodyBytes),numBodyBytes);
-		
+
 		// Deserialize local sets and unpack them into a linear array of local types.
 		Uptr numLocalSets = 0;
 		serializeVarUInt32(bodyStream,numLocalSets);
 
-      constexpr size_t max_size = graphene::chain::wasm_constraints::maximum_code_size;
-      if (numBodyBytes >= max_size)
-         throw FatalSerializationException(std::string("Function body too large"));
-      if (numLocalSets >= 1024)
-         throw FatalSerializationException(std::string("too many locals"));
+		constexpr size_t max_size = graphene::chain::wasm_constraints::maximum_code_size;
+		if (numBodyBytes >= max_size)
+			throw FatalSerializationException(std::string("Function body too large"));
+		if (numLocalSets >= 1024)
+			throw FatalSerializationException(std::string("too many local sets"));
+		size_t locals_accum = 0;
 
 		for(Uptr setIndex = 0;setIndex < numLocalSets;++setIndex)
 		{
 			LocalSet localSet;
 			serialize(bodyStream,localSet);
-
-			if( localSet.num > 8024 )
-				throw FatalSerializationException( "localSet.num too large" );
+			locals_accum += localSet.num*4;
+			if( locals_accum > graphene::chain::wasm_constraints::maximum_func_local_bytes )
+				throw FatalSerializationException( "too many locals" );
 
 			for(Uptr index = 0;index < localSet.num;++index) { functionDef.nonParameterLocalTypes.push_back(localSet.type); }
 		}
@@ -533,7 +534,7 @@ namespace WASM
 		codeValidationStream.finish();
 		functionDef.code = std::move(irCodeByteStream.getBytes());
 	}
-	
+
 	template<typename Stream>
 	void serializeTypeSection(Stream& moduleStream,Module& module)
 	{
@@ -592,8 +593,8 @@ namespace WASM
 							throw FatalSerializationException("invalid import function type index");
 						}
 						module.functions.imports.push_back({{functionTypeIndex},std::move(moduleName),std::move(exportName)});
-                  if (module.functions.imports.size() >= max_size)
-                     throw FatalSerializationException(std::string("Too many function imports"));
+						if (module.functions.imports.size() >= max_size)
+							throw FatalSerializationException(std::string("Too many function imports"));
 						break;
 					}
 					case ObjectKind::table:
@@ -601,8 +602,8 @@ namespace WASM
 						TableType tableType;
 						serialize(sectionStream,tableType);
 						module.tables.imports.push_back({tableType,std::move(moduleName),std::move(exportName)});
-                  if (module.functions.imports.size() >= max_size)
-                     throw FatalSerializationException(std::string("Too many table imports"));
+						if (module.functions.imports.size() >= max_size)
+							throw FatalSerializationException(std::string("Too many table imports"));
 						break;
 					}
 					case ObjectKind::memory:
@@ -610,8 +611,8 @@ namespace WASM
 						MemoryType memoryType;
 						serialize(sectionStream,memoryType);
 						module.memories.imports.push_back({memoryType,std::move(moduleName),std::move(exportName)});
-                  if (module.functions.imports.size() >= max_size)
-                     throw FatalSerializationException(std::string("Too many memory imports"));
+						if (module.functions.imports.size() >= max_size)
+							throw FatalSerializationException(std::string("Too many memory imports"));
 						break;
 					}
 					case ObjectKind::global:
@@ -619,8 +620,8 @@ namespace WASM
 						GlobalType globalType;
 						serialize(sectionStream,globalType);
 						module.globals.imports.push_back({globalType,std::move(moduleName),std::move(exportName)});
-                  if (module.functions.imports.size() >= max_size)
-                     throw FatalSerializationException(std::string("Too many global imports"));
+						if (module.functions.imports.size() >= max_size)
+							throw FatalSerializationException(std::string("Too many global imports"));
 						break;
 					}
 					default: throw FatalSerializationException("invalid ObjectKind");
@@ -677,9 +678,9 @@ namespace WASM
 				// Grow the vector one element at a time:
 				// try to get a serialization exception before making a huge allocation for malformed input.
 				module.functions.defs.clear();
-            constexpr size_t max_size = graphene::chain::wasm_constraints::maximum_section_elements;
-            if ( numFunctions >= max_size )
-               throw FatalSerializationException(std::string("Too many function defs"));
+				constexpr size_t max_size = graphene::chain::wasm_constraints::maximum_section_elements;
+				if ( numFunctions >= max_size )
+					throw FatalSerializationException(std::string("Too many function defs"));
 				for(Uptr functionIndex = 0;functionIndex < numFunctions;++functionIndex)
 				{
 					U32 functionTypeIndex = 0;
