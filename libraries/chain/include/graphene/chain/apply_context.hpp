@@ -22,10 +22,23 @@ namespace config {
     constexpr uint64_t billable_size_v = ((billable_size<T>::value + billable_alignment - 1) / billable_alignment) * billable_alignment;
 
     template<>
-    struct billable_size<key_value_object> {
-       static const uint64_t overhead = overhead_per_row_per_index_ram_bytes * 2;  ///< overhead for potentially single-row table, 2x indices internal-key and primary key
-       static const uint64_t value = 32 + 8 + 4 + overhead; ///< 32 bytes for our constant size fields, 8 for pointer to vector data, 4 bytes for a size of vector + overhead
+    struct billable_size<table_id_object> {
+        static const uint64_t overhead = overhead_per_row_per_index_ram_bytes * 2;  ///< overhead for 2x indices internal-key and code,scope,table
+        static const uint64_t value = 44 + overhead; ///< 36 bytes for constant size fields + overhead
     };
+
+    template<>
+    struct billable_size<key_value_object> {
+        static const uint64_t overhead = overhead_per_row_per_index_ram_bytes * 2;  ///< overhead for potentially single-row table, 2x indices internal-key and primary key
+        static const uint64_t value = 32 + 8 + 4 + overhead; ///< 32 bytes for our constant size fields, 8 for pointer to vector data, 4 bytes for a size of vector + overhead
+    };
+
+    template<>
+    struct billable_size<index64_object> {
+        static const uint64_t overhead = overhead_per_row_per_index_ram_bytes * 3;  ///< overhead for potentially single-row table, 3x indices internal-key, primary key and primary+secondary key
+        static const uint64_t value = 24 + 8 + overhead; ///< 24 bytes for fixed fields + 8 bytes key + overhead
+    };
+
 }
 
 class database;
@@ -210,6 +223,8 @@ class apply_context {
                context._db->modify(tab, [&](table_id_object &t) {
                    ++t.count;
                });
+
+               context.update_ram_usage(config::billable_size_v<ObjectType>);
 
                itr_cache.cache_table(tab);
                return itr_cache.add(obj);
