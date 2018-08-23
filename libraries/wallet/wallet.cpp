@@ -1056,8 +1056,7 @@
              abi_serializer abis(contract_obj.abi, fc::milliseconds(1000000));
              auto action_type = abis.get_action_type(method);
              GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
-             const fc::time_point deadline = fc::time_point::now() + fc::milliseconds(1000000);
-             contract_call_op.data = abis.variant_to_binary(action_type, action_args_var, 0, deadline, fc::milliseconds(1000000));
+             contract_call_op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
 
              signed_transaction tx;
              tx.operations.push_back(contract_call_op);

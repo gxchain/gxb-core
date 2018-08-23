@@ -155,7 +155,7 @@ fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope,
         for(auto it = lower; it != upper; ++it) {
             if(fc::time_point::now() > end) break;
             copy_inline_row(*it, data);
-            result.emplace_back(abis.binary_to_variant(tname.to_string(), data));
+            result.emplace_back(abis.binary_to_variant(tname.to_string(), data, fc::microseconds(1000 * 10)));
         }
     }
     return result;
@@ -173,8 +173,7 @@ bytes database_api_impl::serialize_contract_call_args(string contract, string me
     abi_serializer abis(contract_obj->abi, fc::milliseconds(10000));
     auto action_type = abis.get_action_type(method);
     GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
-    const fc::time_point deadline = fc::time_point::now() + fc::milliseconds(10000);
-    bytes bin_data = abis.variant_to_binary(action_type, action_args_var, 0, deadline, fc::milliseconds(10000));
+    bytes bin_data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(10000));
     return bin_data;
 }
 
