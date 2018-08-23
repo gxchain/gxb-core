@@ -982,30 +982,24 @@
                fc::path cpath(contract_dir);
                if (cpath.filename().generic_string() == ".") cpath = cpath.parent_path();
 
-               fc::path wast_path = cpath / (cpath.filename().generic_string() + ".wast");
                fc::path wasm_path = cpath / (cpath.filename().generic_string() + ".wasm");
                fc::path abi_path = cpath / (cpath.filename().generic_string() + ".abi");
 
-               bool wast_exist = fc::exists(wast_path);
                bool wasm_exist = fc::exists(wasm_path);
                bool abi_exist = fc::exists(abi_path);
 
-               FC_ASSERT(abi_exist && (wast_exist || wasm_exist), "need abi and wast/wasm file");
+               FC_ASSERT(abi_exist, "no abi file exist");
+               FC_ASSERT(wasm_exist, "no wasm file exist");
 
                abi_def_data = fc::json::from_file(abi_path);
 
-               std::string wast;
                std::string wasm_string;
                fc::read_file_contents(wasm_path, wasm_string);
                const string binary_wasm_header("\x00\x61\x73\x6d", 4);
-               if (wasm_string.compare(0, 4, binary_wasm_header) == 0) {
-                   for (auto it = wasm_string.begin(); it != wasm_string.end(); ++it) { //TODO
-                       wasm.push_back(*it);
-                   }
-               } else {
-                   fc::read_file_contents(wast_path, wast);
-                   FC_ASSERT(!wast.empty(), "wasm and wast file both invalid");
-                   wasm = graphene::chain::wast_to_wasm(wast);
+               FC_ASSERT(wasm_string.size() > 4 && (wasm_string.compare(0, 4, binary_wasm_header) == 0), "wasm invalid");
+               
+               for (auto it = wasm_string.begin(); it != wasm_string.end(); ++it) {
+                   wasm.push_back(*it); //TODO
                }
            };
 
