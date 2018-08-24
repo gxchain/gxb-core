@@ -137,8 +137,8 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
         FC_ASSERT(op.amount->amount > 0, "amount > 0");
         // check balance
         const asset_object &asset_type = op.amount->asset_id(d);
-        bool insufficient_balance = d.get_balance(op.account(d), asset_type).amount >= op.amount->amount;
-        FC_ASSERT(insufficient_balance,
+        bool sufficient_balance = d.get_balance(op.account(d), asset_type).amount >= op.amount->amount;
+        FC_ASSERT(sufficient_balance,
                   "insufficient balance: ${balance}, unable to deposit '${total_transfer}' from account '${a}' to '${t}'",
                   ("a", op.account)("t", contract_obj.id)("total_transfer", d.to_pretty_string(op.amount->amount))
                   ("balance", d.to_pretty_string(d.get_balance(op.account(d), asset_type))));
