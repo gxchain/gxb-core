@@ -35,6 +35,6 @@ namespace graphene { namespace chain {
 } } /// graphene::chain
 
 namespace fc {
-  void to_variant(const graphene::chain::name& c, fc::variant& v) { v = std::string(c); }
-  void from_variant(const fc::variant& v, graphene::chain::name& check) { check = v.get_string(); }
+  void to_variant(const graphene::chain::name& c, fc::variant& v, uint32_t max_depth) { v = std::string(c); }
+  void from_variant(const fc::variant& v, graphene::chain::name& check, uint32_t max_deptht) { check = v.get_string(); }
 } // fc

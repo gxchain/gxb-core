@@ -27,6 +27,8 @@
 #include <fc/crypto/city.hpp>
 #include <fc/uint128.hpp>
 
+#define MAX_NESTING (200)
+
 namespace graphene { namespace db {
 
    /**
@@ -70,10 +72,7 @@ namespace graphene { namespace db {
          // serialized
          object_id_type          id;
 
-
-
          /// these methods are implemented for derived classes by inheriting abstract_object<DerivedClass>
-         ///
          virtual unique_ptr<object> clone()const = 0;
          virtual void               move_from( object& obj ) = 0;
          virtual variant            to_variant()const  = 0;
@@ -83,7 +82,7 @@ namespace graphene { namespace db {
 
    /**
     * @class abstract_object
-    * @brief Use the Curiously Recurring Template Pattern to automatically add the ability to
+    * @brief   Use the Curiously Recurring Template Pattern to automatically add the ability to
     *  clone, serialize, and move objects polymorphically.
     *
     *  http://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
@@ -101,7 +100,7 @@ namespace graphene { namespace db {
          {
             static_cast<DerivedClass&>(*this) = std::move( static_cast<DerivedClass&>(obj) );
          }
-         virtual variant to_variant()const { return variant( static_cast<const DerivedClass&>(*this) ); }
+         virtual variant to_variant()const { return variant( static_cast<const DerivedClass&>(*this), MAX_NESTING ); }
          virtual vector<char> pack()const  { return fc::raw::pack( static_cast<const DerivedClass&>(*this) ); }
          virtual fc::uint128  hash()const  {  
              auto tmp = this->pack();

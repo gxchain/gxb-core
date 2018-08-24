@@ -426,12 +426,12 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
               break;
            } case impl_transaction_object_type:{
               const auto& aobj = dynamic_cast<const transaction_object*>(obj);
-              assert( aobj != nullptr );
+              FC_ASSERT( aobj != nullptr );
               transaction_get_impacted_accounts( aobj->trx, accounts );
               break;
            } case impl_blinded_balance_object_type:{
               const auto& aobj = dynamic_cast<const blinded_balance_object*>(obj);
-              assert( aobj != nullptr );
+              FC_ASSERT( aobj != nullptr );
               for( const auto& a : aobj->owner.account_auths )
                 accounts.insert( a.first );
               break;
@@ -527,7 +527,7 @@ void database::notify_changed_objects()
         removed_objects(removed_ids, removed, removed_accounts_impacted);
       }
    }
-} FC_CAPTURE_AND_LOG( () ) }
+} FC_CAPTURE_AND_LOG( (0) ) }
 
 void database::notify_data_transaction_changed_objects(const signed_transaction& trx)
 { try {
@@ -564,6 +564,6 @@ void database::notify_data_transaction_changed_objects(const signed_transaction&
           }
       }
    }
-} FC_CAPTURE_AND_LOG(()) }
+} FC_CAPTURE_AND_LOG( (0) ) }
 
 } }

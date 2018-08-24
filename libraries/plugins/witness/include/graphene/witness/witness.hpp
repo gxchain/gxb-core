@@ -75,11 +75,11 @@ public:
 private:
    void schedule_production_loop();
    block_production_condition::block_production_condition_enum block_production_loop();
-   block_production_condition::block_production_condition_enum maybe_produce_block( fc::mutable_variant_object& capture );
+   block_production_condition::block_production_condition_enum maybe_produce_block( fc::limited_mutable_variant_object& capture );
 
    boost::program_options::variables_map _options;
    bool _production_enabled = false;
-   //bool _consecutive_production_enabled = false;
+   bool _consecutive_production_enabled = false;
    uint32_t _required_witness_participation = 33 * GRAPHENE_1_PERCENT;
    uint32_t _production_skip_flags = graphene::chain::database::skip_nothing;
 

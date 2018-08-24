@@ -76,7 +76,7 @@ struct cmp_pair_by_value {
 class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 {
    public:
-      database_api_impl( graphene::chain::database& db );
+      explicit database_api_impl( graphene::chain::database& db );
       ~database_api_impl();
 
       // Objects

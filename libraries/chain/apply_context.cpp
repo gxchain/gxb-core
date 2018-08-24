@@ -33,10 +33,11 @@ void apply_context::exec_one()
        auto prefix = fc::format_string(
                                        "\n[(${a},${n})->${r}] ",
                                        fc::mutable_variant_object()
-                                       ("a", account_id_type(act.contract_id))
-                                       ("n", act.method_name)
-                                       ("r", account_id_type(receiver)));
-    
+                                       ("a", act.contract_id)
+                                       ("n", std::string(act.method_name))
+                                       ("r", receiver)
+                                       );
+
        dlog(prefix + "CONSOLE OUTPUT BEGIN =====================\n"
                + console + "\n"
                + prefix + "CONSOLE OUTPUT END =====================" );

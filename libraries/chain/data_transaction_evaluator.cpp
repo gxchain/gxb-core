@@ -38,7 +38,7 @@ const uint8_t max_size_request_id = 100;
 vector<schema_context_object> get_schema_contexts_from_variant(const variant &v)
 { try {
         league_data_product_object lpo;
-        v.as<league_data_product_object>(lpo);
+        v.as<league_data_product_object>(lpo, 20);
         return lpo.schema_contexts;
     } catch (const fc::exception& e) {
         elog("get free_data_product schema_contexts exception ${e}", ("e", e.to_detail_string()));
@@ -46,7 +46,7 @@ vector<schema_context_object> get_schema_contexts_from_variant(const variant &v)
 
     try {
         free_data_product_object fpo;
-        v.as<free_data_product_object>(fpo);
+        v.as<free_data_product_object>(fpo, 20);
         return fpo.schema_contexts;
     } catch (const fc::exception& e) {
         elog("get free_data_product schema_contexts exception ${e}", ("e", e.to_detail_string()));

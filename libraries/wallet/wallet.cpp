@@ -3689,7 +3689,7 @@
           for( const auto& peer : peers )
           {
              variant v;
-             fc::to_variant( peer, v );
+             fc::to_variant( peer, v, GRAPHENE_MAX_NESTED_OBJECTS );
              result.push_back( v );
           }
           return result;
@@ -6120,13 +6120,16 @@
 
     } } // graphene::wallet
 
-    void fc::to_variant(const account_multi_index_type& accts, fc::variant& vo)
+    namespace fc
     {
-       vo = vector<account_object>(accts.begin(), accts.end());
+    void to_variant(const account_multi_index_type &accts, variant &vo, uint32_t max_depth)
+    {
+        to_variant(std::vector<account_object>(accts.begin(), accts.end()), vo, max_depth);
     }
 
-    void fc::from_variant(const fc::variant& var, account_multi_index_type& vo)
+    void from_variant(const variant &var, account_multi_index_type &vo, uint32_t max_depth)
     {
-       const vector<account_object>& v = var.as<vector<account_object>>();
-       vo = account_multi_index_type(v.begin(), v.end());
+        const std::vector<account_object> &v = var.as<std::vector<account_object>>(max_depth);
+        vo = account_multi_index_type(v.begin(), v.end());
     }
+}
