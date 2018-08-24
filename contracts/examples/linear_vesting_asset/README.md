@@ -10,7 +10,7 @@ linear_vesting_asset合约
 ```
 gxx -o contracts/examples/linear_vesting_asset/linear_vesting_asset.wast contracts/examples/linear_vesting_asset/linear_vesting_asset.cpp 
 ```
-生成aib
+生成abi
 ```
 gxx -g contracts/examples/linear_vesting_asset/linear_vesting_asset.abi contracts/examples/linear_vesting_asset/linear_vesting_asset.cpp
 ```
