@@ -10,7 +10,7 @@ extern "C" {
  *
  *  This method is optimized to a NO-OP when in fast evaluation mode
  */
-void assert_sha256(const char *data, uint32_t length, const const checksum256 *hash);
+void assert_sha256(const char *data, uint32_t length, const checksum256 *hash);
 
 /**
  *  This method is implemented as:
