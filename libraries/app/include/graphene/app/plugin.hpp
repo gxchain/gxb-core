@@ -121,9 +121,9 @@ class plugin : public abstract_plugin
 /// @group Some useful tools for boost::program_options arguments using vectors of JSON strings
 /// @{
 template<typename T>
-T dejsonify(const string& s)
+T dejsonify(const string& s, uint32_t max_depth)
 {
-   return fc::json::from_string(s).as<T>();
+   return fc::json::from_string(s).as<T>(max_depth);
 }
 
 #define DEFAULT_VALUE_VECTOR(value) default_value({fc::json::to_string(value)}, fc::json::to_string(value))
