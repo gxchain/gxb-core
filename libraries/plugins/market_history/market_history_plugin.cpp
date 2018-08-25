@@ -271,7 +271,7 @@ void market_history_plugin::plugin_initialize(const boost::program_options::vari
    if( options.count( "bucket-size" ) )
    {
       const std::string& buckets = options["bucket-size"].as<string>(); 
-      my->_tracked_buckets = fc::json::from_string(buckets).as<flat_set<uint32_t>>();
+      my->_tracked_buckets = fc::json::from_string(buckets).as<flat_set<uint32_t>>(5);
    }
    if( options.count( "history-per-size" ) )
       my->_maximum_history_per_bucket_size = options["history-per-size"].as<uint32_t>();
