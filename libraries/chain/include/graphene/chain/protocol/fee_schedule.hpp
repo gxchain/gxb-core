@@ -45,6 +45,41 @@ namespace graphene { namespace chain {
       }
    };
 
+   template<>
+   class fee_helper<account_create_operation> {
+     public:
+      const account_create_operation::fee_parameters_type& cget(const flat_set<fee_parameters>& parameters)const
+      {
+         auto itr = parameters.find( account_create_operation::fee_parameters_type() );
+         FC_ASSERT( itr != parameters.end() );
+         return itr->get<account_create_operation::fee_parameters_type>();
+      }
+      typename account_create_operation::fee_parameters_type& get(flat_set<fee_parameters>& parameters)const
+      {
+         auto itr = parameters.find( account_create_operation::fee_parameters_type() );
+         FC_ASSERT( itr != parameters.end() );
+         return itr->get<account_create_operation::fee_parameters_type>();
+      }
+   };
+
+
+   template<>
+   class fee_helper<contract_call_operation> {
+     public:
+      const contract_call_operation::fee_parameters_type& cget(const flat_set<fee_parameters>& parameters)const
+      {
+         auto itr = parameters.find( contract_call_operation::fee_parameters_type() );
+         FC_ASSERT( itr != parameters.end() );
+         return itr->get<contract_call_operation::fee_parameters_type>();
+      }
+      typename contract_call_operation::fee_parameters_type& get(flat_set<fee_parameters>& parameters)const
+      {
+         auto itr = parameters.find( contract_call_operation::fee_parameters_type() );
+         FC_ASSERT( itr != parameters.end() );
+         return itr->get<contract_call_operation::fee_parameters_type>();
+      }
+   };
+
    /**
     *  @brief contains all of the parameters necessary to calculate the fee for any operation
     */
