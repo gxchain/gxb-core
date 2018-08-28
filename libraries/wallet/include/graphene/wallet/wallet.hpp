@@ -2313,7 +2313,6 @@ FC_API( graphene::wallet::wallet_api,
         (update_asset_feed_producers)
         (publish_asset_feed)
         (get_asset)
-        (get_bitasset_data)
         (fund_asset_fee_pool)
         (reserve_asset)
         (global_settle_asset)
