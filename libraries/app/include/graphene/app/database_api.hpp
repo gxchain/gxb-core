@@ -882,7 +882,6 @@ FC_API(graphene::app::database_api,
    (lookup_asset_symbols)
 
    // Markets / feeds
-   (get_order_book)
    (get_limit_orders)
    (get_call_orders)
    (get_settle_orders)

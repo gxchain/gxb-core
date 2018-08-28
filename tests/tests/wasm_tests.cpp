@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(nested_limit_test)
    op.account = alice_id;
    op.vm_type = "0";
    op.vm_version = "0";
-   op.abi = fc::json::from_string(contract_abi).as<abi_def>();
+   op.abi = fc::json::from_string(contract_abi).as<abi_def>(GRAPHENE_MAX_NESTED_OBJECTS);
    // nested loops
    {
       std::stringstream ss;

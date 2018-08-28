@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(contract_test)
    deploy_op.vm_version = "0";
    auto wasm = graphene::chain::wast_to_wasm(contract_test_wast_code);
    deploy_op.code = bytes(wasm.begin(), wasm.end());
-   deploy_op.abi = fc::json::from_string(contract_abi).as<abi_def>();
+   deploy_op.abi = fc::json::from_string(contract_abi).as<abi_def>(GRAPHENE_MAX_NESTED_OBJECTS);
    deploy_op.fee = asset(2000);
    trx.operations.push_back(deploy_op);
    set_expiration(db, trx);
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(contract_block_cpu_limit_test)
     deploy_op.vm_version = "0";
     auto wasm = graphene::chain::wast_to_wasm(contract_test_wast_code);
     deploy_op.code = bytes(wasm.begin(), wasm.end());
-    deploy_op.abi = fc::json::from_string(contract_abi).as<abi_def>();
+    deploy_op.abi = fc::json::from_string(contract_abi).as<abi_def>(GRAPHENE_MAX_NESTED_OBJECTS);
     deploy_op.fee = asset(2000);
     trx.operations.push_back(deploy_op);
     set_expiration(db, trx);

@@ -1022,11 +1022,11 @@ market_ticker database_api_impl::get_ticker( const string& base, const string& q
          result.percent_change = trades.size() > 0 ? ( ( result.latest / trades.back().price ) - 1 ) * 100 : 0;
       }
 
-      auto orders = get_order_book( base, quote, 1 );
-      if( orders.asks.size() )
-         result.lowest_ask = orders.asks[0].price;
-      if( orders.bids.size() )
-         result.highest_bid = orders.bids[0].price;
+//      auto orders = get_order_book( base, quote, 1 );
+//      if( orders.asks.size() )
+//         result.lowest_ask = orders.asks[0].price;
+//      if( orders.bids.size() )
+//         result.highest_bid = orders.bids[0].price;
 
    } FC_CAPTURE_AND_RETHROW( (base)(quote) )
 
