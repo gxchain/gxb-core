@@ -2992,7 +2992,7 @@
 
           m["get_account_history"] = [this](variant result, const fc::variants& a)
           {
-             auto r = result.as<vector<operation_detail>>();
+             auto r = result.as<vector<operation_detail>>( GRAPHENE_MAX_NESTED_OBJECTS );
              std::stringstream ss;
              for( operation_detail& d : r )
              {
@@ -3009,7 +3009,7 @@
 
           m["get_account_history_by_operations"] = [this](variant result, const fc::variants& a)
           {
-             auto r = result.as<account_history_operation_detail>();
+             auto r = result.as<account_history_operation_detail>(GRAPHENE_MAX_NESTED_OBJECTS);
              std::stringstream ss;
              ss << "total_without_operations : ";
              ss << r.total_without_operations;
@@ -3031,7 +3031,7 @@
 
           m["get_irreversible_account_history"] = [this](variant result, const fc::variants& a)
           {
-             auto r = result.as<irreversible_account_history_detail>();
+             auto r = result.as<irreversible_account_history_detail>(GRAPHENE_MAX_NESTED_OBJECTS);
              std::stringstream ss;
              ss << "next_start_sequence : " << r.next_start_sequence << "\n";
              ss << "result_count : " << r.result_count << "\n";
@@ -3049,7 +3049,7 @@
           };
           m["get_relative_account_history"] = [this](variant result, const fc::variants& a)
           {
-              auto r = result.as<vector<operation_detail>>();
+              auto r = result.as<vector<operation_detail>>(GRAPHENE_MAX_NESTED_OBJECTS);
               std::stringstream ss;
 
               for( operation_detail& d : r )
@@ -3067,7 +3067,7 @@
 
           m["list_account_balances"] = [this](variant result, const fc::variants& a)
           {
-             auto r = result.as<vector<asset>>();
+             auto r = result.as<vector<asset>>(GRAPHENE_MAX_NESTED_OBJECTS);
              vector<asset_object> asset_recs;
              std::transform(r.begin(), r.end(), std::back_inserter(asset_recs), [this](const asset& a) {
                 return get_asset(a.asset_id);
@@ -3082,7 +3082,7 @@
 
           m["list_account_lock_balances"] = [this](variant result, const fc::variants& a)
           {
-             auto r = result.as<vector<asset>>();
+             auto r = result.as<vector<asset>>(GRAPHENE_MAX_NESTED_OBJECTS);
              vector<asset_object> asset_recs;
              std::transform(r.begin(), r.end(), std::back_inserter(asset_recs), [this](const asset& a) {
                 return get_asset(a.asset_id);
@@ -3097,7 +3097,7 @@
 
           m["get_blind_balances"] = [this](variant result, const fc::variants& a)
           {
-             auto r = result.as<vector<asset>>();
+             auto r = result.as<vector<asset>>(GRAPHENE_MAX_NESTED_OBJECTS);
              vector<asset_object> asset_recs;
              std::transform(r.begin(), r.end(), std::back_inserter(asset_recs), [this](const asset& a) {
                 return get_asset(a.asset_id);
@@ -3111,13 +3111,10 @@
           };
           m["transfer_to_blind"] = [this](variant result, const fc::variants& a)
           {
-             auto r = result.as<blind_confirmation>();
+             auto r = result.as<blind_confirmation>(GRAPHENE_MAX_NESTED_OBJECTS);
              std::stringstream ss;
              r.trx.operations[0].visit( operation_printer( ss, *this, operation_result() ) );
              ss << "\n";
-
-
-
 
              for( const auto& out : r.outputs )
              {
@@ -3128,7 +3125,7 @@
           };
           m["blind_transfer"] = [this](variant result, const fc::variants& a)
           {
-             auto r = result.as<blind_confirmation>();
+             auto r = result.as<blind_confirmation>(GRAPHENE_MAX_NESTED_OBJECTS);
              std::stringstream ss;
              r.trx.operations[0].visit( operation_printer( ss, *this, operation_result() ) );
              ss << "\n";
@@ -3141,7 +3138,7 @@
           };
           m["receive_blind_transfer"] = [this](variant result, const fc::variants& a)
           {
-             auto r = result.as<blind_receipt>();
+             auto r = result.as<blind_receipt>(GRAPHENE_MAX_NESTED_OBJECTS);
              std::stringstream ss;
              asset_object as = get_asset( r.amount.asset_id );
              ss << as.amount_to_pretty_string( r.amount ) << "  " << r.from_label << "  =>  " << r.to_label  << "  " << r.memo <<"\n";
@@ -3149,7 +3146,7 @@
           };
           m["blind_history"] = [this](variant result, const fc::variants& a)
           {
-             auto records = result.as<vector<blind_receipt>>();
+             auto records = result.as<vector<blind_receipt>>(GRAPHENE_MAX_NESTED_OBJECTS);
              std::stringstream ss;
              ss << "WHEN         "
                 << "  " << "AMOUNT"  << "  " << "FROM" << "  =>  " << "TO" << "  " << "MEMO" <<"\n";
@@ -3164,7 +3161,7 @@
           };
           m["get_order_book"] = [](variant result, const fc::variants& a)
           {
-             auto orders = result.as<order_book>();
+             auto orders = result.as<order_book>(GRAPHENE_MAX_NESTED_OBJECTS);
              auto bids = orders.bids;
              auto asks = orders.asks;
              std::stringstream ss;
@@ -3330,7 +3327,7 @@
           const chain_parameters& current_params = get_global_properties().parameters;
           chain_parameters new_params = current_params;
           fc::reflector<chain_parameters>::visit(
-             fc::from_variant_visitor<chain_parameters>( changed_values, new_params )
+             fc::from_variant_visitor<chain_parameters>( changed_values, new_params, GRAPHENE_MAX_NESTED_OBJECTS )
              );
 
           committee_member_update_global_parameters_operation update_op;
@@ -3366,7 +3363,7 @@
            const chain_parameters& current_params = get_global_properties().parameters;
            chain_parameters new_params = current_params;
            fc::reflector<chain_parameters>::visit(
-              fc::from_variant_visitor<chain_parameters>( changed_extensions, new_params )
+              fc::from_variant_visitor<chain_parameters>( changed_extensions, new_params, GRAPHENE_MAX_NESTED_OBJECTS )
               );
            extensions_type extension_tmp = new_params.extensions;
            for (auto& ext : current_params.extensions) {
@@ -3447,7 +3444,7 @@
                 which = it->second;
              }
 
-             fee_parameters fp = from_which_variant< fee_parameters >( which, item.value() );
+             fee_parameters fp = from_which_variant< fee_parameters >( which, item.value(), GRAPHENE_MAX_NESTED_OBJECTS );
              fee_map[ which ] = fp;
           }
 
@@ -3572,7 +3569,7 @@
           proposal_update_operation update_op;
 
           update_op.fee_paying_account = get_account(fee_paying_account).id;
-          update_op.proposal = fc::variant(proposal_id).as<proposal_id_type>();
+          update_op.proposal = fc::variant(proposal_id).as<proposal_id_type>(1);
           // make sure the proposal exists
           get_object( update_op.proposal );
 
@@ -5588,7 +5585,7 @@
 
     public_key_type  wallet_api::get_public_key( string label )const
     {
-       try { return fc::variant(label).as<public_key_type>(); } catch ( ... ){}
+       try { return fc::variant(label).as<public_key_type>(1); } catch ( ... ){}
 
        auto key_itr   = my->_wallet.labeled_keys.get<by_label>().find(label);
        if( key_itr != my->_wallet.labeled_keys.get<by_label>().end() )
