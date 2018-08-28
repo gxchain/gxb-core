@@ -655,7 +655,7 @@
           FC_ASSERT( asset_symbol_or_id.size() > 0 );
           vector<optional<asset_object>> opt_asset;
           if( std::isdigit( asset_symbol_or_id.front() ) )
-             return fc::variant(asset_symbol_or_id).as<asset_id_type>();
+             return fc::variant(asset_symbol_or_id).as<asset_id_type>(1);
           opt_asset = _remote_db->lookup_asset_symbols( {asset_symbol_or_id} );
           FC_ASSERT( (opt_asset.size() > 0) && (opt_asset[0].valid()) );
           return opt_asset[0]->id;
@@ -726,7 +726,7 @@
           if( ! fc::exists( wallet_filename ) )
              return false;
 
-          _wallet = fc::json::from_file( wallet_filename ).as< wallet_data >();
+          _wallet = fc::json::from_file(wallet_filename).as<wallet_data>(2 * GRAPHENE_MAX_NESTED_OBJECTS);
           if( _wallet.chain_id != _chain_id )
              FC_THROW( "Wallet chain ID does not match",
                 ("wallet.chain_id", _wallet.chain_id)
@@ -1014,7 +1014,7 @@
            op.vm_type = vm_type;
            op.vm_version = vm_version;
            op.code = bytes(wasm.begin(), wasm.end());
-           op.abi = abi_def_data.as<abi_def>();
+           op.abi = abi_def_data.as<abi_def>(GRAPHENE_MAX_NESTED_OBJECTS);
 
            signed_transaction tx;
            tx.operations.push_back(op);
@@ -1045,7 +1045,7 @@
                  contract_call_op.amount = amount;
              }
              contract_call_op.method_name = string_to_name(method.c_str());
-             fc::variant action_args_var = fc::json::from_string(args, fc::json::relaxed_parser);
+             fc::variant action_args_var = fc::json::from_string(args);
 
              abi_serializer abis(contract_obj.abi, fc::milliseconds(1000000));
              auto action_type = abis.get_action_type(method);
@@ -2468,7 +2468,7 @@
           for( const variant& obj : objects )
           {
              worker_object wo;
-             from_variant( obj, wo );
+             from_variant(obj, wo, GRAPHENE_MAX_NESTED_OBJECTS);
              new_votes.erase( wo.vote_for );
              new_votes.erase( wo.vote_against );
              if( delta.vote_for.find( wo.id ) != delta.vote_for.end() )
