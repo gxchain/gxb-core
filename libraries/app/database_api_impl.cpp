@@ -60,7 +60,7 @@ optional<T> maybe_id( const string& name_or_id )
    {
       try
       {
-         return fc::variant(name_or_id).as<T>(1,);
+         return fc::variant(name_or_id).as<T>(1);
       }
       catch (const fc::exception&)
       {
@@ -170,7 +170,7 @@ bytes database_api_impl::serialize_contract_call_args(string contract, string me
         return bytes();
     }
 
-    fc::variant action_args_var = fc::json::from_string(json_args, fc::json::relaxed_parser);
+    fc::variant action_args_var = fc::json::from_string(json_args);
 
     abi_serializer abis(contract_obj->abi, fc::milliseconds(10000));
     auto action_type = abis.get_action_type(method);
@@ -421,7 +421,7 @@ std::map<std::string, full_account> database_api_impl::get_full_accounts( const 
    {
       const account_object* account = nullptr;
       if (std::isdigit(account_name_or_id[0]))
-         account = _db.find(fc::variant(account_name_or_id).as<account_id_type>());
+         account = _db.find(fc::variant(account_name_or_id).as<account_id_type>(1));
       else
       {
          const auto& idx = _db.get_index_type<account_index>().indices().get<by_name>();
@@ -1448,7 +1448,7 @@ bool database_api_impl::verify_account_authority( const string& name_or_id, cons
    FC_ASSERT( name_or_id.size() > 0);
    const account_object* account = nullptr;
    if (std::isdigit(name_or_id[0]))
-      account = _db.find(fc::variant(name_or_id).as<account_id_type>());
+      account = _db.find(fc::variant(name_or_id).as<account_id_type>(1));
    else
    {
       const auto& idx = _db.get_index_type<account_index>().indices().get<by_name>();
@@ -1973,7 +1973,7 @@ free_data_product_search_results_object   database_api_impl::list_free_data_prod
     vector<free_data_product_object> free_vecotr_result_temp;
 
     const free_data_product_index& product_index = _db.get_index_type<free_data_product_index>();
-    data_market_category_id_type  category_id = fc::variant(data_market_category_id).as<data_market_category_id_type>();
+    data_market_category_id_type  category_id = fc::variant(data_market_category_id).as<data_market_category_id_type>(1);
     auto range = product_index.indices().get<by_data_market_category_id>().equal_range(boost::make_tuple(category_id));
 
    // const auto& range = _db.get_index_type<free_data_product_index>().indices().get<by_id>();
@@ -2021,7 +2021,7 @@ league_data_product_search_results_object   database_api_impl::list_league_data_
     vector<league_data_product_object> league_vecotr_result_temp;
 
     const league_data_product_index& product_index = _db.get_index_type<league_data_product_index>();
-    data_market_category_id_type  category_id = fc::variant(data_market_category_id).as<data_market_category_id_type>();
+    data_market_category_id_type  category_id = fc::variant(data_market_category_id).as<data_market_category_id_type>(1);
     auto range = product_index.indices().get<by_data_market_category_id>().equal_range(boost::make_tuple(category_id));
     int total = 0;
     for (const league_data_product_object& league_data_product : boost::make_iterator_range(range.first, range.second))
@@ -2114,7 +2114,7 @@ league_search_results_object database_api_impl::list_leagues(string data_market_
     vector<league_object> league_vecotr_result_temp;
 
     const league_index& product_index = _db.get_index_type<league_index>();
-    data_market_category_id_type category_id = fc::variant(data_market_category_id).as<data_market_category_id_type>();
+    data_market_category_id_type category_id = fc::variant(data_market_category_id).as<data_market_category_id_type>(1);
     auto range = product_index.indices().get<by_data_market_category_id>().equal_range(boost::make_tuple(category_id));
     int total = 0;
     for (const league_object& league : boost::make_iterator_range(range.first, range.second))
