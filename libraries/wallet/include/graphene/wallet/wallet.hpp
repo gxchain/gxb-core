@@ -2097,8 +2097,6 @@ class wallet_api
          bool broadcast /* = false */
          );
 
-      order_book get_order_book( const string& base, const string& quote, unsigned limit = 50);
-
       /** get pocs_object.
        *
        * @param league_id
@@ -2409,7 +2407,6 @@ FC_API( graphene::wallet::wallet_api,
         (blind_transfer)
         (blind_history)
         (receive_blind_transfer)
-        (get_order_book)
         (create_data_market_category)
         (propose_data_market_category_update)
         (create_free_data_product)

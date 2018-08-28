@@ -502,15 +502,6 @@ class database_api
        */
       market_volume get_24_volume( const string& base, const string& quote )const;
 
-      /**
-       * @brief Returns the order book for the market base:quote
-       * @param base String name of the first asset
-       * @param quote String name of the second asset
-       * @param depth of the order book. Up to depth of each asks and bids, capped at 50. Prioritizes most moderate of each
-       * @return Order book of the market
-       */
-      order_book get_order_book( const string& base, const string& quote, unsigned limit = 50 )const;
-
       /** get pocs_object.
        *
        * @param league_id

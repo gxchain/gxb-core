@@ -1077,56 +1077,6 @@ market_volume database_api_impl::get_24_volume( const string& base, const string
    } FC_CAPTURE_AND_RETHROW( (base)(quote) )
 }
 
-order_book database_api_impl::get_order_book( const string& base, const string& quote, unsigned limit )const
-{
-   using boost::multiprecision::uint128_t;
-   FC_ASSERT( limit <= 50 );
-
-   order_book result;
-   result.base = base;
-   result.quote = quote;
-
-   auto assets = lookup_asset_symbols( {base, quote} );
-   FC_ASSERT( assets[0], "Invalid base asset symbol: ${s}", ("s",base) );
-   FC_ASSERT( assets[1], "Invalid quote asset symbol: ${s}", ("s",quote) );
-
-   auto base_id = assets[0]->id;
-   auto quote_id = assets[1]->id;
-   auto orders = get_limit_orders( base_id, quote_id, limit );
-
-
-   auto asset_to_real = [&]( const asset& a, int p ) { return double(a.amount.value)/pow( 10, p ); };
-   auto price_to_real = [&]( const price& p )
-   {
-      if( p.base.asset_id == base_id )
-         return asset_to_real( p.base, assets[0]->precision ) / asset_to_real( p.quote, assets[1]->precision );
-      else
-         return asset_to_real( p.quote, assets[0]->precision ) / asset_to_real( p.base, assets[1]->precision );
-   };
-
-   for( const auto& o : orders )
-   {
-      if( o.sell_price.base.asset_id == base_id )
-      {
-         order ord;
-         ord.price = price_to_real( o.sell_price );
-         ord.quote = asset_to_real( share_type( ( uint128_t( o.for_sale.value ) * o.sell_price.quote.amount.value ) / o.sell_price.base.amount.value ), assets[1]->precision );
-         ord.base = asset_to_real( o.for_sale, assets[0]->precision );
-         result.bids.push_back( ord );
-      }
-      else
-      {
-         order ord;
-         ord.price = price_to_real( o.sell_price );
-         ord.quote = asset_to_real( o.for_sale, assets[1]->precision );
-         ord.base = asset_to_real( share_type( ( uint64_t( o.for_sale.value ) * o.sell_price.quote.amount.value ) / o.sell_price.base.amount.value ), assets[0]->precision );
-         result.asks.push_back( ord );
-      }
-   }
-
-   return result;
-}
-
 optional<pocs_object> database_api_impl::get_pocs_object(league_id_type league_id, account_id_type account_id, object_id_type product_id    )const
 {
     FC_ASSERT(get_leagues({league_id}).size());

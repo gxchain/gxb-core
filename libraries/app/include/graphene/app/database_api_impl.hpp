@@ -148,7 +148,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       void unsubscribe_from_market(asset_id_type a, asset_id_type b);
       market_ticker                      get_ticker( const string& base, const string& quote )const;
       market_volume                      get_24_volume( const string& base, const string& quote )const;
-      order_book                         get_order_book( const string& base, const string& quote, unsigned limit = 50 )const;
       vector<market_trade>               get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
       optional<pocs_object>              get_pocs_object(league_id_type league_id, account_id_type account_id, object_id_type product_id) const;
 
