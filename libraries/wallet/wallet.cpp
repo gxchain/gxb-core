@@ -140,7 +140,7 @@
        {
           try
           {
-             return fc::variant(name_or_id).as<T>();
+             return fc::variant(name_or_id).as<T>(1);
           }
           catch (const fc::exception&)
           {
@@ -524,15 +524,15 @@
           auto dynamic_props = get_dynamic_global_properties();
           fc::mutable_variant_object result;
           result["head_block_num"] = dynamic_props.head_block_number;
-          result["head_block_id"] = dynamic_props.head_block_id;
+          result["head_block_id"] = fc::variant(dynamic_props.head_block_id, 1);
           result["head_block_age"] = fc::get_approximate_relative_time_string(dynamic_props.time,
                                                                               time_point_sec(time_point::now()),
                                                                               " old");
           result["next_maintenance_time"] = fc::get_approximate_relative_time_string(dynamic_props.next_maintenance_time);
           result["chain_id"] = chain_props.chain_id;
           result["participation"] = (100*dynamic_props.recent_slots_filled.popcount()) / 128.0;
-          result["active_witnesses"] = global_props.active_witnesses;
-          result["active_committee_members"] = global_props.active_committee_members;
+          result["active_witnesses"] = fc::variant(global_props.active_witnesses, GRAPHENE_MAX_NESTED_OBJECTS);
+          result["active_committee_members"] = fc::variant(global_props.active_committee_members, GRAPHENE_MAX_NESTED_OBJECTS);
           return result;
        }
 
