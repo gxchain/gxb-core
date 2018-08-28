@@ -142,7 +142,7 @@ namespace detail {
          if( _options->count("seed-nodes") )
          {
             auto seeds_str = _options->at("seed-nodes").as<string>();
-            auto seeds = fc::json::from_string(seeds_str).as<vector<string>>();
+            auto seeds = fc::json::from_string(seeds_str).as<vector<string>>(2);
             for( const string& endpoint_string : seeds )
             {
                try {

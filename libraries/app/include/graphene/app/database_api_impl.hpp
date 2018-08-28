@@ -305,7 +305,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
          auto sub = _market_subscriptions.find( market );
          if( sub != _market_subscriptions.end() ) {
-            queue[market].emplace_back( full_object ? obj->to_variant() : fc::variant(obj->id) );
+             queue[market].emplace_back( full_object ? obj->to_variant() : fc::variant(obj->id, 1) );
          }
       }
 
