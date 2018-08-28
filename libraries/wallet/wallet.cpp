@@ -497,7 +497,7 @@
        T get_object(object_id<T::space_id, T::type_id, T> id)const
        {
           auto ob = _remote_db->get_objects({id}).front();
-          return ob.template as<T>();
+          return ob.template as<T>( GRAPHENE_MAX_NESTED_OBJECTS );
        }
 
        /**
@@ -2380,7 +2380,7 @@
        static WorkerInit _create_worker_initializer( const variant& worker_settings )
        {
           WorkerInit result;
-          from_variant( worker_settings, result );
+          from_variant( worker_settings, result, GRAPHENE_MAX_NESTED_OBJECTS );
           return result;
        }
 
@@ -4601,13 +4601,6 @@
        auto a = my->find_asset(asset_name_or_id);
        FC_ASSERT(a);
        return *a;
-    }
-
-    asset_bitasset_data_object wallet_api::get_bitasset_data(string asset_name_or_id) const
-    {
-       auto asset = get_asset(asset_name_or_id);
-       FC_ASSERT(asset.is_market_issued() && asset.bitasset_data_id);
-       return my->get_object<asset_bitasset_data_object>(*asset.bitasset_data_id);
     }
 
     account_id_type wallet_api::get_account_id(string account_name_or_id) const

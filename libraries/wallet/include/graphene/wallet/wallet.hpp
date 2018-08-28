@@ -743,14 +743,6 @@ class wallet_api
        */
       asset_object                      get_asset(string asset_name_or_id) const;
 
-      /** Returns the BitAsset-specific data for a given asset.
-       * Market-issued assets's behavior are determined both by their "BitAsset Data" and
-       * their basic asset data, as returned by \c get_asset().
-       * @param asset_name_or_id the symbol or id of the BitAsset in question
-       * @returns the BitAsset-specific data for this asset
-       */
-      asset_bitasset_data_object        get_bitasset_data(string asset_name_or_id)const;
-
       /** Lookup the id of a named account.
        * @param account_name_or_id the name of the account to look up
        * @returns the id of the named account
