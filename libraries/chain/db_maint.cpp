@@ -320,7 +320,7 @@ void database::update_active_committee_members()
 void database::initialize_budget_record( fc::time_point_sec now, budget_record& rec )const
 {
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
-   const asset_object& core = asset_id_type(0)(*this);
+   const asset_object& core = (head_block_time() >= HARDFORK_1006_TIME) ? asset_id_type(1)(*this) : asset_id_type(0)(*this);
    const asset_dynamic_data_object& core_dd = core.dynamic_asset_data_id(*this);
 
    rec.from_initial_reserve = core.reserved(*this);
@@ -356,13 +356,11 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    //   be able to use the entire reserve
    budget_u128 += ((uint64_t(1) << GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS) - 1);
    budget_u128 >>= GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS;
-   share_type budget;
-   if( budget_u128 < reserve.value )
-      rec.total_budget = share_type(budget_u128.to_uint64());
+
+   if (head_block_time() < HARDFORK_1006_TIME && budget_u128 < reserve.value)
+       rec.total_budget = share_type(budget_u128.to_uint64());
    else
       rec.total_budget = reserve;
-
-   return;
 }
 
 /**
@@ -375,7 +373,7 @@ void database::process_budget()
       const global_property_object& gpo = get_global_properties();
       const dynamic_global_property_object& dpo = get_dynamic_global_properties();
       const asset_dynamic_data_object& core =
-         asset_id_type(0)(*this).dynamic_asset_data_id(*this);
+         (head_block_time() >= HARDFORK_1006_TIME) ? asset_id_type(1)(*this).dynamic_asset_data_id(*this) : asset_id_type(0)(*this).dynamic_asset_data_id(*this);
       fc::time_point_sec now = head_block_time();
 
       int64_t time_to_maint = (dpo.next_maintenance_time - now).to_seconds();
@@ -535,7 +533,7 @@ void split_fba_balance(
    if( fba.accumulated_fba_fees == 0 )
       return;
 
-   const asset_object& core = asset_id_type(0)(db);
+   const asset_object& core =  (db.head_block_time() >= HARDFORK_1006_TIME) ? asset_id_type(1)(db) : asset_id_type(0)(db);
    const asset_dynamic_data_object& core_dd = core.dynamic_asset_data_id(db);
 
    if( !fba.is_configured(db) )
@@ -680,37 +678,6 @@ void create_buyback_orders( database& db )
                   ("as", asset_to_sell)("ab", asset_to_buy)("b", buyback_account)("n", db.head_block_num())("e", e.to_detail_string()) );
             continue;
          }
-      }
-   }
-   return;
-}
-
-void deprecate_annual_members( database& db )
-{
-   const auto& account_idx = db.get_index_type<account_index>().indices().get<by_id>();
-   fc::time_point_sec now = db.head_block_time();
-   for( const account_object& acct : account_idx )
-   {
-      try
-      {
-         transaction_evaluation_state upgrade_context(&db);
-         upgrade_context.skip_fee_schedule_check = true;
-
-         if( acct.is_annual_member( now ) )
-         {
-            account_upgrade_operation upgrade_vop;
-            upgrade_vop.fee = asset( 0, asset_id_type() );
-            upgrade_vop.account_to_upgrade = acct.id;
-            upgrade_vop.upgrade_to_lifetime_member = true;
-            db.apply_operation( upgrade_context, upgrade_vop );
-         }
-      }
-      catch( const fc::exception& e )
-      {
-         // we can in fact get here, e.g. if asset issuer of buy/sell asset blacklists/whitelists the buyback account
-         wlog( "Skipping annual member deprecate processing for account ${a} (${an}) at block ${n}; exception was ${e}",
-               ("a", acct.id)("an", acct.name)("n", db.head_block_num())("e", e.to_detail_string()) );
-         continue;
       }
    }
    return;
@@ -875,10 +842,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    }
 
    const dynamic_global_property_object& dgpo = get_dynamic_global_properties();
-
-   if( (dgpo.next_maintenance_time < HARDFORK_613_TIME) && (next_maintenance_time >= HARDFORK_613_TIME) )
-      deprecate_annual_members(*this);
-
    modify(dgpo, [next_maintenance_time](dynamic_global_property_object& d) {
       d.next_maintenance_time = next_maintenance_time;
       d.accounts_registered_this_interval = 0;
