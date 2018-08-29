@@ -76,6 +76,12 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
 
    if( op.bitasset_opts )
    {
+      // #################
+      // disable bitasset
+      if (d.head_block_time() >= HARDFORK_1006_TIME) {
+          FC_ASSERT(false, "bitasset diabled since hardfork 1006");
+      }
+
       const asset_object& backing = op.bitasset_opts->short_backing_asset(d);
       if( backing.is_market_issued() )
       {

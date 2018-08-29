@@ -34,6 +34,12 @@
 #endif
 
 // hardfork 1006
+// enable smart contract 2.0
+#ifndef HARDFORK_1006_TIME
+#define HARDFORK_1006_TIME (fc::time_point_sec( 1524153600 ))
+#endif
+
+// hardfork 1006
 // add wasm validate, hardfork for testnet
 // start at 2018-08-20 18:00:00
 #ifndef HARDFORK_1006_TIME
