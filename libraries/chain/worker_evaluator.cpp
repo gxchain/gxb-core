@@ -36,6 +36,12 @@ void_result worker_create_evaluator::do_evaluate(const worker_create_evaluator::
 { try {
    database& d = db();
 
+   // #################
+   // disable worker
+   if (d.head_block_time() >= HARDFORK_1006_TIME) {
+       FC_ASSERT(false, "worker disable since hardfork 1006");
+   }
+
    FC_ASSERT(d.get(o.owner).is_lifetime_member());
    FC_ASSERT(o.work_begin_date >= d.head_block_time());
 
@@ -76,9 +82,6 @@ struct worker_init_visitor
 };
 
 
-
-
-
 object_id_type worker_create_evaluator::do_apply(const worker_create_evaluator::operation_type& o, int32_t billed_cpu_time_us)
 { try {
    database& d = db();
@@ -106,23 +109,39 @@ object_id_type worker_create_evaluator::do_apply(const worker_create_evaluator::
 void refund_worker_type::pay_worker(share_type pay, database& db)
 {
    total_burned += pay;
-   db.modify(db.get(asset_id_type()).dynamic_data(db), [pay](asset_dynamic_data_object& d) {
-      d.current_supply -= pay;
-   });
+   if (db.head_block_time() >= HARDFORK_1006_TIME) {
+       db.modify(db.get(asset_id_type(1)).dynamic_data(db), [pay](asset_dynamic_data_object &d) {
+           d.current_supply -= pay;
+       });
+   } else {
+       db.modify(db.get(asset_id_type()).dynamic_data(db), [pay](asset_dynamic_data_object &d) {
+           d.current_supply -= pay;
+       });
+   }
 }
 
 void vesting_balance_worker_type::pay_worker(share_type pay, database& db)
 {
-   db.modify(balance(db), [&](vesting_balance_object& b) {
-      b.deposit(db.head_block_time(), asset(pay));
-   });
+    if (db.head_block_time() >= HARDFORK_1006_TIME) {
+        db.modify(balance(db), [&](vesting_balance_object &b) {
+            b.deposit(db.head_block_time(), asset(pay, asset_id_type(1)));
+        });
+    } else {
+        db.modify(balance(db), [&](vesting_balance_object &b) {
+            b.deposit(db.head_block_time(), asset(pay));
+        });
+    }
 }
-
 
 void burn_worker_type::pay_worker(share_type pay, database& db)
 {
    total_burned += pay;
-   db.adjust_balance( GRAPHENE_NULL_ACCOUNT, pay );
+   if (db.head_block_time() >= HARDFORK_1006_TIME) {
+       db.adjust_balance(GRAPHENE_NULL_ACCOUNT, asset(pay, asset_id_type(1)));
+   } else {
+       db.adjust_balance(GRAPHENE_NULL_ACCOUNT, pay);
+   }
+
 }
 
 } } // graphene::chain
