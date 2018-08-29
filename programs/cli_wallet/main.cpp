@@ -53,6 +53,7 @@
 #include <graphene/utilities/git_revision.hpp>
 #include <boost/version.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/filesystem.hpp>
 #include <websocketpp/version.hpp>
 
 #ifdef WIN32
