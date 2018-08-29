@@ -2056,27 +2056,6 @@
           return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW((symbol)(new_issuer)(new_options)(fee_asset_symbol)(broadcast)) }
 
-       signed_transaction update_bitasset(string symbol,
-                                          bitasset_options new_options,
-                                          bool broadcast /* = false */)
-       { try {
-          optional<asset_object> asset_to_update = find_asset(symbol);
-          if (!asset_to_update)
-            FC_THROW("No asset with that symbol exists!");
-
-          asset_update_bitasset_operation update_op;
-          update_op.issuer = asset_to_update->issuer;
-          update_op.asset_to_update = asset_to_update->id;
-          update_op.new_options = new_options;
-
-          signed_transaction tx;
-          tx.operations.push_back( update_op );
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-          tx.validate();
-
-          return sign_transaction( tx, broadcast );
-       } FC_CAPTURE_AND_RETHROW( (symbol)(new_options)(broadcast) ) }
-
        signed_transaction update_asset_feed_producers(string symbol,
                                                       flat_set<string> new_feed_producers,
                                                       bool broadcast /* = false */)
@@ -4889,13 +4868,6 @@
                                                 bool broadcast /* = false */)
     {
        return my->update_asset(symbol, new_issuer, new_options, fee_asset_symbol, broadcast);
-    }
-
-    signed_transaction wallet_api::update_bitasset(string symbol,
-                                                   bitasset_options new_options,
-                                                   bool broadcast /* = false */)
-    {
-       return my->update_bitasset(symbol, new_options, broadcast);
     }
 
     signed_transaction wallet_api::update_asset_feed_producers(string symbol,

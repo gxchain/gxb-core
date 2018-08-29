@@ -1514,8 +1514,7 @@ class wallet_api
        * enumerated in the asset_object::asset_options struct. This command is used to update
        * these options for an existing asset.
        *
-       * @note This operation cannot be used to update BitAsset-specific options. For these options,
-       * \c update_bitasset() instead.
+       * @note This operation cannot be used to update BitAsset-specific options.
        *
        * @param symbol the name or id of the asset to update
        * @param new_issuer if changing the asset's issuer, the name or id of the new issuer.
@@ -1532,22 +1531,6 @@ class wallet_api
                                       string fee_asset_symbol,
                                       bool broadcast = false);
 
-      /** Update the options specific to a BitAsset.
-       *
-       * BitAssets have some options which are not relevant to other asset types. This operation is used to update those
-       * options an an existing BitAsset.
-       *
-       * @see update_asset()
-       *
-       * @param symbol the name or id of the asset to update, which must be a market-issued asset
-       * @param new_options the new bitasset_options object, which will entirely replace the existing
-       *                    options.
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction updating the bitasset
-       */
-      signed_transaction update_bitasset(string symbol,
-                                         bitasset_options new_options,
-                                         bool broadcast = false);
 
       /** Update the set of feed-producing accounts for a BitAsset.
        *
@@ -2317,7 +2300,6 @@ FC_API( graphene::wallet::wallet_api,
         (issue_asset)
         (create_asset)
         (update_asset)
-        (update_bitasset)
         (update_asset_feed_producers)
         (publish_asset_feed)
         (get_asset)
