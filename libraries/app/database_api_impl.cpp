@@ -1528,7 +1528,8 @@ struct get_required_fees_helper
 
 vector< fc::variant > database_api_impl::get_required_fees( const vector<operation>& ops, asset_id_type id )const
 {
-   vector< fc::variant > result(ops.size());
+   vector< fc::variant > result;
+   result.reserve(ops.size());
 
    const asset_object& a = id(_db);
    get_required_fees_helper helper(

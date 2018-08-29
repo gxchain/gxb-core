@@ -5,7 +5,7 @@ extern "C" {
     // return head block num
     int64_t get_head_block_num();
     // return head block id
-    void get_head_block_id(checksum256* hash);
+    void get_head_block_id(checksum160* hash);
     // return head block time
     int64_t get_head_block_time();
     // return trx sender
