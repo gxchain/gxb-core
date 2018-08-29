@@ -225,9 +225,9 @@ operation_result pay_data_transaction_evaluator::do_apply(const pay_data_transac
                if (status_obj.datasource == op.to)
                    status_obj.status = data_transaction_datasource_status_payed;
            }
-           obj.product_pay += op.amount.amount.value;
-           obj.commission += commission_amount.value;
-           obj.transaction_fee += transaction_fee;
+           // obj.product_pay += op.amount.amount.value;
+           // obj.commission += commission_amount.value;
+           // obj.transaction_fee += transaction_fee;
            });
 
    // pocs statistics
@@ -286,7 +286,7 @@ void pay_data_transaction_evaluator::prepare_fee(account_id_type account_id, ass
             }
         }
     }
-    transaction_fee = fee;
+    transaction_fee = fee.amount.value;
     // calcurlate core_fee_paid
     evaluator::prepare_fee(account_id, fee, o);
 }
