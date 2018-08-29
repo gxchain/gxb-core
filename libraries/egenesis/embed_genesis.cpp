@@ -167,6 +167,7 @@ struct egenesis_info
       {
          // If genesis not exist, generate from genesis_json
          genesis = fc::json::from_string( *genesis_json ).as< genesis_state_type >( 20 );
+         dlog("genesis:\n ${x}", ("x", genesis));
       }
       else
       {
