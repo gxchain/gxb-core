@@ -506,6 +506,11 @@ void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_
 { try {
    database& d = db();
 
+   // disable publish feeds
+   if (d.head_block_time() >= HARDFORK_1006_TIME) {
+       FC_ASSERT(false, "publish feeds diabled since hardfork 1006");
+   }
+
    const asset_object& base = o.asset_id(d);
    //Verify that this feed is for a market-issued asset and that asset is backed by the base
    FC_ASSERT(base.is_market_issued());
