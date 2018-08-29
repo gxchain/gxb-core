@@ -77,7 +77,7 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
    if( op.bitasset_opts )
    {
       // #################
-      // disable bitasset
+      // disable bitasset creation
       if (d.head_block_time() >= HARDFORK_1006_TIME) {
           FC_ASSERT(false, "bitasset diabled since hardfork 1006");
       }
@@ -325,6 +325,11 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o, ui
 void_result asset_update_bitasset_evaluator::do_evaluate(const asset_update_bitasset_operation& o)
 { try {
    database& d = db();
+
+   // disable bitasset creation
+   if (d.head_block_time() >= HARDFORK_1006_TIME) {
+       FC_ASSERT(false, "bitasset diabled since hardfork 1006");
+   }
 
    const asset_object& a = o.asset_to_update(d);
 
