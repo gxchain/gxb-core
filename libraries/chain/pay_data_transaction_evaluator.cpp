@@ -235,7 +235,7 @@ operation_result pay_data_transaction_evaluator::do_apply(const pay_data_transac
        update_league_pocs(*dto.league_id, dto.product_id, op);
    }
 
-   return transaction_fee;
+   return asset(transaction_fee);
 } FC_CAPTURE_AND_RETHROW((op)) }
 
 void pay_data_transaction_evaluator::prepare_fee(account_id_type account_id, asset fee, const operation& o)
