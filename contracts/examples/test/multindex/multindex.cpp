@@ -45,6 +45,12 @@ class multindex : public contract
         if (matched_offer_itr != idx.end()) {
             dump_item(*matched_offer_itr);
         }
+
+        auto ii = idx.find(key);
+        if (ii != idx.end()) {
+            dump_item(*ii);
+            idx.erase(ii);
+        }
     }
 
     //@abi action
