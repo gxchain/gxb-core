@@ -870,6 +870,7 @@ map<account_id_type, uint64_t> database_api_impl::list_data_transaction_complain
     return results;
 }
 
+void database_api_impl::unsubscribe_data_transaction_callback()
 {
     dlog("unsubscribe_data_transaction_callback");
     _data_transaction_subscribe_callback =  std::function<void(const fc::variant&)>();
