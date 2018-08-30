@@ -303,7 +303,6 @@ dynamic_global_property_object database_api_impl::get_dynamic_global_properties(
  */
 vector<vector<account_id_type>> database_api_impl::get_key_references( vector<public_key_type> keys )const
 {
-   wdump( (keys) );
    vector< vector<account_id_type> > final_result;
    final_result.reserve(keys.size());
 
@@ -337,7 +336,6 @@ vector<vector<account_id_type>> database_api_impl::get_key_references( vector<pu
              result.reserve( itr->second.size() );
              for( auto item : itr->second )
              {
-                wdump((a)(item)(item(_db).name));
                 result.push_back(item);
              }
           }
