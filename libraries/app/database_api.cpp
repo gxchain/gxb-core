@@ -376,86 +376,15 @@ vector<asset_object> database_api::list_assets(const string& lower_bound_symbol,
    return my->list_assets( lower_bound_symbol, limit );
 }
 
-
 vector<optional<asset_object>> database_api::lookup_asset_symbols(const vector<string>& symbols_or_ids)const
 {
    return my->lookup_asset_symbols( symbols_or_ids );
-}
-
-//////////////////////////////////////////////////////////////////////
-//                                                                  //
-// Markets / feeds                                                  //
-//                                                                  //
-//////////////////////////////////////////////////////////////////////
-
-vector<limit_order_object> database_api::get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const
-{
-   return my->get_limit_orders( a, b, limit );
-}
-
-
-vector<call_order_object> database_api::get_call_orders(asset_id_type a, uint32_t limit)const
-{
-   return my->get_call_orders( a, limit );
-}
-
-
-vector<force_settlement_object> database_api::get_settle_orders(asset_id_type a, uint32_t limit)const
-{
-   return my->get_settle_orders( a, limit );
-}
-
-vector<call_order_object> database_api::get_margin_positions( const account_id_type& id )const
-{
-   return my->get_margin_positions( id );
-}
-
-
-void database_api::subscribe_to_market(std::function<void(const variant&)> callback, asset_id_type a, asset_id_type b)
-{
-   my->subscribe_to_market( callback, a, b );
-}
-
-void database_api::unsubscribe_data_transaction_callback()
-{
-   my->unsubscribe_data_transaction_callback();
-}
-
-void database_api::unsubscribe_from_market(asset_id_type a, asset_id_type b)
-{
-   my->unsubscribe_from_market( a, b );
-}
-
-market_ticker database_api::get_ticker( const string& base, const string& quote )const
-{
-   return my->get_ticker( base, quote );
-}
-
-market_volume database_api::get_24_volume( const string& base, const string& quote )const
-{
-   return my->get_24_volume( base, quote );
-}
-
-order_book database_api::get_order_book( const string& base, const string& quote, unsigned limit )const
-{
-   return my->get_order_book( base, quote, limit);
 }
 
 optional<pocs_object> database_api::get_pocs_object(league_id_type league_id, account_id_type account_id, object_id_type product_id)const
 {
     return my->get_pocs_object(league_id, account_id, product_id);
 }
-
-
-vector<market_trade> database_api::get_trade_history( const string& base,
-                                                      const string& quote,
-                                                      fc::time_point_sec start,
-                                                      fc::time_point_sec stop,
-                                                      unsigned limit )const
-{
-   return my->get_trade_history( base, quote, start, stop, limit );
-}
-
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //

@@ -28,15 +28,9 @@ struct get_impacted_account_visitor
 
    void operator()( const asset_claim_fees_operation& op ){}
    void operator()( const limit_order_create_operation& op ) {}
-   void operator()( const limit_order_cancel_operation& op )
-   {
-      _impacted.insert( op.fee_paying_account );
-   }
+   void operator()( const limit_order_cancel_operation& op ) {}
    void operator()( const call_order_update_operation& op ) {}
-   void operator()( const fill_order_operation& op )
-   {
-      _impacted.insert( op.account_id );
-   }
+   void operator()( const fill_order_operation& op ) {}
 
    void operator()( const account_create_operation& op )
    {

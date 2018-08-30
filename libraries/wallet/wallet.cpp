@@ -2056,52 +2056,6 @@
           return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW((symbol)(new_issuer)(new_options)(fee_asset_symbol)(broadcast)) }
 
-       signed_transaction update_asset_feed_producers(string symbol,
-                                                      flat_set<string> new_feed_producers,
-                                                      bool broadcast /* = false */)
-       { try {
-          optional<asset_object> asset_to_update = find_asset(symbol);
-          if (!asset_to_update)
-            FC_THROW("No asset with that symbol exists!");
-
-          asset_update_feed_producers_operation update_op;
-          update_op.issuer = asset_to_update->issuer;
-          update_op.asset_to_update = asset_to_update->id;
-          update_op.new_feed_producers.reserve(new_feed_producers.size());
-          std::transform(new_feed_producers.begin(), new_feed_producers.end(),
-                         std::inserter(update_op.new_feed_producers, update_op.new_feed_producers.end()),
-                         [this](const std::string& account_name_or_id){ return get_account_id(account_name_or_id); });
-
-          signed_transaction tx;
-          tx.operations.push_back( update_op );
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-          tx.validate();
-
-          return sign_transaction( tx, broadcast );
-       } FC_CAPTURE_AND_RETHROW( (symbol)(new_feed_producers)(broadcast) ) }
-
-       signed_transaction publish_asset_feed(string publishing_account,
-                                             string symbol,
-                                             price_feed feed,
-                                             bool broadcast /* = false */)
-       { try {
-          optional<asset_object> asset_to_update = find_asset(symbol);
-          if (!asset_to_update)
-            FC_THROW("No asset with that symbol exists!");
-
-          asset_publish_feed_operation publish_op;
-          publish_op.publisher = get_account_id(publishing_account);
-          publish_op.asset_id = asset_to_update->id;
-          publish_op.feed = feed;
-
-          signed_transaction tx;
-          tx.operations.push_back( publish_op );
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-          tx.validate();
-
-          return sign_transaction( tx, broadcast );
-       } FC_CAPTURE_AND_RETHROW( (publishing_account)(symbol)(feed)(broadcast) ) }
-
        signed_transaction fund_asset_fee_pool(string from,
                                               string symbol,
                                               string amount,
@@ -2147,48 +2101,6 @@
 
           return sign_transaction( tx, broadcast );
        } FC_CAPTURE_AND_RETHROW( (from)(amount)(symbol)(broadcast) ) }
-
-       signed_transaction global_settle_asset(string symbol,
-                                              price settle_price,
-                                              bool broadcast /* = false */)
-       { try {
-          optional<asset_object> asset_to_settle = find_asset(symbol);
-          if (!asset_to_settle)
-            FC_THROW("No asset with that symbol exists!");
-
-          asset_global_settle_operation settle_op;
-          settle_op.issuer = asset_to_settle->issuer;
-          settle_op.asset_to_settle = asset_to_settle->id;
-          settle_op.settle_price = settle_price;
-
-          signed_transaction tx;
-          tx.operations.push_back( settle_op );
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-          tx.validate();
-
-          return sign_transaction( tx, broadcast );
-       } FC_CAPTURE_AND_RETHROW( (symbol)(settle_price)(broadcast) ) }
-
-       signed_transaction settle_asset(string account_to_settle,
-                                       string amount_to_settle,
-                                       string symbol,
-                                       bool broadcast /* = false */)
-       { try {
-          optional<asset_object> asset_to_settle = find_asset(symbol);
-          if (!asset_to_settle)
-            FC_THROW("No asset with that symbol exists!");
-
-          asset_settle_operation settle_op;
-          settle_op.account = get_account_id(account_to_settle);
-          settle_op.amount = asset_to_settle->amount_from_string(amount_to_settle);
-
-          signed_transaction tx;
-          tx.operations.push_back( settle_op );
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-          tx.validate();
-
-          return sign_transaction( tx, broadcast );
-       } FC_CAPTURE_AND_RETHROW( (account_to_settle)(amount_to_settle)(symbol)(broadcast) ) }
 
        signed_transaction whitelist_account(string authorizing_account,
                                             string account_to_list,
@@ -4310,26 +4222,6 @@
         return result;
     }
 
-    vector<bucket_object> wallet_api::get_market_history( string symbol1, string symbol2, uint32_t bucket , fc::time_point_sec start, fc::time_point_sec end )const
-    {
-       return my->_remote_hist->get_market_history( get_asset_id(symbol1), get_asset_id(symbol2), bucket, start, end );
-    }
-
-    vector<limit_order_object> wallet_api::get_limit_orders(string a, string b, uint32_t limit)const
-    {
-       return my->_remote_db->get_limit_orders(get_asset(a).id, get_asset(b).id, limit);
-    }
-
-    vector<call_order_object> wallet_api::get_call_orders(string a, uint32_t limit)const
-    {
-       return my->_remote_db->get_call_orders(get_asset(a).id, limit);
-    }
-
-    vector<force_settlement_object> wallet_api::get_settle_orders(string a, uint32_t limit)const
-    {
-       return my->_remote_db->get_settle_orders(get_asset(a).id, limit);
-    }
-
     brain_key_info wallet_api::suggest_brain_key()const
     {
         return graphene::wallet::utility::suggest_brain_key();
@@ -4863,21 +4755,6 @@
        return my->update_asset(symbol, new_issuer, new_options, fee_asset_symbol, broadcast);
     }
 
-    signed_transaction wallet_api::update_asset_feed_producers(string symbol,
-                                                               flat_set<string> new_feed_producers,
-                                                               bool broadcast /* = false */)
-    {
-       return my->update_asset_feed_producers(symbol, new_feed_producers, broadcast);
-    }
-
-    signed_transaction wallet_api::publish_asset_feed(string publishing_account,
-                                                      string symbol,
-                                                      price_feed feed,
-                                                      bool broadcast /* = false */)
-    {
-       return my->publish_asset_feed(publishing_account, symbol, feed, broadcast);
-    }
-
     signed_transaction wallet_api::fund_asset_fee_pool(string from,
                                                        string symbol,
                                                        string amount,
@@ -4892,21 +4769,6 @@
                                               bool broadcast /* = false */)
     {
        return my->reserve_asset(from, amount, symbol, broadcast);
-    }
-
-    signed_transaction wallet_api::global_settle_asset(string symbol,
-                                                       price settle_price,
-                                                       bool broadcast /* = false */)
-    {
-       return my->global_settle_asset(symbol, settle_price, broadcast);
-    }
-
-    signed_transaction wallet_api::settle_asset(string account_to_settle,
-                                                string amount_to_settle,
-                                                string symbol,
-                                                bool broadcast /* = false */)
-    {
-       return my->settle_asset(account_to_settle, amount_to_settle, symbol, broadcast);
     }
 
     signed_transaction wallet_api::whitelist_account(string authorizing_account,

@@ -381,194 +381,41 @@ void_result asset_update_bitasset_evaluator::do_apply(const asset_update_bitasse
 
 void_result asset_update_feed_producers_evaluator::do_evaluate(const asset_update_feed_producers_evaluator::operation_type& o)
 { try {
-   database& d = db();
-
-   FC_ASSERT( o.new_feed_producers.size() <= d.get_global_properties().parameters.maximum_asset_feed_publishers );
-   for( auto id : o.new_feed_producers )
-      d.get_object(id);
-
-   const asset_object& a = o.asset_to_update(d);
-
-   FC_ASSERT(a.is_market_issued(), "Cannot update feed producers on a non-BitAsset.");
-   FC_ASSERT(!(a.options.flags & committee_fed_asset), "Cannot set feed producers on a committee-fed asset.");
-   FC_ASSERT(!(a.options.flags & witness_fed_asset), "Cannot set feed producers on a witness-fed asset.");
-
-   const asset_bitasset_data_object& b = a.bitasset_data(d);
-   bitasset_to_update = &b;
-   FC_ASSERT( a.issuer == o.issuer );
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
 void_result asset_update_feed_producers_evaluator::do_apply(const asset_update_feed_producers_evaluator::operation_type& o, uint32_t billed_cpu_time_us)
 { try {
-   db().modify(*bitasset_to_update, [&](asset_bitasset_data_object& a) {
-      //This is tricky because I have a set of publishers coming in, but a map of publisher to feed is stored.
-      //I need to update the map such that the keys match the new publishers, but not munge the old price feeds from
-      //publishers who are being kept.
-      //First, remove any old publishers who are no longer publishers
-      for( auto itr = a.feeds.begin(); itr != a.feeds.end(); )
-      {
-         if( !o.new_feed_producers.count(itr->first) )
-            itr = a.feeds.erase(itr);
-         else
-            ++itr;
-      }
-      //Now, add any new publishers
-      for( auto itr = o.new_feed_producers.begin(); itr != o.new_feed_producers.end(); ++itr )
-         if( !a.feeds.count(*itr) )
-            a.feeds[*itr];
-      a.update_median_feeds(db().head_block_time());
-   });
-   db().check_call_orders( o.asset_to_update(db()) );
-
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
 void_result asset_global_settle_evaluator::do_evaluate(const asset_global_settle_evaluator::operation_type& op)
 { try {
-   const database& d = db();
-   asset_to_settle = &op.asset_to_settle(d);
-   FC_ASSERT(asset_to_settle->is_market_issued());
-   FC_ASSERT(asset_to_settle->can_global_settle());
-   FC_ASSERT(asset_to_settle->issuer == op.issuer );
-   FC_ASSERT(asset_to_settle->dynamic_data(d).current_supply > 0);
-   const auto& idx = d.get_index_type<call_order_index>().indices().get<by_collateral>();
-   assert( !idx.empty() );
-   auto itr = idx.lower_bound(boost::make_tuple(price::min(asset_to_settle->bitasset_data(d).options.short_backing_asset,
-                                                           op.asset_to_settle)));
-   assert( itr != idx.end() && itr->debt_type() == op.asset_to_settle );
-   const call_order_object& least_collateralized_short = *itr;
-   FC_ASSERT(least_collateralized_short.get_debt() * op.settle_price <= least_collateralized_short.get_collateral(),
-             "Cannot force settle at supplied price: least collateralized short lacks sufficient collateral to settle.");
-
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 void_result asset_global_settle_evaluator::do_apply(const asset_global_settle_evaluator::operation_type& op, uint32_t billed_cpu_time_us)
 { try {
-   database& d = db();
-   d.globally_settle_asset( op.asset_to_settle(db()), op.settle_price );
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 void_result asset_settle_evaluator::do_evaluate(const asset_settle_evaluator::operation_type& op)
 { try {
-   const database& d = db();
-   asset_to_settle = &op.amount.asset_id(d);
-   FC_ASSERT(asset_to_settle->is_market_issued());
-   const auto& bitasset = asset_to_settle->bitasset_data(d);
-   FC_ASSERT(asset_to_settle->can_force_settle() || bitasset.has_settlement() );
-   if( bitasset.is_prediction_market )
-      FC_ASSERT( bitasset.has_settlement(), "global settlement must occur before force settling a prediction market"  );
-   else if( bitasset.current_feed.settlement_price.is_null() )
-      FC_THROW_EXCEPTION(insufficient_feeds, "Cannot force settle with no price feed.");
-   FC_ASSERT(d.get_balance(d.get(op.account), *asset_to_settle) >= op.amount);
-
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 operation_result asset_settle_evaluator::do_apply(const asset_settle_evaluator::operation_type& op, uint32_t billed_cpu_time_us)
 { try {
-   database& d = db();
-   d.adjust_balance(op.account, -op.amount);
-
-   const auto& bitasset = asset_to_settle->bitasset_data(d);
-   if( bitasset.has_settlement() )
-   {
-      auto settled_amount = op.amount * bitasset.settlement_price;
-      FC_ASSERT( settled_amount.amount <= bitasset.settlement_fund );
-
-      d.modify( bitasset, [&]( asset_bitasset_data_object& obj ){
-                obj.settlement_fund -= settled_amount.amount;
-                });
-
-      d.adjust_balance(op.account, settled_amount);
-
-      const auto& mia_dyn = asset_to_settle->dynamic_asset_data_id(d);
-
-      d.modify( mia_dyn, [&]( asset_dynamic_data_object& obj ){
-                obj.current_supply -= op.amount.amount;
-                });
-
-      return settled_amount;
-   }
-   else
-   {
-      return d.create<force_settlement_object>([&](force_settlement_object& s) {
-         s.owner = op.account;
-         s.balance = op.amount;
-         s.settlement_date = d.head_block_time() + asset_to_settle->bitasset_data(d).options.force_settlement_delay_sec;
-      }).id;
-   }
+   return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_operation& o)
 { try {
-   database& d = db();
-
-   // disable publish feeds
-   if (d.head_block_time() >= HARDFORK_1006_TIME) {
-       FC_ASSERT(false, "publish feeds diabled since hardfork 1006");
-   }
-
-   const asset_object& base = o.asset_id(d);
-   //Verify that this feed is for a market-issued asset and that asset is backed by the base
-   FC_ASSERT(base.is_market_issued());
-
-   const asset_bitasset_data_object& bitasset = base.bitasset_data(d);
-   FC_ASSERT( !bitasset.has_settlement(), "No further feeds may be published after a settlement event" );
-
-   FC_ASSERT( o.feed.settlement_price.quote.asset_id == bitasset.options.short_backing_asset );
-   if( d.head_block_time() > HARDFORK_480_TIME )
-   {
-      if( !o.feed.core_exchange_rate.is_null() )
-      {
-         FC_ASSERT( o.feed.core_exchange_rate.quote.asset_id == asset_id_type() );
-      }
-   }
-   else
-   {
-      if( (!o.feed.settlement_price.is_null()) && (!o.feed.core_exchange_rate.is_null()) )
-      {
-         FC_ASSERT( o.feed.settlement_price.quote.asset_id == o.feed.core_exchange_rate.quote.asset_id );
-      }
-   }
-
-   //Verify that the publisher is authoritative to publish a feed
-   if( base.options.flags & witness_fed_asset )
-   {
-      FC_ASSERT( d.get(GRAPHENE_WITNESS_ACCOUNT).active.account_auths.count(o.publisher) );
-   }
-   else if( base.options.flags & committee_fed_asset )
-   {
-      FC_ASSERT( d.get(GRAPHENE_COMMITTEE_ACCOUNT).active.account_auths.count(o.publisher) );
-   }
-   else
-   {
-      FC_ASSERT(bitasset.feeds.count(o.publisher));
-   }
-
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }
 
 void_result asset_publish_feeds_evaluator::do_apply(const asset_publish_feed_operation& o, uint32_t billed_cpu_time_us)
 { try {
-
-   database& d = db();
-
-   const asset_object& base = o.asset_id(d);
-   const asset_bitasset_data_object& bad = base.bitasset_data(d);
-
-   auto old_feed =  bad.current_feed;
-   // Store medians for this asset
-   d.modify(bad , [&o,&d](asset_bitasset_data_object& a) {
-      a.feeds[o.publisher] = make_pair(d.head_block_time(), o.feed);
-      a.update_median_feeds(d.head_block_time());
-   });
-
-   if( !(old_feed == bad.current_feed) )
-      db().check_call_orders(base);
-
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }
 

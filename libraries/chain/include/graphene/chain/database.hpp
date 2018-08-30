@@ -461,11 +461,8 @@ namespace graphene { namespace chain {
          void clear_expired_transactions();
          void clear_expired_signature_objs();
          void clear_expired_proposals();
-         void clear_expired_orders();
-         void update_expired_feeds();
          void update_maintenance_flag( bool new_maintenance_flag );
          void update_withdraw_permissions();
-         bool check_for_blackswan( const asset_object& mia, bool enable_black_swan = true );
 
          ///Steps performed only at maintenance intervals
          ///@{
