@@ -118,7 +118,7 @@ node_property_object& database::node_properties()
 
 uint32_t database::last_non_undoable_block_num() const
 {
-   return head_block_num() - _undo_db.size();
+   return head_block_num() - (_undo_db.size() - _undo_db.active_sessions());
 }
 
 
