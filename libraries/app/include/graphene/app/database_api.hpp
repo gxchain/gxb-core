@@ -809,6 +809,7 @@ FC_API(graphene::app::database_api,
    (lookup_asset_symbols)
 
    (unsubscribe_data_transaction_callback)
+   (get_pocs_object)
 
    // Witnesses
    (get_witnesses)
