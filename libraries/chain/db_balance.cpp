@@ -150,30 +150,35 @@ void database::deposit_cashback(const account_object& acct, share_type amount, b
    if( amount == 0 )
       return;
 
-   if( acct.get_id() == GRAPHENE_COMMITTEE_ACCOUNT || acct.get_id() == GRAPHENE_WITNESS_ACCOUNT ||
+   if (acct.get_id() == GRAPHENE_COMMITTEE_ACCOUNT || acct.get_id() == GRAPHENE_WITNESS_ACCOUNT ||
        acct.get_id() == GRAPHENE_RELAXED_COMMITTEE_ACCOUNT || acct.get_id() == GRAPHENE_NULL_ACCOUNT ||
-       acct.get_id() == GRAPHENE_TEMP_ACCOUNT )
-   {
-      // The blockchain's accounts do not get cashback; it simply goes to the reserve pool.
-      modify(get(asset_id_type()).dynamic_asset_data_id(*this), [amount](asset_dynamic_data_object& d) {
-         d.current_supply -= amount;
-      });
-      return;
+       acct.get_id() == GRAPHENE_TEMP_ACCOUNT) {
+       // The blockchain's accounts do not get cashback; it simply goes to the reserve pool.
+       if (head_block_time() > HARDFORK_1006_TIME) {
+           // deposit 1.3.1 after hardfork
+           modify(get(asset_id_type(1)).dynamic_asset_data_id(*this), [amount](asset_dynamic_data_object &d) {
+               d.current_supply -= amount;
+           });
+       } else {
+           // deposit 1.3.0 before hardfork
+           modify(get(asset_id_type()).dynamic_asset_data_id(*this), [amount](asset_dynamic_data_object &d) {
+               d.current_supply -= amount;
+           });
+       }
+       return;
    }
 
-   optional< vesting_balance_id_type > new_vbid = deposit_lazy_vesting(
-      acct.cashback_vb,
-      amount,
-      get_global_properties().parameters.cashback_vesting_period_seconds,
-      acct.id,
-      require_vesting );
+   optional<vesting_balance_id_type> new_vbid = deposit_lazy_vesting(
+       acct.cashback_vb,
+       amount,
+       get_global_properties().parameters.cashback_vesting_period_seconds,
+       acct.id,
+       require_vesting);
 
-   if( new_vbid.valid() )
-   {
-      modify( acct, [&]( account_object& _acct )
-      {
-         _acct.cashback_vb = *new_vbid;
-      } );
+   if (new_vbid.valid()) {
+       modify(acct, [&](account_object &_acct) {
+           _acct.cashback_vb = *new_vbid;
+       });
    }
 
    return;
