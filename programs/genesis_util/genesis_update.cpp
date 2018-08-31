@@ -34,10 +34,10 @@
 
 #include <graphene/app/api.hpp>
 #include <graphene/chain/protocol/address.hpp>
-#include <graphene/chain/protocol/protocol.hpp>
 #include <graphene/egenesis/egenesis.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 
+#include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 
 #ifndef WIN32
@@ -118,7 +118,7 @@ int main( int argc, char** argv )
 
       std::string dev_key_prefix = options["dev-key-prefix"].as<std::string>();
 
-      auto get_dev_key = [&]( std::string prefix, uint32_t i ) -> public_key_type
+      auto get_dev_key = [&dev_key_prefix]( std::string prefix, uint32_t i )
       {
          return fc::ecc::private_key::regenerate( fc::sha256::hash( dev_key_prefix + prefix + std::to_string(i) ) ).get_public_key();
       };
