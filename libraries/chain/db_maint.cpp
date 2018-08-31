@@ -534,7 +534,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                    GRAPHENE_PROXY_TO_SELF_ACCOUNT)? stake_account
                                      : d.get(stake_account.options.voting_account);
 
-            const auto& stats = stake_account.statistics(d);
             auto core_asset_id = (d.head_block_time() > HARDFORK_1008_TIME) ? asset_id_type(1) : asset_id_type();
             uint64_t voting_stake = (stake_account.cashback_vb.valid() ? (*stake_account.cashback_vb)(d).balance.amount.value: 0)
                   + d.get_balance(stake_account.get_id(), core_asset_id).amount.value;
