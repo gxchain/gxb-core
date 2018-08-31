@@ -355,9 +355,6 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
            accounts.insert( aobj->owner );
            break;
         } case worker_object_type:{
-           const auto& aobj = dynamic_cast<const worker_object*>(obj);
-           FC_ASSERT( aobj != nullptr );
-           accounts.insert( aobj->worker_account );
            break;
         }  case balance_object_type:{
            /** these are free from any accounts */

@@ -741,21 +741,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       apply_operation(genesis_eval_state, op);
    });
 
-   // Create initial workers
-   std::for_each(genesis_state.initial_worker_candidates.begin(), genesis_state.initial_worker_candidates.end(),
-                  [&](const genesis_state_type::initial_worker_type& worker)
-   {
-       worker_create_operation op;
-       op.owner = get_account_id(worker.owner_name);
-       op.work_begin_date = genesis_state.initial_timestamp;
-       op.work_end_date = time_point_sec::maximum();
-       op.daily_pay = worker.daily_pay;
-       op.name = "Genesis-Worker-" + worker.owner_name;
-       op.initializer = vesting_balance_worker_initializer{uint16_t(0)};
-
-       apply_operation(genesis_eval_state, std::move(op));
-   });
-
    // Set active witnesses
    modify(get_global_properties(), [&](global_property_object& p) {
       for( uint32_t i = 1; i <= genesis_state.initial_active_witnesses; ++i )

@@ -44,7 +44,6 @@
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/vote_count.hpp>
 #include <graphene/chain/witness_object.hpp>
-#include <graphene/chain/worker_object.hpp>
 
 namespace graphene { namespace chain {
 
@@ -78,82 +77,6 @@ void database::perform_account_maintenance(std::tuple<Types...> helpers)
    const auto& idx = get_index_type<account_index>().indices().get<by_name>();
    for( const account_object& a : idx )
       detail::for_each(helpers, a, detail::gen_seq<sizeof...(Types)>());
-}
-
-/// @brief A visitor for @ref worker_type which calls pay_worker on the worker within
-struct worker_pay_visitor
-{
-   private:
-      share_type pay;
-      database& db;
-
-   public:
-      worker_pay_visitor(share_type pay, database& db)
-         : pay(pay), db(db) {}
-
-      typedef void result_type;
-      template<typename W>
-      void operator()(W& worker)const
-      {
-         worker.pay_worker(pay, db);
-      }
-};
-void database::update_worker_votes()
-{
-   auto& idx = get_index_type<worker_index>();
-   auto itr = idx.indices().get<by_account>().begin();
-   bool allow_negative_votes = (head_block_time() < HARDFORK_607_TIME);
-   while( itr != idx.indices().get<by_account>().end() )
-   {
-      modify( *itr, [&]( worker_object& obj ){
-         obj.total_votes_for = _vote_tally_buffer[obj.vote_for];
-         obj.total_votes_against = allow_negative_votes ? _vote_tally_buffer[obj.vote_against] : 0;
-      });
-      ++itr;
-   }
-}
-
-void database::pay_workers( share_type& budget )
-{
-//   ilog("Processing payroll! Available budget is ${b}", ("b", budget));
-   vector<std::reference_wrapper<const worker_object>> active_workers;
-   get_index_type<worker_index>().inspect_all_objects([this, &active_workers](const object& o) {
-      const worker_object& w = static_cast<const worker_object&>(o);
-      auto now = head_block_time();
-      if( w.is_active(now) && w.approving_stake() > 0 )
-         active_workers.emplace_back(w);
-   });
-
-   // worker with more votes is preferred
-   // if two workers exactly tie for votes, worker with lower ID is preferred
-   std::sort(active_workers.begin(), active_workers.end(), [](const worker_object& wa, const worker_object& wb) {
-      share_type wa_vote = wa.approving_stake();
-      share_type wb_vote = wb.approving_stake();
-      if( wa_vote != wb_vote )
-         return wa_vote > wb_vote;
-      return wa.id < wb.id;
-   });
-
-   for( uint32_t i = 0; i < active_workers.size() && budget > 0; ++i )
-   {
-      const worker_object& active_worker = active_workers[i];
-      share_type requested_pay = active_worker.daily_pay;
-      if( head_block_time() - get_dynamic_global_properties().last_budget_time != fc::days(1) )
-      {
-         fc::uint128 pay(requested_pay.value);
-         pay *= (head_block_time() - get_dynamic_global_properties().last_budget_time).count();
-         pay /= fc::days(1).count();
-         requested_pay = pay.to_uint64();
-      }
-
-      share_type actual_pay = std::min(budget, requested_pay);
-      //ilog(" ==> Paying ${a} to worker ${w}", ("w", active_worker.id)("a", actual_pay));
-      modify(active_worker, [&](worker_object& w) {
-         w.worker.visit(worker_pay_visitor(actual_pay, *this));
-      });
-
-      budget -= actual_pay;
-   }
 }
 
 void database::update_active_witnesses()
@@ -360,11 +283,11 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    if (head_block_time() < HARDFORK_1006_TIME && budget_u128 < reserve.value)
        rec.total_budget = share_type(budget_u128.to_uint64());
    else
-      rec.total_budget = reserve;
+       rec.total_budget = reserve;
 }
 
 /**
- * Update the budget for witnesses and workers.
+ * Update the budget for witnesses
  */
 void database::process_budget()
 {
@@ -404,40 +327,14 @@ void database::process_budget()
       rec.witness_budget = witness_budget;
       available_funds -= witness_budget;
 
-      fc::uint128_t worker_budget_u128 = gpo.parameters.worker_budget_per_day.value;
-      worker_budget_u128 *= uint64_t(time_to_maint);
-      worker_budget_u128 /= 60*60*24;
-
-      share_type worker_budget;
-      if( worker_budget_u128 >= available_funds.value )
-         worker_budget = available_funds;
-      else
-         worker_budget = worker_budget_u128.to_uint64();
-      rec.worker_budget = worker_budget;
-      available_funds -= worker_budget;
-
-      share_type leftover_worker_funds = worker_budget;
-      pay_workers(leftover_worker_funds);
-      rec.leftover_worker_funds = leftover_worker_funds;
-      available_funds += leftover_worker_funds;
-
       rec.supply_delta = rec.witness_budget
-         + rec.worker_budget
-         - rec.leftover_worker_funds
          - rec.from_accumulated_fees
          - rec.from_unused_witness_budget;
 
       modify(core, [&]( asset_dynamic_data_object& _core )
       {
-         _core.current_supply = (_core.current_supply + rec.supply_delta );
-
-         assert( rec.supply_delta ==
-                                   witness_budget
-                                 + worker_budget
-                                 - leftover_worker_funds
-                                 - _core.accumulated_fees
-                                 - dpo.witness_budget
-                                );
+         _core.current_supply = (_core.current_supply + rec.supply_delta);
+         assert(rec.supply_delta == - _core.accumulated_fees - dpo.witness_budget);
          _core.accumulated_fees = 0;
       });
 
@@ -719,7 +616,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    update_top_n_authorities(*this);
    update_active_witnesses();
    update_active_committee_members();
-   update_worker_votes();
 
    modify(gpo, [this](global_property_object& p) {
       // Remove scaling of account registration fee

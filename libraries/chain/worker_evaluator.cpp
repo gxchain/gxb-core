@@ -34,114 +34,12 @@ namespace graphene { namespace chain {
 
 void_result worker_create_evaluator::do_evaluate(const worker_create_evaluator::operation_type& o)
 { try {
-   database& d = db();
-
-   // #################
-   // disable worker
-   if (d.head_block_time() >= HARDFORK_1006_TIME) {
-       FC_ASSERT(false, "worker disable since hardfork 1006");
-   }
-
-   FC_ASSERT(d.get(o.owner).is_lifetime_member());
-   FC_ASSERT(o.work_begin_date >= d.head_block_time());
-
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-
-struct worker_init_visitor
-{
-   typedef void result_type;
-
-   worker_object& worker;
-   database&      db;
-
-   worker_init_visitor( worker_object& w, database& d ):worker(w),db(d){}
-
-   result_type operator()( const vesting_balance_worker_initializer& i )const
-   {
-      vesting_balance_worker_type w;
-       w.balance = db.create<vesting_balance_object>([&](vesting_balance_object& b) {
-         b.owner = worker.worker_account;
-         b.balance = asset(0);
-
-         cdd_vesting_policy policy;
-         policy.vesting_seconds = fc::days(i.pay_vesting_period_days).to_seconds();
-         policy.coin_seconds_earned = 0;
-         policy.coin_seconds_earned_last_update = db.head_block_time();
-         b.policy = policy;
-      }).id;
-      worker.worker = w;
-   }
-
-   template<typename T>
-   result_type operator()( const T& )const
-   {
-      // DO NOTHING FOR OTHER WORKERS
-   }
-};
-
-
 object_id_type worker_create_evaluator::do_apply(const worker_create_evaluator::operation_type& o, int32_t billed_cpu_time_us)
 { try {
-   database& d = db();
-   vote_id_type for_id, against_id;
-   d.modify(d.get_global_properties(), [&for_id, &against_id](global_property_object& p) {
-      for_id = get_next_vote_id(p, vote_id_type::worker);
-      against_id = get_next_vote_id(p, vote_id_type::worker);
-   });
-
-   return d.create<worker_object>([&](worker_object& w) {
-      w.worker_account = o.owner;
-      w.daily_pay = o.daily_pay;
-      w.work_begin_date = o.work_begin_date;
-      w.work_end_date = o.work_end_date;
-      w.name = o.name;
-      w.url = o.url;
-      w.vote_for = for_id;
-      w.vote_against = against_id;
-
-      w.worker.set_which(o.initializer.which());
-      o.initializer.visit( worker_init_visitor( w, d ) );
-   }).id;
+   return  object_id_type();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
-
-void refund_worker_type::pay_worker(share_type pay, database& db)
-{
-   total_burned += pay;
-   if (db.head_block_time() >= HARDFORK_1006_TIME) {
-       db.modify(db.get(asset_id_type(1)).dynamic_data(db), [pay](asset_dynamic_data_object &d) {
-           d.current_supply -= pay;
-       });
-   } else {
-       db.modify(db.get(asset_id_type()).dynamic_data(db), [pay](asset_dynamic_data_object &d) {
-           d.current_supply -= pay;
-       });
-   }
-}
-
-void vesting_balance_worker_type::pay_worker(share_type pay, database& db)
-{
-    if (db.head_block_time() >= HARDFORK_1006_TIME) {
-        db.modify(balance(db), [&](vesting_balance_object &b) {
-            b.deposit(db.head_block_time(), asset(pay, asset_id_type(1)));
-        });
-    } else {
-        db.modify(balance(db), [&](vesting_balance_object &b) {
-            b.deposit(db.head_block_time(), asset(pay));
-        });
-    }
-}
-
-void burn_worker_type::pay_worker(share_type pay, database& db)
-{
-   total_burned += pay;
-   if (db.head_block_time() >= HARDFORK_1006_TIME) {
-       db.adjust_balance(GRAPHENE_NULL_ACCOUNT, asset(pay, asset_id_type(1)));
-   } else {
-       db.adjust_balance(GRAPHENE_NULL_ACCOUNT, pay);
-   }
-
-}
 
 } } // graphene::chain
