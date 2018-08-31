@@ -104,6 +104,7 @@ class database_api
        * This unsubscribes from all subscribed markets and objects.
        */
       void cancel_all_subscriptions();
+      void unsubscribe_data_transaction_callback();
 
       /////////////////////////////
       // Blocks and transactions //
@@ -749,6 +750,7 @@ FC_API(graphene::app::database_api,
    (set_pending_transaction_callback)
    (set_block_applied_callback)
    (cancel_all_subscriptions)
+   (unsubscribe_data_transaction_callback)
 
    // Blocks and transactions
    (get_block_header)
@@ -808,7 +810,6 @@ FC_API(graphene::app::database_api,
    (list_assets)
    (lookup_asset_symbols)
 
-   (unsubscribe_data_transaction_callback)
    (get_pocs_object)
 
    // Witnesses

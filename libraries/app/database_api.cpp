@@ -111,6 +111,10 @@ void database_api::cancel_all_subscriptions()
    my->cancel_all_subscriptions();
 }
 
+void database_api::unsubscribe_data_transaction_callback()
+{
+   my->unsubscribe_data_transaction_callback();
+}
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //

@@ -138,7 +138,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<asset_object>           list_assets(const string& lower_bound_symbol, uint32_t limit)const;
       vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
 
-      void unsubscribe_data_transaction_callback();
       optional<pocs_object>              get_pocs_object(league_id_type league_id, account_id_type account_id, object_id_type product_id) const;
 
       // Witnesses
