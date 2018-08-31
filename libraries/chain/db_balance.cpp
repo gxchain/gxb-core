@@ -89,8 +89,7 @@ optional< vesting_balance_id_type > database::deposit_lazy_vesting(
 
    fc::time_point_sec now = head_block_time();
 
-   while( true )
-   {
+   while (true) {
        if (!ovbid.valid())
            break;
 
@@ -107,16 +106,26 @@ optional< vesting_balance_id_type > database::deposit_lazy_vesting(
        if (vbo.policy.get<cdd_vesting_policy>().vesting_seconds != req_vesting_seconds)
            break;
 
-       // vesging asset id must be 1.3.1
-       if (head_block_time() > HARDFORK_1006_TIME && vbo.balance.asset_id != asset_id_type(1))
-           break;
+       if (now > HARDFORK_1006_TIME) {
+           // update 1.3.1 vbo after hardfork
+           // vesting asset id must be 1.3.1
+           if (vbo.balance.asset_id != asset_id_type(1)) break;
 
-       modify(vbo, [&](vesting_balance_object &_vbo) {
-           if (require_vesting)
-               _vbo.deposit(now, amount);
-           else
-               _vbo.deposit_vested(now, amount);
-       });
+           modify(vbo, [&](vesting_balance_object &_vbo) {
+               if (require_vesting)
+                   _vbo.deposit(now, asset(amount, asset_id_type(1)));
+               else
+                   _vbo.deposit_vested(now, asset(amount, asset_id_type(1)));
+           });
+       } else {
+           // update 1.3.0 vbo before hardfork
+           modify(vbo, [&](vesting_balance_object &_vbo) {
+               if (require_vesting)
+                   _vbo.deposit(now, amount);
+               else
+                   _vbo.deposit_vested(now, amount);
+           });
+       }
        return optional<vesting_balance_id_type>();
    }
 
