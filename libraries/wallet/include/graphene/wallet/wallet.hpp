@@ -220,13 +220,6 @@ struct approval_delta
    vector<string> key_approvals_to_remove;
 };
 
-struct worker_vote_delta
-{
-   flat_set<worker_id_type> vote_for;
-   flat_set<worker_id_type> vote_against;
-   flat_set<worker_id_type> vote_abstain;
-};
-
 struct vesting_balance_object_with_info : public vesting_balance_object
 {
    vesting_balance_object_with_info( const vesting_balance_object& vbo, fc::time_point_sec now );
@@ -2105,12 +2098,6 @@ FC_REFLECT( graphene::wallet::approval_delta,
    (key_approvals_to_remove)
 )
 
-FC_REFLECT( graphene::wallet::worker_vote_delta,
-   (vote_for)
-   (vote_against)
-   (vote_abstain)
-)
-
 FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphene::chain::vesting_balance_object),
    (allowed_withdraw)(allowed_withdraw_time) )
 
@@ -2174,8 +2161,6 @@ FC_API( graphene::wallet::wallet_api,
         (get_asset)
         (fund_asset_fee_pool)
         (reserve_asset)
-        (global_settle_asset)
-        (settle_asset)
         (whitelist_account)
         (create_committee_member)
         (get_witness)
