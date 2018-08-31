@@ -34,11 +34,12 @@ namespace graphene { namespace chain {
 
 void_result worker_create_evaluator::do_evaluate(const worker_create_evaluator::operation_type& o)
 { try {
-   if (db.head_block_time() > HARDFORK_1008_TIME) {
+   database& d = db();
+
+   // disable worker create
+   if (d.head_block_time() > HARDFORK_1008_TIME) {
        FC_ASSERT(false, "worker disable after hardfork 1008");
    }
-
-   database& d = db();
 
    FC_ASSERT(d.get(o.owner).is_lifetime_member());
    FC_ASSERT(o.work_begin_date >= d.head_block_time());
