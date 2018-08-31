@@ -47,7 +47,6 @@
 
 namespace graphene { namespace app {
    using namespace graphene::chain;
-   using namespace graphene::market_history;
    using namespace fc::ecc;
    using namespace std;
 
