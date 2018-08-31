@@ -108,14 +108,17 @@ void_result proxy_transfer_evaluator::do_apply(const proxy_transfer_operation &o
             obj.signature     = op.request_params.signatures.at(0);
             obj.expiration    = op.request_params.expiration;
             });
-    dlog("signature_object ${o}", ("o", new_object));
+    // dlog("signature_object ${o}", ("o", new_object));
 
     // transfer asset
     share_type commission_amount = cut_fee(op.request_params.amount.amount, op.request_params.percentage);
     asset commission_asset = asset(commission_amount, op.request_params.amount.asset_id);
     asset delta_asset = op.request_params.amount - commission_asset;
+
+    /*
     dlog("total amount: ${t}, commission amount ${c}, delta amount ${d}",
             ("t", op.request_params.amount.amount)("c", commission_asset.amount)("d", delta_asset.amount));
+    */
 
     db().adjust_balance(op.get_from_account(), -op.request_params.amount);
     db().adjust_balance(op.get_to_account(), delta_asset);
