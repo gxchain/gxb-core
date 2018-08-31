@@ -25,7 +25,6 @@
 #include <boost/program_options.hpp>
 
 #include <graphene/account_history/account_history_plugin.hpp>
-#include <graphene/market_history/market_history_plugin.hpp>
 
 #include <graphene/db/simple_index.hpp>
 

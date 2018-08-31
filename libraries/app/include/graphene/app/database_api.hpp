@@ -37,7 +37,6 @@
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/witness_object.hpp>
-#include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/chain/data_market_object.hpp>
 #include <graphene/chain/data_transaction_object.hpp>
 #include <graphene/app/database_api_common.hpp>

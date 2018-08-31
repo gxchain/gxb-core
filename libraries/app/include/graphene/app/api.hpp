@@ -29,8 +29,6 @@
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/confidential.hpp>
 
-#include <graphene/market_history/market_history_plugin.hpp>
-
 #include <graphene/debug_witness/debug_api.hpp>
 
 #include <graphene/net/node.hpp>
