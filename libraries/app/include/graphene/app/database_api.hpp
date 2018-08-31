@@ -441,8 +441,6 @@ class database_api
        */
       vector<call_order_object> get_call_orders(asset_id_type a, uint32_t limit)const;
 
-      void unsubscribe_data_transaction_callback();
-
       /** get pocs_object.
        *
        * @param league_id

@@ -91,6 +91,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       void set_pending_transaction_callback( std::function<void(const variant&)> cb );
       void set_block_applied_callback( std::function<void(const variant& block_id)> cb );
       void cancel_all_subscriptions();
+      void unsubscribe_data_transaction_callback();
 
       // Blocks and transactions
       optional<block_header> get_block_header(uint32_t block_num)const;

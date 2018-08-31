@@ -223,6 +223,12 @@ void database_api_impl::cancel_all_subscriptions()
    _data_transaction_products_subscribe_callback =  std::function<void(const fc::variant&)>();
 }
 
+void database_api_impl::unsubscribe_data_transaction_callback()
+{
+    dlog("unsubscribe_data_transaction_callback");
+    _data_transaction_subscribe_callback =  std::function<void(const fc::variant&)>();
+}
+
 optional<block_header> database_api_impl::get_block_header(uint32_t block_num) const
 {
    auto result = _db.fetch_block_by_number(block_num);
@@ -868,12 +874,6 @@ map<account_id_type, uint64_t> database_api_impl::list_data_transaction_complain
     }
 
     return results;
-}
-
-void database_api_impl::unsubscribe_data_transaction_callback()
-{
-    dlog("unsubscribe_data_transaction_callback");
-    _data_transaction_subscribe_callback =  std::function<void(const fc::variant&)>();
 }
 
 optional<pocs_object> database_api_impl::get_pocs_object(league_id_type league_id, account_id_type account_id, object_id_type product_id    )const
