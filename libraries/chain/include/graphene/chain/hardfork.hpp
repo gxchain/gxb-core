@@ -23,10 +23,6 @@
 #ifndef HARDFORK_1003_TIME
 #define HARDFORK_1003_TIME (fc::time_point_sec( 1509292800 ))
 #endif
-// hardfork 1004 disable limit order
-#ifndef HARDFORK_1004_TIME
-#define HARDFORK_1004_TIME (fc::time_point_sec( 1524153600 ))
-#endif
 // hardfork 1005
 // create asset fee
 #ifndef HARDFORK_1005_TIME
@@ -34,10 +30,23 @@
 #endif
 
 // hardfork 1006
-// add wasm validate, hardfork for testnet
+// add wasm validate, for testnet
 // start at 2018-08-20 18:00:00
 #ifndef HARDFORK_1006_TIME
-#define HARDFORK_1006_TIME (fc::time_point_sec( 1534759200 ))
+#define HARDFORK_1006_TIME (fc::time_point_sec( 1524153600 ))
+#endif
+
+// hardfork 1007
+// enable smart contract 2.0
+#ifndef HARDFORK_1007_TIME
+#define HARDFORK_1007_TIME (fc::time_point_sec( 1534759200 ))
+#endif
+
+// hardfork 1008
+// core asset hardfork
+// 2018-11-01 00:00:00
+#ifndef HARDFORK_1008_TIME
+#define HARDFORK_1008_TIME (fc::time_point_sec( 1534759200 ))
 #endif
 
 // #357 Disallow publishing certain malformed price feeds

@@ -111,6 +111,10 @@ void database_api::cancel_all_subscriptions()
    my->cancel_all_subscriptions();
 }
 
+void database_api::unsubscribe_data_transaction_callback()
+{
+   my->unsubscribe_data_transaction_callback();
+}
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
@@ -440,17 +444,6 @@ optional<pocs_object> database_api::get_pocs_object(league_id_type league_id, ac
 {
     return my->get_pocs_object(league_id, account_id, product_id);
 }
-
-
-vector<market_trade> database_api::get_trade_history( const string& base,
-                                                      const string& quote,
-                                                      fc::time_point_sec start,
-                                                      fc::time_point_sec stop,
-                                                      unsigned limit )const
-{
-   return my->get_trade_history( base, quote, start, stop, limit );
-}
-
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //

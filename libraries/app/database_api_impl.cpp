@@ -219,9 +219,14 @@ void database_api_impl::set_block_applied_callback( std::function<void(const var
 void database_api_impl::cancel_all_subscriptions()
 {
    set_subscribe_callback( std::function<void(const fc::variant&)>(), true);
-   _market_subscriptions.clear();
    _data_transaction_subscribe_callback =  std::function<void(const fc::variant&)>();
    _data_transaction_products_subscribe_callback =  std::function<void(const fc::variant&)>();
+}
+
+void database_api_impl::unsubscribe_data_transaction_callback()
+{
+    dlog("unsubscribe_data_transaction_callback");
+    _data_transaction_subscribe_callback =  std::function<void(const fc::variant&)>();
 }
 
 optional<block_header> database_api_impl::get_block_header(uint32_t block_num) const
@@ -489,18 +494,6 @@ std::map<std::string, full_account> database_api_impl::get_full_accounts( const 
       std::for_each(vesting_range.first, vesting_range.second,
                     [&acnt](const vesting_balance_object& balance) {
                        acnt.vesting_balances.emplace_back(balance);
-                    });
-
-      // Add the account's orders
-      auto order_range = _db.get_index_type<limit_order_index>().indices().get<by_account>().equal_range(account->id);
-      std::for_each(order_range.first, order_range.second,
-                    [&acnt] (const limit_order_object& order) {
-                       acnt.limit_orders.emplace_back(order);
-                    });
-      auto call_range = _db.get_index_type<call_order_index>().indices().get<by_account>().equal_range(account->id);
-      std::for_each(call_range.first, call_range.second,
-                    [&acnt] (const call_order_object& call) {
-                       acnt.call_orders.emplace_back(call);
                     });
 
       // get assets issued by user
@@ -1091,69 +1084,6 @@ optional<pocs_object> database_api_impl::get_pocs_object(league_id_type league_i
     return optional<pocs_object>();
 }
 
-vector<market_trade> database_api_impl::get_trade_history( const string& base,
-                                                           const string& quote,
-                                                           fc::time_point_sec start,
-                                                           fc::time_point_sec stop,
-                                                           unsigned limit )const
-{
-   FC_ASSERT( limit <= 100 );
-
-   auto assets = lookup_asset_symbols( {base, quote} );
-   FC_ASSERT( assets[0], "Invalid base asset symbol: ${s}", ("s",base) );
-   FC_ASSERT( assets[1], "Invalid quote asset symbol: ${s}", ("s",quote) );
-
-   auto base_id = assets[0]->id;
-   auto quote_id = assets[1]->id;
-
-   if( base_id > quote_id ) std::swap( base_id, quote_id );
-   const auto& history_idx = _db.get_index_type<graphene::market_history::history_index>().indices().get<by_key>();
-   history_key hkey;
-   hkey.base = base_id;
-   hkey.quote = quote_id;
-   hkey.sequence = std::numeric_limits<int64_t>::min();
-
-   auto price_to_real = [&]( const share_type a, int p ) { return double( a.value ) / pow( 10, p ); };
-
-   if ( start.sec_since_epoch() == 0 )
-      start = fc::time_point_sec( fc::time_point::now() );
-
-   uint32_t count = 0;
-   auto itr = history_idx.lower_bound( hkey );
-   vector<market_trade> result;
-
-   while( itr != history_idx.end() && count < limit && !( itr->key.base != base_id || itr->key.quote != quote_id || itr->time < stop ) )
-   {
-      if( itr->time < start )
-      {
-         market_trade trade;
-
-         if( assets[0]->id == itr->op.receives.asset_id )
-         {
-            trade.amount = price_to_real( itr->op.pays.amount, assets[1]->precision );
-            trade.value = price_to_real( itr->op.receives.amount, assets[0]->precision );
-         }
-         else
-         {
-            trade.amount = price_to_real( itr->op.receives.amount, assets[1]->precision );
-            trade.value = price_to_real( itr->op.pays.amount, assets[0]->precision );
-         }
-
-         trade.date = itr->time;
-         trade.price = trade.value / trade.amount;
-
-         result.push_back( trade );
-         ++count;
-      }
-
-      // Trades are tracked in each direction.
-      ++itr;
-      ++itr;
-   }
-
-   return result;
-}
-
 vector<optional<witness_object>> database_api_impl::get_witnesses(const vector<witness_id_type>& witness_ids)const
 {
    vector<optional<witness_object>> result; result.reserve(witness_ids.size());
@@ -1253,8 +1183,6 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
 
    const auto& witness_idx = _db.get_index_type<witness_index>().indices().get<by_vote_id>();
    const auto& committee_idx = _db.get_index_type<committee_member_index>().indices().get<by_vote_id>();
-   const auto& for_worker_idx = _db.get_index_type<worker_index>().indices().get<by_vote_for>();
-   const auto& against_worker_idx = _db.get_index_type<worker_index>().indices().get<by_vote_against>();
 
    vector<variant> result;
    result.reserve( votes.size() );
@@ -1611,22 +1539,6 @@ void database_api_impl::broadcast_updates( const vector<variant>& updates )
    }
 }
 
-void database_api_impl::broadcast_market_updates( const market_queue_type& queue)
-{
-   if( queue.size() )
-   {
-      auto capture_this = shared_from_this();
-      fc::async([capture_this, this, queue](){
-          for( const auto& item : queue )
-          {
-            auto sub = _market_subscriptions.find(item.first);
-            if( sub != _market_subscriptions.end() )
-                sub->second( fc::variant(item.second ) );
-          }
-      });
-   }
-}
-
 void database_api_impl::on_objects_removed( const vector<object_id_type>& ids, const vector<const object*>& objs, const flat_set<account_id_type>& impacted_accounts)
 {
    handle_object_changed(_notify_remove_create, false, ids, impacted_accounts,
@@ -1760,25 +1672,6 @@ void database_api_impl::handle_object_changed(bool force_notify, bool full_objec
       }
 
       broadcast_updates(updates);
-   }
-
-   if( _market_subscriptions.size() )
-   {
-      market_queue_type broadcast_queue;
-
-      for(auto id : ids)
-      {
-         if( id.is<call_order_object>() )
-         {
-            enqueue_if_subscribed_to_market<call_order_object>( find_object(id), broadcast_queue, full_object );
-         }
-         else if( id.is<limit_order_object>() )
-         {
-            enqueue_if_subscribed_to_market<limit_order_object>( find_object(id), broadcast_queue, full_object );
-         }
-      }
-
-      broadcast_market_updates(broadcast_queue);
    }
 }
 

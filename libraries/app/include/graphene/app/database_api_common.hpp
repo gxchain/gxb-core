@@ -34,47 +34,7 @@ struct order
    double                     base;
 };
 
-struct order_book
-{
-  string                      base;
-  string                      quote;
-  vector< order >             bids;
-  vector< order >             asks;
-};
-
-struct market_ticker
-{
-   string                     base;
-   string                     quote;
-   double                     latest;
-   double                     lowest_ask;
-   double                     highest_bid;
-   double                     percent_change;
-   double                     base_volume;
-   double                     quote_volume;
-};
-
-struct market_volume
-{
-   string                     base;
-   string                     quote;
-   double                     base_volume;
-   double                     quote_volume;
-};
-
-struct market_trade
-{
-   fc::time_point_sec         date;
-   double                     price;
-   double                     amount;
-   double                     value;
-};
-
 }} //
 
 FC_REFLECT( graphene::app::order, (price)(quote)(base) );
-FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
-FC_REFLECT( graphene::app::market_ticker, (base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
-FC_REFLECT( graphene::app::market_volume, (base)(quote)(base_volume)(quote_volume) );
-FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
 

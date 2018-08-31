@@ -220,13 +220,6 @@ struct approval_delta
    vector<string> key_approvals_to_remove;
 };
 
-struct worker_vote_delta
-{
-   flat_set<worker_id_type> vote_for;
-   flat_set<worker_id_type> vote_against;
-   flat_set<worker_id_type> vote_abstain;
-};
-
 struct vesting_balance_object_with_info : public vesting_balance_object
 {
    vesting_balance_object_with_info( const vesting_balance_object& vbo, fc::time_point_sec now );
@@ -705,11 +698,6 @@ class wallet_api
        */
       vector<operation_detail>  get_relative_account_history(string name, uint32_t stop, int limit, uint32_t start) const;
 
-
-      vector<bucket_object>             get_market_history(string symbol, string symbol2, uint32_t bucket, fc::time_point_sec start, fc::time_point_sec end)const;
-      vector<limit_order_object>        get_limit_orders(string a, string b, uint32_t limit)const;
-      vector<call_order_object>         get_call_orders(string a, uint32_t limit)const;
-      vector<force_settlement_object>   get_settle_orders(string a, uint32_t limit)const;
 
       /** Returns the block chain's slowly-changing settings.
        * This object contains all of the properties of the blockchain that are fixed
@@ -1506,8 +1494,7 @@ class wallet_api
        * enumerated in the asset_object::asset_options struct. This command is used to update
        * these options for an existing asset.
        *
-       * @note This operation cannot be used to update BitAsset-specific options. For these options,
-       * \c update_bitasset() instead.
+       * @note This operation cannot be used to update BitAsset-specific options.
        *
        * @param symbol the name or id of the asset to update
        * @param new_issuer if changing the asset's issuer, the name or id of the new issuer.
@@ -1524,61 +1511,6 @@ class wallet_api
                                       string fee_asset_symbol,
                                       bool broadcast = false);
 
-      /** Update the options specific to a BitAsset.
-       *
-       * BitAssets have some options which are not relevant to other asset types. This operation is used to update those
-       * options an an existing BitAsset.
-       *
-       * @see update_asset()
-       *
-       * @param symbol the name or id of the asset to update, which must be a market-issued asset
-       * @param new_options the new bitasset_options object, which will entirely replace the existing
-       *                    options.
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction updating the bitasset
-       */
-      signed_transaction update_bitasset(string symbol,
-                                         bitasset_options new_options,
-                                         bool broadcast = false);
-
-      /** Update the set of feed-producing accounts for a BitAsset.
-       *
-       * BitAssets have price feeds selected by taking the median values of recommendations from a set of feed producers.
-       * This command is used to specify which accounts may produce feeds for a given BitAsset.
-       * @param symbol the name or id of the asset to update
-       * @param new_feed_producers a list of account names or ids which are authorized to produce feeds for the asset.
-       *                           this list will completely replace the existing list
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction updating the bitasset's feed producers
-       */
-      signed_transaction update_asset_feed_producers(string symbol,
-                                                     flat_set<string> new_feed_producers,
-                                                     bool broadcast = false);
-
-      /** Publishes a price feed for the named asset.
-       *
-       * Price feed providers use this command to publish their price feeds for market-issued assets. A price feed is
-       * used to tune the market for a particular market-issued asset. For each value in the feed, the median across all
-       * committee_member feeds for that asset is calculated and the market for the asset is configured with the median of that
-       * value.
-       *
-       * The feed object in this command contains three prices: a call price limit, a short price limit, and a settlement price.
-       * The call limit price is structured as (collateral asset) / (debt asset) and the short limit price is structured
-       * as (asset for sale) / (collateral asset). Note that the asset IDs are opposite to eachother, so if we're
-       * publishing a feed for USD, the call limit price will be CORE/USD and the short limit price will be USD/CORE. The
-       * settlement price may be flipped either direction, as long as it is a ratio between the market-issued asset and
-       * its collateral.
-       *
-       * @param publishing_account the account publishing the price feed
-       * @param symbol the name or id of the asset whose feed we're publishing
-       * @param feed the price_feed object containing the three prices making up the feed
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction updating the price feed for the given asset
-       */
-      signed_transaction publish_asset_feed(string publishing_account,
-                                            string symbol,
-                                            price_feed feed,
-                                            bool broadcast = false);
 
       /** Pay into the fee pool for the given asset.
        *
@@ -1613,47 +1545,6 @@ class wallet_api
                                     string amount,
                                     string symbol,
                                     bool broadcast = false);
-
-      /** Forces a global settling of the given asset (black swan or prediction markets).
-       *
-       * In order to use this operation, asset_to_settle must have the global_settle flag set
-       *
-       * When this operation is executed all balances are converted into the backing asset at the
-       * settle_price and all open margin positions are called at the settle price.  If this asset is
-       * used as backing for other bitassets, those bitassets will be force settled at their current
-       * feed price.
-       *
-       * @note this operation is used only by the asset issuer, \c settle_asset() may be used by
-       *       any user owning the asset
-       *
-       * @param symbol the name or id of the asset to force settlement on
-       * @param settle_price the price at which to settle
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction settling the named asset
-       */
-      signed_transaction global_settle_asset(string symbol,
-                                             price settle_price,
-                                             bool broadcast = false);
-
-      /** Schedules a market-issued asset for automatic settlement.
-       *
-       * Holders of market-issued assests may request a forced settlement for some amount of their asset. This means that
-       * the specified sum will be locked by the chain and held for the settlement period, after which time the chain will
-       * choose a margin posision holder and buy the settled asset using the margin's collateral. The price of this sale
-       * will be based on the feed price for the market-issued asset being settled. The exact settlement price will be the
-       * feed price at the time of settlement with an offset in favor of the margin position, where the offset is a
-       * blockchain parameter set in the global_property_object.
-       *
-       * @param account_to_settle the name or id of the account owning the asset
-       * @param amount_to_settle the amount of the named asset to schedule for settlement
-       * @param symbol the name or id of the asset to settlement on
-       * @param broadcast true to broadcast the transaction on the network
-       * @returns the signed transaction settling the named asset
-       */
-      signed_transaction settle_asset(string account_to_settle,
-                                      string amount_to_settle,
-                                      string symbol,
-                                      bool broadcast = false);
 
       /** Whitelist and blacklist accounts, primarily for transacting in whitelisted assets.
        *
@@ -1767,42 +1658,6 @@ class wallet_api
                                         string asset_symbol,
                                         bool broadcast = false);
 
-
-      /**
-       * Create a worker object.
-       *
-       * @param owner_account The account which owns the worker and will be paid
-       * @param work_begin_date When the work begins
-       * @param work_end_date When the work ends
-       * @param daily_pay Amount of pay per day (NOT per maint interval)
-       * @param name Any text
-       * @param url Any text
-       * @param worker_settings {"type" : "burn"|"refund"|"vesting", "pay_vesting_period_days" : x}
-       * @param broadcast true if you wish to broadcast the transaction.
-       */
-      signed_transaction create_worker(
-         string owner_account,
-         time_point_sec work_begin_date,
-         time_point_sec work_end_date,
-         share_type daily_pay,
-         string name,
-         string url,
-         variant worker_settings,
-         bool broadcast = false
-         );
-
-      /**
-       * Update your votes for a worker
-       *
-       * @param account The account which will pay the fee and update votes.
-       * @param delta worker_vote_delta {"vote_for" : [...], "vote_against" : [...], "vote_abstain" : [...]}
-       * @param broadcast true if you wish to broadcast the transaction.
-       */
-      signed_transaction update_worker_votes(
-         string account,
-         worker_vote_delta delta,
-         bool broadcast = false
-         );
 
       /**
        * Get information about a vesting balance object.
@@ -2241,12 +2096,6 @@ FC_REFLECT( graphene::wallet::approval_delta,
    (key_approvals_to_remove)
 )
 
-FC_REFLECT( graphene::wallet::worker_vote_delta,
-   (vote_for)
-   (vote_against)
-   (vote_abstain)
-)
-
 FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphene::chain::vesting_balance_object),
    (allowed_withdraw)(allowed_withdraw_time) )
 
@@ -2307,14 +2156,9 @@ FC_API( graphene::wallet::wallet_api,
         (issue_asset)
         (create_asset)
         (update_asset)
-        (update_bitasset)
-        (update_asset_feed_producers)
-        (publish_asset_feed)
         (get_asset)
         (fund_asset_fee_pool)
         (reserve_asset)
-        (global_settle_asset)
-        (settle_asset)
         (whitelist_account)
         (create_committee_member)
         (get_witness)
@@ -2323,8 +2167,6 @@ FC_API( graphene::wallet::wallet_api,
         (list_committee_members)
         (create_witness)
         (update_witness)
-        (create_worker)
-        (update_worker_votes)
         (get_vesting_balances)
         (withdraw_vesting)
         (vote_for_committee_member)
@@ -2356,16 +2198,12 @@ FC_API( graphene::wallet::wallet_api,
         (get_data_transaction_total_count_by_product_id)
         (is_public_key_registered)
         (is_account_registered)
-        (get_market_history)
         (get_global_properties)
         (get_dynamic_global_properties)
         (get_object)
         (get_private_key)
         (load_wallet_file)
         (normalize_brain_key)
-        (get_limit_orders)
-        (get_call_orders)
-        (get_settle_orders)
         (save_wallet_file)
         (serialize_transaction)
         (serialize_proxy_transfer_params)

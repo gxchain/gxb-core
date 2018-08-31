@@ -93,7 +93,6 @@ void pay_data_transaction_evaluator::update_league_pocs(league_id_type league_id
 void_result pay_data_transaction_evaluator::do_evaluate( const pay_data_transaction_operation& op )
 { try {
    const database& _db = db();
-   FC_ASSERT(asset_id_type() == op.amount.asset_id, "pay asset must be core asset");
 
    // check data_transaction_object status by reuqest_id
    const auto& data_transaction_idx = _db.get_index_type<data_transaction_index>().indices().get<by_request_id>();
@@ -226,9 +225,9 @@ operation_result pay_data_transaction_evaluator::do_apply(const pay_data_transac
                if (status_obj.datasource == op.to)
                    status_obj.status = data_transaction_datasource_status_payed;
            }
-           obj.product_pay += op.amount.amount.value;
-           obj.commission += commission_amount.value;
-           obj.transaction_fee += transaction_fee;
+           // obj.product_pay += op.amount.amount.value;
+           // obj.commission += commission_amount.value;
+           // obj.transaction_fee += transaction_fee;
            });
 
    // pocs statistics
@@ -236,8 +235,7 @@ operation_result pay_data_transaction_evaluator::do_apply(const pay_data_transac
        update_league_pocs(*dto.league_id, dto.product_id, op);
    }
 
-   asset fee_amount = asset(transaction_fee, asset_id_type());
-   return fee_amount;
+   return asset(transaction_fee);
 } FC_CAPTURE_AND_RETHROW((op)) }
 
 void pay_data_transaction_evaluator::prepare_fee(account_id_type account_id, asset fee, const operation& o)

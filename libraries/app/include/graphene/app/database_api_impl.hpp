@@ -37,7 +37,6 @@
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/witness_object.hpp>
-#include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/chain/data_market_object.hpp>
 #include <graphene/chain/data_transaction_object.hpp>
 #include <graphene/chain/second_hand_data_object.hpp>
@@ -60,7 +59,6 @@
 namespace graphene { namespace app {
 
 using namespace graphene::chain;
-using namespace graphene::market_history;
 using namespace std;
 
 typedef std::map< std::pair<graphene::chain::asset_id_type, graphene::chain::asset_id_type>, std::vector<fc::variant> > market_queue_type;
@@ -91,6 +89,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       void set_pending_transaction_callback( std::function<void(const variant&)> cb );
       void set_block_applied_callback( std::function<void(const variant& block_id)> cb );
       void cancel_all_subscriptions();
+      void unsubscribe_data_transaction_callback();
 
       // Blocks and transactions
       optional<block_header> get_block_header(uint32_t block_num)const;
@@ -340,7 +339,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       boost::signals2::scoped_connection                                                                                           _removed_connection;
       boost::signals2::scoped_connection                                                                                           _applied_block_connection;
       boost::signals2::scoped_connection                                                                                           _pending_trx_connection;
-      map< pair<asset_id_type,asset_id_type>, std::function<void(const variant&)> >      _market_subscriptions;
       graphene::chain::database&                                                                                                   _db;
 
 

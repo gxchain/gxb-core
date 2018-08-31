@@ -224,7 +224,9 @@ struct database_fixture {
    const asset_object& create_bitasset(const string& name,
                                        account_id_type issuer = GRAPHENE_WITNESS_ACCOUNT,
                                        uint16_t market_fee_percent = 100 /*1%*/,
-                                       uint16_t flags = charge_market_fee);
+                                       uint16_t flags = charge_market_fee,
+                                       uint16_t precision = 2,
+                                       asset_id_type backing_asset = {});
    const asset_object& create_prediction_market(const string& name,
                                        account_id_type issuer = GRAPHENE_WITNESS_ACCOUNT,
                                        uint16_t market_fee_percent = 100 /*1%*/,

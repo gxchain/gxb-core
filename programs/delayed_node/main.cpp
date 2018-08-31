@@ -25,7 +25,6 @@
 
 #include <graphene/delayed_node/delayed_node_plugin.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>
-#include <graphene/market_history/market_history_plugin.hpp>
 
 #include <fc/exception/exception.hpp>
 #include <fc/thread/thread.hpp>
@@ -72,7 +71,6 @@ int main(int argc, char** argv) {
 
       auto delayed_plug = node.register_plugin<delayed_node::delayed_node_plugin>();
       auto history_plug = node.register_plugin<account_history::account_history_plugin>();
-      auto market_history_plug = node.register_plugin<market_history::market_history_plugin>();
 
       try
       {
@@ -161,7 +159,7 @@ int main(int argc, char** argv) {
          return 1;
       }
       if( !options.count("plugins") )
-         options.insert( std::make_pair( "plugins", bpo::variable_value(std::string("delayed_node account_history market_history"), true) ) );
+         options.insert( std::make_pair( "plugins", bpo::variable_value(std::string("delayed_node account_history"), true) ) );
 
       node.initialize(data_dir, options);
       node.initialize_plugins( options );

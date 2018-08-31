@@ -28,15 +28,9 @@ struct get_impacted_account_visitor
 
    void operator()( const asset_claim_fees_operation& op ){}
    void operator()( const limit_order_create_operation& op ) {}
-   void operator()( const limit_order_cancel_operation& op )
-   {
-      _impacted.insert( op.fee_paying_account );
-   }
+   void operator()( const limit_order_cancel_operation& op ) {}
    void operator()( const call_order_update_operation& op ) {}
-   void operator()( const fill_order_operation& op )
-   {
-      _impacted.insert( op.account_id );
-   }
+   void operator()( const fill_order_operation& op ) {}
 
    void operator()( const account_create_operation& op )
    {
@@ -361,9 +355,6 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
            accounts.insert( aobj->owner );
            break;
         } case worker_object_type:{
-           const auto& aobj = dynamic_cast<const worker_object*>(obj);
-           FC_ASSERT( aobj != nullptr );
-           accounts.insert( aobj->worker_account );
            break;
         }  case balance_object_type:{
            /** these are free from any accounts */

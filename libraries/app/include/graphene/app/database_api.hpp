@@ -37,7 +37,6 @@
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/witness_object.hpp>
-#include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/chain/data_market_object.hpp>
 #include <graphene/chain/data_transaction_object.hpp>
 #include <graphene/app/database_api_common.hpp>
@@ -104,6 +103,7 @@ class database_api
        * This unsubscribes from all subscribed markets and objects.
        */
       void cancel_all_subscriptions();
+      void unsubscribe_data_transaction_callback();
 
       /////////////////////////////
       // Blocks and transactions //
@@ -431,18 +431,6 @@ class database_api
        */
       vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
 
-      /////////////////////
-      // Markets / feeds //
-      /////////////////////
-
-      /**
-       * @brief Get limit orders in a given market
-       * @param a ID of asset being sold
-       * @param b ID of asset being purchased
-       * @param limit Maximum number of orders to retrieve
-       * @return The limit orders, ordered from least price to greatest
-       */
-      vector<limit_order_object> get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
 
       /**
        * @brief Get call orders in a given asset
@@ -510,19 +498,6 @@ class database_api
        * @return pocs_object
        */
       optional<pocs_object> get_pocs_object(league_id_type league_id, account_id_type account_id, object_id_type product_id) const;
-
-      /**
-       * @brief Returns recent trades for the market assetA:assetB
-       * Note: Currentlt, timezone offsets are not supported. The time must be UTC.
-       * @param a String name of the first asset
-       * @param b String name of the second asset
-       * @param stop Stop time as a UNIX timestamp
-       * @param limit Number of trasactions to retrieve, capped at 100
-       * @param start Start time as a UNIX timestamp
-       * @return Recent transactions in the market
-       */
-      vector<market_trade> get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
-
 
 
       ///////////////
@@ -822,6 +797,7 @@ FC_API(graphene::app::database_api,
    (set_pending_transaction_callback)
    (set_block_applied_callback)
    (cancel_all_subscriptions)
+   (unsubscribe_data_transaction_callback)
 
    // Blocks and transactions
    (get_block_header)
@@ -892,7 +868,6 @@ FC_API(graphene::app::database_api,
    (get_ticker)
    (get_24_volume)
    (get_pocs_object)
-   (get_trade_history)
 
    // Witnesses
    (get_witnesses)

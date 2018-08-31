@@ -36,6 +36,11 @@ void_result worker_create_evaluator::do_evaluate(const worker_create_evaluator::
 { try {
    database& d = db();
 
+   // disable worker create
+   if (d.head_block_time() > HARDFORK_1008_TIME) {
+       FC_ASSERT(false, "worker disable after hardfork 1008");
+   }
+
    FC_ASSERT(d.get(o.owner).is_lifetime_member());
    FC_ASSERT(o.work_begin_date >= d.head_block_time());
 
@@ -75,11 +80,7 @@ struct worker_init_visitor
    }
 };
 
-
-
-
-
-object_id_type worker_create_evaluator::do_apply(const worker_create_evaluator::operation_type& o, int32_t billed_cpu_time_us)
+object_id_type worker_create_evaluator::do_apply(const operation_type& o, int32_t billed_cpu_time_us)
 { try {
    database& d = db();
    vote_id_type for_id, against_id;
@@ -102,27 +103,5 @@ object_id_type worker_create_evaluator::do_apply(const worker_create_evaluator::
       o.initializer.visit( worker_init_visitor( w, d ) );
    }).id;
 } FC_CAPTURE_AND_RETHROW( (o) ) }
-
-void refund_worker_type::pay_worker(share_type pay, database& db)
-{
-   total_burned += pay;
-   db.modify(db.get(asset_id_type()).dynamic_data(db), [pay](asset_dynamic_data_object& d) {
-      d.current_supply -= pay;
-   });
-}
-
-void vesting_balance_worker_type::pay_worker(share_type pay, database& db)
-{
-   db.modify(balance(db), [&](vesting_balance_object& b) {
-      b.deposit(db.head_block_time(), asset(pay));
-   });
-}
-
-
-void burn_worker_type::pay_worker(share_type pay, database& db)
-{
-   total_burned += pay;
-   db.adjust_balance( GRAPHENE_NULL_ACCOUNT, pay );
-}
 
 } } // graphene::chain

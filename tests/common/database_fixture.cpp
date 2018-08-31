@@ -25,7 +25,6 @@
 #include <boost/program_options.hpp>
 
 #include <graphene/account_history/account_history_plugin.hpp>
-#include <graphene/market_history/market_history_plugin.hpp>
 
 #include <graphene/db/simple_index.hpp>
 
@@ -72,7 +71,6 @@ database_fixture::database_fixture()
          std::cout << "running test " << boost::unit_test::framework::current_test_case().p_name << std::endl;
    }
    auto ahplugin = app.register_plugin<graphene::account_history::account_history_plugin>();
-   auto mhplugin = app.register_plugin<graphene::market_history::market_history_plugin>();
    init_account_pub_key = init_account_priv_key.get_public_key();
 
    boost::program_options::variables_map options;
@@ -115,11 +113,8 @@ database_fixture::database_fixture()
    ahplugin->plugin_initialize(options);
 
    options.insert(std::make_pair("bucket-size", boost::program_options::variable_value(string("[15]"),false)));
-   mhplugin->plugin_set_app(&app);
-   mhplugin->plugin_initialize(options);
 
    ahplugin->plugin_startup();
-   mhplugin->plugin_startup();
 
    generate_block();
 
@@ -448,7 +443,9 @@ const asset_object& database_fixture::create_bitasset(
    const string& name,
    account_id_type issuer /* = GRAPHENE_WITNESS_ACCOUNT */,
    uint16_t market_fee_percent /* = 100 */ /* 1% */,
-   uint16_t flags /* = charge_market_fee */
+   uint16_t flags /* = charge_market_fee */,
+   uint16_t precision /* = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS */,
+   asset_id_type backing_asset /* = CORE */
    )
 { try {
    asset_create_operation creator;
@@ -456,14 +453,15 @@ const asset_object& database_fixture::create_bitasset(
    creator.fee = asset();
    creator.symbol = name;
    creator.common_options.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
-   creator.precision = 2;
+   creator.precision = precision;
    creator.common_options.market_fee_percent = market_fee_percent;
    if( issuer == GRAPHENE_WITNESS_ACCOUNT )
       flags |= witness_fed_asset;
    creator.common_options.issuer_permissions = flags;
    creator.common_options.flags = flags & ~global_settle;
-   creator.common_options.core_exchange_rate = price({asset(1,asset_id_type(1)),asset(1)});
+   creator.common_options.core_exchange_rate = price(asset(1,asset_id_type(1)),asset(1));
    creator.bitasset_opts = bitasset_options();
+   creator.bitasset_opts->short_backing_asset = backing_asset;
    trx.operations.push_back(std::move(creator));
    trx.validate();
    processed_transaction ptx = db.push_transaction(trx, ~0);
