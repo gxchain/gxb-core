@@ -32,7 +32,6 @@
 #include <graphene/chain/internal_exceptions.hpp>
 #include <graphene/chain/special_authority.hpp>
 #include <graphene/chain/special_authority_object.hpp>
-#include <graphene/chain/worker_object.hpp>
 #include <algorithm>
 
 
@@ -72,27 +71,11 @@ void verify_account_votes( const database& db, const account_options& options )
    FC_ASSERT(db.find_object(options.voting_account), "Invalid proxy account specified.");
 
    uint32_t max_vote_id = gpo.next_available_vote_id;
-   bool has_worker_votes = false;
-   for( auto id : options.votes )
-   {
-      FC_ASSERT( id < max_vote_id );
-      has_worker_votes |= (id.type() == vote_id_type::worker);
-   }
-
-   if( has_worker_votes && (db.head_block_time() >= HARDFORK_607_TIME) )
-   {
-      const auto& against_worker_idx = db.get_index_type<worker_index>().indices().get<by_vote_against>();
-      for( auto id : options.votes )
-      {
-         if( id.type() == vote_id_type::worker )
-         {
-            FC_ASSERT( against_worker_idx.find( id ) == against_worker_idx.end() );
-         }
-      }
+   for (auto id : options.votes) {
+       FC_ASSERT(id < max_vote_id);
    }
 
 }
-
 
 void_result account_create_evaluator::do_evaluate( const account_create_operation& op )
 { try {
