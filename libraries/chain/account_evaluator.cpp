@@ -73,7 +73,7 @@ void verify_account_votes( const database& db, const account_options& options )
    uint32_t max_vote_id = gpo.next_available_vote_id;
    for (auto id : options.votes) {
        if (db.head_block_time() > HARDFORK_1008_TIME) {
-           FC_ASSERT(id < max_vote_id, " ${a} < ${b} failed", ("a", id)("b", max_vote_id));
+           FC_ASSERT(id < max_vote_id, "assert ${a} < ${b} failed", ("a", id)("b", max_vote_id));
        }
    }
 
