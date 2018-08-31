@@ -91,29 +91,45 @@ optional< vesting_balance_id_type > database::deposit_lazy_vesting(
 
    while( true )
    {
-      if( !ovbid.valid() )
-         break;
-      const vesting_balance_object& vbo = (*ovbid)(*this);
-      if( vbo.owner != req_owner )
-         break;
-      if( vbo.policy.which() != vesting_policy::tag< cdd_vesting_policy >::value )
-         break;
-      if( vbo.policy.get< cdd_vesting_policy >().vesting_seconds != req_vesting_seconds )
-         break;
-      modify( vbo, [&]( vesting_balance_object& _vbo )
-      {
-         if( require_vesting )
-            _vbo.deposit(now, amount);
-         else
-            _vbo.deposit_vested(now, amount);
-      } );
-      return optional< vesting_balance_id_type >();
+       if (!ovbid.valid())
+           break;
+
+       const vesting_balance_object &vbo = (*ovbid)(*this);
+       // check owner
+       if (vbo.owner != req_owner)
+           break;
+
+       // check vesting policy, must be cdd
+       if (vbo.policy.which() != vesting_policy::tag<cdd_vesting_policy>::value)
+           break;
+
+       // check vesting seconds
+       if (vbo.policy.get<cdd_vesting_policy>().vesting_seconds != req_vesting_seconds)
+           break;
+
+       // vesging asset id must be 1.3.1
+       if (head_block_time() > HARDFORK_1006_TIME && vbo.balance.asset_id != asset_id_type(1))
+           break;
+
+       modify(vbo, [&](vesting_balance_object &_vbo) {
+           if (require_vesting)
+               _vbo.deposit(now, amount);
+           else
+               _vbo.deposit_vested(now, amount);
+       });
+       return optional<vesting_balance_id_type>();
    }
 
    const vesting_balance_object& vbo = create< vesting_balance_object >( [&]( vesting_balance_object& _vbo )
    {
       _vbo.owner = req_owner;
-      _vbo.balance = amount;
+
+      // after hardfork 1006, deposit 1.3.1
+      if (head_block_time() > HARDFORK_1006_TIME) {
+          _vbo.balance = asset(amount, asset_id_type(1));
+      } else {
+          _vbo.balance = amount;
+      }
 
       cdd_vesting_policy policy;
       policy.vesting_seconds = req_vesting_seconds;
