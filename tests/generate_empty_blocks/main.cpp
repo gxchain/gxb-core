@@ -37,6 +37,7 @@
 #include <graphene/egenesis/egenesis.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 
+#include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 
 #ifndef WIN32
