@@ -46,8 +46,6 @@ namespace graphene { namespace chain {
          /** override the default behavior defined by generic_evalautor which is to
           * post the fee to fee_paying_account_stats.pending_fees
           */
-         virtual void pay_fee() override;
-
          share_type                          _deferred_fee  = 0;
          const limit_order_create_operation* _op            = nullptr;
          const account_object*               _seller        = nullptr;
