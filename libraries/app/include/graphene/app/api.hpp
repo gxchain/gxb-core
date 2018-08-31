@@ -157,9 +157,6 @@ namespace graphene { namespace app {
                                                                         uint32_t stop = 0,
                                                                         unsigned limit = 100,
                                                                         uint32_t start = 0) const;
-
-         vector<order_history_object> get_fill_order_history( asset_id_type a, asset_id_type b, uint32_t limit )const;
-         flat_set<uint32_t> get_market_history_buckets()const;
       private:
            application& _app;
    };

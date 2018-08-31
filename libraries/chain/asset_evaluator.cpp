@@ -300,18 +300,6 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o, ui
 { try {
    database& d = db();
 
-   // If we are now disabling force settlements, cancel all open force settlement orders
-   if( o.new_options.flags & disable_force_settle && asset_to_update->can_force_settle() )
-   {
-      const auto& idx = d.get_index_type<force_settlement_index>().indices().get<by_expiration>();
-      // Funky iteration code because we're removing objects as we go. We have to re-initialize itr every loop instead
-      // of simply incrementing it.
-      for( auto itr = idx.lower_bound(o.asset_to_update);
-           itr != idx.end() && itr->settlement_asset_id() == o.asset_to_update;
-           itr = idx.lower_bound(o.asset_to_update) )
-         d.cancel_order(*itr);
-   }
-
    d.modify(*asset_to_update, [&](asset_object &a) {
        if (o.new_issuer) {
            a.issuer = *o.new_issuer;

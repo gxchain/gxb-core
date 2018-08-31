@@ -43,8 +43,6 @@ namespace graphene { namespace chain {
          void_result do_evaluate( const limit_order_create_operation& o );
          object_id_type do_apply(const limit_order_create_operation& o, int32_t billed_cpu_time_us = 0);
 
-         asset calculate_market_fee( const asset_object* aobj, const asset& trade_amount );
-
          /** override the default behavior defined by generic_evalautor which is to
           * post the fee to fee_paying_account_stats.pending_fees
           */
