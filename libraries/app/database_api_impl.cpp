@@ -1016,6 +1016,7 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
                result.emplace_back( variant() );
             break;
          }
+         case vote_id_type::worker:
          case vote_id_type::VOTE_TYPE_COUNT: break; // supress unused enum value warnings
       }
    }
