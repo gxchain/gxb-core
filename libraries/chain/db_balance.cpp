@@ -106,7 +106,7 @@ optional< vesting_balance_id_type > database::deposit_lazy_vesting(
        if (vbo.policy.get<cdd_vesting_policy>().vesting_seconds != req_vesting_seconds)
            break;
 
-       if (now > HARDFORK_1006_TIME) {
+       if (now > HARDFORK_1008_TIME) {
            // update 1.3.1 vbo after hardfork
            // vesting asset id must be 1.3.1
            if (vbo.balance.asset_id != asset_id_type(1)) break;
@@ -134,7 +134,7 @@ optional< vesting_balance_id_type > database::deposit_lazy_vesting(
       _vbo.owner = req_owner;
 
       // after hardfork 1006, deposit 1.3.1
-      if (head_block_time() > HARDFORK_1006_TIME) {
+      if (head_block_time() > HARDFORK_1008_TIME) {
           _vbo.balance = asset(amount, asset_id_type(1));
       } else {
           _vbo.balance = amount;
@@ -163,7 +163,7 @@ void database::deposit_cashback(const account_object& acct, share_type amount, b
        acct.get_id() == GRAPHENE_RELAXED_COMMITTEE_ACCOUNT || acct.get_id() == GRAPHENE_NULL_ACCOUNT ||
        acct.get_id() == GRAPHENE_TEMP_ACCOUNT) {
        // The blockchain's accounts do not get cashback; it simply goes to the reserve pool.
-       if (head_block_time() > HARDFORK_1006_TIME) {
+       if (head_block_time() > HARDFORK_1008_TIME) {
            // deposit 1.3.1 after hardfork
            modify(get(asset_id_type(1)).dynamic_asset_data_id(*this), [amount](asset_dynamic_data_object &d) {
                d.current_supply -= amount;
