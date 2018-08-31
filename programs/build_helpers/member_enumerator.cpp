@@ -18,7 +18,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include <graphene/chain/protocol/protocol.hpp>
+#include <graphene/chain/protocol/block.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
@@ -199,7 +199,7 @@ int main( int argc, char** argv )
       for( const std::pair< std::string, std::vector< std::string > >& e : result )
       {
          variant v;
-         to_variant( e.second, v );
+         to_variant( e.second, v , 1);
          mvo.set( e.first, v );
       }
 

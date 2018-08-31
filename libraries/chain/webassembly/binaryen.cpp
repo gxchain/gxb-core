@@ -97,7 +97,7 @@ std::unique_ptr<wasm_instantiated_module_interface> binaryen_runtime::instantiat
          FC_ASSERT( !"unresolvable", "${module}.${export}", ("module",import->module.c_str())("export",import->base.c_str()) );
       }
 
-      return std::make_unique<binaryen_instantiated_module>(_memory, initial_memory, move(table), move(import_lut), move(module));
+      return std::make_unique<binaryen_instantiated_module>(_memory, initial_memory, fc::move(table), fc::move(import_lut), fc::move(module));
    } catch (const ParseException &e) {
       FC_THROW_EXCEPTION(wasm_execution_error, "Error building interpreter: ${s}", ("s", e.text));
    }

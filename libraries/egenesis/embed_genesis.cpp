@@ -166,7 +166,8 @@ struct egenesis_info
       else if( genesis_json.valid() )
       {
          // If genesis not exist, generate from genesis_json
-         genesis = fc::json::from_string( *genesis_json ).as< genesis_state_type >();
+         genesis = fc::json::from_string( *genesis_json ).as< genesis_state_type >( 20 );
+         dlog("genesis:\n ${x}", ("x", genesis));
       }
       else
       {
@@ -215,7 +216,6 @@ void load_genesis(
       std::cerr << "embed_genesis:  Genesis ID from argument is " << chain_id_str << "\n";
       info.chain_id = chain_id_str;
    }
-   return;
 }
 
 int main( int argc, char** argv )

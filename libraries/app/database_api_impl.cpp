@@ -60,7 +60,7 @@ optional<T> maybe_id( const string& name_or_id )
    {
       try
       {
-         return fc::variant(name_or_id).as<T>();
+         return fc::variant(name_or_id).as<T>(1);
       }
       catch (const fc::exception&)
       {
@@ -87,7 +87,7 @@ database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
    _applied_block_connection = _db.applied_block.connect([this](const signed_block&){ on_applied_block(); });
 
    _pending_trx_connection = _db.on_pending_transaction.connect([this](const signed_transaction& trx ){
-                         if( _pending_trx_callback ) _pending_trx_callback( fc::variant(trx) );
+                         if( _pending_trx_callback ) _pending_trx_callback( fc::variant(trx, GRAPHENE_NET_MAX_NESTED_OBJECTS) );
                       });
 
    // for data_transaction
@@ -170,7 +170,7 @@ bytes database_api_impl::serialize_contract_call_args(string contract, string me
         return bytes();
     }
 
-    fc::variant action_args_var = fc::json::from_string(json_args, fc::json::relaxed_parser);
+    fc::variant action_args_var = fc::json::from_string(json_args);
 
     abi_serializer abis(contract_obj->abi, fc::milliseconds(10000));
     auto action_type = abis.get_action_type(method);
@@ -419,7 +419,7 @@ std::map<std::string, full_account> database_api_impl::get_full_accounts( const 
    {
       const account_object* account = nullptr;
       if (std::isdigit(account_name_or_id[0]))
-         account = _db.find(fc::variant(account_name_or_id).as<account_id_type>());
+         account = _db.find(fc::variant(account_name_or_id).as<account_id_type>(1));
       else
       {
          const auto& idx = _db.get_index_type<account_index>().indices().get<by_name>();
@@ -769,7 +769,7 @@ vector<optional<asset_object>> database_api_impl::lookup_asset_symbols(const vec
                   [this, &assets_by_symbol](const string& symbol_or_id) -> optional<asset_object> {
       if( !symbol_or_id.empty() && std::isdigit(symbol_or_id[0]) )
       {
-         auto ptr = _db.find(variant(symbol_or_id).as<asset_id_type>());
+         auto ptr = _db.find(variant(symbol_or_id, 1).as<asset_id_type>(1));
          return ptr == nullptr? optional<asset_object>() : *ptr;
       }
       auto itr = assets_by_symbol.find(symbol_or_id);
@@ -1020,11 +1020,11 @@ market_ticker database_api_impl::get_ticker( const string& base, const string& q
          result.percent_change = trades.size() > 0 ? ( ( result.latest / trades.back().price ) - 1 ) * 100 : 0;
       }
 
-      auto orders = get_order_book( base, quote, 1 );
-      if( orders.asks.size() )
-         result.lowest_ask = orders.asks[0].price;
-      if( orders.bids.size() )
-         result.highest_bid = orders.bids[0].price;
+//      auto orders = get_order_book( base, quote, 1 );
+//      if( orders.asks.size() )
+//         result.lowest_ask = orders.asks[0].price;
+//      if( orders.bids.size() )
+//         result.highest_bid = orders.bids[0].price;
 
    } FC_CAPTURE_AND_RETHROW( (base)(quote) )
 
@@ -1073,56 +1073,6 @@ market_volume database_api_impl::get_24_volume( const string& base, const string
 
       return result;
    } FC_CAPTURE_AND_RETHROW( (base)(quote) )
-}
-
-order_book database_api_impl::get_order_book( const string& base, const string& quote, unsigned limit )const
-{
-   using boost::multiprecision::uint128_t;
-   FC_ASSERT( limit <= 50 );
-
-   order_book result;
-   result.base = base;
-   result.quote = quote;
-
-   auto assets = lookup_asset_symbols( {base, quote} );
-   FC_ASSERT( assets[0], "Invalid base asset symbol: ${s}", ("s",base) );
-   FC_ASSERT( assets[1], "Invalid quote asset symbol: ${s}", ("s",quote) );
-
-   auto base_id = assets[0]->id;
-   auto quote_id = assets[1]->id;
-   auto orders = get_limit_orders( base_id, quote_id, limit );
-
-
-   auto asset_to_real = [&]( const asset& a, int p ) { return double(a.amount.value)/pow( 10, p ); };
-   auto price_to_real = [&]( const price& p )
-   {
-      if( p.base.asset_id == base_id )
-         return asset_to_real( p.base, assets[0]->precision ) / asset_to_real( p.quote, assets[1]->precision );
-      else
-         return asset_to_real( p.quote, assets[0]->precision ) / asset_to_real( p.base, assets[1]->precision );
-   };
-
-   for( const auto& o : orders )
-   {
-      if( o.sell_price.base.asset_id == base_id )
-      {
-         order ord;
-         ord.price = price_to_real( o.sell_price );
-         ord.quote = asset_to_real( share_type( ( uint128_t( o.for_sale.value ) * o.sell_price.quote.amount.value ) / o.sell_price.base.amount.value ), assets[1]->precision );
-         ord.base = asset_to_real( o.for_sale, assets[0]->precision );
-         result.bids.push_back( ord );
-      }
-      else
-      {
-         order ord;
-         ord.price = price_to_real( o.sell_price );
-         ord.quote = asset_to_real( o.for_sale, assets[1]->precision );
-         ord.base = asset_to_real( share_type( ( uint64_t( o.for_sale.value ) * o.sell_price.quote.amount.value ) / o.sell_price.base.amount.value ), assets[0]->precision );
-         result.asks.push_back( ord );
-      }
-   }
-
-   return result;
 }
 
 optional<pocs_object> database_api_impl::get_pocs_object(league_id_type league_id, account_id_type account_id, object_id_type product_id    )const
@@ -1316,7 +1266,7 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
          {
             auto itr = committee_idx.find( id );
             if( itr != committee_idx.end() )
-               result.emplace_back( variant( *itr ) );
+               result.emplace_back( variant( *itr, 2 ) ); // Depth of committee_member_object is 1, add 1 here to be safe
             else
                result.emplace_back( variant() );
             break;
@@ -1325,7 +1275,7 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
          {
             auto itr = witness_idx.find( id );
             if( itr != witness_idx.end() )
-               result.emplace_back( variant( *itr ) );
+               result.emplace_back( variant( *itr, 2 ) ); // Depth of witness_object is 1, add 1 here to be safe
             else
                result.emplace_back( variant() );
             break;
@@ -1334,12 +1284,16 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
          {
             auto itr = for_worker_idx.find( id );
             if( itr != for_worker_idx.end() ) {
-               result.emplace_back( variant( *itr ) );
+               result.emplace_back( variant( *itr, 4 ) ); // Depth of worker_object is 3, add 1 here to be safe.
+                                                          // If we want to extract the balance object inside,
+                                                          //   need to increase this value
             }
             else {
                auto itr = against_worker_idx.find( id );
                if( itr != against_worker_idx.end() ) {
-                  result.emplace_back( variant( *itr ) );
+                  result.emplace_back( variant( *itr, 4 ) ); // Depth of worker_object is 3, add 1 here to be safe.
+                                                             // If we want to extract the balance object inside,
+                                                             //   need to increase this value
                }
                else {
                   result.emplace_back( variant() );
@@ -1442,7 +1396,7 @@ bool database_api_impl::verify_account_authority( const string& name_or_id, cons
    FC_ASSERT( name_or_id.size() > 0);
    const account_object* account = nullptr;
    if (std::isdigit(name_or_id[0]))
-      account = _db.find(fc::variant(name_or_id).as<account_id_type>());
+      account = _db.find(fc::variant(name_or_id).as<account_id_type>(1));
    else
    {
       const auto& idx = _db.get_index_type<account_index>().indices().get<by_name>();
@@ -1493,7 +1447,7 @@ struct get_required_fees_helper
       {
          asset fee = current_fee_schedule.set_fee( op, core_exchange_rate );
          fc::variant result;
-         fc::to_variant( fee, result );
+         fc::to_variant( fee, result, GRAPHENE_NET_MAX_NESTED_OBJECTS );
          return result;
       }
    }
@@ -1513,7 +1467,7 @@ struct get_required_fees_helper
       // two mutually recursive functions instead of a visitor
       result.first = current_fee_schedule.set_fee( proposal_create_op, core_exchange_rate );
       fc::variant vresult;
-      fc::to_variant( result, vresult );
+      fc::to_variant( result, vresult, GRAPHENE_NET_MAX_NESTED_OBJECTS );
       return vresult;
    }
 
@@ -1546,7 +1500,7 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
    if(mock_calc_fee) {
        const asset mock_asset{0, id};
        fc::variant mock_fee;
-       fc::to_variant(mock_asset, mock_fee);
+       fc::to_variant(mock_asset, mock_fee, GRAPHENE_NET_MAX_NESTED_OBJECTS);
 
        for( operation& op : _ops )
        {
@@ -1586,7 +1540,7 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
            asset fee = asset(basic_fee + ram_fee + cpu_fee, asset_id_type()) * a.options.core_exchange_rate;
 
            fc::variant r;
-           fc::to_variant(fee, r);
+           fc::to_variant(fee, r, GRAPHENE_NET_MAX_NESTED_OBJECTS);
            result.push_back(r);
        } else {
            result.push_back(helper.set_op_fees(op));
@@ -1800,7 +1754,7 @@ void database_api_impl::handle_object_changed(bool force_notify, bool full_objec
             }
             else
             {
-               updates.emplace_back( id );
+               updates.emplace_back( fc::variant( id, 1 ) );
             }
          }
       }
@@ -1839,7 +1793,7 @@ void database_api_impl::on_applied_block()
       auto capture_this = shared_from_this();
       block_id_type block_id = _db.head_block_id();
       fc::async([this,capture_this,block_id](){
-         _block_applied_callback(fc::variant(block_id));
+         _block_applied_callback(fc::variant(block_id, 1));
       });
    }
 
@@ -1880,7 +1834,7 @@ void database_api_impl::on_applied_block()
       {
          auto itr = _market_subscriptions.find(item.first);
          if(itr != _market_subscriptions.end())
-            itr->second(fc::variant(item.second));
+            itr->second(fc::variant(item.second, GRAPHENE_NET_MAX_NESTED_OBJECTS));
       }
    });
 }
@@ -1968,7 +1922,7 @@ free_data_product_search_results_object   database_api_impl::list_free_data_prod
     vector<free_data_product_object> free_vecotr_result_temp;
 
     const free_data_product_index& product_index = _db.get_index_type<free_data_product_index>();
-    data_market_category_id_type  category_id = fc::variant(data_market_category_id).as<data_market_category_id_type>();
+    data_market_category_id_type  category_id = fc::variant(data_market_category_id).as<data_market_category_id_type>(1);
     auto range = product_index.indices().get<by_data_market_category_id>().equal_range(boost::make_tuple(category_id));
 
    // const auto& range = _db.get_index_type<free_data_product_index>().indices().get<by_id>();
@@ -2016,7 +1970,7 @@ league_data_product_search_results_object   database_api_impl::list_league_data_
     vector<league_data_product_object> league_vecotr_result_temp;
 
     const league_data_product_index& product_index = _db.get_index_type<league_data_product_index>();
-    data_market_category_id_type  category_id = fc::variant(data_market_category_id).as<data_market_category_id_type>();
+    data_market_category_id_type  category_id = fc::variant(data_market_category_id).as<data_market_category_id_type>(1);
     auto range = product_index.indices().get<by_data_market_category_id>().equal_range(boost::make_tuple(category_id));
     int total = 0;
     for (const league_data_product_object& league_data_product : boost::make_iterator_range(range.first, range.second))
@@ -2109,7 +2063,7 @@ league_search_results_object database_api_impl::list_leagues(string data_market_
     vector<league_object> league_vecotr_result_temp;
 
     const league_index& product_index = _db.get_index_type<league_index>();
-    data_market_category_id_type category_id = fc::variant(data_market_category_id).as<data_market_category_id_type>();
+    data_market_category_id_type category_id = fc::variant(data_market_category_id).as<data_market_category_id_type>(1);
     auto range = product_index.indices().get<by_data_market_category_id>().equal_range(boost::make_tuple(category_id));
     int total = 0;
     for (const league_object& league : boost::make_iterator_range(range.first, range.second))

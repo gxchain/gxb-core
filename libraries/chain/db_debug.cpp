@@ -29,6 +29,7 @@
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/fba_object.hpp>
 
 namespace graphene { namespace chain {
 
@@ -58,21 +59,6 @@ void database::debug_dump()
     //  idump(("statistics")(s));
       reported_core_in_orders += s.total_core_in_orders;
    }
-   for( const limit_order_object& o : db.get_index_type<limit_order_index>().indices() )
-   {
- //     idump(("limit_order")(o));
-      auto for_sale = o.amount_for_sale();
-      if( for_sale.asset_id == asset_id_type() ) core_in_orders += for_sale.amount;
-      total_balances[for_sale.asset_id] += for_sale.amount;
-   }
-   for( const call_order_object& o : db.get_index_type<call_order_index>().indices() )
-   {
-//      idump(("call_order")(o));
-      auto col = o.get_collateral();
-      if( col.asset_id == asset_id_type() ) core_in_orders += col.amount;
-      total_balances[col.asset_id] += col.amount;
-      total_debts[o.get_debt().asset_id] += o.get_debt().amount;
-   }
    for( const asset_object& asset_obj : db.get_index_type<asset_index>().indices() )
    {
       total_balances[asset_obj.id] += asset_obj.dynamic_asset_data_id(db).accumulated_fees;
@@ -82,7 +68,9 @@ void database::debug_dump()
 
    if( total_balances[asset_id_type()].value != core_asset_data.current_supply.value )
    {
-      edump( (total_balances[asset_id_type()].value)(core_asset_data.current_supply.value ));
+      FC_THROW( "computed balance of CORE mismatch",
+                ("computed value",total_balances[asset_id_type()].value)
+                ("current supply",core_asset_data.current_supply.value) );
    }
 
 
@@ -143,25 +131,19 @@ void debug_apply_update( database& db, const fc::variant_object& vo )
    switch( action )
    {
       case db_action_create:
-         /*
-         idx.create( [&]( object& obj )
-         {
-            idx.object_from_variant( vo, obj );
-         } );
-         */
          FC_ASSERT( false );
          break;
       case db_action_write:
          db.modify( db.get_object( oid ), [&]( object& obj )
          {
             idx.object_default( obj );
-            idx.object_from_variant( vo, obj );
+            idx.object_from_variant( vo, obj, GRAPHENE_MAX_NESTED_OBJECTS );
          } );
          break;
       case db_action_update:
          db.modify( db.get_object( oid ), [&]( object& obj )
          {
-            idx.object_from_variant( vo, obj );
+            idx.object_from_variant( vo, obj, GRAPHENE_MAX_NESTED_OBJECTS );
          } );
          break;
       case db_action_delete:

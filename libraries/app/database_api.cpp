@@ -436,11 +436,6 @@ market_volume database_api::get_24_volume( const string& base, const string& quo
    return my->get_24_volume( base, quote );
 }
 
-order_book database_api::get_order_book( const string& base, const string& quote, unsigned limit )const
-{
-   return my->get_order_book( base, quote, limit);
-}
-
 optional<pocs_object> database_api::get_pocs_object(league_id_type league_id, account_id_type account_id, object_id_type product_id)const
 {
     return my->get_pocs_object(league_id, account_id, product_id);

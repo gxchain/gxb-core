@@ -743,14 +743,6 @@ class wallet_api
        */
       asset_object                      get_asset(string asset_name_or_id) const;
 
-      /** Returns the BitAsset-specific data for a given asset.
-       * Market-issued assets's behavior are determined both by their "BitAsset Data" and
-       * their basic asset data, as returned by \c get_asset().
-       * @param asset_name_or_id the symbol or id of the BitAsset in question
-       * @returns the BitAsset-specific data for this asset
-       */
-      asset_bitasset_data_object        get_bitasset_data(string asset_name_or_id)const;
-
       /** Lookup the id of a named account.
        * @param account_name_or_id the name of the account to look up
        * @returns the id of the named account
@@ -2105,8 +2097,6 @@ class wallet_api
          bool broadcast /* = false */
          );
 
-      order_book get_order_book( const string& base, const string& quote, unsigned limit = 50);
-
       /** get pocs_object.
        *
        * @param league_id
@@ -2321,7 +2311,6 @@ FC_API( graphene::wallet::wallet_api,
         (update_asset_feed_producers)
         (publish_asset_feed)
         (get_asset)
-        (get_bitasset_data)
         (fund_asset_fee_pool)
         (reserve_asset)
         (global_settle_asset)
@@ -2418,7 +2407,6 @@ FC_API( graphene::wallet::wallet_api,
         (blind_transfer)
         (blind_history)
         (receive_blind_transfer)
-        (get_order_book)
         (create_data_market_category)
         (propose_data_market_category_update)
         (create_free_data_product)

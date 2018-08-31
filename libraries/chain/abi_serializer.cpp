@@ -1,9 +1,11 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <fc/io/raw.hpp>
 #include <fc/io/varint.hpp>
+#include <fc/uint128.hpp>
 #include <graphene/chain/abi_serializer.hpp>
 #include <graphene/chain/protocol/contract_asset.hpp>
 #include <graphene/chain/symbol.hpp>
+#include <graphene/chain/config.hpp>
 
 using namespace boost;
 
@@ -18,11 +20,11 @@ using boost::algorithm::ends_with;
 using std::string;
 
 template <typename T>
-inline fc::variant variant_from_stream(fc::datastream<const char *> &stream)
+inline fc::variant variant_from_stream(fc::datastream<const char *> &stream, uint32_t max_depth)
 {
     T temp;
     fc::raw::unpack(stream, temp);
-    return fc::variant(temp);
+    return fc::variant(temp, max_depth);
 }
 
 template <typename T>
@@ -31,18 +33,18 @@ auto pack_unpack()
     return std::make_pair<abi_serializer::unpack_function, abi_serializer::pack_function>(
         [](fc::datastream<const char *> &stream, bool is_array, bool is_optional) -> fc::variant {
             if (is_array)
-                return variant_from_stream<vector<T>>(stream);
+                return variant_from_stream<vector<T>>(stream, GRAPHENE_MAX_NESTED_OBJECTS);
             else if (is_optional)
-                return variant_from_stream<optional<T>>(stream);
-            return variant_from_stream<T>(stream);
+                return variant_from_stream<optional<T>>(stream, GRAPHENE_MAX_NESTED_OBJECTS);
+            return variant_from_stream<T>(stream, GRAPHENE_MAX_NESTED_OBJECTS);
         },
         [](const fc::variant &var, fc::datastream<char *> &ds, bool is_array, bool is_optional) {
             if (is_array)
-                fc::raw::pack(ds, var.as<vector<T>>());
+                fc::raw::pack(ds, var.as<vector<T>>(20));
             else if (is_optional)
-                fc::raw::pack(ds, var.as<optional<T>>());
+                fc::raw::pack(ds, var.as<optional<T>>(20));
             else
-                fc::raw::pack(ds, var.as<T>());
+                fc::raw::pack(ds, var.as<T>(20));
         });
 }
 
@@ -64,15 +66,15 @@ void abi_serializer::configure_built_in_types()
     built_in_types.emplace("uint32", pack_unpack<uint32_t>());
     built_in_types.emplace("int64", pack_unpack<int64_t>());
     built_in_types.emplace("uint64", pack_unpack<uint64_t>());
-    built_in_types.emplace("int128", pack_unpack<int128_t>());
-    built_in_types.emplace("uint128", pack_unpack<uint128_t>());
-    built_in_types.emplace("varint32", pack_unpack<fc::signed_int>());
-    built_in_types.emplace("varuint32", pack_unpack<fc::unsigned_int>());
+    // built_in_types.emplace("int128", pack_unpack<fc::int128_t>());
+    // built_in_types.emplace("uint128", pack_unpack<fc::uint128_t>());
+    // built_in_types.emplace("varint32", pack_unpack<fc::signed_int>());
+    // built_in_types.emplace("varuint32", pack_unpack<fc::unsigned_int>());
 
     // TODO: Add proper support for floating point types. For now this is good enough.
     built_in_types.emplace("float32", pack_unpack<float>());
     built_in_types.emplace("float64", pack_unpack<double>());
-    built_in_types.emplace("float128", pack_unpack<uint128_t>());
+    // built_in_types.emplace("float128", pack_unpack<fc::uint128_t>());
 
     built_in_types.emplace("time_point", pack_unpack<fc::time_point>());
     built_in_types.emplace("time_point_sec", pack_unpack<fc::time_point_sec>());
@@ -316,7 +318,7 @@ fc::variant abi_serializer::_binary_to_variant(const type_name &type, fc::datast
         FC_ASSERT(vars.size() == size.value,
                   "packed size does not match unpacked array size, packed size ${p} actual size ${a}",
                   ("p", size)("a", vars.size()));
-        return fc::variant(std::move(vars));
+        return fc::variant(std::move(vars), GRAPHENE_MAX_NESTED_OBJECTS);
 
     } else if (is_optional(rtype)) {
         char flag;
@@ -327,7 +329,7 @@ fc::variant abi_serializer::_binary_to_variant(const type_name &type, fc::datast
     fc::mutable_variant_object mvo;
     _binary_to_variant(rtype, stream, mvo, recursion_depth, deadline, max_serialization_time);
     FC_ASSERT(mvo.size() > 0, "Unable to unpack stream ${type}", ("type", type));
-    return fc::variant(std::move(mvo));
+    return fc::variant(std::move(mvo), GRAPHENE_MAX_NESTED_OBJECTS);
 }
 
 fc::variant abi_serializer::_binary_to_variant(const type_name &type, const bytes &binary,
@@ -400,7 +402,7 @@ bytes abi_serializer::_variant_to_binary(const type_name &type, const fc::varian
         FC_ASSERT(++recursion_depth < max_recursion_depth, "recursive definition, max_recursion_depth ${r} ", ("r", max_recursion_depth));
         FC_ASSERT(fc::time_point::now() < deadline, "serialization time limit ${t}us exceeded", ("t", max_serialization_time));
         if (!_is_type(type, recursion_depth, deadline, max_serialization_time)) {
-            return var.as<bytes>();
+            return var.as<bytes>(20);
         }
 
         bytes temp(1024 * 1024);

@@ -33,15 +33,13 @@
 #include <fc/safe.hpp>
 #include <fc/container/flat.hpp>
 #include <fc/string.hpp>
+
+#include <graphene/chain/protocol/ext.hpp>
+
 #include <fc/io/raw.hpp>
 #include <fc/uint128.hpp>
 #include <fc/static_variant.hpp>
 #include <fc/smart_ref_fwd.hpp>
-
-#include <boost/interprocess/containers/string.hpp>
-#include <boost/interprocess/allocators/allocator.hpp>
-#include <boost/interprocess/managed_mapped_file.hpp>
-
 
 #include <memory>
 #include <vector>
@@ -53,6 +51,7 @@
 #include <graphene/chain/protocol/config.hpp>
 
 #define SECONDS_PER_DAY 86400 //seconds of a day
+#include <boost/rational.hpp>
 
 namespace graphene { namespace chain {
    using namespace graphene::db;
@@ -77,7 +76,6 @@ namespace graphene { namespace chain {
    using                               fc::enum_type;
    using                               fc::optional;
    using                               fc::unsigned_int;
-   using                               fc::signed_int;
    using                               fc::time_point_sec;
    using                               fc::time_point;
    using                               fc::safe;
@@ -154,6 +152,8 @@ namespace graphene { namespace chain {
 
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
+
+   typedef boost::rational< int32_t >   ratio_type;
 
    enum asset_issuer_permission_flags
    {
@@ -457,8 +457,6 @@ namespace graphene { namespace chain {
        friend bool operator == ( const public_key_type& p1, const fc::ecc::public_key& p2);
        friend bool operator == ( const public_key_type& p1, const public_key_type& p2);
        friend bool operator != ( const public_key_type& p1, const public_key_type& p2);
-       // TODO: This is temporary for testing
-       bool is_valid_v1( const std::string& base58str );
    };
 
    struct extended_public_key_type
@@ -504,17 +502,16 @@ namespace graphene { namespace chain {
       friend bool operator == ( const extended_private_key_type& p1, const extended_private_key_type& p2);
       friend bool operator != ( const extended_private_key_type& p1, const extended_private_key_type& p2);
    };
-
 } }  // graphene::chain
 
 namespace fc
 {
-    void to_variant( const graphene::chain::public_key_type& var,  fc::variant& vo );
-    void from_variant( const fc::variant& var,  graphene::chain::public_key_type& vo );
-    void to_variant( const graphene::chain::extended_public_key_type& var, fc::variant& vo );
-    void from_variant( const fc::variant& var, graphene::chain::extended_public_key_type& vo );
-    void to_variant( const graphene::chain::extended_private_key_type& var, fc::variant& vo );
-    void from_variant( const fc::variant& var, graphene::chain::extended_private_key_type& vo );
+    void to_variant( const graphene::chain::public_key_type& var,  fc::variant& vo, uint32_t max_depth = 2 );
+    void from_variant( const fc::variant& var,  graphene::chain::public_key_type& vo, uint32_t max_depth = 2 );
+    void to_variant( const graphene::chain::extended_public_key_type& var, fc::variant& vo, uint32_t max_depth = 2 );
+    void from_variant( const fc::variant& var, graphene::chain::extended_public_key_type& vo, uint32_t max_depth = 2 );
+    void to_variant( const graphene::chain::extended_private_key_type& var, fc::variant& vo, uint32_t max_depth = 2 );
+    void from_variant( const fc::variant& var, graphene::chain::extended_private_key_type& vo, uint32_t max_depth = 2 );
 }
 
 FC_REFLECT( graphene::chain::public_key_type, (key_data) )

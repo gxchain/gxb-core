@@ -92,10 +92,6 @@
 #ifndef HARDFORK_516_TIME
 #define HARDFORK_516_TIME (fc::time_point_sec( 1456250400 ))
 #endif
-// #533 Improve vote counting implementation
-#ifndef HARDFORK_533_TIME
-#define HARDFORK_533_TIME (fc::time_point_sec( 1456250400 ))
-#endif
 // #538 Buyback accounts
 #ifndef HARDFORK_538_TIME
 #define HARDFORK_538_TIME (fc::time_point_sec( 1456250400 ))
