@@ -991,8 +991,6 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
 
    const auto& witness_idx = _db.get_index_type<witness_index>().indices().get<by_vote_id>();
    const auto& committee_idx = _db.get_index_type<committee_member_index>().indices().get<by_vote_id>();
-   const auto& for_worker_idx = _db.get_index_type<worker_index>().indices().get<by_vote_for>();
-   const auto& against_worker_idx = _db.get_index_type<worker_index>().indices().get<by_vote_against>();
 
    vector<variant> result;
    result.reserve( votes.size() );
@@ -1016,23 +1014,6 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
                result.emplace_back( variant( *itr ) );
             else
                result.emplace_back( variant() );
-            break;
-         }
-         case vote_id_type::worker:
-         {
-            auto itr = for_worker_idx.find( id );
-            if( itr != for_worker_idx.end() ) {
-               result.emplace_back( variant( *itr ) );
-            }
-            else {
-               auto itr = against_worker_idx.find( id );
-               if( itr != against_worker_idx.end() ) {
-                  result.emplace_back( variant( *itr ) );
-               }
-               else {
-                  result.emplace_back( variant() );
-               }
-            }
             break;
          }
          case vote_id_type::VOTE_TYPE_COUNT: break; // supress unused enum value warnings
