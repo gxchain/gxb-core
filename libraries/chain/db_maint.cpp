@@ -243,7 +243,7 @@ void database::update_active_committee_members()
 void database::initialize_budget_record( fc::time_point_sec now, budget_record& rec )const
 {
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
-   const asset_object& core = (head_block_time() >= HARDFORK_1006_TIME) ? asset_id_type(1)(*this) : asset_id_type(0)(*this);
+   const asset_object& core = (head_block_time() > HARDFORK_1006_TIME) ? asset_id_type(1)(*this) : asset_id_type(0)(*this);
    const asset_dynamic_data_object& core_dd = core.dynamic_asset_data_id(*this);
 
    rec.from_initial_reserve = core.reserved(*this);
@@ -280,7 +280,7 @@ void database::initialize_budget_record( fc::time_point_sec now, budget_record& 
    budget_u128 += ((uint64_t(1) << GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS) - 1);
    budget_u128 >>= GRAPHENE_CORE_ASSET_CYCLE_RATE_BITS;
 
-   if (head_block_time() < HARDFORK_1006_TIME && budget_u128 < reserve.value)
+   if (head_block_time() <= HARDFORK_1006_TIME && budget_u128 < reserve.value)
        rec.total_budget = share_type(budget_u128.to_uint64());
    else
        rec.total_budget = reserve;
@@ -296,7 +296,7 @@ void database::process_budget()
       const global_property_object& gpo = get_global_properties();
       const dynamic_global_property_object& dpo = get_dynamic_global_properties();
       const asset_dynamic_data_object& core =
-         (head_block_time() >= HARDFORK_1006_TIME) ? asset_id_type(1)(*this).dynamic_asset_data_id(*this) : asset_id_type(0)(*this).dynamic_asset_data_id(*this);
+         (head_block_time() > HARDFORK_1006_TIME) ? asset_id_type(1)(*this).dynamic_asset_data_id(*this) : asset_id_type(0)(*this).dynamic_asset_data_id(*this);
       fc::time_point_sec now = head_block_time();
 
       int64_t time_to_maint = (dpo.next_maintenance_time - now).to_seconds();
@@ -430,7 +430,7 @@ void split_fba_balance(
    if( fba.accumulated_fba_fees == 0 )
       return;
 
-   const asset_object& core =  (db.head_block_time() >= HARDFORK_1006_TIME) ? asset_id_type(1)(db) : asset_id_type(0)(db);
+   const asset_object& core =  (db.head_block_time() > HARDFORK_1006_TIME) ? asset_id_type(1)(db) : asset_id_type(0)(db);
    const asset_dynamic_data_object& core_dd = core.dynamic_asset_data_id(db);
 
    if( !fba.is_configured(db) )
@@ -535,9 +535,9 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                                      : d.get(stake_account.options.voting_account);
 
             const auto& stats = stake_account.statistics(d);
-            uint64_t voting_stake = stats.total_core_in_orders.value
-                  + (stake_account.cashback_vb.valid() ? (*stake_account.cashback_vb)(d).balance.amount.value: 0)
-                  + d.get_balance(stake_account.get_id(), asset_id_type()).amount.value;
+            auto core_asset_id = (d.head_block_time() > HARDFORK_1006_TIME) ? asset_id_type(1) : asset_id_type();
+            uint64_t voting_stake = (stake_account.cashback_vb.valid() ? (*stake_account.cashback_vb)(d).balance.amount.value: 0)
+                  + d.get_balance(stake_account.get_id(), core_asset_id).amount.value;
             // dlog("account ${a}, core voting_stake ${v}", ("a", stake_account.get_id())("v", voting_stake));
 
             // voting_stake, add GXS
