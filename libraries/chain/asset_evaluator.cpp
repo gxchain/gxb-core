@@ -76,9 +76,8 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
 
    if( op.bitasset_opts )
    {
-      // #################
       // disable bitasset creation
-      if (d.head_block_time() > HARDFORK_1006_TIME) {
+      if (d.head_block_time() > HARDFORK_1008_TIME) {
           FC_ASSERT(false, "bitasset diabled since hardfork 1006");
       }
 
@@ -96,11 +95,6 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
                     "May not create a blockchain-controlled market asset which is not backed by CORE.");
       FC_ASSERT( op.bitasset_opts->feed_lifetime_sec > chain_parameters.block_interval &&
                  op.bitasset_opts->force_settlement_delay_sec > chain_parameters.block_interval );
-   }
-   if( op.is_prediction_market )
-   {
-      FC_ASSERT( op.bitasset_opts );
-      FC_ASSERT( op.precision == op.bitasset_opts->short_backing_asset(d).precision );
    }
 
    return void_result();
@@ -130,13 +124,6 @@ object_id_type asset_create_evaluator::do_apply(const asset_create_operation& op
       });
    }
 
-   asset_bitasset_data_id_type bit_asset_id;
-   if( op.bitasset_opts.valid() )
-      bit_asset_id = db().create<asset_bitasset_data_object>( [&]( asset_bitasset_data_object& a ) {
-            a.options = *op.bitasset_opts;
-            a.is_prediction_market = op.is_prediction_market;
-         }).id;
-
    auto next_asset_id = db().get_index_type<asset_index>().get_next_id();
 
    const asset_object& new_asset =
@@ -150,8 +137,6 @@ object_id_type asset_create_evaluator::do_apply(const asset_create_operation& op
          else
             a.options.core_exchange_rate.base.asset_id = next_asset_id;
          a.dynamic_asset_data_id = dyn_asset.id;
-         if( op.bitasset_opts.valid() )
-            a.bitasset_data_id = bit_asset_id;
       });
    assert( new_asset.id == next_asset_id );
 
@@ -312,58 +297,11 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o, ui
 
 void_result asset_update_bitasset_evaluator::do_evaluate(const asset_update_bitasset_operation& o)
 { try {
-   database& d = db();
-
-   // disable bitasset creation
-   if (d.head_block_time() > HARDFORK_1006_TIME) {
-       FC_ASSERT(false, "bitasset diabled since hardfork 1006");
-   }
-
-   const asset_object& a = o.asset_to_update(d);
-
-   FC_ASSERT(a.is_market_issued(), "Cannot update BitAsset-specific settings on a non-BitAsset.");
-
-   const asset_bitasset_data_object& b = a.bitasset_data(d);
-   FC_ASSERT( !b.has_settlement(), "Cannot update a bitasset after a settlement has executed" );
-   if( o.new_options.short_backing_asset != b.options.short_backing_asset )
-   {
-      FC_ASSERT(a.dynamic_asset_data_id(d).current_supply == 0);
-      FC_ASSERT(d.find_object(o.new_options.short_backing_asset));
-
-      if( a.issuer == GRAPHENE_COMMITTEE_ACCOUNT )
-      {
-         const asset_object& backing = a.bitasset_data(d).options.short_backing_asset(d);
-         if( backing.is_market_issued() )
-         {
-            const asset_object& backing_backing = backing.bitasset_data(d).options.short_backing_asset(d);
-            FC_ASSERT( backing_backing.get_id() == asset_id_type(),
-                       "May not create a blockchain-controlled market asset which is not backed by CORE.");
-         } else
-            FC_ASSERT( backing.get_id() == asset_id_type(),
-                       "May not create a blockchain-controlled market asset which is not backed by CORE.");
-      }
-   }
-
-   bitasset_to_update = &b;
-   FC_ASSERT( o.issuer == a.issuer, "", ("o.issuer", o.issuer)("a.issuer", a.issuer) );
-
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
 void_result asset_update_bitasset_evaluator::do_apply(const asset_update_bitasset_operation& o, uint32_t billed_cpu_time_us)
 { try {
-   bool should_update_feeds = false;
-   // If the minimum number of feeds to calculate a median has changed, we need to recalculate the median
-   if( o.new_options.minimum_feeds != bitasset_to_update->options.minimum_feeds )
-      should_update_feeds = true;
-
-   db().modify(*bitasset_to_update, [&](asset_bitasset_data_object& b) {
-      b.options = o.new_options;
-
-      if( should_update_feeds )
-         b.update_median_feeds(db().head_block_time());
-   });
-
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
