@@ -87,7 +87,7 @@ database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
    _applied_block_connection = _db.applied_block.connect([this](const signed_block&){ on_applied_block(); });
 
    _pending_trx_connection = _db.on_pending_transaction.connect([this](const signed_transaction& trx ){
-                         if( _pending_trx_callback ) _pending_trx_callback( fc::variant(trx, GRAPHENE_NET_MAX_NESTED_OBJECTS) );
+                         if( _pending_trx_callback ) _pending_trx_callback( fc::variant(trx, GRAPHENE_MAX_NESTED_OBJECTS) );
                       });
 
    // for data_transaction
@@ -1161,7 +1161,7 @@ struct get_required_fees_helper
       {
          asset fee = current_fee_schedule.set_fee( op, core_exchange_rate );
          fc::variant result;
-         fc::to_variant( fee, result, GRAPHENE_NET_MAX_NESTED_OBJECTS );
+         fc::to_variant( fee, result, GRAPHENE_MAX_NESTED_OBJECTS );
          return result;
       }
    }
@@ -1181,7 +1181,7 @@ struct get_required_fees_helper
       // two mutually recursive functions instead of a visitor
       result.first = current_fee_schedule.set_fee( proposal_create_op, core_exchange_rate );
       fc::variant vresult;
-      fc::to_variant( result, vresult, GRAPHENE_NET_MAX_NESTED_OBJECTS );
+      fc::to_variant( result, vresult, GRAPHENE_MAX_NESTED_OBJECTS );
       return vresult;
    }
 
@@ -1214,7 +1214,7 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
    if(mock_calc_fee) {
        const asset mock_asset{0, id};
        fc::variant mock_fee;
-       fc::to_variant(mock_asset, mock_fee, GRAPHENE_NET_MAX_NESTED_OBJECTS);
+       fc::to_variant(mock_asset, mock_fee, GRAPHENE_MAX_NESTED_OBJECTS);
 
        for( operation& op : _ops )
        {
@@ -1254,7 +1254,7 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
            asset fee = asset(basic_fee + ram_fee + cpu_fee, asset_id_type()) * a.options.core_exchange_rate;
 
            fc::variant r;
-           fc::to_variant(fee, r, GRAPHENE_NET_MAX_NESTED_OBJECTS);
+           fc::to_variant(fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
            result.push_back(r);
        } else {
            result.push_back(helper.set_op_fees(op));
