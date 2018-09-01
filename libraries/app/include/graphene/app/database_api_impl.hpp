@@ -282,22 +282,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
          });
       }
 
-      template<typename T>
-      void enqueue_if_subscribed_to_market(const object* obj, market_queue_type& queue, bool full_object=true)
-      {
-         const T* order = dynamic_cast<const T*>(obj);
-         FC_ASSERT( order != nullptr);
-
-         auto market = order->get_market();
-
-         auto sub = _market_subscriptions.find( market );
-         if( sub != _market_subscriptions.end() ) {
-             queue[market].emplace_back( full_object ? obj->to_variant() : fc::variant(obj->id, 1) );
-         }
-      }
-
       void broadcast_updates( const vector<variant>& updates );
-      void broadcast_market_updates( const market_queue_type& queue);
       void handle_object_changed(bool force_notify, bool full_object, const vector<object_id_type>& ids, const flat_set<account_id_type>& impacted_accounts, std::function<const object*(object_id_type id)> find_object);
       
       /** called every time a block is applied to report the objects that were changed */
