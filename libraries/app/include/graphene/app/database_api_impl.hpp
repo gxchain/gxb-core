@@ -137,17 +137,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<asset_object>           list_assets(const string& lower_bound_symbol, uint32_t limit)const;
       vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
 
-      // Markets / feeds
-      vector<limit_order_object>         get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
-      vector<call_order_object>          get_call_orders(asset_id_type a, uint32_t limit)const;
-      vector<force_settlement_object>    get_settle_orders(asset_id_type a, uint32_t limit)const;
-      vector<call_order_object>          get_margin_positions( const account_id_type& id )const;
-      void subscribe_to_market(std::function<void(const variant&)> callback, asset_id_type a, asset_id_type b);
-      void unsubscribe_data_transaction_callback();
-      void unsubscribe_from_market(asset_id_type a, asset_id_type b);
-      market_ticker                      get_ticker( const string& base, const string& quote )const;
-      market_volume                      get_24_volume( const string& base, const string& quote )const;
-      vector<market_trade>               get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
       optional<pocs_object>              get_pocs_object(league_id_type league_id, account_id_type account_id, object_id_type product_id) const;
 
       // Witnesses

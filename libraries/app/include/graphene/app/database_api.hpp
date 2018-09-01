@@ -431,65 +431,6 @@ class database_api
        */
       vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
 
-
-      /**
-       * @brief Get call orders in a given asset
-       * @param a ID of asset being called
-       * @param limit Maximum number of orders to retrieve
-       * @return The call orders, ordered from earliest to be called to latest
-       */
-      vector<call_order_object> get_call_orders(asset_id_type a, uint32_t limit)const;
-
-      /**
-       * @brief Get forced settlement orders in a given asset
-       * @param a ID of asset being settled
-       * @param limit Maximum number of orders to retrieve
-       * @return The settle orders, ordered from earliest settlement date to latest
-       */
-      vector<force_settlement_object> get_settle_orders(asset_id_type a, uint32_t limit)const;
-
-      /**
-       *  @return all open margin positions for a given account id.
-       */
-      vector<call_order_object> get_margin_positions( const account_id_type& id )const;
-
-      /**
-       * @brief Request notification when the active orders in the market between two assets changes
-       * @param callback Callback method which is called when the market changes
-       * @param a First asset ID
-       * @param b Second asset ID
-       *
-       * Callback will be passed a variant containing a vector<pair<operation, operation_result>>. The vector will
-       * contain, in order, the operations which changed the market, and their results.
-       */
-      void subscribe_to_market(std::function<void(const variant&)> callback,
-                   asset_id_type a, asset_id_type b);
-
-      void unsubscribe_data_transaction_callback();
-
-      /**
-       * @brief Unsubscribe from updates to a given market
-       * @param a First asset ID
-       * @param b Second asset ID
-       */
-      void unsubscribe_from_market( asset_id_type a, asset_id_type b );
-
-      /**
-       * @brief Returns the ticker for the market assetA:assetB
-       * @param a String name of the first asset
-       * @param b String name of the second asset
-       * @return The market ticker for the past 24 hours.
-       */
-      market_ticker get_ticker( const string& base, const string& quote )const;
-
-      /**
-       * @brief Returns the 24 hour volume for the market assetA:assetB
-       * @param a String name of the first asset
-       * @param b String name of the second asset
-       * @return The market volume over the past 24 hours
-       */
-      market_volume get_24_volume( const string& base, const string& quote )const;
-
       /** get pocs_object.
        *
        * @param league_id
@@ -858,15 +799,6 @@ FC_API(graphene::app::database_api,
    (lookup_asset_symbols)
 
    // Markets / feeds
-   (get_limit_orders)
-   (get_call_orders)
-   (get_settle_orders)
-   (get_margin_positions)
-   (subscribe_to_market)
-   (unsubscribe_data_transaction_callback)
-   (unsubscribe_from_market)
-   (get_ticker)
-   (get_24_volume)
    (get_pocs_object)
 
    // Witnesses
