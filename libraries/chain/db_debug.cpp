@@ -29,7 +29,6 @@
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/witness_object.hpp>
-#include <graphene/chain/fba_object.hpp>
 
 namespace graphene { namespace chain {
 
@@ -68,9 +67,7 @@ void database::debug_dump()
 
    if( total_balances[asset_id_type()].value != core_asset_data.current_supply.value )
    {
-      FC_THROW( "computed balance of CORE mismatch",
-                ("computed value",total_balances[asset_id_type()].value)
-                ("current supply",core_asset_data.current_supply.value) );
+      edump( (total_balances[asset_id_type()].value)(core_asset_data.current_supply.value ));
    }
 
 
