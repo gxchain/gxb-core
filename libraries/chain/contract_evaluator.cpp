@@ -77,6 +77,8 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
             ("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
 
     // pay fee, core_fee_paid
+    generic_evaluator::prepare_fee(op.fee_payer(), fee_from_account, op);
+    generic_evaluator::convert_fee();
     generic_evaluator::pay_fee();
 
     contract_receipt receipt{cpu_time_us, ram_usage_bs, fee_from_account};
@@ -169,5 +171,15 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     contract_receipt receipt = contract_exec(d, op, billed_cpu_time_us);
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)) }
+
+void contract_call_evaluator::convert_fee()
+{
+    fee_from_account = asset(0);
+    core_fee_paid = 0;
+}
+
+void contract_call_evaluator::pay_fee()
+{
+}
 
 } } // graphene::chain
