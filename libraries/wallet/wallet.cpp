@@ -838,7 +838,7 @@
           FC_ASSERT( operation_index < trx.operations.size());
           trx.operations[operation_index] = new_op;
        }
-       asset set_fees_on_builder_transaction(transaction_handle_type handle, string fee_asset = GRAPHENE_SYMBOL)
+       asset set_fees_on_builder_transaction(transaction_handle_type handle, string fee_asset = GRAPHENE_SYMBOL_GXS)
        {
           FC_ASSERT(_builder_transactions.count(handle));
 
@@ -846,7 +846,7 @@
           asset total_fee = fee_asset_obj.amount(0);
 
           auto gprops = _remote_db->get_global_properties().parameters;
-          if( fee_asset_obj.get_id() != asset_id_type() )
+          if( fee_asset_obj.get_id() != asset_id_type(1) )
           {
              for( auto& op : _builder_transactions[handle].operations )
                 total_fee += gprops.current_fees->set_fee( op, fee_asset_obj.options.core_exchange_rate );
@@ -2065,7 +2065,7 @@
           optional<asset_object> asset_to_fund = find_asset(symbol);
           if (!asset_to_fund)
             FC_THROW("No asset with that symbol exists!");
-          asset_object core_asset = get_asset(asset_id_type());
+          asset_object core_asset = get_asset(asset_id_type(1));
 
           asset_fund_fee_pool_operation fund_op;
           fund_op.from_account = from_account.id;
