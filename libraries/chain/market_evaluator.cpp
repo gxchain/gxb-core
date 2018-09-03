@@ -42,7 +42,7 @@ namespace graphene { namespace chain {
 void_result limit_order_create_evaluator::do_evaluate(const limit_order_create_operation& op)
 { try {
     // disable limit order
-    if (d.head_block_time() >= HARDFORK_1004_TIME) {
+    if (db().head_block_time() >= HARDFORK_1004_TIME) {
         FC_ASSERT(false, "creation of limit order is disabled");
     }
 
