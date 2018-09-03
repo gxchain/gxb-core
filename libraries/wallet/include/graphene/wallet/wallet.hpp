@@ -1510,6 +1510,15 @@ class wallet_api
                                       asset_options new_options,
                                       string fee_asset_symbol,
                                       bool broadcast = false);
+      
+      
+      /** Update asset symbol.
+       * @param old_symbol the name or id of the asset to update
+       * @param new_symbol the symbol to updated to.
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction updating the asset
+       */
+      signed_transaction update_asset_symbol(string old_symbol, string new_symbol, string fee_asset_symbol, bool broadcast /* = false */);
 
 
       /** Pay into the fee pool for the given asset.
@@ -2156,6 +2165,7 @@ FC_API( graphene::wallet::wallet_api,
         (issue_asset)
         (create_asset)
         (update_asset)
+        (update_asset_symbol)
         (get_asset)
         (fund_asset_fee_pool)
         (reserve_asset)

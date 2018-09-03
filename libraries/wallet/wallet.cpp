@@ -2021,6 +2021,34 @@
           return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW((issuer)(symbol)(precision)(common)(fee_asset_symbol)(broadcast)) }
 
+       signed_transaction update_asset_symbol(string old_symbol, string new_symbol, string fee_asset_symbol, bool broadcast /* = false */)
+       { try {
+          fc::optional<asset_object> exist_asset = find_asset(new_symbol);
+          FC_ASSERT(!exist_asset.valid(), "symbol:${sym} exists!", ("sym", new_symbol));
+          
+          fc::optional<asset_object> fee_asset_obj = find_asset(fee_asset_symbol);
+          FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", fee_asset_symbol));
+          
+          fc::optional<asset_object> asset_to_update = find_asset(old_symbol);
+          FC_ASSERT(asset_to_update, "No asset with that symbol exists!");
+
+          asset_update_operation update_op;
+          update_op.issuer = asset_to_update->issuer;
+          if (asset_to_update->issuer == GRAPHENE_NULL_ACCOUNT && asset_to_update->get_id() == asset_id_type()) {
+              update_op.issuer = account_id_type();
+          }
+          update_op.asset_to_update = asset_to_update->id;
+          update_op.new_options = asset_to_update->options;
+          update_op.extensions.emplace(update_symbol_t{old_symbol, new_symbol});
+          
+          signed_transaction tx;
+          tx.operations.push_back(update_op);
+          set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+          tx.validate();
+
+          return sign_transaction(tx, broadcast);
+       } FC_CAPTURE_AND_RETHROW((old_symbol)(new_symbol)(fee_asset_symbol)(broadcast)) }
+
        signed_transaction update_asset(string symbol,
                                        optional<string> new_issuer,
                                        asset_options new_options,
@@ -2055,7 +2083,7 @@
 
           return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW((symbol)(new_issuer)(new_options)(fee_asset_symbol)(broadcast)) }
-
+       
        signed_transaction fund_asset_fee_pool(string from,
                                               string symbol,
                                               string amount,
@@ -4601,7 +4629,12 @@
     {
        return my->update_asset(symbol, new_issuer, new_options, fee_asset_symbol, broadcast);
     }
-
+    
+    signed_transaction wallet_api::update_asset_symbol(string old_symbol, string new_symbol, string fee_asset_symbol, bool broadcast /* = false */)
+    {
+       return my->update_asset_symbol(old_symbol, new_symbol, fee_asset_symbol, broadcast);
+    }
+    
     signed_transaction wallet_api::fund_asset_fee_pool(string from,
                                                        string symbol,
                                                        string amount,
