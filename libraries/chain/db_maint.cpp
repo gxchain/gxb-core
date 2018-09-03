@@ -272,7 +272,8 @@ void database::process_budget()
       modify(core, [&]( asset_dynamic_data_object& _core )
       {
          _core.current_supply = (_core.current_supply + rec.supply_delta);
-         assert(rec.supply_delta == - _core.accumulated_fees - dpo.witness_budget);
+//         assert(rec.supply_delta == - _core.accumulated_fees - dpo.witness_budget);20180903
+         assert(rec.supply_delta == witness_budget - _core.accumulated_fees - dpo.witness_budget);
          _core.accumulated_fees = 0;
       });
 
