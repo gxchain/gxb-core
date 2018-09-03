@@ -53,48 +53,28 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
    auto asset_symbol_itr = asset_indx.find( op.symbol );
    FC_ASSERT( asset_symbol_itr == asset_indx.end() );
 
-   if( d.head_block_time() > HARDFORK_385_TIME )
-   {
-      auto dotpos = op.symbol.rfind( '.' );
-      if( dotpos != std::string::npos )
-      {
-         auto prefix = op.symbol.substr( 0, dotpos );
-         auto asset_symbol_itr = asset_indx.find( prefix );
-         FC_ASSERT( asset_symbol_itr != asset_indx.end(), "Asset ${s} may only be created by issuer of ${p}, but ${p} has not been registered",
-                    ("s",op.symbol)("p",prefix) );
-         FC_ASSERT( asset_symbol_itr->issuer == op.issuer, "Asset ${s} may only be created by issuer of ${p}, ${i}",
-                    ("s",op.symbol)("p",prefix)("i", op.issuer(d).name) );
-      }
-
-   }
-   else
-   {
-      auto dotpos = op.symbol.find( '.' );
-      if( dotpos != std::string::npos )
-          wlog( "Asset ${s} has a name which requires hardfork 385", ("s",op.symbol) );
+   auto dotpos = op.symbol.rfind( '.' );
+   if (dotpos != std::string::npos) {
+       auto prefix = op.symbol.substr( 0, dotpos );
+       auto asset_symbol_itr = asset_indx.find( prefix );
+       FC_ASSERT( asset_symbol_itr != asset_indx.end(), "Asset ${s} may only be created by issuer of ${p}, but ${p} has not been registered",
+               ("s",op.symbol)("p",prefix) );
+       FC_ASSERT( asset_symbol_itr->issuer == op.issuer, "Asset ${s} may only be created by issuer of ${p}, ${i}",
+               ("s",op.symbol)("p",prefix)("i", op.issuer(d).name) );
    }
 
-   if( op.bitasset_opts )
-   {
-      // disable bitasset creation
-      if (d.head_block_time() > HARDFORK_1008_TIME) {
-          FC_ASSERT(false, "disabled since hardfork 1008");
-      }
+   // check core_exchange_rate
+   if (d.head_block_time() > HARDFORK_1008_TIME) {
+       asset dummy = asset(1, asset_id_type(1)) * op.common_options.core_exchange_rate;
+       FC_ASSERT(dummy.asset_id == asset_id_type(1));
 
-      const asset_object& backing = op.bitasset_opts->short_backing_asset(d);
-      if( backing.is_market_issued() )
-      {
-         const asset_bitasset_data_object& backing_bitasset_data = backing.bitasset_data(d);
-         const asset_object& backing_backing = backing_bitasset_data.options.short_backing_asset(d);
-         FC_ASSERT( !backing_backing.is_market_issued(),
-                    "May not create a bitasset backed by a bitasset backed by a bitasset." );
-         FC_ASSERT( op.issuer != GRAPHENE_COMMITTEE_ACCOUNT || backing_backing.get_id() == asset_id_type(),
-                    "May not create a blockchain-controlled market asset which is not backed by CORE.");
-      } else
-         FC_ASSERT( op.issuer != GRAPHENE_COMMITTEE_ACCOUNT || backing.get_id() == asset_id_type(),
-                    "May not create a blockchain-controlled market asset which is not backed by CORE.");
-      FC_ASSERT( op.bitasset_opts->feed_lifetime_sec > chain_parameters.block_interval &&
-                 op.bitasset_opts->force_settlement_delay_sec > chain_parameters.block_interval );
+       if (op.bitasset_opts) {
+           // disable bitasset creation
+           FC_ASSERT(false, "disabled since hardfork 1008");
+       }
+   } else {
+       asset dummy = asset(1) * op.common_options.core_exchange_rate;
+       FC_ASSERT(dummy.asset_id == asset_id_type(1));
    }
 
    return void_result();
@@ -116,16 +96,14 @@ object_id_type asset_create_evaluator::do_apply(const asset_create_operation& op
          a.current_supply = 0;
          a.fee_pool = core_fee_paid - (hf_1005 ? 1 : 0);
       });
-   if( fee_is_odd && !hf_1005 )
-   {
-      const auto& core_dd = db().get<asset_object>( asset_id_type() ).dynamic_data( db() );
-      db().modify( core_dd, [=]( asset_dynamic_data_object& dd ) {
-         dd.current_supply++;
-      });
+   if (fee_is_odd && !hf_1005) {
+       const auto &core_dd = db().get<asset_object>(asset_id_type()).dynamic_data(db());
+       db().modify(core_dd, [=](asset_dynamic_data_object &dd) {
+           dd.current_supply++;
+       });
    }
 
    auto next_asset_id = db().get_index_type<asset_index>().get_next_id();
-
    const asset_object& new_asset =
      db().create<asset_object>( [&]( asset_object& a ) {
          a.issuer = op.issuer;
@@ -277,6 +255,15 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
    FC_ASSERT( o.new_options.blacklist_authorities.size() <= chain_parameters.maximum_asset_whitelist_authorities );
    for( auto id : o.new_options.blacklist_authorities )
       d.get_object(id);
+
+   // check core_exchange_rate
+   if (d.head_block_time() > HARDFORK_1008_TIME) {
+       asset dummy = asset(1, asset_to_update) * new_options.core_exchange_rate;
+       FC_ASSERT(dummy.asset_id == asset_id_type(1));
+   } else {
+       asset dummy = asset(1, asset_to_update) * new_options.core_exchange_rate;
+       FC_ASSERT(dummy.asset_id == asset_id_type());
+   }
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }

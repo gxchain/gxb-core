@@ -108,8 +108,6 @@ void  asset_create_operation::validate()const
    }
    if( bitasset_opts ) bitasset_opts->validate();
 
-   asset dummy = asset(1) * common_options.core_exchange_rate;
-   FC_ASSERT(dummy.asset_id == asset_id_type(1));
    FC_ASSERT(precision <= 12);
 }
 
@@ -124,9 +122,6 @@ void asset_update_operation::validate()const
    } else {
        new_options.validate();
    }
-
-   asset dummy = asset(1, asset_to_update) * new_options.core_exchange_rate;
-   FC_ASSERT(dummy.asset_id == asset_id_type());
 }
 
 share_type asset_update_operation::calculate_fee(const asset_update_operation::fee_parameters_type& k)const
