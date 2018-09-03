@@ -185,8 +185,14 @@ void_result asset_fund_fee_pool_evaluator::do_evaluate(const asset_fund_fee_pool
 { try {
    database& d = db();
 
-   const asset_object& a = o.asset_id(d);
+   // check fee asset type
+   if (d.head_block_time() > HARDFORK_1008_TIME) {
+       FC_ASSERT(fee.asset_id == asset_id_type(1));
+   } else {
+       FC_ASSERT(fee.asset_id == asset_id_type());
+   }
 
+   const asset_object& a = o.asset_id(d);
    asset_dyn_data = &a.dynamic_asset_data_id(d);
 
    return void_result();
