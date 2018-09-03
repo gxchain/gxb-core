@@ -63,14 +63,14 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
     auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
 
-    // calculate real fee, fee_from_account
+    // calculate real fee, fee_from_account and core_fee_paid
     const auto &asset_obj = db.get<asset_object>(op.fee.asset_id);
     if (db.head_block_time() > HARDFORK_1008_TIME) {
-        asset real_fee = asset(ram_fee.to_uint64() + cpu_fee.to_uint64(), asset_id_type(1)) * asset_obj.options.core_exchange_rate;
-        fee_from_account = real_fee;
+        core_fee_paid = asset(fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64(), asset_id_type(1));
+        fee_from_account = core_fee_paid * asset_obj.options.core_exchange_rate;
     } else {
-        asset real_fee = asset(ram_fee.to_uint64() + cpu_fee.to_uint64(), asset_id_type()) * asset_obj.options.core_exchange_rate;
-        fee_from_account = real_fee;
+        core_fee_paid = asset(fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64(), asset_id_type());
+        fee_from_account = core_fee_paid * asset_obj.options.core_exchange_rate;
     }
 
     dlog("ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
@@ -78,7 +78,6 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
             ("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
 
     // pay fee, core_fee_paid
-    core_fee_paid = fee_from_account / asset_obj.options.core_exchange_rate;
     generic_evaluator::pay_fee();
 
     contract_receipt receipt{cpu_time_us, ram_usage_bs, fee_from_account};
