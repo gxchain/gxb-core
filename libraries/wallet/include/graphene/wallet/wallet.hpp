@@ -789,7 +789,7 @@ class wallet_api
       /**
        * @ingroup Transaction Builder API
        */
-      asset set_fees_on_builder_transaction(transaction_handle_type handle, string fee_asset = GRAPHENE_SYMBOL);
+      asset set_fees_on_builder_transaction(transaction_handle_type handle, string fee_asset = GRAPHENE_SYMBOL_GXS);
       /**
        * @ingroup Transaction Builder API
        */
