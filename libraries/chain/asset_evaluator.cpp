@@ -187,9 +187,9 @@ void_result asset_fund_fee_pool_evaluator::do_evaluate(const asset_fund_fee_pool
 
    // check fee asset type
    if (d.head_block_time() > HARDFORK_1008_TIME) {
-       FC_ASSERT(fee.asset_id == asset_id_type(1));
+       FC_ASSERT(o.fee.asset_id == asset_id_type(1));
    } else {
-       FC_ASSERT(fee.asset_id == asset_id_type());
+       FC_ASSERT(o.fee.asset_id == asset_id_type());
    }
 
    const asset_object& a = o.asset_id(d);
@@ -251,10 +251,10 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
 
    // check core_exchange_rate
    if (d.head_block_time() > HARDFORK_1008_TIME) {
-       asset dummy = asset(1, asset_to_update) * new_options.core_exchange_rate;
+       asset dummy = asset(1, o.asset_to_update) * o.new_options.core_exchange_rate;
        FC_ASSERT(dummy.asset_id == asset_id_type(1));
    } else {
-       asset dummy = asset(1, asset_to_update) * new_options.core_exchange_rate;
+       asset dummy = asset(1, o.asset_to_update) * o.new_options.core_exchange_rate;
        FC_ASSERT(dummy.asset_id == asset_id_type());
    }
 
