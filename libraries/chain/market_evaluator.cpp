@@ -41,13 +41,20 @@
 namespace graphene { namespace chain {
 void_result limit_order_create_evaluator::do_evaluate(const limit_order_create_operation& op)
 { try {
-   return void_result();
+    // disable limit order
+    if (d.head_block_time() >= HARDFORK_1004_TIME) {
+        FC_ASSERT(false, "creation of limit order is disabled");
+    }
+
+    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 object_id_type limit_order_create_evaluator::do_apply(const limit_order_create_operation& op, int32_t billed_cpu_time_us)
 { try {
    return  object_id_type();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void limit_order_create_evaluator::pay_fee() {}
 
 void_result limit_order_cancel_evaluator::do_evaluate(const limit_order_cancel_operation& o)
 { try {

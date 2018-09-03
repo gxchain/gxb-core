@@ -23,6 +23,12 @@
 #ifndef HARDFORK_1003_TIME
 #define HARDFORK_1003_TIME (fc::time_point_sec( 1509292800 ))
 #endif
+
+// hardfork 1004 disable limit order
+#ifndef HARDFORK_1004_TIME
+#define HARDFORK_1004_TIME (fc::time_point_sec( 1524153600 ))
+#endif
+
 // hardfork 1005
 // create asset fee
 #ifndef HARDFORK_1005_TIME
