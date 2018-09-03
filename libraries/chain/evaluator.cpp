@@ -95,7 +95,7 @@ database& generic_evaluator::db()const { return trx_state->db(); }
    void generic_evaluator::convert_fee()
    {
       if( !trx_state->skip_fee ) {
-          if (d.head_block_time() > HARDFORK_1008_TIME) {
+          if (db().head_block_time() > HARDFORK_1008_TIME) {
               if (fee_asset->get_id() != asset_id_type(1)) {
                   db().modify(*fee_asset_dyn_data, [this](asset_dynamic_data_object &d) {
                       d.accumulated_fees += fee_from_account.amount;
