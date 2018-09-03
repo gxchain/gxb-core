@@ -37,7 +37,7 @@
 namespace graphene { namespace chain {
 
 contract_receipt contract_call_evaluator::contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
-{
+{ try {
     int32_t witness_cpu_limit = db.get_max_trx_cpu_time();
     int32_t gpo_cpu_limit = db.get_cpu_limit().trx_cpu_limit;
     fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(std::min(witness_cpu_limit, gpo_cpu_limit)) : fc::days(1);
@@ -63,17 +63,27 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
     auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
 
-    // calculate real fee
+    // calculate real fee, fee_from_account
     const auto &asset_obj = db.get<asset_object>(op.fee.asset_id);
-    asset fee = asset(ram_fee.to_uint64() + cpu_fee.to_uint64(), asset_id_type()) * asset_obj.options.core_exchange_rate;
-    fee_from_account += fee;
+    if (db.head_block_time() > HARDFORK_1008_TIME) {
+        asset real_fee = asset(ram_fee.to_uint64() + cpu_fee.to_uint64(), asset_id_type(1)) * asset_obj.options.core_exchange_rate.to_real();
+        fee_from_account = real_fee;
+    } else {
+        asset real_fee = asset(ram_fee.to_uint64() + cpu_fee.to_uint64(), asset_id_type()) * asset_obj.options.core_exchange_rate;
+        fee_from_account = real_fee;
+    }
+
     dlog("ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
             ("rf",ram_fee.to_uint64())("cf",cpu_fee.to_uint64())("ru",ctx.get_ram_usage())
             ("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
 
+    // pay fee, core_fee_paid
+    core_fee_paid = fee_from_account / asset_obj.options.core_exchange_rate.to_real();
+    generic_evaluator::pay_fee();
+
     contract_receipt receipt{cpu_time_us, ram_usage_bs, fee_from_account};
     return receipt;
-}
+} FC_CAPTURE_AND_RETHROW((op)(billed_cpu_time_us)) }
 
 void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operation &op)
 { try {
