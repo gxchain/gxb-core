@@ -118,7 +118,8 @@ void asset_update_operation::validate()const
    FC_ASSERT( fee.amount >= 0 );
    if( new_issuer )
       FC_ASSERT(issuer != *new_issuer);
-   if (asset_to_update == asset_id_type()) {
+   // 1.3.0 and 1.3.1, don't validate core_exchange_rate
+   if (asset_to_update == asset_id_type() || asset_to_update == asset_id_type()1) {
        new_options.validate(false);
    } else {
        new_options.validate();

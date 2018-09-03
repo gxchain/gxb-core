@@ -54,7 +54,11 @@ object_id_type limit_order_create_evaluator::do_apply(const limit_order_create_o
    return  object_id_type();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void limit_order_create_evaluator::pay_fee() {}
+void limit_order_create_evaluator::pay_fee()
+{
+    fee_from_account = asset(0);
+    core_fee_paid = 0;
+}
 
 void_result limit_order_cancel_evaluator::do_evaluate(const limit_order_cancel_operation& o)
 { try {

@@ -78,7 +78,7 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
    {
       // disable bitasset creation
       if (d.head_block_time() > HARDFORK_1008_TIME) {
-          FC_ASSERT(false, "bitasset diabled since hardfork 1006");
+          FC_ASSERT(false, "disabled since hardfork 1008");
       }
 
       const asset_object& backing = op.bitasset_opts->short_backing_asset(d);
@@ -297,7 +297,11 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o, ui
 
 void_result asset_update_bitasset_evaluator::do_evaluate(const asset_update_bitasset_operation& o)
 { try {
-   return void_result();
+    // disable
+    if (db().head_block_time() > HARDFORK_1008_TIME) {
+        FC_ASSERT(false, "disabled since hardfork 1008");
+    }
+    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
 void_result asset_update_bitasset_evaluator::do_apply(const asset_update_bitasset_operation& o, uint32_t billed_cpu_time_us)
@@ -307,7 +311,11 @@ void_result asset_update_bitasset_evaluator::do_apply(const asset_update_bitasse
 
 void_result asset_update_feed_producers_evaluator::do_evaluate(const asset_update_feed_producers_evaluator::operation_type& o)
 { try {
-   return void_result();
+    // disable
+    if (db().head_block_time() > HARDFORK_1008_TIME) {
+        FC_ASSERT(false, "disabled since hardfork 1008");
+    }
+    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
 void_result asset_update_feed_producers_evaluator::do_apply(const asset_update_feed_producers_evaluator::operation_type& o, uint32_t billed_cpu_time_us)
@@ -317,7 +325,11 @@ void_result asset_update_feed_producers_evaluator::do_apply(const asset_update_f
 
 void_result asset_global_settle_evaluator::do_evaluate(const asset_global_settle_evaluator::operation_type& op)
 { try {
-   return void_result();
+    // disable
+    if (db().head_block_time() > HARDFORK_1008_TIME) {
+        FC_ASSERT(false, "disabled since hardfork 1008");
+    }
+    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 void_result asset_global_settle_evaluator::do_apply(const asset_global_settle_evaluator::operation_type& op, uint32_t billed_cpu_time_us)
@@ -327,7 +339,10 @@ void_result asset_global_settle_evaluator::do_apply(const asset_global_settle_ev
 
 void_result asset_settle_evaluator::do_evaluate(const asset_settle_evaluator::operation_type& op)
 { try {
-   return void_result();
+    if (db().head_block_time() > HARDFORK_1008_TIME) {
+        FC_ASSERT(false, "disabled since hardfork 1008");
+    }
+    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 operation_result asset_settle_evaluator::do_apply(const asset_settle_evaluator::operation_type& op, uint32_t billed_cpu_time_us)
@@ -337,7 +352,10 @@ operation_result asset_settle_evaluator::do_apply(const asset_settle_evaluator::
 
 void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_operation& o)
 { try {
-   return void_result();
+    if (db().head_block_time() > HARDFORK_1008_TIME) {
+        FC_ASSERT(false, "disabled since hardfork 1008");
+    }
+    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }
 
 void_result asset_publish_feeds_evaluator::do_apply(const asset_publish_feed_operation& o, uint32_t billed_cpu_time_us)
