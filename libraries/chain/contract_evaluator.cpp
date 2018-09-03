@@ -63,6 +63,7 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
     auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
 
+    // calculate real fee
     const auto &asset_obj = db.get<asset_object>(op.fee.asset_id);
     asset fee = asset(ram_fee.to_uint64() + cpu_fee.to_uint64(), asset_id_type()) * asset_obj.options.core_exchange_rate;
     fee_from_account += fee;
