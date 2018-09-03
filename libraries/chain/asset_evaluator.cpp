@@ -251,12 +251,14 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
       }
    }
 
-   for (auto ex = o.extensions.begin(); ex != o.extensions.end(); ++ex) {
-       if (ex->which() == future_extensions::tag<update_symbol_t>::value) {
-           const update_symbol_t &ust = ex->get<update_symbol_t>();
-           assert(!ust.new_symbol.empty());
-           assert(!ust.old_symbol.empty());
+   for (const auto &ex : o.extensions) {
+       if (ex.which() == future_extensions::tag<update_symbol_t>::value) {
+           const update_symbol_t &ust = ex.get<update_symbol_t>();
+           FC_ASSERT(!ust.new_symbol.empty(), "new_symbol can not be empty");
            FC_ASSERT(d.head_block_time() < HARDFORK_1103_TIME, "you can not change asset symbol after the timestamp:${x}", ("x", HARDFORK_1103_TIME));
+           auto& asset_indx = d.get_index_type<asset_index>().indices().get<by_symbol>();
+           auto asset_symbol_itr = asset_indx.find( ust.new_symbol );
+           FC_ASSERT( asset_symbol_itr == asset_indx.end(), "symbol: ${x} exist", ("x", ust.new_symbol) );
            break;
        }
    }
@@ -296,9 +298,9 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o, ui
    database& d = db();
 
    std::string new_symbol;
-   for (auto ex = o.extensions.begin(); ex != o.extensions.end(); ++ex) {
-       if (ex->which() == future_extensions::tag<update_symbol_t>::value) {
-           const update_symbol_t &ust = ex->get<update_symbol_t>();
+   for (const auto &ex : o.extensions) {
+       if (ex.which() == future_extensions::tag<update_symbol_t>::value) {
+           const update_symbol_t &ust = ex.get<update_symbol_t>();
            new_symbol = ust.new_symbol;
            break;
        }

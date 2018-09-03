@@ -1513,12 +1513,12 @@ class wallet_api
       
       
       /** Update asset symbol.
-       * @param old_symbol the name or id of the asset to update
+       * @param symbol the name or id of the asset to update
        * @param new_symbol the symbol to updated to.
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction updating the asset
        */
-      signed_transaction update_asset_symbol(string old_symbol, string new_symbol, string fee_asset_symbol, bool broadcast /* = false */);
+      signed_transaction update_asset_symbol(string symbol, string new_symbol, string fee_asset_symbol, bool broadcast /* = false */);
 
 
       /** Pay into the fee pool for the given asset.

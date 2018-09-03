@@ -124,7 +124,6 @@ namespace graphene { namespace chain {
    };
    
    struct update_symbol_t {
-       std::string old_symbol;
        std::string new_symbol;
    };
 
@@ -650,7 +649,7 @@ FC_REFLECT(graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshol
 FC_REFLECT(graphene::chain::interest_rate_t, (lock_days)(interest_rate)(is_valid))
 FC_REFLECT(graphene::chain::lock_balance_params_t, (params))
 FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
-FC_REFLECT(graphene::chain::update_symbol_t, (old_symbol)(new_symbol))
+FC_REFLECT(graphene::chain::update_symbol_t, (new_symbol))
 
 FC_REFLECT_ENUM(graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)
