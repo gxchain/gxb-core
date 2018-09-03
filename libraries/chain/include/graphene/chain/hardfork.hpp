@@ -39,7 +39,7 @@
 // add wasm validate, for testnet
 // start at 2018-08-20 18:00:00
 #ifndef HARDFORK_1006_TIME
-#define HARDFORK_1006_TIME (fc::time_point_sec( 1524153600 ))
+#define HARDFORK_1006_TIME (fc::time_point_sec( 1534759200 ))
 #endif
 
 // hardfork 1007
