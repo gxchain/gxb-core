@@ -222,6 +222,18 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
        FC_ASSERT(d.find_object(*o.new_issuer));
    }
 
+   for (const auto &ex : o.extensions) {
+       if (ex.which() == future_extensions::tag<update_symbol_t>::value) {
+           const update_symbol_t &ust = ex.get<update_symbol_t>();
+           FC_ASSERT(!ust.new_symbol.empty(), "new_symbol can not be empty");
+           FC_ASSERT(d.head_block_time() < HARDFORK_1103_TIME, "you can not change asset symbol after the timestamp:${x}", ("x", HARDFORK_1103_TIME));
+           auto& asset_indx = d.get_index_type<asset_index>().indices().get<by_symbol>();
+           auto asset_symbol_itr = asset_indx.find( ust.new_symbol );
+           FC_ASSERT( asset_symbol_itr == asset_indx.end(), "symbol: ${x} exist", ("x", ust.new_symbol) );
+           break;
+       }
+   }
+   
    if( (d.head_block_time() < HARDFORK_572_TIME) || (a.dynamic_asset_data_id(d).current_supply != 0) )
    {
       // new issuer_permissions must be subset of old issuer permissions
@@ -265,11 +277,23 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o, ui
 { try {
    database& d = db();
 
+   std::string new_symbol;
+   for (const auto &ex : o.extensions) {
+       if (ex.which() == future_extensions::tag<update_symbol_t>::value) {
+           const update_symbol_t &ust = ex.get<update_symbol_t>();
+           new_symbol = ust.new_symbol;
+           break;
+       }
+   }
+   
    d.modify(*asset_to_update, [&](asset_object &a) {
        if (o.new_issuer) {
            a.issuer = *o.new_issuer;
        }
        a.options = o.new_options;
+       if(!new_symbol.empty()) {
+           a.symbol = new_symbol;
+       }
    });
 
    return void_result();

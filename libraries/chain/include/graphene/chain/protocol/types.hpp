@@ -122,6 +122,10 @@ namespace graphene { namespace chain {
        uint32_t trx_cpu_limit = 20000; // 20 ms
        uint32_t block_cpu_limit = 800000; // 800 ms
    };
+   
+   struct update_symbol_t {
+       std::string new_symbol;
+   };
 
    struct operation_ext_copyright_hash_t {
        fc::optional<string> copyright_hash;
@@ -645,6 +649,7 @@ FC_REFLECT(graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshol
 FC_REFLECT(graphene::chain::interest_rate_t, (lock_days)(interest_rate)(is_valid))
 FC_REFLECT(graphene::chain::lock_balance_params_t, (params))
 FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
+FC_REFLECT(graphene::chain::update_symbol_t, (new_symbol))
 
 FC_REFLECT_ENUM(graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)
