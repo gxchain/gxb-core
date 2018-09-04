@@ -13,8 +13,6 @@ static const uint64_t bet_asset_id = 0; //GXC
 class simpledice : public contract
 {
   public:
-    const uint32_t FIVE_MINUTES = 5 * 60;
-
     simpledice(uint64_t self)
         : contract(self)
         , offers(_self, _self)
