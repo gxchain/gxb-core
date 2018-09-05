@@ -99,20 +99,26 @@ object_id_type asset_create_evaluator::do_apply(const asset_create_operation& op
        });
    }
 
-   auto next_asset_id = db().get_index_type<asset_index>().get_next_id();
+   // for core_exchange_rate
+   asset_id_type core_asset_id = asset_id_type();
+   if (d.head_block_time() > HARDFORK_1008_TIME) {
+       core_asset_id = asset_id_type(1);
+   }
+
+   auto next_asset_id = d.get_index_type<asset_index>().get_next_id();
    const asset_object& new_asset =
      d.create<asset_object>( [&]( asset_object& a ) {
          a.issuer = op.issuer;
          a.symbol = op.symbol;
          a.precision = op.precision;
          a.options = op.common_options;
-         if( a.options.core_exchange_rate.base.asset_id.instance.value == 0 )
+         if( a.options.core_exchange_rate.base.asset_id.instance.value == core_asset_id )
             a.options.core_exchange_rate.quote.asset_id = next_asset_id;
          else
             a.options.core_exchange_rate.base.asset_id = next_asset_id;
          a.dynamic_asset_data_id = dyn_asset.id;
       });
-   FC_ASSERT( new_asset.id == next_asset_id, "Unexpected object database error, object id mismatch" );
+   FC_ASSERT(new_asset.id == next_asset_id, "Unexpected object database error, object id mismatch");
 
    return new_asset.id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
