@@ -507,12 +507,17 @@
         */
        void set_operation_fees(signed_transaction& tx, const fee_schedule& s, fc::optional<asset_object> fee_asset = fc::optional<asset_object>())
        {
+           auto core_asset_id = asset_id_type();
+           auto dyn_props = get_dynamic_global_properties();
+           if (dyn_props.time >= HARDFORK_1008_TIME) {
+               core_asset_id = asset_id_type(1);
+           }
            for( auto& op : tx.operations )  {
                if (fee_asset.valid()) {
-                   s.set_fee(op, fee_asset->options.core_exchange_rate);
+                   s.set_fee(op, fee_asset->options.core_exchange_rate, core_asset_id);
                }
                else {
-                   s.set_fee(op);
+                   s.set_fee(op, price::unit_price(), core_asset_id);
                }
            }
        }
