@@ -1144,11 +1144,13 @@ struct get_required_fees_helper
    get_required_fees_helper(
       const fee_schedule& _current_fee_schedule,
       const price& _core_exchange_rate,
-      uint32_t _max_recursion
+      uint32_t _max_recursion,
+      asset_id_type _core_asset_id
       )
       : current_fee_schedule(_current_fee_schedule),
         core_exchange_rate(_core_exchange_rate),
-        max_recursion(_max_recursion)
+        max_recursion(_max_recursion),
+        core_asset_id(_core_asset_id)
    {}
 
    fc::variant set_op_fees( operation& op )
@@ -1159,7 +1161,7 @@ struct get_required_fees_helper
       }
       else
       {
-         asset fee = current_fee_schedule.set_fee( op, core_exchange_rate );
+         asset fee = current_fee_schedule.set_fee(op, core_exchange_rate, core_asset_id);
          fc::variant result;
          fc::to_variant( fee, result, GRAPHENE_MAX_NESTED_OBJECTS );
          return result;
@@ -1179,7 +1181,7 @@ struct get_required_fees_helper
       }
       // we need to do this on the boxed version, which is why we use
       // two mutually recursive functions instead of a visitor
-      result.first = current_fee_schedule.set_fee( proposal_create_op, core_exchange_rate );
+      result.first = current_fee_schedule.set_fee(proposal_create_op, core_exchange_rate, core_asset_id);
       fc::variant vresult;
       fc::to_variant( result, vresult, GRAPHENE_MAX_NESTED_OBJECTS );
       return vresult;
@@ -1189,6 +1191,7 @@ struct get_required_fees_helper
    const price& core_exchange_rate;
    uint32_t max_recursion;
    uint32_t current_recursion = 0;
+   asset_id_type core_asset_id = asset_id_type();
 };
 
 
@@ -1198,10 +1201,12 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
    result.reserve(ops.size());
 
    const asset_object& a = id(_db);
+   asset_id_type core_asset_id = _db.head_block_time() > HARDFORK_1001_TIME ? asset_id_type(1) : asset_id_type();
    get_required_fees_helper helper(
                                    _db.current_fee_schedule(),
                                    a.options.core_exchange_rate,
-                                   GET_REQUIRED_FEES_MAX_RECURSION
+                                   GET_REQUIRED_FEES_MAX_RECURSION,
+                                   core_asset_id
                                   );
 
    vector< operation > _ops = ops;
