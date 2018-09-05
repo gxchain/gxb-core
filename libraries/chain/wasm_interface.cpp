@@ -150,7 +150,10 @@ class global_api : public context_aware_api
         block_id = dpo.head_block_id;
     }
 
-    void get_block_id_for_num(block_id_type &block_id, uint32_t block_num){
+    void get_block_id_for_num(block_id_type &block_id, uint32_t block_num)
+    {
+        int64_t head_block_num = get_head_block_num();
+        FC_ASSERT(block_num <= head_block_num && block_num > 0, "block_num to large, can not big than head block num:${x}", ("x", head_block_num));
         block_id = context.db().get_block_id_for_num(block_num);
     }
 

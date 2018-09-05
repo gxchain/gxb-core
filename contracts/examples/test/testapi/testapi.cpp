@@ -43,10 +43,7 @@ class testapi : public contract
             checksum160 hash;
             print("ahead_block_num = ", pingit->ahead_block_num, "\n");
             get_block_id_for_num(&hash, pingit->ahead_block_num);
-            for(int i=0;i<20;i++) {
-                print("[", (int)(hash.hash[i]), "]");
-            }
-            print("\n");
+            printhex((hash.hash), 20);
             pingrecords.erase(pingit);
         } else {
             print("not exist\n");

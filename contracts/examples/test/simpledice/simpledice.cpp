@@ -9,6 +9,7 @@
 using namespace graphene;
 
 static const uint64_t bet_asset_id = 0; //GXC
+static const uint32_t ahead_block_num = 3;
 
 class simpledice : public contract
 {
@@ -16,145 +17,85 @@ class simpledice : public contract
     simpledice(uint64_t self)
         : contract(self)
         , offers(_self, _self)
-        , accounts(_self, _self)
     {
     }
 
     //@abi action
-    void offerbet(const contract_asset &bet)
+    //@abi payable
+    void offerbet()
     {
-        graphene_assert(bet_asset_id == bet.asset_id, "not supported asset");
+        int64_t asset_amount = get_action_asset_amount();
+        uint64_t asset_id = get_action_asset_id();
 
-        uint64_t p1_id = get_trx_sender();
-        auto p1_acnt_it = accounts.find(p1_id);
-        graphene_assert(p1_acnt_it != accounts.end(), "unknown account");
-        graphene_assert(p1_acnt_it->balance >= bet, "balance not enouth");
+        graphene_assert(bet_asset_id == asset_id, "not supported asset");
+        graphene_assert(asset_amount > 0, "not supported asset");
 
-        auto p1_offer_it = offers.find(p1_id);
-        graphene_assert(p1_offer_it == offers.end(), "you have a unfinished offer, you can cancel it and rebet");
+        uint64_t player = get_trx_sender();
+        auto cur_player_itr = offers.find(player);
+        graphene_assert(cur_player_itr == offers.end(), "you have a unfinished offer, you can cancel it and rebet");
 
-        p1_offer_it = offers.emplace(0, [&](auto &o) {
-            o.owner = p1_id;
+        const contract_asset bet{asset_amount, asset_id};
+        cur_player_itr = offers.emplace(0, [&](auto &o) {
+            o.owner = player;
             o.bet = bet;
             o.matchedplayer = 0;
         });
 
-        for (auto p2_offer_it = offers.begin(); p2_offer_it != offers.end(); ++p2_offer_it) {
-            if (p2_offer_it->matchedplayer == 0 && p2_offer_it->owner != p1_id && p2_offer_it->bet == bet) {
+        for (auto matched_player_itr = offers.begin(); matched_player_itr != offers.end(); ++matched_player_itr) {
+            if (matched_player_itr->matchedplayer == 0 && matched_player_itr->owner != player && matched_player_itr->bet == bet) {
                 int64_t head_block_num = get_head_block_num();
-                offers.modify(p1_offer_it, 0, [&](auto &o) {
-                    o.matchedplayer = p2_offer_it->owner;
-                    o.betblocknum = head_block_num + 3;
+                offers.modify(cur_player_itr, 0, [&](auto &o) {
+                    o.matchedplayer = matched_player_itr->owner;
+                    o.betblocknum = head_block_num + ahead_block_num;
                 });
 
-                offers.modify(p2_offer_it, 0, [&](auto &o) {
-                    o.matchedplayer = p1_id;
-                    o.betblocknum = head_block_num + 3;
+                offers.modify(matched_player_itr, 0, [&](auto &o) {
+                    o.matchedplayer = player;
+                    o.betblocknum = head_block_num + ahead_block_num;
                 });
 
                 break;
             }
         }
-
-        accounts.modify(p1_acnt_it, 0, [&](auto &o) {
-            graphene_assert(o.balance >= bet, "insufficient balance");
-            o.balance -= bet;
-        });
     }
 
     //@abi action
     void canceloffer()
     {
-        uint64_t p1_id = get_trx_sender();
-        auto p1_offer_it = offers.find(p1_id);
+        uint64_t player = get_trx_sender();
+        auto player_offer_itr = offers.find(player);
 
-        graphene_assert(p1_offer_it != offers.end(), "offer does not exists");
-        graphene_assert(p1_offer_it->matchedplayer == 0, "unable to cancel offer");
+        graphene_assert(player_offer_itr != offers.end(), "offer does not exists");
+        graphene_assert(player_offer_itr->matchedplayer == 0, "unable to cancel offer than had been matched");
 
-        auto p1_acnt_it = accounts.find(p1_offer_it->owner);
-        accounts.modify(p1_acnt_it, 0, [&](auto &o) {
-            o.balance += p1_offer_it->bet;
-        });
-
-        offers.erase(p1_offer_it);
+        withdraw_asset(_self, player, player_offer_itr->bet.asset_id, player_offer_itr->bet.amount);
+        offers.erase(player_offer_itr);
     }
 
     //@abi action
     void reveal()
     {
-        uint64_t p1_id = get_trx_sender();
-        auto p1_offer_it = offers.find(p1_id);
+        uint64_t player = get_trx_sender();
+        auto player_offer_itr = offers.find(player);
 
-        graphene_assert(p1_offer_it != offers.end(), "offer not found");
-        graphene_assert(p1_offer_it->matchedplayer > 0, "unable to reveal");
+        graphene_assert(player_offer_itr != offers.end(), "offer not found");
+        graphene_assert(player_offer_itr->matchedplayer > 0, "unable to reveal offer that not been matched");
 
-        auto p2_offer_it = offers.find(p1_offer_it->matchedplayer);
-        graphene_assert(p2_offer_it != offers.end(), "offer not found");
-        graphene_assert(p2_offer_it->matchedplayer > 0, "unable to reveal");
+        auto matched_offer_itr = offers.find(player_offer_itr->matchedplayer);
+        graphene_assert(matched_offer_itr != offers.end(), "matched offer not found");
+        graphene_assert(matched_offer_itr->matchedplayer > 0, "unable to reveal that not been matched");
 
         checksum160 block_id;
-        get_block_id_for_num(&block_id, p1_offer_it->betblocknum);
+        get_block_id_for_num(&block_id, player_offer_itr->betblocknum);
 
-        if (block_id.hash[p1_offer_it->owner % 20] > block_id.hash[p1_offer_it->matchedplayer % 20]) {
-            auto p1_acnt_it = accounts.find(p1_offer_it->owner);
-            accounts.modify(p1_acnt_it, 0, [&](auto &o) {
-                o.balance += 2 * p1_offer_it->bet;
-            });
+        if (block_id.hash[player_offer_itr->owner % 20] > block_id.hash[player_offer_itr->matchedplayer % 20]) {
+            withdraw_asset(_self, player, player_offer_itr->bet.asset_id, 2 * player_offer_itr->bet.amount);
         } else {
-            auto p2_acnt_it = accounts.find(p2_offer_it->owner);
-            accounts.modify(p2_acnt_it, 0, [&](auto &o) {
-                o.balance += 2 * p1_offer_it->bet;
-            });
+            withdraw_asset(_self, player_offer_itr->matchedplayer, player_offer_itr->bet.asset_id, 2 * player_offer_itr->bet.amount);
         }
 
-        offers.erase(p1_offer_it);
-        offers.erase(p2_offer_it);
-    }
-
-    //@abi action
-    //@abi payable
-    void deposit()
-    {
-        int64_t asset_amount = get_action_asset_amount();
-        uint64_t asset_id = get_action_asset_id();
-        uint64_t owner = get_trx_sender();
-
-        graphene_assert(bet_asset_id == asset_id, "not supported asset");
-        graphene_assert(asset_amount > 0, "not supported asset");
-
-        auto acnt_it = accounts.find(owner);
-        if (acnt_it == accounts.end()) {
-            acnt_it = accounts.emplace(_self, [&](auto &o) {
-                o.owner = owner;
-            });
-        }
-
-        contract_asset ast{asset_amount, asset_id};
-        accounts.modify(acnt_it, 0, [&](auto &o) {
-            o.balance += ast;
-        });
-    }
-
-    //@abi action
-    void withdraw(const contract_asset &quantity)
-    {
-        uint64_t owner = get_trx_sender();
-        graphene_assert(quantity.amount > 0, "must withdraw positive quantity");
-
-        auto owner_it = accounts.find(owner);
-        graphene_assert(owner_it != accounts.end(), "unknown account");
-
-        accounts.modify(owner_it, 0, [&](auto &o) {
-            graphene_assert(o.balance >= quantity, "insufficient balance");
-            o.balance -= quantity;
-        });
-
-        auto offer_it = offers.find(owner);
-        if (owner_it->balance == 0 && offer_it != offers.end()) {
-            accounts.erase(owner_it);
-        }
-
-        withdraw_asset(_self, owner, quantity.asset_id, quantity.amount);
+        offers.erase(player_offer_itr);
+        offers.erase(matched_offer_itr);
     }
 
   private:
@@ -172,20 +113,7 @@ class simpledice : public contract
 
     typedef multi_index<N(offer), offer> offer_index;
 
-    //@abi table account i64
-    struct account {
-        uint64_t owner;
-        contract_asset balance;
-
-        uint64_t primary_key() const { return owner; }
-
-        GRAPHENE_SERIALIZE(account, (owner)(balance))
-    };
-
-    typedef multi_index<N(account), account> account_index;
-
     offer_index offers;
-    account_index accounts;
 };
 
-GRAPHENE_ABI(simpledice, (offerbet)(canceloffer)(reveal)(deposit)(withdraw))
+GRAPHENE_ABI(simpledice, (offerbet)(canceloffer)(reveal))
