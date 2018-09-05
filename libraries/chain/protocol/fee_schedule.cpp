@@ -139,14 +139,17 @@ namespace graphene { namespace chain {
        // idump((base_value)(scaled)(core_exchange_rate));
 
        price exchange_rate = core_exchange_rate;
-       if (exchange_rate.base.asset_id != core_asset_id) {
+       if (exchange_rate.quote.asset_id == core_asset_id) {
+           exchange_rate = price::unit_price(core_asset_id);
+       } else if (exchange_rate.base.asset_id != core_asset_id) {
            exchange_rate.base.asset_id = core_asset_id;
        }
        auto result = asset(scaled.to_uint64(), core_asset_id) * exchange_rate;
        //FC_ASSERT( result * core_exchange_rate >= asset( scaled.to_uint64()) );
 
-       while (result * exchange_rate < asset(scaled.to_uint64(), exchange_rate.base.asset_id))
+       while (result * exchange_rate < asset(scaled.to_uint64(), exchange_rate.base.asset_id)) {
            result.amount++;
+       }
 
        FC_ASSERT(result.amount <= GRAPHENE_MAX_SHARE_SUPPLY);
        return result;
