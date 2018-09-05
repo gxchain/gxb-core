@@ -132,19 +132,24 @@ namespace graphene { namespace chain {
 
    asset fee_schedule::calculate_fee(const operation& op, const price& core_exchange_rate, asset_id_type core_asset_id)const
    {
-      auto base_value = op.visit( calc_fee_visitor( *this, op ) );
-      auto scaled = fc::uint128(base_value) * scale;
-      scaled /= GRAPHENE_100_PERCENT;
-      FC_ASSERT( scaled <= GRAPHENE_MAX_SHARE_SUPPLY );
-      idump( (base_value)(scaled)(core_exchange_rate) );
-      auto result = asset( scaled.to_uint64(), core_asset_id ) * core_exchange_rate;
-      //FC_ASSERT( result * core_exchange_rate >= asset( scaled.to_uint64()) );
+       auto base_value = op.visit(calc_fee_visitor(*this, op));
+       auto scaled = fc::uint128(base_value) * scale;
+       scaled /= GRAPHENE_100_PERCENT;
+       FC_ASSERT(scaled <= GRAPHENE_MAX_SHARE_SUPPLY);
+       // idump((base_value)(scaled)(core_exchange_rate));
 
-      while( result * core_exchange_rate < asset( scaled.to_uint64()) )
-        result.amount++;
+       price exchagne_rate = core_exchange_rate;
+       if (exchange_rate.base.asset_id == asset_id_type()) {
+           exchange_rate.base.asset_id = asset_id_type(1);
+       }
+       auto result = asset(scaled.to_uint64(), core_asset_id) * exchange_rate;
+       //FC_ASSERT( result * core_exchange_rate >= asset( scaled.to_uint64()) );
 
-      FC_ASSERT( result.amount <= GRAPHENE_MAX_SHARE_SUPPLY );
-      return result;
+       while (result * exchange_rate < asset(scaled.to_uint64()))
+           result.amount++;
+
+       FC_ASSERT(result.amount <= GRAPHENE_MAX_SHARE_SUPPLY);
+       return result;
    }
 
    asset fee_schedule::set_fee(operation &op, const price &core_exchange_rate, asset_id_type core_asset_id) const
