@@ -142,8 +142,13 @@ database& generic_evaluator::db()const { return trx_state->db(); }
 
    share_type generic_evaluator::calculate_fee_for_operation(const operation& op) const
    {
-     return db().current_fee_schedule().calculate_fee( op ).amount;
+       if (db().head_block_time() > HARDFORK_1008_TIME) {
+           return db().current_fee_schedule().calculate_fee(op, price::unit_price(asset_id_type(1)), asset_id_type(1)).amount;
+       } else {
+           return db().current_fee_schedule().calculate_fee(op).amount;
+       }
    }
+
    void generic_evaluator::db_adjust_balance(const account_id_type& fee_payer, asset fee_from_account)
    {
      db().adjust_balance(fee_payer, fee_from_account);

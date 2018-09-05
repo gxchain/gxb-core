@@ -130,14 +130,14 @@ namespace graphene { namespace chain {
       this->scale = 0;
    }
 
-   asset fee_schedule::calculate_fee( const operation& op, const price& core_exchange_rate )const
+   asset fee_schedule::calculate_fee(const operation& op, const price& core_exchange_rate, asset_id_type core_asset_id)const
    {
       auto base_value = op.visit( calc_fee_visitor( *this, op ) );
       auto scaled = fc::uint128(base_value) * scale;
       scaled /= GRAPHENE_100_PERCENT;
       FC_ASSERT( scaled <= GRAPHENE_MAX_SHARE_SUPPLY );
-      //idump( (base_value)(scaled)(core_exchange_rate) );
-      auto result = asset( scaled.to_uint64(), asset_id_type(0) ) * core_exchange_rate;
+      idump( (base_value)(scaled)(core_exchange_rate) );
+      auto result = asset( scaled.to_uint64(), core_asset_id ) * core_exchange_rate;
       //FC_ASSERT( result * core_exchange_rate >= asset( scaled.to_uint64()) );
 
       while( result * core_exchange_rate < asset( scaled.to_uint64()) )
@@ -147,26 +147,25 @@ namespace graphene { namespace chain {
       return result;
    }
 
-   asset fee_schedule::set_fee( operation& op, const price& core_exchange_rate )const
+   asset fee_schedule::set_fee(operation &op, const price &core_exchange_rate, asset_id_type core_asset_id) const
    {
-      auto f = calculate_fee( op, core_exchange_rate );
-      auto f_max = f;
-      for( int i=0; i<MAX_FEE_STABILIZATION_ITERATION; i++ )
-      {
-         op.visit( set_fee_visitor( f_max ) );
-         auto f2 = calculate_fee( op, core_exchange_rate );
-         if( f == f2 )
-            break;
-         f_max = std::max( f_max, f2 );
-         f = f2;
-         if( i == 0 )
-         {
-            // no need for warnings on later iterations
-            wlog( "set_fee requires multiple iterations to stabilize with core_exchange_rate ${p} on operation ${op}",
-               ("p", core_exchange_rate) ("op", op) );
-         }
-      }
-      return f_max;
+       auto f = calculate_fee(op, core_exchange_rate, core_asset_id);
+       auto f_max = f;
+       for (int i = 0; i < MAX_FEE_STABILIZATION_ITERATION; i++) {
+           op.visit(set_fee_visitor(f_max));
+           auto f2 = calculate_fee(op, core_exchange_rate, core_asset_id);
+           if (f == f2)
+               break;
+           f_max = std::max(f_max, f2);
+           f = f2;
+           if (i == 0) {
+               // no need for warnings on later iterations
+               wlog("set_fee requires multiple iterations to stabilize with "
+                       "core_exchange_rate ${p} on operation ${op}",
+                       ("p", core_exchange_rate)("op", op));
+           }
+       }
+       return f_max;
    }
 
    void chain_parameters::validate()const
