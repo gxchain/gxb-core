@@ -1201,7 +1201,7 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
    result.reserve(ops.size());
 
    const asset_object& a = id(_db);
-   asset_id_type core_asset_id = _db.head_block_time() > HARDFORK_1001_TIME ? asset_id_type(1) : asset_id_type();
+   asset_id_type core_asset_id = _db.head_block_time() > HARDFORK_1008_TIME ? asset_id_type(1) : asset_id_type();
    get_required_fees_helper helper(
                                    _db.current_fee_schedule(),
                                    a.options.core_exchange_rate,
@@ -1251,15 +1251,18 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
                    break;
                }
            }
-           auto ram_result = fc::uint128(ctx.get_ram_usage() * fee_param.price_per_kbyte_ram) / 1024;
-           auto cpu_result = fc::uint128(trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu);
-           uint64_t basic_fee = fee_param.fee;
-           uint64_t ram_fee = ram_result.to_uint64();
-           uint64_t cpu_fee = cpu_result.to_uint64();
-           asset fee = asset(basic_fee + ram_fee + cpu_fee, asset_id_type()) * a.options.core_exchange_rate;
+           auto ram_fee = fc::uint128(ctx.get_ram_usage() * fee_param.price_per_kbyte_ram) / 1024;
+           auto cpu_fee = fc::uint128(trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu);
+           uint64_t core_fee_paid = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
 
            fc::variant r;
-           fc::to_variant(fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
+           if (_db.head_block_time() > HARDFORK_1008_TIME) {
+               auto fee = asset(core_fee_paid * uint64_t(a.options.core_exchange_rate.to_real()), asset_id_type(1));
+               fc::to_variant(fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
+           } else {
+               auto fee = asset(core_fee_paid * uint64_t(a.options.core_exchange_rate.to_real()), asset_id_type());
+               fc::to_variant(fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
+           }
            result.push_back(r);
        } else {
            result.push_back(helper.set_op_fees(op));
