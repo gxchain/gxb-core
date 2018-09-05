@@ -82,23 +82,26 @@ void asset_create_evaluator::pay_fee()
 
 object_id_type asset_create_evaluator::do_apply(const asset_create_operation& op, uint32_t billed_cpu_time_us)
 { try {
-   bool hf_1005 = fee_is_odd && db().head_block_time() > HARDFORK_1005_TIME;
+   database& d = db();
+
+   bool hf_1005 = fee_is_odd && d.head_block_time() > HARDFORK_1005_TIME;
 
    const asset_dynamic_data_object& dyn_asset =
-      db().create<asset_dynamic_data_object>( [&]( asset_dynamic_data_object& a ) {
+      d.create<asset_dynamic_data_object>( [&]( asset_dynamic_data_object& a ) {
          a.current_supply = 0;
          a.fee_pool = core_fee_paid - (hf_1005 ? 1 : 0);
       });
+
    if (fee_is_odd && !hf_1005) {
-       const auto &core_dd = db().get<asset_object>(asset_id_type()).dynamic_data(db());
-       db().modify(core_dd, [=](asset_dynamic_data_object &dd) {
+       const auto &core_dd = d.get<asset_object>(asset_id_type()).dynamic_data(d);
+       d.modify(core_dd, [=](asset_dynamic_data_object &dd) {
            dd.current_supply++;
        });
    }
 
    auto next_asset_id = db().get_index_type<asset_index>().get_next_id();
    const asset_object& new_asset =
-     db().create<asset_object>( [&]( asset_object& a ) {
+     d.create<asset_object>( [&]( asset_object& a ) {
          a.issuer = op.issuer;
          a.symbol = op.symbol;
          a.precision = op.precision;
@@ -109,7 +112,7 @@ object_id_type asset_create_evaluator::do_apply(const asset_create_operation& op
             a.options.core_exchange_rate.base.asset_id = next_asset_id;
          a.dynamic_asset_data_id = dyn_asset.id;
       });
-   assert( new_asset.id == next_asset_id );
+   FC_ASSERT( new_asset.id == next_asset_id, "Unexpected object database error, object id mismatch" );
 
    return new_asset.id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
