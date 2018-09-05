@@ -63,18 +63,11 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
                ("s",op.symbol)("p",prefix)("i", op.issuer(d).name) );
    }
 
-   // check core_exchange_rate
    if (d.head_block_time() > HARDFORK_1008_TIME) {
-       asset dummy = asset(1, asset_id_type(1)) * op.common_options.core_exchange_rate;
-       FC_ASSERT(dummy.asset_id == asset_id_type(1));
-
        if (op.bitasset_opts) {
            // disable bitasset creation
            FC_ASSERT(false, "disabled since hardfork 1008");
        }
-   } else {
-       asset dummy = asset(1) * op.common_options.core_exchange_rate;
-       FC_ASSERT(dummy.asset_id == asset_id_type(1));
    }
 
    return void_result();
