@@ -138,7 +138,7 @@ namespace graphene { namespace chain {
        FC_ASSERT(scaled <= GRAPHENE_MAX_SHARE_SUPPLY);
        // idump((base_value)(scaled)(core_exchange_rate));
 
-       price exchagne_rate = core_exchange_rate;
+       price exchange_rate = core_exchange_rate;
        if (exchange_rate.base.asset_id == asset_id_type()) {
            exchange_rate.base.asset_id = asset_id_type(1);
        }
