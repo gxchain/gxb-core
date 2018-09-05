@@ -6,6 +6,7 @@ extern "C" {
     int64_t get_head_block_num();
     // return head block id
     void get_head_block_id(checksum160* hash);
+    void get_block_id_for_num(checksum160* hash, uint32_t block_num);
     // return head block time
     int64_t get_head_block_time();
     // return trx sender
