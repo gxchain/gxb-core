@@ -52,7 +52,8 @@
 // core asset hardfork
 // 2018-11-01 00:00:00
 #ifndef HARDFORK_1008_TIME
-#define HARDFORK_1008_TIME (fc::time_point_sec( 1541001600 ))
+// #define HARDFORK_1008_TIME (fc::time_point_sec( 1541001600 ))
+#define HARDFORK_1008_TIME (fc::time_point_sec( 1536132600 )) // for test
 #endif
 
 // #357 Disallow publishing certain malformed price feeds
