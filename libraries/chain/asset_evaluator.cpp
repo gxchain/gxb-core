@@ -64,7 +64,7 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
    }
 
    if (d.head_block_time() > HARDFORK_1008_TIME) {
-       asset dummy = asset(1, asset_id_type(1)) * common_options.core_exchange_rate;
+       asset dummy = asset(1, asset_id_type(1)) * op.common_options.core_exchange_rate;
        FC_ASSERT(dummy.asset_id == asset_id_type(2));
 
        if (op.bitasset_opts) {
@@ -72,7 +72,7 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
            FC_ASSERT(false, "disabled since hardfork 1008");
        }
    } else {
-       asset dummy = asset(1) * common_options.core_exchange_rate;
+       asset dummy = asset(1) * op.common_options.core_exchange_rate;
        FC_ASSERT(dummy.asset_id == asset_id_type(1));
    }
 
@@ -118,7 +118,7 @@ object_id_type asset_create_evaluator::do_apply(const asset_create_operation& op
          a.symbol = op.symbol;
          a.precision = op.precision;
          a.options = op.common_options;
-         if( a.options.core_exchange_rate.base.asset_id.instance.value == core_asset_id )
+         if( a.options.core_exchange_rate.base.asset_id == core_asset_id )
             a.options.core_exchange_rate.quote.asset_id = next_asset_id;
          else
             a.options.core_exchange_rate.base.asset_id = next_asset_id;
