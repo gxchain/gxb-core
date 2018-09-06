@@ -279,24 +279,26 @@ namespace impl {
          mutable_variant_object mvo;
          mvo("account", act.contract_id, 20);
          mvo("name", act.method_name, 20);
-//         mvo("authorization", act.authorization);
 
-         auto abi = resolver(act.contract_id);
-         if (abi.valid()) {
-            auto type = abi->get_action_type(act.method_name);
-            if (!type.empty()) {
-               try {
-                  mvo( "data", abi->_binary_to_variant( type, act.data, recursion_depth, deadline, max_serialization_time ), 20);
-                  mvo("hex_data", act.data, 20);
-               } catch(...) {
-                  // any failure to serialize data, then leave as not serailzed
-                  mvo("data", act.data, 20);
-               }
-            } else {
-               mvo("data", act.data, 20);
-            }
-         } else {
-            mvo("data", act.data, 20);
+         try {
+             auto abi = resolver(act.contract_id);
+             if (abi.valid()) {
+                 auto type = abi->get_action_type(act.method_name);
+                 if (!type.empty()) {
+                     try {
+                         mvo("data", abi->_binary_to_variant(type, act.data, recursion_depth, deadline, max_serialization_time), 20);
+                         mvo("hex_data", act.data, 20);
+                     } catch (...) {
+                         mvo("data", act.data, 20);
+                     }
+                 } else {
+                     mvo("data", act.data, 20);
+                 }
+             } else {
+                 mvo("data", act.data, 20);
+             }
+         } catch (...) {
+             mvo("data", act.data, 20);
          }
          out(name, std::move(mvo));
       }
