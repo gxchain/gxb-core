@@ -931,7 +931,12 @@
           if( review_period_seconds )
              op.review_period_seconds = review_period_seconds;
           trx.operations = {op};
-          _remote_db->get_global_properties().parameters.current_fees->set_fee( trx.operations.front() );
+
+          auto core_asset_id = asset_id_type();
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              core_asset_id = asset_id_type(1);
+          }
+          _remote_db->get_global_properties().parameters.current_fees->set_fee(trx.operations.front(), price::unit_price(), core_asset_id);
 
           return trx = sign_transaction(trx, broadcast);
        }
