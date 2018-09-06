@@ -509,7 +509,7 @@
        {
            auto core_asset_id = asset_id_type();
            auto dyn_props = get_dynamic_global_properties();
-           if (dyn_props.time >= HARDFORK_1008_TIME) {
+           if (dyn_props.time > HARDFORK_1008_TIME) {
                core_asset_id = asset_id_type(1);
            }
            for( auto& op : tx.operations )  {
@@ -2403,7 +2403,13 @@
 
           signed_transaction tx;
           tx.operations.push_back( vesting_balance_withdraw_op );
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              auto core_obj = find_asset(asset_id_type(1));
+              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, core_obj);
+          }
+          else {
+              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+          }
           tx.validate();
 
           return sign_transaction( tx, broadcast );
