@@ -217,8 +217,6 @@ void asset_options::validate(bool check_core_exchange_rate) const
    if (check_core_exchange_rate) {
        core_exchange_rate.validate();
    }
-   FC_ASSERT( core_exchange_rate.base.asset_id.instance.value == 0 ||
-              core_exchange_rate.quote.asset_id.instance.value == 0 );
 
    if(!whitelist_authorities.empty() || !blacklist_authorities.empty())
       FC_ASSERT( flags & white_list );

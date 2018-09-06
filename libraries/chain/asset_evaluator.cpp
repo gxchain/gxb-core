@@ -63,6 +63,15 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
                ("s",op.symbol)("p",prefix)("i", op.issuer(d).name) );
    }
 
+   // check core_exchange_rate
+   if (d.head_block_time() > HARDFORK_1008_TIME) {
+       FC_ASSERT(op.common_options.core_exchange_rate.base.asset_id == asset_id_type(1) ||
+                 op.common_options.core_exchange_rate.quote.asset_id == asset_id_type(1));
+   } else {
+       FC_ASSERT(op.common_options.core_exchange_rate.base.asset_id == asset_id_type() ||
+                 op.common_options.core_exchange_rate.quote.asset_id == asset_id_type());
+   }
+
    if (d.head_block_time() > HARDFORK_1008_TIME) {
        asset dummy = asset(1, asset_id_type(1)) * op.common_options.core_exchange_rate;
        FC_ASSERT(dummy.asset_id == asset_id_type(2));
@@ -225,6 +234,15 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
    auto a_copy = a;
    a_copy.options = o.new_options;
    a_copy.validate();
+
+   // check core_exchange_rate
+   if (d.head_block_time() > HARDFORK_1008_TIME) {
+       FC_ASSERT(a_copy.options.core_exchange_rate.base.asset_id == asset_id_type(1) ||
+                 a_copy.options.core_exchange_rate.quote.asset_id == asset_id_type(1));
+   } else {
+       FC_ASSERT(a_copy.options.core_exchange_rate.base.asset_id == asset_id_type() ||
+                 a_copy.options.core_exchange_rate.quote.asset_id == asset_id_type());
+   }
 
    if (o.new_issuer) {
        FC_ASSERT(d.find_object(*o.new_issuer));
