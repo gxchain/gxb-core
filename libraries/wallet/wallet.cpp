@@ -850,11 +850,16 @@
           auto fee_asset_obj = get_asset(fee_asset);
           asset total_fee = fee_asset_obj.amount(0);
 
+          auto core_asset_id = asset_id_type();
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              core_asset_id = asset_id_type(1);
+          }
+
           auto gprops = _remote_db->get_global_properties().parameters;
-          if( fee_asset_obj.get_id() != asset_id_type(1) )
+          if( fee_asset_obj.get_id() != core_asset_id )
           {
              for( auto& op : _builder_transactions[handle].operations )
-                total_fee += gprops.current_fees->set_fee( op, fee_asset_obj.options.core_exchange_rate );
+                total_fee += gprops.current_fees->set_fee( op, fee_asset_obj.options.core_exchange_rate, core_asset_id );
 
              FC_ASSERT((total_fee * fee_asset_obj.options.core_exchange_rate).amount <=
                        get_object<asset_dynamic_data_object>(fee_asset_obj.dynamic_asset_data_id).fee_pool,
@@ -862,7 +867,7 @@
                        ("asset", fee_asset_obj.symbol));
           } else {
              for( auto& op : _builder_transactions[handle].operations )
-                total_fee += gprops.current_fees->set_fee( op );
+                total_fee += gprops.current_fees->set_fee( op, price::unit_price(), core_asset_id );
           }
 
           return total_fee;
