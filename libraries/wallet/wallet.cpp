@@ -2035,10 +2035,10 @@
        { try {
           fc::optional<asset_object> exist_asset = find_asset(new_symbol);
           FC_ASSERT(!exist_asset.valid(), "symbol:${sym} exists!", ("sym", new_symbol));
-          
+
           fc::optional<asset_object> fee_asset_obj = find_asset(fee_asset_symbol);
           FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", fee_asset_symbol));
-          
+
           fc::optional<asset_object> asset_to_update = find_asset(symbol);
           FC_ASSERT(asset_to_update, "No asset with that symbol exists!");
 
@@ -2049,8 +2049,8 @@
           }
           update_op.asset_to_update = asset_to_update->id;
           update_op.new_options = asset_to_update->options;
-          update_op.extensions.emplace(update_symbol_t{new_symbol});
-          
+          update_op.extensions.emplace(asset_symbol_t{new_symbol});
+
           signed_transaction tx;
           tx.operations.push_back(update_op);
           set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
