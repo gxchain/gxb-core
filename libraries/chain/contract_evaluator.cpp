@@ -66,7 +66,20 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     // calculate real fee, core_fee_paid and fee_from_account
     core_fee_paid = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
     const auto &asset_obj = db.get<asset_object>(op.fee.asset_id);
-    fee_from_account = asset(core_fee_paid / uint64_t(asset_obj.options.core_exchange_rate.to_real()), op.fee.asset_id);
+
+    if (db.head_block_time() > HARDFORK_1008_TIME) {
+        if (asset_obj.id == asset_id_type(1)) {
+            fee_from_account = asset(core_fee_paid, asset_id_type(1));
+        } else {
+            fee_from_account = asset(core_fee_paid / uint64_t(asset_obj.options.core_exchange_rate.to_real()), op.fee.asset_id);
+        }
+    } else {
+        if (asset_obj.id == asset_id_type()) {
+            fee_from_account = asset(core_fee_paid, asset_id_type());
+        } else {
+            fee_from_account = asset(core_fee_paid / uint64_t(asset_obj.options.core_exchange_rate.to_real()), op.fee.asset_id);
+        }
+    }
 
     dlog("real_fee=${r}, ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
             ("r", fee_from_account)("rf",ram_fee.to_uint64())("cf",cpu_fee.to_uint64())("ru",ctx.get_ram_usage())
