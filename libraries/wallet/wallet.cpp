@@ -2118,7 +2118,14 @@
 
           signed_transaction tx;
           tx.operations.push_back( fund_op );
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              auto fee_asset_obj = find_asset(asset_id_type(1));
+              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+          }
+          else {
+              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+          }
           tx.validate();
 
           return sign_transaction( tx, broadcast );
@@ -2140,7 +2147,13 @@
 
           signed_transaction tx;
           tx.operations.push_back( reserve_op );
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              auto fee_asset_obj = find_asset(asset_id_type(1));
+              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+          }
+          else {
+              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+          }
           tx.validate();
 
           return sign_transaction( tx, broadcast );
