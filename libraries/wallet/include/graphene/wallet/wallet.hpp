@@ -1532,12 +1532,14 @@ class wallet_api
        * @param from the name or id of the account sending the core asset
        * @param symbol the name or id of the asset whose fee pool you wish to fund
        * @param amount the amount of the core asset to deposit
+       * @param fee_asset_symbol the symbol of the fee asset.
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction funding the fee pool
        */
       signed_transaction fund_asset_fee_pool(string from,
                                              string symbol,
                                              string amount,
+                                             string fee_asset_symbol,
                                              bool broadcast = false);
 
       /** Burns the given user-issued asset.
@@ -1547,12 +1549,14 @@ class wallet_api
        * @param from the account containing the asset you wish to burn
        * @param amount the amount to burn, in nominal units
        * @param symbol the name or id of the asset to burn
+       * @param fee_asset_symbol the symbol of the fee asset.
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction burning the asset
        */
       signed_transaction reserve_asset(string from,
                                     string amount,
                                     string symbol,
+                                    string fee_asset_symbol,
                                     bool broadcast = false);
 
       /** Whitelist and blacklist accounts, primarily for transacting in whitelisted assets.
@@ -1681,12 +1685,14 @@ class wallet_api
        * @param witness_name The account name of the witness, also accepts account ID or vesting balance ID type.
        * @param amount The amount to withdraw.
        * @param asset_symbol The symbol of the asset to withdraw.
+       * @param fee_asset_symbol the symbol of the fee asset.
        * @param broadcast true if you wish to broadcast the transaction
        */
       signed_transaction withdraw_vesting(
          string witness_name,
          string amount,
          string asset_symbol,
+         string fee_asset_symbol,
          bool broadcast = false);
 
       /** Vote for a given committee_member.

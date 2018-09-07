@@ -1115,8 +1115,13 @@
 
           tx.operations.push_back( account_create_op );
 
-          auto current_fees = _remote_db->get_global_properties().parameters.current_fees;
-          set_operation_fees( tx, current_fees );
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              auto fee_asset_obj = find_asset(asset_id_type(1));
+              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+          }
+          else {
+              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+          }
 
           vector<public_key_type> paying_keys = registrar_account_object.active.get_keys();
 
@@ -1189,8 +1194,13 @@
 
           tx.operations.push_back( account_create_op );
 
-          auto current_fees = _remote_db->get_global_properties().parameters.current_fees;
-          set_operation_fees( tx, current_fees, asset_obj );
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              auto fee_asset_obj = find_asset(asset_id_type(1));
+              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+          }
+          else {
+              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+          }
 
           vector<public_key_type> paying_keys = registrar_account_object.active.get_keys();
 
@@ -1433,7 +1443,13 @@
 
              tx.operations.push_back( account_create_op );
 
-             set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+             if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+                 auto fee_asset_obj = find_asset(asset_id_type(1));
+                 set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+             }
+             else {
+                 set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+             }
 
              vector<public_key_type> paying_keys = registrar_account_object.active.get_keys();
 
@@ -2075,7 +2091,6 @@
           FC_ASSERT(asset_to_update, "No asset with that symbol exists!");
 
           fc::optional<asset_object> fee_asset_obj = find_asset(fee_asset_symbol);
-          FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", fee_asset_symbol));
 
           optional<account_id_type> new_issuer_account_id;
           if (new_issuer) {
@@ -2103,13 +2118,14 @@
        signed_transaction fund_asset_fee_pool(string from,
                                               string symbol,
                                               string amount,
+                                              string fee_asset_symbol,
                                               bool broadcast /* = false */)
        { try {
           account_object from_account = get_account(from);
           optional<asset_object> asset_to_fund = find_asset(symbol);
           if (!asset_to_fund)
             FC_THROW("No asset with that symbol exists!");
-          asset_object core_asset = get_asset(asset_id_type(1));
+          asset_object fee_asset_obj = get_asset(fee_asset_symbol);
 
           asset_fund_fee_pool_operation fund_op;
           fund_op.from_account = from_account.id;
@@ -2118,14 +2134,7 @@
 
           signed_transaction tx;
           tx.operations.push_back( fund_op );
-
-          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
-              auto fee_asset_obj = find_asset(asset_id_type(1));
-              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
-          }
-          else {
-              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-          }
+          set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
           tx.validate();
 
           return sign_transaction( tx, broadcast );
@@ -2134,12 +2143,14 @@
        signed_transaction reserve_asset(string from,
                                      string amount,
                                      string symbol,
+                                     string fee_asset_symbol,
                                      bool broadcast /* = false */)
        { try {
           account_object from_account = get_account(from);
           optional<asset_object> asset_to_reserve = find_asset(symbol);
           if (!asset_to_reserve)
             FC_THROW("No asset with that symbol exists!");
+          asset_object fee_asset_obj = get_asset(fee_asset_symbol);
 
           asset_reserve_operation reserve_op;
           reserve_op.payer = from_account.id;
@@ -2147,13 +2158,7 @@
 
           signed_transaction tx;
           tx.operations.push_back( reserve_op );
-          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
-              auto fee_asset_obj = find_asset(asset_id_type(1));
-              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
-          }
-          else {
-              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-          }
+          set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
           tx.validate();
 
           return sign_transaction( tx, broadcast );
@@ -2268,10 +2273,13 @@
        signed_transaction create_witness(string owner_account,
                                          string url,
                                          string asset_symbol,
+                                         string fee_asset_symbol,
                                          bool broadcast /* = false */)
        { try {
           fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
           FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
+          asset_object fee_asset_obj = get_asset(fee_asset_symbol);
+
           account_object witness_account = get_account(owner_account);
           fc::ecc::private_key active_private_key = get_private_key_for_account(witness_account);
           int witness_key_index = find_first_unused_derived_key_index(active_private_key);
@@ -2356,9 +2364,12 @@
           string witness_name,
           string amount,
           string asset_symbol,
+          string fee_asset_symbol,
           bool broadcast = false )
        { try {
           asset_object asset_obj = get_asset( asset_symbol );
+          asset_object fee_asset_obj = get_asset(fee_asset_symbol);
+
           fc::optional<vesting_balance_id_type> vbid = maybe_id<vesting_balance_id_type>(witness_name);
           if( !vbid )
           {
@@ -2376,13 +2387,7 @@
 
           signed_transaction tx;
           tx.operations.push_back( vesting_balance_withdraw_op );
-          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
-              auto fee_asset_obj = find_asset(asset_id_type(1));
-              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
-          }
-          else {
-              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-          }
+          set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
           tx.validate();
 
           return sign_transaction( tx, broadcast );
@@ -4625,17 +4630,19 @@
     signed_transaction wallet_api::fund_asset_fee_pool(string from,
                                                        string symbol,
                                                        string amount,
+                                                       string fee_asset_symbol,
                                                        bool broadcast /* = false */)
     {
-       return my->fund_asset_fee_pool(from, symbol, amount, broadcast);
+       return my->fund_asset_fee_pool(from, symbol, amount, fee_asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::reserve_asset(string from,
                                               string amount,
                                               string symbol,
+                                              string fee_asset_symbol,
                                               bool broadcast /* = false */)
     {
-       return my->reserve_asset(from, amount, symbol, broadcast);
+       return my->reserve_asset(from, amount, symbol, fee_asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::whitelist_account(string authorizing_account,
@@ -4675,9 +4682,10 @@
     signed_transaction wallet_api::create_witness(string owner_account,
                                                   string url,
                                                   string asset_symbol,
+                                                  string fee_asset_symbol,
                                                   bool broadcast /* = false */)
     {
-       return my->create_witness(owner_account, url, asset_symbol, broadcast);
+       return my->create_witness(owner_account, url, asset_symbol, fee_asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::update_witness(
@@ -4699,9 +4707,10 @@
        string witness_name,
        string amount,
        string asset_symbol,
+       string fee_asset_symbol,
        bool broadcast /* = false */)
     {
-       return my->withdraw_vesting( witness_name, amount, asset_symbol, broadcast );
+       return my->withdraw_vesting( witness_name, amount, asset_symbol, fee_asset_symbol, broadcast );
     }
 
     signed_transaction wallet_api::update_account_multisig_keys(string account,
