@@ -1128,7 +1128,7 @@ class wallet_api
        *                         not claimed by the blockchain that will be distributed to the
        *                         referrer; the rest will be sent to the registrar.  Will be
        *                         multiplied by GRAPHENE_1_PERCENT when constructing the transaction.
-       * @param asset_symbol the symbol or id of the fee.
+       * @param fee_asset_symbol the symbol or id of the fee.
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction registering the account
        */
@@ -1139,7 +1139,7 @@ class wallet_api
                                           string  registrar_account,
                                           string  referrer_account,
                                           uint32_t referrer_percent,
-                                          string asset_symbol,
+                                          string fee_asset_symbol,
                                           bool broadcast = false);
       /**
        * Upgrades an account to prime status.

@@ -1157,7 +1157,7 @@
                                            string  registrar_account,
                                            string  referrer_account,
                                            uint32_t referrer_percent,
-                                           string asset_symbol,
+                                           string fee_asset_symbol,
                                            bool broadcast = false)
        { try {
           FC_ASSERT( !self.is_locked() );
@@ -1174,8 +1174,7 @@
                 this->get_account( registrar_account );
           FC_ASSERT( registrar_account_object.is_lifetime_member() );
 
-          fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
-          FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
+          asset_object fee_asset_obj = get_asset(fee_asset_symbol);
 
           account_id_type registrar_account_id = registrar_account_object.id;
 
@@ -1191,16 +1190,8 @@
           account_create_op.options.memo_key = memo;
 
           signed_transaction tx;
-
           tx.operations.push_back( account_create_op );
-
-          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
-              auto fee_asset_obj = find_asset(asset_id_type(1));
-              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
-          }
-          else {
-              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-          }
+          set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
 
           vector<public_key_type> paying_keys = registrar_account_object.active.get_keys();
 
@@ -4484,10 +4475,10 @@
                                                     string  registrar_account,
                                                     string  referrer_account,
                                                     uint32_t referrer_percent,
-                                                    string asset_symbol,
+                                                    string fee_asset_symbol,
                                                     bool broadcast)
     {
-       return my->register_account2( name, owner_pubkey, active_pubkey, memo, registrar_account, referrer_account, referrer_percent, asset_symbol, broadcast );
+       return my->register_account2( name, owner_pubkey, active_pubkey, memo, registrar_account, referrer_account, referrer_percent, fee_asset_symbol, broadcast );
     }
 
     signed_transaction wallet_api::deploy_contract(string name,
