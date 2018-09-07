@@ -517,7 +517,7 @@
                    s.set_fee(op, fee_asset->options.core_exchange_rate, core_asset_id);
                }
                else {
-                   s.set_fee(op, price::unit_price(), core_asset_id);
+                   s.set_fee(op, price::unit_price(core_asset_id), core_asset_id);
                }
            }
        }
