@@ -866,8 +866,9 @@
                        "Cannot pay fees in ${asset}, as this asset's fee pool is insufficiently funded.",
                        ("asset", fee_asset_obj.symbol));
           } else {
-             for( auto& op : _builder_transactions[handle].operations )
-                total_fee += gprops.current_fees->set_fee( op, price::unit_price(), core_asset_id );
+              for( auto& op : _builder_transactions[handle].operations ) {
+                  total_fee += gprops.current_fees->set_fee( op, price::unit_price(core_asset_id), core_asset_id );
+              }
           }
 
           return total_fee;
@@ -936,7 +937,7 @@
           if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
               core_asset_id = asset_id_type(1);
           }
-          _remote_db->get_global_properties().parameters.current_fees->set_fee(trx.operations.front(), price::unit_price(), core_asset_id);
+          _remote_db->get_global_properties().parameters.current_fees->set_fee(trx.operations.front(), price::unit_price(core_asset_id), core_asset_id);
 
           return trx = sign_transaction(trx, broadcast);
        }
@@ -2414,8 +2415,8 @@
           signed_transaction tx;
           tx.operations.push_back( vesting_balance_withdraw_op );
           if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
-              auto core_obj = find_asset(asset_id_type(1));
-              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, core_obj);
+              auto fee_asset_obj = find_asset(asset_id_type(1));
+              set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
           }
           else {
               set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
@@ -3378,7 +3379,12 @@
 
           signed_transaction tx;
           tx.operations.push_back(update_op);
-          set_operation_fees(tx, get_global_properties().parameters.current_fees);
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              auto fee_asset_obj = find_asset(asset_id_type(1));
+              set_operation_fees(tx, get_global_properties().parameters.current_fees, fee_asset_obj);
+          } else {
+              set_operation_fees(tx, get_global_properties().parameters.current_fees);
+          }
           tx.validate();
           return sign_transaction(tx, broadcast);
        }
