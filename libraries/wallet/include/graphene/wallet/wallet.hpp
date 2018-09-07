@@ -1635,13 +1635,13 @@ class wallet_api
        * @param owner_account the name or id of the account which is creating the witness
        * @param url a URL to include in the witness record in the blockchain.  Clients may
        *            display this when showing a list of witnesses.  May be blank.
-       * @param asset_symbol the symbol or id of the fee.
+       * @param fee_asset_symbol the symbol of the fee asset.
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction registering a witness
        */
       signed_transaction create_witness(string owner_account,
                                         string url,
-                                        string asset_symbol,
+                                        string fee_asset_symbol,
                                         bool broadcast = false);
 
       /**
@@ -1650,13 +1650,13 @@ class wallet_api
        * @param witness_name The name of the witness's owner account.  Also accepts the ID of the owner account or the ID of the witness.
        * @param url Same as for create_witness.  The empty string makes it remain the same.
        * @param block_signing_key The new block signing public key.  The empty string makes it remain the same.
-       * @param asset_symbol the symbol or id of the fee.
+       * @param fee_asset_symbol the symbol or id of the fee.
        * @param broadcast true if you wish to broadcast the transaction.
        */
       signed_transaction update_witness(string witness_name,
                                         string url,
                                         string block_signing_key,
-                                        string asset_symbol,
+                                        string fee_asset_symbol,
                                         bool broadcast = false);
 
 

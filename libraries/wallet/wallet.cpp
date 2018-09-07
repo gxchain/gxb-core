@@ -2243,12 +2243,9 @@
 
        signed_transaction create_witness(string owner_account,
                                          string url,
-                                         string asset_symbol,
                                          string fee_asset_symbol,
                                          bool broadcast /* = false */)
        { try {
-          fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
-          FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
           asset_object fee_asset_obj = get_asset(fee_asset_symbol);
 
           account_object witness_account = get_account(owner_account);
@@ -2267,7 +2264,7 @@
 
           signed_transaction tx;
           tx.operations.push_back( witness_create_op );
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, asset_obj);
+          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
           tx.validate();
 
           _wallet.pending_witness_registrations[owner_account] = key_to_wif(witness_private_key);
@@ -2278,11 +2275,10 @@
        signed_transaction update_witness(string witness_name,
                                          string url,
                                          string block_signing_key,
-                                         string asset_symbol,
+                                         string fee_asset_symbol,
                                          bool broadcast /* = false */)
        { try {
-          fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
-          FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
+          asset_object fee_asset_obj = get_asset(fee_asset_symbol);
           witness_object witness = get_witness(witness_name);
           account_object witness_account = get_account( witness.witness_account );
           fc::ecc::private_key active_private_key = get_private_key_for_account(witness_account);
@@ -2297,7 +2293,7 @@
 
           signed_transaction tx;
           tx.operations.push_back( witness_update_op );
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, asset_obj);
+          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
           tx.validate();
 
           return sign_transaction( tx, broadcast );
@@ -4657,10 +4653,10 @@
        string witness_name,
        string url,
        string block_signing_key,
-       string asset_symbol,
+       string fee_asset_symbol,
        bool broadcast /* = false */)
     {
-       return my->update_witness(witness_name, url, block_signing_key, asset_symbol, broadcast);
+       return my->update_witness(witness_name, url, block_signing_key, fee_asset_symbol, broadcast);
     }
 
     vector< vesting_balance_object_with_info > wallet_api::get_vesting_balances( string account_name )
