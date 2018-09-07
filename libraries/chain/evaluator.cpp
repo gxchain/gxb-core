@@ -73,7 +73,7 @@ database& generic_evaluator::db()const { return trx_state->db(); }
               core_fee_paid = fee_from_account.amount;
           else {
               asset fee_from_pool = fee_from_account * fee_asset->options.core_exchange_rate;
-              FC_ASSERT(fee_from_pool.asset_id == asset_id_type(1));
+              FC_ASSERT(fee_from_pool.asset_id == asset_id_type(1), "fee asset id ${f}", ("f", fee_from_pool.asset_id));
               core_fee_paid = fee_from_pool.amount;
               FC_ASSERT(core_fee_paid <= fee_asset_dyn_data->fee_pool, "Fee pool balance of '${b}' is less than the ${r} required to convert ${c}",
                         ("r", db().to_pretty_string(fee_from_pool))("b", db().to_pretty_string(fee_asset_dyn_data->fee_pool))("c", db().to_pretty_string(fee)));
