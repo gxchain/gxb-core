@@ -4642,11 +4642,10 @@
 
     signed_transaction wallet_api::create_witness(string owner_account,
                                                   string url,
-                                                  string asset_symbol,
                                                   string fee_asset_symbol,
                                                   bool broadcast /* = false */)
     {
-       return my->create_witness(owner_account, url, asset_symbol, fee_asset_symbol, broadcast);
+       return my->create_witness(owner_account, url, fee_asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::update_witness(
