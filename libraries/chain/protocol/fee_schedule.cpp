@@ -140,7 +140,7 @@ namespace graphene { namespace chain {
 
        // exchange_rate for 1.3.1
        price exchange_rate = core_exchange_rate;
-       if (core_asset_id == asset_id_typ(1) && exchange_rate.quote.asset_id == asset_id_type(1) && exchange_rate.base.asset_id == asset_id_type()) {
+       if (core_asset_id == asset_id_type(1) && exchange_rate.quote.asset_id == asset_id_type(1) && exchange_rate.base.asset_id == asset_id_type()) {
            exchange_rate = price::unit_price(core_asset_id);
        }
        auto result = asset(scaled.to_uint64(), core_asset_id) * exchange_rate;
