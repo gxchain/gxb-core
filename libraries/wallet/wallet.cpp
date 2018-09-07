@@ -2324,57 +2324,6 @@
           return sign_transaction( tx, broadcast );
        } FC_CAPTURE_AND_RETHROW( (witness_name)(url)(block_signing_key)(broadcast) ) }
 
-       template<typename WorkerInit>
-       static WorkerInit _create_worker_initializer( const variant& worker_settings )
-       {
-          WorkerInit result;
-          from_variant( worker_settings, result, GRAPHENE_MAX_NESTED_OBJECTS );
-          return result;
-       }
-
-       signed_transaction create_worker(
-          string owner_account,
-          time_point_sec work_begin_date,
-          time_point_sec work_end_date,
-          share_type daily_pay,
-          string name,
-          string url,
-          variant worker_settings,
-          bool broadcast
-          )
-       {
-          worker_initializer init;
-          std::string wtype = worker_settings["type"].get_string();
-
-          // TODO:  Use introspection to do this dispatch
-          if( wtype == "burn" )
-             init = _create_worker_initializer< burn_worker_initializer >( worker_settings );
-          else if( wtype == "refund" )
-             init = _create_worker_initializer< refund_worker_initializer >( worker_settings );
-          else if( wtype == "vesting" )
-             init = _create_worker_initializer< vesting_balance_worker_initializer >( worker_settings );
-          else
-          {
-             FC_ASSERT( false, "unknown worker[\"type\"] value" );
-          }
-
-          worker_create_operation op;
-          op.owner = get_account( owner_account ).id;
-          op.work_begin_date = work_begin_date;
-          op.work_end_date = work_end_date;
-          op.daily_pay = daily_pay;
-          op.name = name;
-          op.url = url;
-          op.initializer = init;
-
-          signed_transaction tx;
-          tx.operations.push_back( op );
-          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
-          tx.validate();
-
-          return sign_transaction( tx, broadcast );
-       }
-
        vector< vesting_balance_object_with_info > get_vesting_balances( string account_name )
        { try {
           fc::optional<vesting_balance_id_type> vbid = maybe_id<vesting_balance_id_type>( account_name );
@@ -2447,7 +2396,6 @@
              account_object updating_account = get_account(account);
 
              fc::optional<asset_object> asset_obj = get_asset(fee_symbol);
-             FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", fee_symbol));
 
              auto auth = authority();
              auth.weight_threshold = weight_threshold;
@@ -2483,7 +2431,6 @@
              account_object updating_account = get_account(account);
 
              fc::optional<asset_object> asset_obj = get_asset(fee_symbol);
-             FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", fee_symbol));
 
              vector<account_id_type> account_ids;
              account_ids.reserve(account_auths.size());
