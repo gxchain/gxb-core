@@ -217,9 +217,15 @@ void_result asset_fund_fee_pool_evaluator::do_evaluate(const asset_fund_fee_pool
 
 void_result asset_fund_fee_pool_evaluator::do_apply(const asset_fund_fee_pool_operation& o, uint32_t billed_cpu_time_us)
 { try {
-   db().adjust_balance(o.from_account, -o.amount);
+   database& d = db();
 
-   db().modify( *asset_dyn_data, [&]( asset_dynamic_data_object& data ) {
+   if (d.head_block_time() > HARDFORK_1008_TIME) {
+       d.adjust_balance(o.from_account, asset(asset_id_type(1), -o.amount));
+   } else {
+       d.adjust_balance(o.from_account, -o.amount);
+   }
+
+   d.modify( *asset_dyn_data, [&]( asset_dynamic_data_object& data ) {
       data.fee_pool += o.amount;
    });
 
