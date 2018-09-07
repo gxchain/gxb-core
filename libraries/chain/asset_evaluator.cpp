@@ -220,7 +220,7 @@ void_result asset_fund_fee_pool_evaluator::do_apply(const asset_fund_fee_pool_op
    database& d = db();
 
    if (d.head_block_time() > HARDFORK_1008_TIME) {
-       d.adjust_balance(o.from_account, asset(asset_id_type(1), -o.amount));
+       d.adjust_balance(o.from_account, asset(-o.amount, asset_id_type(1)));
    } else {
        d.adjust_balance(o.from_account, -o.amount);
    }
