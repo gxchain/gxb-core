@@ -2118,14 +2118,13 @@
        signed_transaction fund_asset_fee_pool(string from,
                                               string symbol,
                                               string amount,
-                                              string fee_asset_symbol,
                                               bool broadcast /* = false */)
        { try {
           account_object from_account = get_account(from);
           optional<asset_object> asset_to_fund = find_asset(symbol);
           if (!asset_to_fund)
             FC_THROW("No asset with that symbol exists!");
-          asset_object fee_asset_obj = get_asset(fee_asset_symbol);
+          asset_object core_asset = get_asset(asset_id_type(1));
 
           asset_fund_fee_pool_operation fund_op;
           fund_op.from_account = from_account.id;
@@ -2134,7 +2133,7 @@
 
           signed_transaction tx;
           tx.operations.push_back( fund_op );
-          set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+          set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, core_asset);
           tx.validate();
 
           return sign_transaction( tx, broadcast );
@@ -4630,10 +4629,9 @@
     signed_transaction wallet_api::fund_asset_fee_pool(string from,
                                                        string symbol,
                                                        string amount,
-                                                       string fee_asset_symbol,
                                                        bool broadcast /* = false */)
     {
-       return my->fund_asset_fee_pool(from, symbol, amount, fee_asset_symbol, broadcast);
+       return my->fund_asset_fee_pool(from, symbol, amount, broadcast);
     }
 
     signed_transaction wallet_api::reserve_asset(string from,
