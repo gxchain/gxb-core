@@ -310,6 +310,17 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o, ui
 { try {
    database& d = db();
 
+   // clear uia fee pool
+   if (d.head_block_time() > HARDFORK_1008_TIME 
+           && asset_to_update->options.core_exchange_rate.base.asset_id != asset_id_type(1)
+           && asset_to_update->options.core_exchange_rate.quote.asset_id != asset_id_type(1)) {
+       ilog("clear ${a} asset fee pool", ("a", asset_to_update->symbol));
+       const asset_dynamic_data_object& asset_dyn_data = asset_to_update->dynamic_asset_data_id(d);
+       d.modify(asset_dyn_data, [&](asset_dynamic_data_object &data) {
+           data.fee_pool = 0;
+       });
+   }
+
    d.modify(*asset_to_update, [&](asset_object &a) {
        if (o.new_issuer) {
            a.issuer = *o.new_issuer;
