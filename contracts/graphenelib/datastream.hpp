@@ -28,7 +28,6 @@ namespace graphene {
 /**
  *  @brief A data stream for reading and writing data in the form of bytes
  *
- *  @brief %A data stream for reading and writing data in the form of bytes.
  *  @tparam T - Type of the datastream buffer
  */
 template<typename T>
