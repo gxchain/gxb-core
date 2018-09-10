@@ -486,7 +486,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                         amount += bal.amount.amount;
                     }
                 }
-
+                dlog("locked balance ${l}", ("l", amount.value));
                 voting_stake += amount.value;
             } else {
                 voting_stake += d.get_balance(stake_account.get_id(), asset_id_type()).amount.value;
