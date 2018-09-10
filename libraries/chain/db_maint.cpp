@@ -473,6 +473,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                    GRAPHENE_PROXY_TO_SELF_ACCOUNT)? stake_account
                                      : d.get(stake_account.options.voting_account);
 
+            // calc voting_stake
             uint64_t voting_stake = (stake_account.cashback_vb.valid() ? (*stake_account.cashback_vb)(d).balance.amount.value: 0);
             if (d.head_block_time() > HARDFORK_1008_TIME) {
                 voting_stake += d.get_balance(stake_account.get_id(),  asset_id_type(1)).amount.value;
@@ -486,12 +487,12 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                         amount += bal.amount.amount;
                     }
                 }
-                dlog("locked balance ${l}", ("l", amount.value));
                 voting_stake += amount.value;
+                dlog("locked balance ${l}", ("l", amount.value));
+                dlog("account ${a}, core voting_stake ${v}", ("a", stake_account.get_id())("v", voting_stake));
             } else {
                 voting_stake += d.get_balance(stake_account.get_id(), asset_id_type()).amount.value;
             }
-            dlog("account ${a}, core voting_stake ${v}", ("a", stake_account.get_id())("v", voting_stake));
 
             // voting_stake, add GXS
             if (d.head_block_time() > HARDFORK_1002_TIME && d.head_block_time() <= HARDFORK_1008_TIME) {
