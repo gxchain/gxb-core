@@ -473,13 +473,28 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                    GRAPHENE_PROXY_TO_SELF_ACCOUNT)? stake_account
                                      : d.get(stake_account.options.voting_account);
 
-            auto core_asset_id = (d.head_block_time() > HARDFORK_1008_TIME) ? asset_id_type(1) : asset_id_type();
-            uint64_t voting_stake = (stake_account.cashback_vb.valid() ? (*stake_account.cashback_vb)(d).balance.amount.value: 0)
-                  + d.get_balance(stake_account.get_id(), core_asset_id).amount.value;
-            // dlog("account ${a}, core voting_stake ${v}", ("a", stake_account.get_id())("v", voting_stake));
+            uint64_t voting_stake = (stake_account.cashback_vb.valid() ? (*stake_account.cashback_vb)(d).balance.amount.value: 0);
+            if (d.head_block_time() > HARDFORK_1008_TIME) {
+                voting_stake += d.get_balance(stake_account.get_id(),  asset_id_type(1)).amount.value;
+
+                // locked balance
+                const auto& lock_balance_idx = d.get_index_type<account_balance_locked_index>().indices();
+                auto range = lock_balance_idx.get<by_account_asset>().equal_range(boost::make_tuple(stake_account.id));
+                share_type amount = 0;
+                for (const auto& bal : boost::make_iterator_range(range.first, range.second)) {
+                    if (asset_id_type(1) == bal.amount.asset_id) {
+                        amount += bal.amount.amount;
+                    }
+                }
+
+                voting_stake += amount.value;
+            } else {
+                voting_stake += d.get_balance(stake_account.get_id(), asset_id_type()).amount.value;
+            }
+            dlog("account ${a}, core voting_stake ${v}", ("a", stake_account.get_id())("v", voting_stake));
 
             // voting_stake, add GXS
-            if (d.head_block_time() > HARDFORK_1002_TIME) {
+            if (d.head_block_time() > HARDFORK_1002_TIME && d.head_block_time() <= HARDFORK_1008_TIME) {
                 const auto& asset_by_symbol = d.get_index_type<asset_index>().indices().get<by_symbol>();
                 auto gxs = asset_by_symbol.find(GRAPHENE_SYMBOL_GXS);
                 if (gxs != asset_by_symbol.end()) {
