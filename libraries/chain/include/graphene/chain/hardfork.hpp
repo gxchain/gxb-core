@@ -50,10 +50,9 @@
 
 // hardfork 1008
 // core asset hardfork
-// 2018-11-01 00:00:00
+// 2010-09-12 03:00:00
 #ifndef HARDFORK_1008_TIME
-// #define HARDFORK_1008_TIME (fc::time_point_sec( 1541001600 ))
-#define HARDFORK_1008_TIME (fc::time_point_sec( 1536210000 )) // for test, 2018-09-06T13:00:00
+#define HARDFORK_1008_TIME (fc::time_point_sec( 1284231600 )) // for testnet
 #endif
 
 // #357 Disallow publishing certain malformed price feeds
