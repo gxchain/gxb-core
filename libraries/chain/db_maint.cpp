@@ -488,11 +488,11 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                     }
                 }
                 voting_stake += amount.value;
-                dlog("locked balance ${l}", ("l", amount.value));
-                dlog("account ${a}, core voting_stake ${v}", ("a", stake_account.get_id())("v", voting_stake));
+                // dlog("locked balance ${l}", ("l", amount.value));
             } else {
                 voting_stake += d.get_balance(stake_account.get_id(), asset_id_type()).amount.value;
             }
+            // dlog("account ${a}, core voting_stake ${v}", ("a", stake_account.get_id())("v", voting_stake));
 
             // voting_stake, add GXS
             if (d.head_block_time() > HARDFORK_1002_TIME && d.head_block_time() <= HARDFORK_1008_TIME) {
