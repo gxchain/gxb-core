@@ -39,15 +39,15 @@ namespace graphene { namespace chain {
 
       asset& operator += ( const asset& o )
       {
-         FC_ASSERT( asset_id == o.asset_id );
+         FC_ASSERT(asset_id == o.asset_id, "${a} == ${b}", ("a", asset_id)("b", o.asset_id));
          amount += o.amount;
          return *this;
       }
       asset& operator -= ( const asset& o )
       {
-         FC_ASSERT( asset_id == o.asset_id );
-         amount -= o.amount;
-         return *this;
+          FC_ASSERT(asset_id == o.asset_id, "${a} == ${b}", ("a", asset_id)("b", o.asset_id));
+          amount -= o.amount;
+          return *this;
       }
       asset operator -()const { return asset( -amount, asset_id ); }
 
@@ -57,7 +57,7 @@ namespace graphene { namespace chain {
       }
       friend bool operator < ( const asset& a, const asset& b )
       {
-         FC_ASSERT( a.asset_id == b.asset_id );
+         FC_ASSERT(a.asset_id == b.asset_id, "${a} == ${b}", ("a", a.asset_id)("b", b.asset_id));
          return a.amount < b.amount;
       }
       friend bool operator <= ( const asset& a, const asset& b )
@@ -80,12 +80,12 @@ namespace graphene { namespace chain {
 
       friend asset operator - ( const asset& a, const asset& b )
       {
-         FC_ASSERT( a.asset_id == b.asset_id );
+         FC_ASSERT(a.asset_id == b.asset_id, "${a} == ${b}", ("a", a.asset_id)("b", b.asset_id));
          return asset( a.amount - b.amount, a.asset_id );
       }
       friend asset operator + ( const asset& a, const asset& b )
       {
-         FC_ASSERT( a.asset_id == b.asset_id );
+         FC_ASSERT(a.asset_id == b.asset_id, "${a} == ${b}", ("a", a.asset_id)("b", b.asset_id));
          return asset( a.amount + b.amount, a.asset_id );
       }
 
