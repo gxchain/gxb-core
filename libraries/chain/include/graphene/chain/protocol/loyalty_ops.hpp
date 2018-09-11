@@ -69,7 +69,7 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 
-FC_REFLECT(graphene::chain::balance_lock_operation::fee_parameters_type,(fee))
+FC_REFLECT(graphene::chain::balance_lock_operation::fee_parameters_type,)
 FC_REFLECT(graphene::chain::balance_lock_operation,
             (fee)(account)(create_date_time)(program_id)(amount)(lock_days)(interest_rate)(memo)(extensions) )
 
