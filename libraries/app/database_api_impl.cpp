@@ -760,11 +760,17 @@ vector<optional<asset_object>> database_api_impl::lookup_asset_symbols(const vec
    result.reserve(symbols_or_ids.size());
    std::transform(symbols_or_ids.begin(), symbols_or_ids.end(), std::back_inserter(result),
                   [this, &assets_by_symbol](const string& symbol_or_id) -> optional<asset_object> {
-      if( !symbol_or_id.empty() && std::isdigit(symbol_or_id[0]) )
-      {
+      // by id
+      if (!symbol_or_id.empty() && std::isdigit(symbol_or_id[0])) {
          auto ptr = _db.find(variant(symbol_or_id, 1).as<asset_id_type>(1));
          return ptr == nullptr? optional<asset_object>() : *ptr;
       }
+      // for gxs
+      if (GRAPHENE_SYMBOL_GXS == symbol_or_id &&  _db.head_block_time() > HARDFORK_1008_TIME) {
+          auto ptr = _db.find(asset_id_type(1));
+          return ptr == nullptr? optional<asset_object>() : *ptr;
+      }
+      // by symbol
       auto itr = assets_by_symbol.find(symbol_or_id);
       return itr == assets_by_symbol.end()? optional<asset_object>() : *itr;
    });

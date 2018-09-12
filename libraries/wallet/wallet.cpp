@@ -636,7 +636,7 @@
                // It's a symbol
                auto rec = _remote_db->lookup_asset_symbols({asset_symbol_or_id}).front();
                if (!rec) return optional<asset_object>();
-               if (rec->symbol != asset_symbol_or_id) {
+               if (rec->symbol != asset_symbol_or_id && rec->symbol != GRAPHENE_SYMBOL) {
                    return optional<asset_object>();
                }
                return rec;
