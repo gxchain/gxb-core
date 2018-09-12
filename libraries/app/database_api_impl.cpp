@@ -1262,13 +1262,21 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
            uint64_t core_fee_paid = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
 
            fc::variant r;
+           asset fee = asset(0);
            if (_db.head_block_time() > HARDFORK_1008_TIME) {
-               auto fee = asset(core_fee_paid * uint64_t(a.options.core_exchange_rate.to_real()), asset_id_type(1));
-               fc::to_variant(fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
+               if (asset_obj.id == asset_id_type(1)) {
+                   fee = asset(core_fee_paid, asset_id_type(1));
+               } else {
+                   fee = asset(core_fee_paid / uint64_t(asset_obj.options.core_exchange_rate.to_real()), op.fee.asset_id);
+               }
            } else {
-               auto fee = asset(core_fee_paid * uint64_t(a.options.core_exchange_rate.to_real()), asset_id_type());
-               fc::to_variant(fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
+               if (asset_obj.id == asset_id_type()) {
+                   fee = asset(core_fee_paid, asset_id_type());
+               } else {
+                   fee = asset(core_fee_paid / uint64_t(asset_obj.options.core_exchange_rate.to_real()), op.fee.asset_id);
+               }
            }
+           fc::to_variant(fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
            result.push_back(r);
        } else {
            result.push_back(helper.set_op_fees(op));
