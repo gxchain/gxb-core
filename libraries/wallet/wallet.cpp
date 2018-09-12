@@ -2087,7 +2087,11 @@
           optional<asset_object> asset_to_fund = find_asset(symbol);
           if (!asset_to_fund)
             FC_THROW("No asset with that symbol exists!");
-          asset_object core_asset = get_asset(asset_id_type(1));
+
+          asset_object core_asset = get_asset(asset_id_type(0));
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              core_asset = get_asset(asset_id_type(1));
+          }
 
           asset_fund_fee_pool_operation fund_op;
           fund_op.from_account = from_account.id;
