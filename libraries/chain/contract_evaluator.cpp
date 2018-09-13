@@ -130,6 +130,7 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
             obj.code = op.code;
             obj.code_version = fc::sha256::hash(op.code);
             obj.abi = op.abi;
+            obj.statistics = db().create<account_statistics_object>([&](account_statistics_object& s){s.owner = obj.id;}).id;
             });
 
     return new_acnt_object.id;
