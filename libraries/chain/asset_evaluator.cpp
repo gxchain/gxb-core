@@ -49,6 +49,10 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
    for( auto id : op.common_options.blacklist_authorities )
       d.get_object(id);
 
+   if (d.head_block_time() > HARDFORK_1008_TIME) {
+       FC_ASSERT(GRAPHENE_SYMBOL_GXS != op.symbol, "new asset symbol can not be GXS");
+   }
+
    auto& asset_indx = d.get_index_type<asset_index>().indices().get<by_symbol>();
    auto asset_symbol_itr = asset_indx.find( op.symbol );
    FC_ASSERT( asset_symbol_itr == asset_indx.end() );
@@ -259,6 +263,7 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
            const asset_symbol_t &ast = ex.get<asset_symbol_t>();
            FC_ASSERT(!ast.symbol.empty(), "new_symbol can not be empty");
            FC_ASSERT(d.head_block_time() < HARDFORK_1103_TIME, "you can not change asset symbol after the timestamp:${x}", ("x", HARDFORK_1103_TIME));
+           FC_ASSERT(GRAPHENE_SYMBOL_GXS != ast.symbol, "new asset symbol can not be GXS");
            auto& asset_indx = d.get_index_type<asset_index>().indices().get<by_symbol>();
            auto itr = asset_indx.find(ast.symbol);
            FC_ASSERT(itr == asset_indx.end(), "symbol: ${x} exist", ("x", ast.symbol));
