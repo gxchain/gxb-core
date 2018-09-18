@@ -17,4 +17,10 @@ extern "C" {
     int64_t get_account_id(const char *data, uint32_t length);
     // get asset_id by symbol
     int64_t get_asset_id(const char *data, uint32_t length);
+    
+    int read_transaction(char* dst, uint32_t len);
+    int transaction_size();
+    int expiration();
+    int tapos_block_num();
+    int tapos_block_prefix();
 }
