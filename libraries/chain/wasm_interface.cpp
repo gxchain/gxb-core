@@ -1050,20 +1050,12 @@ class context_free_transaction_api : public context_aware_api {
    public:
       context_free_transaction_api( apply_context& ctx )
       :context_aware_api(ctx,true){}
-      
-      bytes get_packed_transaction()
-      {
-      //    auto r = fc::raw::pack(static_cast<const signed_transaction &>(cur_trx));
-          transaction trx1;
-          auto r = fc::raw::pack(trx1);
-      //    return r;
-          return bytes();
-      }
 
       int read_transaction(array_ptr<char> data, size_t buffer_size)
       {
-          signed_transaction *tmp_trx = context.db().get_cur_trx();
-          bytes trx = fc::raw::pack(*tmp_trx);
+          const signed_transaction *cur_trx = context.db().get_cur_trx();
+          FC_ASSERT(nullptr != cur_trx, "cur_trx is null");
+          bytes trx = fc::raw::pack(*cur_trx);
 
           auto s = trx.size();
           if (buffer_size == 0) return s;
@@ -1075,7 +1067,7 @@ class context_free_transaction_api : public context_aware_api {
       }
 
       int transaction_size() {
-          signed_transaction *tmp_trx = context.db().get_cur_trx();
+          const signed_transaction *tmp_trx = context.db().get_cur_trx();
           return fc::raw::pack(*tmp_trx).size();
       }
 
@@ -1523,7 +1515,7 @@ REGISTER_INTRINSICS(transaction_api,
 );
 
 REGISTER_INTRINSICS(context_free_transaction_api,
-//(read_transaction,               int(int, int))
+(read_transaction,               int(int, int))
 (transaction_size,               int())
 (expiration,                     int())
 (tapos_block_num,                int())
