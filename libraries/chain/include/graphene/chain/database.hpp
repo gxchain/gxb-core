@@ -391,11 +391,11 @@ namespace graphene { namespace chain {
 
        // set and get current trx
        public:
-         const signed_transaction *get_cur_trx() const { return cur_trx; }
-         void set_cur_trx(const signed_transaction *trx) { cur_trx = trx; }
+         const transaction *get_cur_trx() const { return cur_trx; }
+         void set_cur_trx(const transaction *trx) { cur_trx = trx; }
 
        private:
-         const signed_transaction *cur_trx = nullptr;
+         const transaction *cur_trx = nullptr;
 
 
        private:

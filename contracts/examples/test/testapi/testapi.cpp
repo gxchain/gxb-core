@@ -4,6 +4,7 @@
 #include <graphenelib/multi_index.hpp>
 #include <graphenelib/print.hpp>
 #include <graphenelib/types.h>
+#include <graphenelib/crypto.h>
 
 using namespace graphene;
 
@@ -37,17 +38,30 @@ class testapi : public contract
     /// @abi action
     void pong()
     {
-        uint64_t owner = get_trx_sender();
-        auto pingit = pingrecords.find(owner);
-        if(pingit != pingrecords.end()) {
-            checksum160 hash;
-            print("ahead_block_num = ", pingit->ahead_block_num, "\n");
-            get_block_id_for_num(&hash, pingit->ahead_block_num);
-            printhex((hash.hash), 20);
-            pingrecords.erase(pingit);
-        } else {
-            print("not exist\n");
-        }
+//        uint64_t owner = get_trx_sender();
+//        auto pingit = pingrecords.find(owner);
+//        if(pingit != pingrecords.end()) {
+//            checksum160 hash;
+//            print("ahead_block_num = ", pingit->ahead_block_num, "\n");
+//            get_block_id_for_num(&hash, pingit->ahead_block_num);
+//            printhex((hash.hash), 20);
+//            pingrecords.erase(pingit);
+//        } else {
+//            print("not exist\n");
+//        }
+        
+        char dst[10240] = { 0 };
+        int dst_len = transaction_size();
+        read_transaction(dst, dst_len);
+        printhex(dst, dst_len);
+        print("\n");
+        print("transaction_size() = ", transaction_size(), "\n");
+        print("expiration() = ", expiration(), "\n");
+        print("tapos_block_num() = ", tapos_block_num(), "\n");
+        print("tapos_block_prefix() = ", tapos_block_prefix(), "\n");
+        checksum256 hs;
+        sha256(dst, dst_len, &hs);
+        printhex(hs.hash, 20);
     }
 
   private:

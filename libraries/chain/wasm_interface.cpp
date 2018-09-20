@@ -1053,7 +1053,7 @@ class context_free_transaction_api : public context_aware_api {
 
       int read_transaction(array_ptr<char> data, size_t buffer_size)
       {
-          const signed_transaction *cur_trx = context.db().get_cur_trx();
+          auto cur_trx = context.db().get_cur_trx();
           FC_ASSERT(nullptr != cur_trx, "cur_trx is null");
           bytes trx = fc::raw::pack(*cur_trx);
 
@@ -1067,7 +1067,7 @@ class context_free_transaction_api : public context_aware_api {
       }
 
       int transaction_size() {
-          const signed_transaction *tmp_trx = context.db().get_cur_trx();
+          auto tmp_trx = context.db().get_cur_trx();
           return fc::raw::pack(*tmp_trx).size();
       }
 
