@@ -261,7 +261,7 @@ void_result asset_update_evaluator::do_evaluate(const asset_update_operation& o)
    for (const auto &ex : o.extensions) {
        if (ex.which() == future_extensions::tag<asset_symbol_t>::value) {
            const asset_symbol_t &ast = ex.get<asset_symbol_t>();
-           FC_ASSERT(!ast.symbol.empty(), "new_symbol can not be empty");
+           FC_ASSERT(is_valid_symbol(ast.symbol));
            FC_ASSERT(d.head_block_time() < HARDFORK_1103_TIME, "you can not change asset symbol after the timestamp:${x}", ("x", HARDFORK_1103_TIME));
            FC_ASSERT(GRAPHENE_SYMBOL_GXS != ast.symbol, "new asset symbol can not be GXS");
            auto& asset_indx = d.get_index_type<asset_index>().indices().get<by_symbol>();
