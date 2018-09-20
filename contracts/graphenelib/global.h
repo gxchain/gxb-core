@@ -17,10 +17,16 @@ extern "C" {
     int64_t get_account_id(const char *data, uint32_t length);
     // get asset_id by symbol
     int64_t get_asset_id(const char *data, uint32_t length);
-    
-    int read_transaction(char* dst, uint32_t len);
+    // dump current transaction of current contract calling to dst in binary form
+    int read_transaction(char* dst, uint32_t dst_size);
+    // get current transaction size of current contract calling
     int transaction_size();
+    // return current transaction expiration
     int expiration();
+    // return ref block num(block_id.hash[0])
+    // eg. "block_id": "00000fa00f4dd71912f56dd6e23f03bf2af87be5" --> 00000fa0
     int tapos_block_num();
+    // return ref block prefix(block_id.hash[1])
+    //eg. "block_id": "00000fa00f4dd71912f56dd6e23f03bf2af87be5" --> 0f4dd719
     int tapos_block_prefix();
 }
