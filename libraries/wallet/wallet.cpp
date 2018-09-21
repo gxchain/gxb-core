@@ -3188,8 +3188,12 @@
           prop_op.review_period_seconds = current_params.committee_proposal_review_period;
           prop_op.fee_paying_account = get_account(proposing_account).id;
 
-          prop_op.proposed_ops.emplace_back( update_op );
-          current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
+          prop_op.proposed_ops.emplace_back(update_op);
+          auto core_asset_id = asset_id_type();
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              core_asset_id = asset_id_type(1);
+          }
+          current_params.current_fees->set_fee(prop_op.proposed_ops.back().op, price::unit_price(core_asset_id), core_asset_id);
 
           signed_transaction tx;
           tx.operations.push_back(prop_op);
