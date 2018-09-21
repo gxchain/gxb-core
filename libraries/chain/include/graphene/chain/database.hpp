@@ -389,6 +389,15 @@ namespace graphene { namespace chain {
          processed_transaction apply_transaction(const signed_transaction &trx, uint32_t skip = skip_nothing, const vector<operation_result> &operation_results = {});
          operation_result      apply_operation(transaction_evaluation_state &eval_state, const operation &op, uint32_t billed_cpu_time_us = 0);
 
+       // set and get current trx
+       public:
+         const transaction *get_cur_trx() const { return cur_trx; }
+         void set_cur_trx(const transaction *trx) { cur_trx = trx; }
+
+       private:
+         const transaction *cur_trx = nullptr;
+
+
        private:
          void                  _apply_block( const signed_block& next_block );
          processed_transaction _apply_transaction(const signed_transaction &trx, const vector<operation_result> &operation_results = {});
