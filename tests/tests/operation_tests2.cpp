@@ -642,7 +642,7 @@ BOOST_AUTO_TEST_CASE( balance_object_test )
    op.total_claimed.amount = 151;
    op.balance_owner_key = v2_key.get_public_key();
    trx.operations = {op};
-   trx.signatures.clear();
+   trx.clear_signatures();
    _sign( trx, n_key );
    _sign( trx, v2_key );
    // Attempting to claim 151 from a balance with 150 available
@@ -652,7 +652,7 @@ BOOST_AUTO_TEST_CASE( balance_object_test )
    op.total_claimed.amount = 100;
    op.balance_owner_key = v2_key.get_public_key();
    trx.operations = {op};
-   trx.signatures.clear();
+   trx.clear_signatures();
    _sign( trx, n_key );
    _sign( trx, v2_key );
    db.push_transaction(trx);
@@ -661,7 +661,7 @@ BOOST_AUTO_TEST_CASE( balance_object_test )
 
    op.total_claimed.amount = 10;
    trx.operations = {op};
-   trx.signatures.clear();
+   trx.clear_signatures();
    _sign( trx, n_key );
    _sign( trx, v2_key );
    // Attempting to claim twice within a day
@@ -676,7 +676,7 @@ BOOST_AUTO_TEST_CASE( balance_object_test )
    op.total_claimed.amount = 500;
    op.balance_owner_key = v1_key.get_public_key();
    trx.operations = {op};
-   trx.signatures.clear();
+   trx.clear_signatures();
    _sign( trx, n_key );
    _sign( trx, v1_key );
    db.push_transaction(trx);
@@ -687,7 +687,7 @@ BOOST_AUTO_TEST_CASE( balance_object_test )
    op.balance_owner_key = v2_key.get_public_key();
    op.total_claimed.amount = 10;
    trx.operations = {op};
-   trx.signatures.clear();
+   trx.clear_signatures();
    _sign( trx, n_key );
    _sign( trx, v2_key );
    // Attempting to claim twice within a day
@@ -700,7 +700,7 @@ BOOST_AUTO_TEST_CASE( balance_object_test )
 
    op.total_claimed = vesting_balance_2.balance;
    trx.operations = {op};
-   trx.signatures.clear();
+   trx.clear_signatures();
    _sign( trx, n_key );
    _sign( trx, v2_key );
    db.push_transaction(trx);
@@ -1082,7 +1082,7 @@ BOOST_AUTO_TEST_CASE( buyback )
             // Alice and Philbin signed, but asset issuer is invalid
             GRAPHENE_CHECK_THROW( db.push_transaction(tx), account_create_buyback_incorrect_issuer );
 
-            tx.signatures.clear();
+            tx.clear_signatures();
             tx.operations.back().get< account_create_operation >().extensions.value.buyback_options->asset_to_buy_issuer = izzy_id;
             sign( tx, philbin_private_key );
 
@@ -1095,7 +1095,7 @@ BOOST_AUTO_TEST_CASE( buyback )
             rex_id = ptx.operation_results.back().get< object_id_type >();
 
             // Try to create another account rex2 which is bbo on same asset
-            tx.signatures.clear();
+            tx.clear_signatures();
             tx.operations.back().get< account_create_operation >().name = "rex2";
             sign( tx, izzy_private_key );
             sign( tx, philbin_private_key );
