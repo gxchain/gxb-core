@@ -1071,14 +1071,14 @@ class context_free_transaction_api : public context_aware_api {
           return fc::raw::pack(*tmp_trx).size();
       }
 
-      int expiration() {
+      uint64_t expiration() {
           return context.db().get_cur_trx()->expiration.sec_since_epoch();
       }
 
       int tapos_block_num() {
         return context.db().get_cur_trx()->ref_block_num;
       }
-      int tapos_block_prefix() {
+      uint64_t tapos_block_prefix() {
         return context.db().get_cur_trx()->ref_block_prefix;
       }
 };
@@ -1517,9 +1517,9 @@ REGISTER_INTRINSICS(transaction_api,
 REGISTER_INTRINSICS(context_free_transaction_api,
 (read_transaction,               int(int, int))
 (transaction_size,               int())
-(expiration,                     int())
+(expiration,                     int64_t())
 (tapos_block_num,                int())
-(tapos_block_prefix,             int())
+(tapos_block_prefix,             int64_t())
 );
 
 REGISTER_INTRINSICS(console_api,
