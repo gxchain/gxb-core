@@ -482,7 +482,7 @@ class database_api
       /**
        * @brief Get a list of trust_nodes
        */
-      vector<account_object> get_trust_nodes() const;
+      vector<account_id_type> get_trust_nodes() const;
 
       ///////////////////////
       // Committee members //

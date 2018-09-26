@@ -950,7 +950,7 @@ uint64_t database_api_impl::get_committee_member_count() const
    return _db.get_index_type<committee_member_index>().indices().size();
 }
 
-vector<account_object> database_api_impl::get_trust_nodes() const
+vector<account_id_type> database_api_impl::get_trust_nodes() const
 {
     vector<account_object> result;
     const auto& committee_idx = _db.get_index_type<committee_member_index>().indices().get<by_account>();
@@ -958,7 +958,7 @@ vector<account_object> database_api_impl::get_trust_nodes() const
     for (const auto &w : witness_idx) {
         auto itr = committee_idx.find(w.witness_account);
         if (itr != committee_idx.end()) {
-            result.push_back(w.witness_account(_db));
+            result.push_back(w.witness_account);
         }
     }
     return result;
