@@ -479,6 +479,11 @@ class database_api
        */
       uint64_t get_committee_member_count()const;
 
+      /**
+       * @brief Get a list of trust_nodes
+       */
+      vector<account_object> get_trust_nodes() const;
+
       ///////////////////////
       // Committee members //
       ///////////////////////
@@ -811,6 +816,7 @@ FC_API(graphene::app::database_api,
    (get_witness_by_account)
    (lookup_witness_accounts)
    (get_witness_count)
+   (get_trust_nodes)
 
    // Committee members
    (get_committee_members)
