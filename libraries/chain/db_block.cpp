@@ -420,7 +420,7 @@ signed_block database::_generate_block(
        FC_ASSERT(fc::raw::pack_size(pending_block) <= get_global_properties().parameters.maximum_block_size);
    }
 
-   push_block(pending_block, skip);
+   push_block(pending_block, skip | skip_transaction_signatures);
 
    return pending_block;
 } FC_CAPTURE_AND_RETHROW((witness_id)) }
@@ -635,6 +635,7 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
 
    //Finally process the operations
    processed_transaction ptrx(trx);
+   set_cur_trx(dynamic_cast<const transaction*>(&trx));
    _current_op_in_trx = 0;
    for (uint16_t i = 0; i < ptrx.operations.size(); ++i) {
        const auto &op = ptrx.operations.at(i);

@@ -101,6 +101,7 @@ void database::update_active_witnesses()
 
    const chain_property_object& cpo = get_chain_properties();
    auto wits = sort_votable_objects<witness_index>(std::max(witness_count*2+1, (size_t)cpo.immutable_parameters.min_witness_count));
+   dlog("witness_count_histogram size ${a}, witness_count*2+1 ${b}, active witness count ${c}", ("a", _witness_count_histogram_buffer.size())("b", witness_count*2+1)("c", wits.size()));
 
    const global_property_object& gpo = get_global_properties();
 
@@ -149,6 +150,7 @@ void database::update_active_committee_members()
 
    const chain_property_object& cpo = get_chain_properties();
    auto committee_members = sort_votable_objects<committee_member_index>(std::max(committee_member_count*2+1, (size_t)cpo.immutable_parameters.min_committee_member_count));
+   dlog("committee_count_histogram size ${a}, committee_member_count*2+1 ${b}, active committee_member count ${c}", ("a", _committee_count_histogram_buffer.size())("b", committee_member_count*2+1)("c", committee_members.size()));
 
    for( const committee_member_object& del : committee_members )
    {

@@ -1013,7 +1013,7 @@
                fc::read_file_contents(wasm_path, wasm_string);
                const string binary_wasm_header("\x00\x61\x73\x6d", 4);
                FC_ASSERT(wasm_string.size() > 4 && (wasm_string.compare(0, 4, binary_wasm_header) == 0), "wasm invalid");
-               
+
                for (auto it = wasm_string.begin(); it != wasm_string.end(); ++it) {
                    wasm.push_back(*it); //TODO
                }
@@ -2077,7 +2077,7 @@
 
           return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW((symbol)(new_issuer)(new_options)(fee_asset_symbol)(broadcast)) }
-       
+
        signed_transaction fund_asset_fee_pool(string from,
                                               string symbol,
                                               string amount,
@@ -2087,7 +2087,11 @@
           optional<asset_object> asset_to_fund = find_asset(symbol);
           if (!asset_to_fund)
             FC_THROW("No asset with that symbol exists!");
-          asset_object core_asset = get_asset(asset_id_type(1));
+
+          asset_object core_asset = get_asset(asset_id_type(0));
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              core_asset = get_asset(asset_id_type(1));
+          }
 
           asset_fund_fee_pool_operation fund_op;
           fund_op.from_account = from_account.id;
@@ -2559,7 +2563,7 @@
            owned_keys.reserve(pks.size());
            std::copy_if( pks.begin(), pks.end(), std::inserter(owned_keys, owned_keys.end()),
                    [this](const public_key_type& pk){ return _keys.find(pk) != _keys.end(); } );
-           tx.signatures.clear();
+           tx.clear_signatures();
            set<public_key_type> approving_key_set = _remote_db->get_required_signatures(tx, owned_keys);
 
            auto dyn_props = get_dynamic_global_properties();
@@ -2578,7 +2582,7 @@
            for (;;)
            {
                tx.set_expiration(dyn_props.time + fc::seconds(30 + expiration_time_offset));
-               tx.signatures.clear();
+               tx.clear_signatures();
 
                for (const public_key_type &key : approving_key_set)
                    tx.sign(get_private_key(key), _chain_id);
@@ -3053,8 +3057,12 @@
           prop_op.review_period_seconds = current_params.committee_proposal_review_period;
           prop_op.fee_paying_account = get_account(proposing_account).id;
 
-          prop_op.proposed_ops.emplace_back( update_op );
-          current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
+          prop_op.proposed_ops.emplace_back(update_op);
+          auto core_asset_id = asset_id_type();
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              core_asset_id = asset_id_type(1);
+          }
+          current_params.current_fees->set_fee(prop_op.proposed_ops.back().op, price::unit_price(core_asset_id), core_asset_id);
 
           signed_transaction tx;
           tx.operations.push_back(prop_op);
@@ -3180,8 +3188,12 @@
           prop_op.review_period_seconds = current_params.committee_proposal_review_period;
           prop_op.fee_paying_account = get_account(proposing_account).id;
 
-          prop_op.proposed_ops.emplace_back( update_op );
-          current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
+          prop_op.proposed_ops.emplace_back(update_op);
+          auto core_asset_id = asset_id_type();
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              core_asset_id = asset_id_type(1);
+          }
+          current_params.current_fees->set_fee(prop_op.proposed_ops.back().op, price::unit_price(core_asset_id), core_asset_id);
 
           signed_transaction tx;
           tx.operations.push_back(prop_op);
@@ -3722,7 +3734,7 @@
     {
        return _wallet.get_asset(a.asset_id).amount_to_pretty_string(a);
     }
-    
+
     std::string operation_result_printer::operator()(const contract_receipt& r)
     {
        return std::string(r);
