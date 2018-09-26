@@ -45,7 +45,7 @@
 // hardfork 1007
 // enable smart contract 2.0
 #ifndef HARDFORK_1007_TIME
-#define HARDFORK_1007_TIME (fc::time_point_sec( 1534759200 ))
+#define HARDFORK_1007_TIME (fc::time_point_sec( 1539532800 ))
 #endif
 
 // hardfork 1008
