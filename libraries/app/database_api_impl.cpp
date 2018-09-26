@@ -945,6 +945,11 @@ uint64_t database_api_impl::get_witness_count()const
    return _db.get_index_type<witness_index>().indices().size();
 }
 
+uint64_t database_api_impl::get_committee_member_count() const
+{
+   return _db.get_index_type<committee_member_index>().indices().size();
+}
+
 vector<optional<committee_member_object>> database_api_impl::get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const
 {
    vector<optional<committee_member_object>> result; result.reserve(committee_member_ids.size());

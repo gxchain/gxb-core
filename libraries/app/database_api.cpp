@@ -432,6 +432,11 @@ uint64_t database_api::get_witness_count()const
    return my->get_witness_count();
 }
 
+uint64_t database_api::get_committee_member_count() const
+{
+   return my->get_committee_member_count();
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Committee members                                                //

@@ -474,6 +474,11 @@ class database_api
        */
       uint64_t get_witness_count()const;
 
+      /**
+       * @brief Get the total number of committee_members registered with the blockchain
+       */
+      uint64_t get_committee_member_count()const;
+
       ///////////////////////
       // Committee members //
       ///////////////////////
@@ -811,6 +816,7 @@ FC_API(graphene::app::database_api,
    (get_committee_members)
    (get_committee_member_by_account)
    (lookup_committee_member_accounts)
+   (get_committee_member_count)
 
    // workers
    (get_workers_by_account)
