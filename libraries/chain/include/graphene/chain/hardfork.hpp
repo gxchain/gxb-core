@@ -55,6 +55,13 @@
 #define HARDFORK_1008_TIME (fc::time_point_sec( 1536768000 )) // for testnet
 #endif
 
+// hardfork 1009
+// UTC "2018-09-26 00:00:00"
+// for vesting balance object
+#ifndef HARDFORK_1009_TIME
+#define HARDFORK_1009_TIME (fc::time_point_sec( 1537891200 )) // for testnet
+#endif
+
 // #357 Disallow publishing certain malformed price feeds
 #ifndef HARDFORK_357_TIME
 #define HARDFORK_357_TIME (fc::time_point_sec( 1444416300 ))

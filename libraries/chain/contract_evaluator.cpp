@@ -115,8 +115,10 @@ void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operati
 
 object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operation &op, uint32_t billed_cpu_time_us)
 { try {
-    const auto &params = db().get_global_properties().parameters;
-    const auto &new_acnt_object = db().create<account_object>([&](account_object &obj) {
+    database &d = db();
+
+    const auto &params = d.get_global_properties().parameters;
+    const auto &new_acnt_object = d.create<account_object>([&](account_object &obj) {
             obj.registrar = op.account;
             obj.referrer = op.account;
             obj.lifetime_referrer = op.account;
@@ -130,7 +132,9 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
             obj.code = op.code;
             obj.code_version = fc::sha256::hash(op.code);
             obj.abi = op.abi;
-            obj.statistics = db().create<account_statistics_object>([&](account_statistics_object& s){s.owner = obj.id;}).id;
+            if (d.head_block_time() > HARDFORK_1009_TIME) {
+                obj.statistics = d.create<account_statistics_object>([&](account_statistics_object &s) { s.owner = obj.id; }).id;
+            }
             });
 
     return new_acnt_object.id;
