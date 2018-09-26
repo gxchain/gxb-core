@@ -432,6 +432,16 @@ uint64_t database_api::get_witness_count()const
    return my->get_witness_count();
 }
 
+uint64_t database_api::get_committee_member_count() const
+{
+   return my->get_committee_member_count();
+}
+
+vector<account_object> database_api::get_trust_nodes() const
+{
+    return my->get_trust_nodes();
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Committee members                                                //
