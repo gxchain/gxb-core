@@ -34,6 +34,52 @@ namespace graphene { namespace chain {
    };
    typedef transform_to_fee_parameters<operation>::type fee_parameters;
 
+   template<typename Operation>
+   class fee_helper {
+     public:
+      const typename Operation::fee_parameters_type& cget(const flat_set<fee_parameters>& parameters)const
+      {
+         auto itr = parameters.find( typename Operation::fee_parameters_type() );
+         FC_ASSERT( itr != parameters.end() );
+         return itr->template get<typename Operation::fee_parameters_type>();
+      }
+   };
+
+   template<>
+   class fee_helper<account_create_operation> {
+     public:
+      const account_create_operation::fee_parameters_type& cget(const flat_set<fee_parameters>& parameters)const
+      {
+         auto itr = parameters.find( account_create_operation::fee_parameters_type() );
+         FC_ASSERT( itr != parameters.end() );
+         return itr->get<account_create_operation::fee_parameters_type>();
+      }
+      typename account_create_operation::fee_parameters_type& get(flat_set<fee_parameters>& parameters)const
+      {
+         auto itr = parameters.find( account_create_operation::fee_parameters_type() );
+         FC_ASSERT( itr != parameters.end() );
+         return itr->get<account_create_operation::fee_parameters_type>();
+      }
+   };
+
+
+   template<>
+   class fee_helper<contract_call_operation> {
+     public:
+      const contract_call_operation::fee_parameters_type& cget(const flat_set<fee_parameters>& parameters)const
+      {
+         auto itr = parameters.find( contract_call_operation::fee_parameters_type() );
+         FC_ASSERT( itr != parameters.end() );
+         return itr->get<contract_call_operation::fee_parameters_type>();
+      }
+      typename contract_call_operation::fee_parameters_type& get(flat_set<fee_parameters>& parameters)const
+      {
+         auto itr = parameters.find( contract_call_operation::fee_parameters_type() );
+         FC_ASSERT( itr != parameters.end() );
+         return itr->get<contract_call_operation::fee_parameters_type>();
+      }
+   };
+
    /**
     *  @brief contains all of the parameters necessary to calculate the fee for any operation
     */
@@ -47,8 +93,12 @@ namespace graphene { namespace chain {
        *  Finds the appropriate fee parameter struct for the operation
        *  and then calculates the appropriate fee.
        */
-      asset calculate_fee( const operation& op, const price& core_exchange_rate = price::unit_price() )const;
-      asset set_fee( operation& op, const price& core_exchange_rate = price::unit_price() )const;
+      asset calculate_fee(const operation &op,
+                          const price &core_exchange_rate = price::unit_price(),
+                          asset_id_type core_asset_id = asset_id_type()) const;
+      asset set_fee(operation &op,
+                    const price &core_exchange_rate = price::unit_price(),
+                    asset_id_type core_asset_id = asset_id_type()) const;
 
       void zero_all_fees();
 
@@ -60,16 +110,12 @@ namespace graphene { namespace chain {
       template<typename Operation>
       const typename Operation::fee_parameters_type& get()const
       {
-         auto itr = parameters.find( typename Operation::fee_parameters_type() );
-         FC_ASSERT( itr != parameters.end() );
-         return itr->template get<typename Operation::fee_parameters_type>();
+         return fee_helper<Operation>().cget(parameters);
       }
       template<typename Operation>
       typename Operation::fee_parameters_type& get()
       {
-         auto itr = parameters.find( typename Operation::fee_parameters_type() );
-         FC_ASSERT( itr != parameters.end() );
-         return itr->template get<typename Operation::fee_parameters_type>();
+         return fee_helper<Operation>().get(parameters);
       }
 
       /**

@@ -5,6 +5,7 @@
 #include <graphene/chain/wasm_validation.hpp>
 #include <graphene/chain/wasm_injection.hpp>
 #include <graphene/chain/exceptions.hpp>
+#include <graphene/chain/asset_object.hpp>
 
 #include <fc/exception/exception.hpp>
 #include <fc/crypto/sha256.hpp>
@@ -107,6 +108,159 @@ class action_api : public context_aware_api {
       name current_receiver() {
          return context.receiver;
       }
+
+      uint64_t get_action_asset_id() {
+          if (context.amount.valid()) {
+              return context.amount->asset_id.instance;
+          }
+          else {
+              return 0;
+          }
+      }
+
+      int64_t get_action_asset_amount() {
+          if (context.amount.valid()) {
+              return context.amount->amount.value;
+          }
+          else {
+              return 0;
+          }
+      }
+};
+
+class global_api : public context_aware_api
+{
+  public:
+    explicit global_api(apply_context &ctx)
+        : context_aware_api(ctx, true)
+    {
+    }
+
+    // get head block header
+    int64_t get_head_block_num()
+    {
+        const auto& dpo = context.db().get_dynamic_global_properties();
+        return dpo.head_block_number;
+    }
+
+    // get head block hash
+    void get_head_block_id(block_id_type& block_id)
+    {
+        const auto& dpo = context.db().get_dynamic_global_properties();
+        block_id = dpo.head_block_id;
+    }
+
+    void get_block_id_for_num(block_id_type &block_id, uint32_t block_num)
+    {
+        int64_t head_block_num = get_head_block_num();
+        FC_ASSERT(block_num <= head_block_num && block_num > 0, "block_num to large, can not big than head block num:${x}", ("x", head_block_num));
+        block_id = context.db().get_block_id_for_num(block_num);
+    }
+
+    // get head block time
+    int64_t get_head_block_time()
+    {
+        return static_cast<uint64_t>(context.db().head_block_time().sec_since_epoch());
+    }
+
+    // get sender of trx
+    int64_t get_trx_sender()
+    {
+        // get op payer
+        return context.trx_context.get_trx_origin();
+    }
+
+    // get origin of trx
+    int64_t get_trx_origin()
+    {
+        // get op payer
+        return context.trx_context.get_trx_origin();
+    }
+
+    int64_t get_account_id(array_ptr<char> data, size_t datalen)
+    {
+        std::string account_name(data, datalen);
+        const auto& idx = context.db().get_index_type<account_index>().indices().get<by_name>();
+        auto itr = idx.find(account_name);
+        if (itr != idx.end())
+            return (itr->get_id()).instance;
+        return -1;
+    }
+
+    int64_t get_asset_id(array_ptr<char> data, size_t datalen)
+    {
+        std::string symbol(data, datalen);
+        const auto& idx = context.db().get_index_type<asset_index>().indices().get<by_symbol>();
+        auto itr = idx.find(symbol);
+        if (itr != idx.end())
+            return (itr->get_id()).instance;
+        return -1;
+    }
+
+};
+
+class crypto_api : public context_aware_api {
+   public:
+      explicit crypto_api( apply_context& ctx )
+      :context_aware_api(ctx,true){}
+
+      template<class Encoder> auto encode(char* data, size_t datalen) {
+         Encoder e;
+         const size_t bs = 10*1024;
+         while ( datalen > bs ) {
+            e.write( data, bs );
+            data += bs;
+            datalen -= bs;
+            context.trx_context.checktime();
+         }
+         e.write( data, datalen );
+         return e.result();
+      }
+
+      void assert_sha256(array_ptr<char> data, size_t datalen, const fc::sha256& hash_val) {
+         auto result = encode<fc::sha256::encoder>( data, datalen );
+         FC_ASSERT( result == hash_val, "hash mismatch" );
+      }
+
+      void assert_sha1(array_ptr<char> data, size_t datalen, const fc::sha1& hash_val) {
+         auto result = encode<fc::sha1::encoder>( data, datalen );
+         FC_ASSERT( result == hash_val, "hash mismatch" );
+      }
+
+      void assert_sha512(array_ptr<char> data, size_t datalen, const fc::sha512& hash_val) {
+         auto result = encode<fc::sha512::encoder>( data, datalen );
+         FC_ASSERT( result == hash_val, "hash mismatch" );
+      }
+
+      void assert_ripemd160(array_ptr<char> data, size_t datalen, const fc::ripemd160& hash_val) {
+         auto result = encode<fc::ripemd160::encoder>( data, datalen );
+         FC_ASSERT( result == hash_val, "hash mismatch" );
+      }
+
+      void sha1(array_ptr<char> data, size_t datalen, fc::sha1& hash_val) {
+         hash_val = encode<fc::sha1::encoder>( data, datalen );
+      }
+
+      void sha256(array_ptr<char> data, size_t datalen, fc::sha256& hash_val) {
+         hash_val = encode<fc::sha256::encoder>( data, datalen );
+      }
+
+      void sha512(array_ptr<char> data, size_t datalen, fc::sha512& hash_val) {
+         hash_val = encode<fc::sha512::encoder>( data, datalen );
+      }
+
+      void ripemd160(array_ptr<char> data, size_t datalen, fc::ripemd160& hash_val) {
+         hash_val = encode<fc::ripemd160::encoder>( data, datalen );
+      }
+
+      bool verify_signature(array_ptr<char> data, size_t datalen, const fc::ecc::compact_signature& sig, array_ptr<char> pub_key, size_t pub_keylen)
+      {
+          digest_type::encoder enc;
+          fc::raw::pack(enc, std::string(data.value));
+
+          public_key_type pk{pub_key.value};
+          return public_key_type(fc::ecc::public_key(sig, enc.result(), true)) == pk;
+      }
 };
 
 class context_free_system_api : public context_aware_api
@@ -121,7 +275,7 @@ class context_free_system_api : public context_aware_api
         FC_ASSERT(false, "abort() called");
     }
 
-    void gxb_assert(bool condition, null_terminated_ptr msg)
+    void graphene_assert(bool condition, null_terminated_ptr msg)
     {
         if (BOOST_UNLIKELY(!condition)) {
             std::string message(msg);
@@ -130,7 +284,7 @@ class context_free_system_api : public context_aware_api
         }
     }
 
-    void gxb_assert_message(bool condition, array_ptr<const char> msg, size_t msg_len)
+    void graphene_assert_message(bool condition, array_ptr<const char> msg, size_t msg_len)
     {
         if (BOOST_UNLIKELY(!condition)) {
             std::string message(msg, msg_len);
@@ -139,7 +293,7 @@ class context_free_system_api : public context_aware_api
         }
     }
 
-    void gxb_assert_code(bool condition, uint64_t error_code)
+    void graphene_assert_code(bool condition, uint64_t error_code)
     {
         if (BOOST_UNLIKELY(!condition)) {
             edump((error_code));
@@ -148,7 +302,7 @@ class context_free_system_api : public context_aware_api
         }
     }
 
-    void gxb_exit(int32_t code)
+    void graphene_exit(int32_t code)
     {
         throw wasm_exit{code};
     }
@@ -219,7 +373,6 @@ class softfloat_api : public context_aware_api
       {
           float32_t a = to_softfloat32(af);
           float32_t b = to_softfloat32(bf);
-          uint32_t sign_of_a = a.v >> 31;
           uint32_t sign_of_b = b.v >> 31;
           a.v &= ~(1 << 31);             // clear the sign bit
           a.v = a.v | (sign_of_b << 31); // add the sign of b
@@ -398,7 +551,6 @@ class softfloat_api : public context_aware_api
       {
           float64_t a = to_softfloat64(af);
           float64_t b = to_softfloat64(bf);
-          uint64_t sign_of_a = a.v >> 63;
           uint64_t sign_of_b = b.v >> 63;
           a.v &= ~(uint64_t(1) << 63);   // clear the sign bit
           a.v = a.v | (sign_of_b << 63); // add the sign of b
@@ -456,7 +608,6 @@ class softfloat_api : public context_aware_api
           float64_t ret;
           int e = a.v >> 52 & 0x7FF;
           float64_t y;
-          double de = 1 / DBL_EPSILON;
           if (a.v == 0x8000000000000000) {
               return af;
           }
@@ -842,10 +993,6 @@ class database_api : public context_aware_api {
       }
 
       DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx64,  uint64_t)
-      DB_API_METHOD_WRAPPERS_SIMPLE_SECONDARY(idx128, uint128_t)
-      DB_API_METHOD_WRAPPERS_ARRAY_SECONDARY(idx256, 2, uint128_t)
-      DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_double, float64_t)
-      DB_API_METHOD_WRAPPERS_FLOAT_SECONDARY(idx_long_double, float128_t)
 };
 
 
@@ -893,8 +1040,46 @@ class transaction_api : public context_aware_api {
          //TODO
 
          action act;
-         fc::raw::unpack<action>(data, data_len, act);
+         fc::raw::unpack<action>(data, data_len, act, 5);
+         idump((act));
          context.execute_inline(std::move(act));
+      }
+};
+
+class context_free_transaction_api : public context_aware_api {
+   public:
+      context_free_transaction_api( apply_context& ctx )
+      :context_aware_api(ctx,true){}
+
+      int read_transaction(array_ptr<char> data, size_t buffer_size)
+      {
+          auto cur_trx = context.db().get_cur_trx();
+          FC_ASSERT(nullptr != cur_trx, "cur_trx is null");
+          bytes trx = fc::raw::pack(*cur_trx);
+
+          auto s = trx.size();
+          if (buffer_size == 0) return s;
+
+          auto copy_size = std::min(buffer_size, s);
+          memcpy(data, trx.data(), copy_size);
+
+          return copy_size;
+      }
+
+      int transaction_size() {
+          auto tmp_trx = context.db().get_cur_trx();
+          return fc::raw::pack(*tmp_trx).size();
+      }
+
+      uint64_t expiration() {
+          return context.db().get_cur_trx()->expiration.sec_since_epoch();
+      }
+
+      int tapos_block_num() {
+        return context.db().get_cur_trx()->ref_block_num;
+      }
+      uint64_t tapos_block_prefix() {
+        return context.db().get_cur_trx()->ref_block_prefix;
       }
 };
 
@@ -1282,24 +1467,6 @@ class console_api : public context_aware_api
       bool ignore;
 };
 
-class system_api : public context_aware_api
-{
-  public:
-    using context_aware_api::context_aware_api;
-
-    uint64_t current_time()
-    {
-        return static_cast<uint64_t>(context.db().head_block_time().sec_since_epoch());
-    }
-
-    /*
-      uint64_t publication_time() {
-         return static_cast<uint64_t>( context.trx_context.published.time_since_epoch().count() );
-      }
-      */
-
-};
-
 class asset_api : public context_aware_api
 {
   public:
@@ -1307,17 +1474,27 @@ class asset_api : public context_aware_api
         : context_aware_api(ctx, true)
     {}
 
-    void transfer_asset(int64_t from, int64_t to, int64_t symbol, int64_t amount)
+    void withdraw_asset(uint64_t from, uint64_t to, uint64_t asset_id, int64_t amount)
     {
-        // TODO
-        // check more
-        FC_ASSERT(amount> 0, "amount must > 0");
+        FC_ASSERT(from == context.receiver, "can only withdraw from contract ${c}", ("c", context.receiver));
         FC_ASSERT(from != to, "cannot transfer to self");
+        FC_ASSERT(amount> 0, "amount must > 0");
+
+        dlog("${f} -> ${t}, amount ${a}, asset_id ${i}", ("f", from)("t", to)("a", amount)("i", asset_id));
         auto &d = context.db();
-        asset a{amount, asset_id_type(symbol & GRAPHENE_DB_MAX_INSTANCE_ID)};
+        asset a{amount, asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID)};
         // adjust balance
         d.adjust_balance(account_id_type(from & GRAPHENE_DB_MAX_INSTANCE_ID), -a);
         d.adjust_balance(account_id_type(to & GRAPHENE_DB_MAX_INSTANCE_ID), a);
+    }
+
+    // get account balance by asset_id
+    int64_t get_balance(int64_t account, int64_t asset_id)
+    {
+        auto &d = context.db();
+        auto account_id = account_id_type(account & GRAPHENE_DB_MAX_INSTANCE_ID);
+        auto aid = asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID);
+        return d.get_balance(account_id, aid).amount.value;
     }
 
 };
@@ -1337,6 +1514,14 @@ REGISTER_INTRINSICS(transaction_api,
 (send_inline,               void(int, int))
 );
 
+REGISTER_INTRINSICS(context_free_transaction_api,
+(read_transaction,               int(int, int))
+(transaction_size,               int())
+(expiration,                     int64_t())
+(tapos_block_num,                int())
+(tapos_block_prefix,             int64_t())
+);
+
 REGISTER_INTRINSICS(console_api,
 (prints,                void(int)      )
 (prints_l,              void(int, int) )
@@ -1351,28 +1536,48 @@ REGISTER_INTRINSICS(console_api,
 (printhex,              void(int, int) )
 );
 
-REGISTER_INTRINSICS(system_api,
-(current_time, int64_t()       )
-// (publication_time,   int64_t() )
-);
-
 REGISTER_INTRINSICS(context_free_system_api,
-(abort,                void()              )
-(gxb_assert,           void(int, int)      )
-(gxb_assert_message,   void(int, int, int) )
-(gxb_assert_code,      void(int, int64_t)  )
-(gxb_exit,             void(int)           )
+(abort,                     void()              )
+(graphene_assert,           void(int, int)      )
+(graphene_assert_message,   void(int, int, int) )
+(graphene_assert_code,      void(int, int64_t)  )
+(graphene_exit,             void(int)           )
 );
 
+REGISTER_INTRINSICS(global_api,
+(get_head_block_num,    int64_t()          )
+(get_head_block_id,     void(int)          )
+(get_block_id_for_num,     void(int, int)          )
+(get_head_block_time,   int64_t()          )
+(get_trx_sender,        int64_t()          )
+(get_trx_origin,        int64_t()          )
+(get_account_id,        int64_t(int, int)  )
+(get_asset_id,          int64_t(int, int)       )
+);
+
+REGISTER_INTRINSICS(crypto_api,
+(assert_sha256,          void(int, int, int)           )
+(assert_sha1,            void(int, int, int)           )
+(assert_sha512,          void(int, int, int)           )
+(assert_ripemd160,       void(int, int, int)           )
+(sha1,                   void(int, int, int)           )
+(sha256,                 void(int, int, int)           )
+(sha512,                 void(int, int, int)           )
+(ripemd160,              void(int, int, int)           )
+(verify_signature,       int(int, int, int, int, int)  )
+);
 
 REGISTER_INTRINSICS(action_api,
-(read_action_data,       int(int, int)  )
-(action_data_size,       int()          )
-(current_receiver,       int64_t()      )
+(read_action_data,          int(int, int)  )
+(action_data_size,          int()          )
+(current_receiver,          int64_t()      )
+(get_action_asset_id,       int64_t()      )
+(get_action_asset_amount,   int64_t()      )
 );
 
 REGISTER_INTRINSICS(asset_api,
-(transfer_asset,                 void(int64_t, int64_t, int64_t, int64_t))
+(withdraw_asset,                 void(int64_t, int64_t, int64_t, int64_t))
+(get_balance,                    int64_t(int64_t, int64_t))
 );
 
 #define DB_SECONDARY_INDEX_METHODS_SIMPLE(IDX) \
@@ -1413,10 +1618,6 @@ REGISTER_INTRINSICS( database_api,
    (db_end_i64,          int(int64_t,int64_t,int64_t))
 
    DB_SECONDARY_INDEX_METHODS_SIMPLE(idx64)
-   DB_SECONDARY_INDEX_METHODS_SIMPLE(idx128)
-   DB_SECONDARY_INDEX_METHODS_ARRAY(idx256)
-   // DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_double)
-   // DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_long_double)
 );
 
 REGISTER_INJECTED_INTRINSICS(transaction_context,

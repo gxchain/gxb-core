@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE( tapos )
       //relative_expiration is 1, but ref block is 2 blocks old, so this should fail.
       GRAPHENE_REQUIRE_THROW(PUSH_TX( db1, trx, database::skip_transaction_signatures | database::skip_authority_check ), fc::exception);
       set_expiration( db1, trx );
-      trx.signatures.clear();
+      trx.clear_signatures();
       trx.sign( init_account_priv_key, db1.get_chain_id() );
       db1.push_transaction(trx, database::skip_transaction_signatures | database::skip_authority_check);
    } catch (fc::exception& e) {
@@ -625,14 +625,14 @@ BOOST_FIXTURE_TEST_CASE( optional_tapos, database_fixture )
 
       tx.ref_block_num = 0;
       tx.ref_block_prefix = 0;
-      tx.signatures.clear();
+      tx.clear_signatures();
       sign( tx, alice_private_key );
       PUSH_TX( db, tx );
 
       BOOST_TEST_MESSAGE( "proper ref_block_num, ref_block_prefix" );
 
       set_expiration( db, tx );
-      tx.signatures.clear();
+      tx.clear_signatures();
       sign( tx, alice_private_key );
       PUSH_TX( db, tx );
 
@@ -640,7 +640,7 @@ BOOST_FIXTURE_TEST_CASE( optional_tapos, database_fixture )
 
       tx.ref_block_num = 0;
       tx.ref_block_prefix = 0x12345678;
-      tx.signatures.clear();
+      tx.clear_signatures();
       sign( tx, alice_private_key );
       GRAPHENE_REQUIRE_THROW( PUSH_TX( db, tx ), fc::exception );
 
@@ -648,7 +648,7 @@ BOOST_FIXTURE_TEST_CASE( optional_tapos, database_fixture )
 
       tx.ref_block_num = 1;
       tx.ref_block_prefix = 0x12345678;
-      tx.signatures.clear();
+      tx.clear_signatures();
       sign( tx, alice_private_key );
       GRAPHENE_REQUIRE_THROW( PUSH_TX( db, tx ), fc::exception );
 
@@ -656,7 +656,7 @@ BOOST_FIXTURE_TEST_CASE( optional_tapos, database_fixture )
 
       tx.ref_block_num = 9999;
       tx.ref_block_prefix = 0x12345678;
-      tx.signatures.clear();
+      tx.clear_signatures();
       sign( tx, alice_private_key );
       GRAPHENE_REQUIRE_THROW( PUSH_TX( db, tx ), fc::exception );
    }
@@ -717,49 +717,6 @@ BOOST_FIXTURE_TEST_CASE( maintenance_interval, database_fixture )
 }
 
 
-BOOST_FIXTURE_TEST_CASE( limit_order_expiration, database_fixture )
-{ try {
-   //Get a sane head block time
-   generate_block();
-
-   auto* test = &create_bitasset("MIATEST");
-   auto* core = &asset_id_type()(db);
-   auto* nathan = &create_account("nathan");
-   auto* committee = &account_id_type()(db);
-
-   transfer(*committee, *nathan, core->amount(50000));
-
-   BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 50000 );
-
-   limit_order_create_operation op;
-   op.seller = nathan->id;
-   op.amount_to_sell = core->amount(500);
-   op.min_to_receive = test->amount(500);
-   op.expiration = db.head_block_time() + fc::seconds(10);
-   trx.operations.push_back(op);
-   auto ptrx = PUSH_TX( db, trx, ~0 );
-
-   BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 49500 );
-
-   auto ptrx_id = ptrx.operation_results.back().get<object_id_type>();
-   auto limit_index = db.get_index_type<limit_order_index>().indices();
-   auto limit_itr = limit_index.begin();
-   BOOST_REQUIRE( limit_itr != limit_index.end() );
-   BOOST_REQUIRE( limit_itr->id == ptrx_id );
-   BOOST_REQUIRE( db.find_object(limit_itr->id) );
-   BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 49500 );
-   auto id = limit_itr->id;
-
-   generate_blocks(op.expiration, false);
-   test = &get_asset("MIATEST");
-   core = &asset_id_type()(db);
-   nathan = &get_account("nathan");
-   committee = &account_id_type()(db);
-
-   BOOST_CHECK(db.find_object(id) == nullptr);
-   BOOST_CHECK_EQUAL( get_balance(*nathan, *core), 50000 );
-} FC_LOG_AND_RETHROW() }
-
 BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
 { try {
    generate_block();
@@ -801,8 +758,8 @@ BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
 
    BOOST_TEST_MESSAGE( "Verify that signing once with the proper key passes" );
    trx.signatures.pop_back();
+   trx.signees.clear();
    db.push_transaction(trx, 0);
-   sign( trx, bob_private_key );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -1113,7 +1070,7 @@ BOOST_FIXTURE_TEST_CASE( transaction_invalidated_in_cache, database_fixture )
 
       signed_transaction tx = generate_xfer_tx( alice_id, bob_id, 1000, 2 );
       tx.set_expiration( db.head_block_time() + 2 * db.get_global_properties().parameters.block_interval );
-      tx.signatures.clear();
+      tx.clear_signatures();
       sign( tx, alice_private_key );
       // put the tx in db tx cache
       PUSH_TX( db, tx );

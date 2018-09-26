@@ -22,10 +22,23 @@ namespace config {
     constexpr uint64_t billable_size_v = ((billable_size<T>::value + billable_alignment - 1) / billable_alignment) * billable_alignment;
 
     template<>
-    struct billable_size<key_value_object> {
-       static const uint64_t overhead = overhead_per_row_per_index_ram_bytes * 2;  ///< overhead for potentially single-row table, 2x indices internal-key and primary key
-       static const uint64_t value = 32 + 8 + 4 + overhead; ///< 32 bytes for our constant size fields, 8 for pointer to vector data, 4 bytes for a size of vector + overhead
+    struct billable_size<table_id_object> {
+        static const uint64_t overhead = overhead_per_row_per_index_ram_bytes * 2;  ///< overhead for 2x indices internal-key and code,scope,table
+        static const uint64_t value = 44 + overhead; ///< 36 bytes for constant size fields + overhead
     };
+
+    template<>
+    struct billable_size<key_value_object> {
+        static const uint64_t overhead = overhead_per_row_per_index_ram_bytes * 2;  ///< overhead for potentially single-row table, 2x indices internal-key and primary key
+        static const uint64_t value = 32 + 8 + 4 + overhead; ///< 32 bytes for our constant size fields, 8 for pointer to vector data, 4 bytes for a size of vector + overhead
+    };
+
+    template<>
+    struct billable_size<index64_object> {
+        static const uint64_t overhead = overhead_per_row_per_index_ram_bytes * 3;  ///< overhead for potentially single-row table, 3x indices internal-key, primary key and primary+secondary key
+        static const uint64_t value = 24 + 8 + overhead; ///< 24 bytes for fixed fields + 8 bytes key + overhead
+    };
+
 }
 
 class database;
@@ -198,8 +211,6 @@ class apply_context {
             int store(uint64_t scope, uint64_t table, const account_name &payer,
                       uint64_t id, secondary_key_proxy_const_type value)
             {
-               // FC_ASSERT( payer != account_name(), "must specify a valid account to pay for new record" );
-
                auto &tab = const_cast<table_id_object&>(context.find_or_create_table(context.receiver, scope, table, payer));
 
                const auto &obj = context._db->create<ObjectType>([&](auto &o) {
@@ -213,7 +224,7 @@ class apply_context {
                    ++t.count;
                });
 
-               // context.update_db_usage
+               context.update_ram_usage(config::billable_size_v<ObjectType>);
 
                itr_cache.cache_table(tab);
                return itr_cache.add(obj);
@@ -222,7 +233,7 @@ class apply_context {
             void remove(int iterator)
             {
                 const auto &obj = itr_cache.get(iterator);
-                // context.update_db_usage
+                context.update_ram_usage(-(config::billable_size_v<ObjectType>));
 
                 const auto &table_obj = itr_cache.get_table(obj.t_id);
                 FC_ASSERT(table_obj.code == context.receiver, "db access violation");
@@ -246,10 +257,6 @@ class apply_context {
                 const auto &table_obj = itr_cache.get_table(obj.t_id);
                 FC_ASSERT(table_obj.code == context.receiver, "db access violation");
 
-                // if( payer == account_name() ) payer = obj.payer;
-
-                // context.update_db_usage
-
                 context._db->modify(obj, [&](ObjectType &o) {
                     secondary_key_helper_t::set(o.secondary_key, secondary);
                     o.payer = payer;
@@ -258,8 +265,8 @@ class apply_context {
 
             int find_secondary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_const_type secondary, uint64_t &primary)
             {
-                auto tab = context.find_table(code, scope, table);
-                if (!tab.valid()) return -1;
+                auto *tab = context.find_table(code, scope, table);
+                if (!tab) return -1;
 
                 auto table_end_itr = itr_cache.cache_table(*tab);
 
@@ -275,7 +282,7 @@ class apply_context {
             int lowerbound_secondary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t &primary)
             {
                 auto tab = context.find_table(code, scope, table);
-                if (!tab.valid()) return -1;
+                if (!tab) return -1;
 
                 auto table_end_itr = itr_cache.cache_table(*tab);
 
@@ -292,8 +299,8 @@ class apply_context {
 
             int upperbound_secondary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t &primary)
             {
-                auto tab = context.find_table(code, scope, table);
-                if (!tab.valid()) return -1;
+                auto *tab = context.find_table(code, scope, table);
+                if (!tab) return -1;
 
                 auto table_end_itr = itr_cache.cache_table(*tab);
 
@@ -310,8 +317,8 @@ class apply_context {
 
             int end_secondary(uint64_t code, uint64_t scope, uint64_t table)
             {
-                auto tab = context.find_table(code, scope, table);
-                if (!tab.valid()) return -1;
+                auto *tab = context.find_table(code, scope, table);
+                if (!tab) return -1;
 
                 return itr_cache.cache_table(*tab);
             }
@@ -368,7 +375,7 @@ class apply_context {
             int find_primary(uint64_t code, uint64_t scope, uint64_t table, secondary_key_proxy_type secondary, uint64_t primary)
             {
                 auto tab = context.find_table(code, scope, table);
-                if (!tab.valid()) return -1;
+                if (!tab) return -1;
 
                 auto table_end_itr = itr_cache.cache_table(*tab);
 
@@ -382,8 +389,8 @@ class apply_context {
 
             int lowerbound_primary(uint64_t code, uint64_t scope, uint64_t table, uint64_t primary)
             {
-                auto tab = context.find_table(code, scope, table);
-                if (!tab.valid()) return -1;
+                auto *tab = context.find_table(code, scope, table);
+                if (!tab) return -1;
 
                 auto table_end_itr = itr_cache.cache_table(*tab);
 
@@ -398,7 +405,7 @@ class apply_context {
             int upperbound_primary(uint64_t code, uint64_t scope, uint64_t table, uint64_t primary)
             {
                 auto tab = context.find_table(code, scope, table);
-                if (!tab.valid()) return -1;
+                if (!tab) return -1;
 
                 auto table_end_itr = itr_cache.cache_table(*tab);
 
@@ -474,19 +481,17 @@ class apply_context {
 
    /// Constructor
    public:
-     apply_context(database &d, transaction_context &trx_ctx, const action &a)
+     apply_context(database &d, transaction_context &trx_ctx, const action &a, optional<asset> amnt)
          : act(a)
          , trx_context(trx_ctx)
          , _db(&d)
-         , receiver(a.account)
+         , amount(amnt)
+         , receiver(a.contract_id)
          , idx64(*this)
-         , idx128(*this)
-         , idx256(*this)
-         , idx_double(*this)
-         , idx_long_double(*this)
      {
+         contract_log_to_console = _db->get_contract_log_to_console();
          reset_console();
-      }
+     }
 
    public:
       database &db() const { assert(_db); return *_db; }
@@ -495,17 +500,15 @@ class apply_context {
       const action&                 act; ///< message being applied
       transaction_context&          trx_context; ///< transaction context in which the action is running
       database*                     _db;
+      optional<asset>               amount;
       uint64_t                      receiver;
 
       gph_generic_index<index64_object>                                  idx64;
-      gph_generic_index<index128_object>                                 idx128;
-      gph_generic_index<index256_object, uint128_t*, const uint128_t*>   idx256;
-      gph_generic_index<index_double_object>                             idx_double;
-      gph_generic_index<index_long_double_object>                        idx_long_double;
 
    private:
       iterator_cache<key_value_object>    keyval_cache;
       vector<action>                      _inline_actions; ///< queued inline messages
+      bool                                contract_log_to_console;
 
    /// Execution methods:
    public:
@@ -528,7 +531,7 @@ class apply_context {
       int db_end_i64(uint64_t code, uint64_t scope, uint64_t table);
 
     private:
-      optional<table_id_object> find_table(uint64_t code, name scope, name table);
+      const table_id_object* find_table(uint64_t code, name scope, name table);
       const table_id_object &find_or_create_table(uint64_t code, name scope, name table, const account_name &payer);
       void remove_table(const table_id_object &tid);
       int db_store_i64(uint64_t code, uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size);
@@ -541,21 +544,46 @@ class apply_context {
 
       template<typename T>
       void console_append(T val) {
-          _pending_console_output << val;
+          if(contract_log_to_console)
+              _pending_console_output << val;
       }
 
-      template<typename T, typename ...Ts>
-      void console_append(T val, Ts ...rest) {
+      template <typename T, typename... Ts>
+      void console_append(T val, Ts... rest)
+      {
+          if (!contract_log_to_console)
+              return;
           console_append(val);
           console_append(rest...);
       };
 
-      inline void console_append_formatted(const string& fmt, const variant_object& vo) {
-          console_append(fc::format_string(fmt, vo));
+      inline void console_append_formatted(const string &fmt, const variant_object &vo)
+      {
+          if (contract_log_to_console)
+              console_append(fc::format_string(fmt, vo));
       }
-   public:
+
+    public:
       uint64_t get_ram_usage() const {
           return ram_usage;
+      }
+
+      void update_ram_usage(int64_t ram_delta) {
+          if (ram_delta == 0) {
+              return;
+          }
+
+          if (!(ram_delta <= 0 || UINT64_MAX - ram_usage >= (uint64_t) ram_delta)) {
+              dlog("Ram usage delta would overflow UINT64_MAX");
+              ram_delta = 0;
+          }
+
+          if (!(ram_delta >= 0 || ram_usage >= (uint64_t)(-ram_delta))) {
+              dlog("Ram usage delta would underflow UINT64_MAX");
+              ram_delta = 0;
+          }
+
+          ram_usage += ram_delta;
       }
 
    private:

@@ -56,7 +56,7 @@ void_result balance_lock_evaluator::do_evaluate(const balance_lock_operation& op
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type balance_lock_evaluator::do_apply(const balance_lock_operation& op)
+object_id_type balance_lock_evaluator::do_apply(const balance_lock_operation& op, int32_t billed_cpu_time_us)
 { try {
     database& _db = db();
     const auto& new_object = _db.create<lock_balance_object>([&](lock_balance_object& obj){
@@ -84,7 +84,7 @@ void_result balance_unlock_evaluator::do_evaluate(const balance_unlock_operation
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result balance_unlock_evaluator::do_apply(const balance_unlock_operation& op)
+void_result balance_unlock_evaluator::do_apply(const balance_unlock_operation& op, int32_t billed_cpu_time_us)
 { try {
     database& _db = db();
     if (nullptr != lock_balance_obj) {

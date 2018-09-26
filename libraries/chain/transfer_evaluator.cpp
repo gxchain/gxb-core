@@ -38,6 +38,12 @@ void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
    const asset_object&   asset_type      = op.amount.asset_id(d);
 
    try {
+      GRAPHENE_ASSERT(
+         to_account.code.size() == 0,
+         transfer_restricted_transfer_to_contract,
+         "the account '${to}' is a contract account",
+         ("to", to_account.name)
+         );
 
       GRAPHENE_ASSERT(
          is_authorized_asset( d, from_account, asset_type ),
@@ -74,7 +80,7 @@ void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
 
 }  FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result transfer_evaluator::do_apply( const transfer_operation& o )
+void_result transfer_evaluator::do_apply(const transfer_operation& o, int32_t billed_cpu_time_us)
 { try {
    db().adjust_balance( o.from, -o.amount );
    db().adjust_balance( o.to, o.amount );
@@ -114,7 +120,7 @@ void_result override_transfer_evaluator::do_evaluate( const override_transfer_op
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result override_transfer_evaluator::do_apply( const override_transfer_operation& o )
+void_result override_transfer_evaluator::do_apply(const override_transfer_operation& o, int32_t billed_cpu_time_us)
 { try {
    db().adjust_balance( o.from, -o.amount );
    db().adjust_balance( o.to, o.amount );

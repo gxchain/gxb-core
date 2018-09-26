@@ -30,13 +30,13 @@
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/fba_object.hpp>
-#include <graphene/chain/market_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/data_market_object.hpp>
+#include <graphene/chain/market_object.hpp>
 #include <graphene/chain/data_transaction_object.hpp>
 #include <graphene/chain/free_data_product_object.hpp>
 #include <graphene/chain/league_data_product_object.hpp>
@@ -127,7 +127,7 @@ template<> struct js_name<fc::uint160>         { static std::string name(){ retu
 template<> struct js_name<fc::sha224>          { static std::string name(){ return "bytes 28";   } };
 template<> struct js_name<fc::sha256>          { static std::string name(){ return "bytes 32";   } };
 template<> struct js_name<fc::unsigned_int>    { static std::string name(){ return "varuint32";  } };
-template<> struct js_name<fc::signed_int>      { static std::string name(){ return "varint32";   } };
+//template<> struct js_name<fc::signed_int>      { static std::string name(){ return "varint32";   } };
 template<> struct js_name< vote_id_type >      { static std::string name(){ return "vote_id";    } };
 template<> struct js_name< time_point_sec >    { static std::string name(){ return "time_point_sec"; } };
 

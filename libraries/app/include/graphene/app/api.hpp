@@ -29,8 +29,6 @@
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/confidential.hpp>
 
-#include <graphene/market_history/market_history_plugin.hpp>
-
 #include <graphene/debug_witness/debug_api.hpp>
 
 #include <graphene/net/node.hpp>
@@ -49,7 +47,6 @@
 
 namespace graphene { namespace app {
    using namespace graphene::chain;
-   using namespace graphene::market_history;
    using namespace fc::ecc;
    using namespace std;
 
@@ -157,11 +154,6 @@ namespace graphene { namespace app {
                                                                         uint32_t stop = 0,
                                                                         unsigned limit = 100,
                                                                         uint32_t start = 0) const;
-
-         vector<order_history_object> get_fill_order_history( asset_id_type a, asset_id_type b, uint32_t limit )const;
-         vector<bucket_object> get_market_history( asset_id_type a, asset_id_type b, uint32_t bucket_seconds,
-                                                   fc::time_point_sec start, fc::time_point_sec end )const;
-         flat_set<uint32_t> get_market_history_buckets()const;
       private:
            application& _app;
    };
@@ -233,14 +225,6 @@ namespace graphene { namespace app {
       public:
          crypto_api();
          
-         fc::ecc::blind_signature blind_sign( const extended_private_key_type& key, const fc::ecc::blinded_hash& hash, int i );
-         
-         signature_type unblind_signature( const extended_private_key_type& key,
-                                              const extended_public_key_type& bob,
-                                              const fc::ecc::blind_signature& sig,
-                                              const fc::sha256& hash,
-                                              int i );
-                                                                  
          fc::ecc::commitment_type blind( const fc::ecc::blind_factor_type& blind, uint64_t value );
          
          fc::ecc::blind_factor_type blind_sum( const std::vector<blind_factor_type>& blinds_in, uint32_t non_neg );
@@ -355,9 +339,6 @@ FC_API(graphene::app::history_api,
        (get_account_history_by_operations)
        (get_account_history_operations)
        (get_relative_account_history)
-       (get_fill_order_history)
-       (get_market_history)
-       (get_market_history_buckets)
      )
 FC_API(graphene::app::block_api,
        (get_blocks)
@@ -371,8 +352,6 @@ FC_API(graphene::app::network_node_api,
        (set_advanced_node_parameters)
      )
 FC_API(graphene::app::crypto_api,
-       (blind_sign)
-       (unblind_signature)
        (blind)
        (blind_sum)
        (verify_sum)

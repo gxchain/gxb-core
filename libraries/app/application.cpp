@@ -142,7 +142,7 @@ namespace detail {
          if( _options->count("seed-nodes") )
          {
             auto seeds_str = _options->at("seed-nodes").as<string>();
-            auto seeds = fc::json::from_string(seeds_str).as<vector<string>>();
+            auto seeds = fc::json::from_string(seeds_str).as<vector<string>>(2);
             for( const string& endpoint_string : seeds )
             {
                try {
@@ -228,7 +228,7 @@ namespace detail {
 
       void new_connection( const fc::http::websocket_connection_ptr& c )
       {
-         auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
+         auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c, GRAPHENE_NET_MAX_NESTED_OBJECTS);
          auto login = std::make_shared<graphene::app::login_api>( std::ref(*_self) );
          login->enable_api("database_api");
 
@@ -291,7 +291,7 @@ namespace detail {
          _websocket_tls_server->start_accept();
       } FC_CAPTURE_AND_RETHROW() }
 
-      application_impl(application* self)
+      explicit application_impl(application* self)
          : _self(self),
            _chain_db(std::make_shared<chain::database>())
       {
@@ -307,20 +307,19 @@ namespace detail {
          public_key_type init_pubkey( init_key );
          for( uint64_t i=0; i<genesis.initial_active_witnesses; i++ )
             genesis.initial_witness_candidates[i].block_signing_key = init_pubkey;
-         return;
       }
 
       void startup()
       { try {
          fc::create_directories(_data_dir / "blockchain");
 
-         auto initial_state = [&] {
+         auto initial_state = [this] {
             ilog("Initializing database...");
             if( _options->count("genesis-json") )
             {
                std::string genesis_str;
                fc::read_file_contents( _options->at("genesis-json").as<boost::filesystem::path>(), genesis_str );
-               genesis_state_type genesis = fc::json::from_string( genesis_str ).as<genesis_state_type>();
+               genesis_state_type genesis = fc::json::from_string( genesis_str ).as<genesis_state_type>(20);
                bool modified_genesis = false;
                if( _options->count("genesis-timestamp") )
                {
@@ -353,7 +352,7 @@ namespace detail {
                graphene::egenesis::compute_egenesis_json( egenesis_json );
                FC_ASSERT( egenesis_json != "" );
                FC_ASSERT( graphene::egenesis::get_egenesis_json_hash() == fc::sha256::hash( egenesis_json ) );
-               auto genesis = fc::json::from_string( egenesis_json ).as<genesis_state_type>();
+               auto genesis = fc::json::from_string( egenesis_json ).as<genesis_state_type>(20);
                genesis.initial_chain_id = fc::sha256::hash( egenesis_json );
                return genesis;
             }
@@ -369,45 +368,53 @@ namespace detail {
             loaded_checkpoints.reserve( cps.size() );
             for( auto cp : cps )
             {
-               auto item = fc::json::from_string(cp).as<std::pair<uint32_t,block_id_type> >();
+               auto item = fc::json::from_string(cp).as<std::pair<uint32_t,block_id_type> >(20);
                loaded_checkpoints[item.first] = item.second;
             }
          }
          _chain_db->add_checkpoints( loaded_checkpoints );
 
+         if (_options->count("max-transaction-time")) {
+             _chain_db->set_max_trx_cpu_time(_options->at("max-transaction-time").as<int32_t>());
+         }
+
          if( _options->count("replay-blockchain") )
             _chain_db->wipe( _data_dir / "blockchain", false );
 
-         try
-         {
-            _chain_db->open( _data_dir / "blockchain", initial_state, GRAPHENE_CURRENT_DB_VERSION );
+         bool fast_replay = false;
+         if (_options->count("fast-replay")) {
+             fast_replay = true;
          }
-         catch( const fc::exception& e )
-         {
-            elog( "Caught exception ${e} in open(), you might want to force a replay", ("e", e.to_detail_string()) );
-            throw;
-         }
-
-         if( _options->count("force-validate") )
-         {
-            ilog( "All transaction signatures will be validated" );
-            _force_validate = true;
+         try {
+             _chain_db->open(_data_dir / "blockchain", initial_state, GRAPHENE_CURRENT_DB_VERSION, fast_replay);
+         } catch (const fc::exception &e) {
+             elog("Caught exception ${e} in open(), you might want to force a replay", ("e", e.to_detail_string()));
+             throw;
          }
 
-         if( _options->count("api-access") ) {
+         if (_options->count("force-validate")) {
+             ilog("All transaction signatures will be validated");
+             _force_validate = true;
+         }
 
-            if(fc::exists(_options->at("api-access").as<boost::filesystem::path>()))
-            {
-               _apiaccess = fc::json::from_file( _options->at("api-access").as<boost::filesystem::path>() ).as<api_access>();
-               ilog( "Using api access file from ${path}",
-                     ("path", _options->at("api-access").as<boost::filesystem::path>().string()) );
-            }
-            else
-            {
-               elog("Failed to load file from ${path}",
-                  ("path", _options->at("api-access").as<boost::filesystem::path>().string()));
-               std::exit(EXIT_FAILURE);
-            }
+         if (_options->count("contracts-console")) {
+             _chain_db->set_contract_log_to_console(true);
+         }
+
+         if (_options->count("rpc-mock-calc-fee")) {
+             _chain_db->set_rpc_mock_calc_fee(true);
+         }
+
+         if (_options->count("api-access")) {
+             if (fc::exists(_options->at("api-access").as<boost::filesystem::path>())) {
+                 _apiaccess = fc::json::from_file(_options->at("api-access").as<boost::filesystem::path>()).as<api_access>(20);
+                 ilog("Using api access file from ${path}",
+                      ("path", _options->at("api-access").as<boost::filesystem::path>().string()));
+             } else {
+                 elog("Failed to load file from ${path}",
+                      ("path", _options->at("api-access").as<boost::filesystem::path>().string()));
+                 std::exit(EXIT_FAILURE);
+             }
          }
 
          else
@@ -931,11 +938,14 @@ void application::set_program_options(boost::program_options::options_descriptio
           "missing fields in a Genesis State will be added, and any unknown fields will be removed. If no file or an "
           "invalid file is found, it will be replaced with an example Genesis State.")
          ("replay-blockchain", "Rebuild object graph by replaying all blocks")
+         ("fast-replay", "no sleep while replaying block blocks")
          ("resync-blockchain", "Delete all blocks and re-sync with network from scratch")
          ("force-validate", "Force validation of all transactions")
          ("log-file", "Output result to log file, not console, only works when config.ini not exists")
          ("genesis-timestamp", bpo::value<uint32_t>(), "Replace timestamp from genesis.json with current time plus this many seconds (experts only!)")
          ("version,v", "Display version information")
+         ("contracts-console", "print contract's output to console")
+         ("rpc-mock-calc-fee", "rec-server mock caculate required fees, default fasle")
          ;
    command_line_options.add(_cli_options);
    configuration_file_options.add(_cfg_options);
@@ -953,7 +963,7 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
       if( fc::exists(genesis_out) )
       {
          try {
-            genesis_state = fc::json::from_file(genesis_out).as<genesis_state_type>();
+            genesis_state = fc::json::from_file(genesis_out).as<genesis_state_type>(20);
          } catch(const fc::exception& e) {
             std::cerr << "Unable to parse existing genesis file:\n" << e.to_string()
                       << "\nWould you like to replace it? [y/N] ";

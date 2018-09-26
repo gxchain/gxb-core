@@ -30,7 +30,7 @@ class datasource_copyright_clear_evaluator : public evaluator<datasource_copyrig
        typedef datasource_copyright_clear_operation operation_type;
 
        void_result do_evaluate(const datasource_copyright_clear_operation& o);
-       void_result do_apply(const datasource_copyright_clear_operation& o);
+       void_result do_apply(const datasource_copyright_clear_operation& o, uint32_t billed_cpu_time_us = 0);
 };
 
 } } // graphene::chain

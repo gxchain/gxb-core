@@ -44,7 +44,7 @@ namespace graphene { namespace chain {
       bool empty()const { return 0 == value; }
       bool good()const  { return !empty();   }
 
-      name( const char* str )   { set(str);           } 
+      name( const char* str )   { set(str);           }
       name( const string& str ) { set( str.c_str() ); }
 
       void set( const char* str );
@@ -112,8 +112,8 @@ namespace std {
 
 namespace fc {
   class variant;
-  void to_variant(const graphene::chain::name& c, fc::variant& v);
-  void from_variant(const fc::variant& v, graphene::chain::name& check);
+  void to_variant(const graphene::chain::name& c, fc::variant& v, uint32_t max_depth = 1);
+  void from_variant(const fc::variant& v, graphene::chain::name& check, uint32_t max_depth = 1);
 } // fc
 
 

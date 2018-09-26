@@ -24,11 +24,9 @@
 #include <graphene/app/application.hpp>
 #include <graphene/app/network_broadcast_api.hpp>
 #include <graphene/chain/transaction_object.hpp>
-#include <graphene/chain/protocol/operations.hpp>
-#include <graphene/chain/free_data_product_object.hpp>
-#include <graphene/chain/league_data_product_object.hpp>
 
 #include <fc/smart_ref_impl.hpp>
+#include <fc/thread/future.hpp>
 
 namespace graphene { namespace app {
 
@@ -52,7 +50,7 @@ namespace graphene { namespace app {
              {
                 auto block_num = b.block_num();
                 auto& callback = _callbacks.find(id)->second;
-                auto v = fc::variant(transaction_confirmation{id, block_num, trx_num, trx});
+                auto v = fc::variant(transaction_confirmation{id, block_num, trx_num, trx}, GRAPHENE_MAX_NESTED_OBJECTS);
                 fc::async([capture_this, v, callback]() { callback(v); });
              }
           }
@@ -65,13 +63,25 @@ namespace graphene { namespace app {
 
        trx.validate();
        _app.chain_database()->push_transaction(trx);// evaluatet trx
-       _app.p2p_node()->broadcast_transaction(trx); // broadcast trx
+       if (_app.p2p_node() != nullptr)
+           _app.p2p_node()->broadcast_transaction(trx); // broadcast trx
+    }
+
+    fc::variant network_broadcast_api::broadcast_transaction_synchronous(const signed_transaction& trx)
+    {
+       fc::promise<fc::variant>::ptr prom( new fc::promise<fc::variant>() );
+       broadcast_transaction_with_callback( [=]( const fc::variant& v ){
+        prom->set_value(v);
+       }, trx );
+
+       return fc::future<fc::variant>(prom).wait();
     }
 
     void network_broadcast_api::broadcast_block( const signed_block& b )
     {
        _app.chain_database()->push_block(b);
-       _app.p2p_node()->broadcast( net::block_message( b ));
+       if (_app.p2p_node() != nullptr)
+           _app.p2p_node()->broadcast(net::block_message(b));
     }
 
     void network_broadcast_api::broadcast_transaction_with_callback(confirmation_callback cb, const signed_transaction& trx)
@@ -79,7 +89,8 @@ namespace graphene { namespace app {
        trx.validate();
        _callbacks[trx.id()] = cb;
        _app.chain_database()->push_transaction(trx);
-       _app.p2p_node()->broadcast_transaction(trx);
+       if (_app.p2p_node() != nullptr)
+           _app.p2p_node()->broadcast_transaction(trx);
     }
 
 } } // graphene::app

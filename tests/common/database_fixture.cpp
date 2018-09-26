@@ -25,7 +25,6 @@
 #include <boost/program_options.hpp>
 
 #include <graphene/account_history/account_history_plugin.hpp>
-#include <graphene/market_history/market_history_plugin.hpp>
 
 #include <graphene/db/simple_index.hpp>
 
@@ -72,7 +71,6 @@ database_fixture::database_fixture()
          std::cout << "running test " << boost::unit_test::framework::current_test_case().p_name << std::endl;
    }
    auto ahplugin = app.register_plugin<graphene::account_history::account_history_plugin>();
-   auto mhplugin = app.register_plugin<graphene::market_history::market_history_plugin>();
    init_account_pub_key = init_account_priv_key.get_public_key();
 
    boost::program_options::variables_map options;
@@ -109,16 +107,14 @@ database_fixture::database_fixture()
       track_account.push_back(track);
       options.insert(std::make_pair("track-account", boost::program_options::variable_value(track_account, false)));
    }
+   options.insert(std::make_pair("partial-operations", boost::program_options::variable_value(false, false)));
 
    ahplugin->plugin_set_app(&app);
    ahplugin->plugin_initialize(options);
 
    options.insert(std::make_pair("bucket-size", boost::program_options::variable_value(string("[15]"),false)));
-   mhplugin->plugin_set_app(&app);
-   mhplugin->plugin_initialize(options);
 
    ahplugin->plugin_startup();
-   mhplugin->plugin_startup();
 
    generate_block();
 
@@ -447,7 +443,9 @@ const asset_object& database_fixture::create_bitasset(
    const string& name,
    account_id_type issuer /* = GRAPHENE_WITNESS_ACCOUNT */,
    uint16_t market_fee_percent /* = 100 */ /* 1% */,
-   uint16_t flags /* = charge_market_fee */
+   uint16_t flags /* = charge_market_fee */,
+   uint16_t precision /* = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS */,
+   asset_id_type backing_asset /* = CORE */
    )
 { try {
    asset_create_operation creator;
@@ -455,14 +453,15 @@ const asset_object& database_fixture::create_bitasset(
    creator.fee = asset();
    creator.symbol = name;
    creator.common_options.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
-   creator.precision = 2;
+   creator.precision = precision;
    creator.common_options.market_fee_percent = market_fee_percent;
    if( issuer == GRAPHENE_WITNESS_ACCOUNT )
       flags |= witness_fed_asset;
    creator.common_options.issuer_permissions = flags;
    creator.common_options.flags = flags & ~global_settle;
-   creator.common_options.core_exchange_rate = price({asset(1,asset_id_type(1)),asset(1)});
+   creator.common_options.core_exchange_rate = price(asset(1,asset_id_type(1)),asset(1));
    creator.bitasset_opts = bitasset_options();
+   creator.bitasset_opts->short_backing_asset = backing_asset;
    trx.operations.push_back(std::move(creator));
    trx.validate();
    processed_transaction ptx = db.push_transaction(trx, ~0);
@@ -644,7 +643,6 @@ const account_object& database_fixture::create_account(
       trx.validate();
 
       processed_transaction ptx = db.push_transaction(trx, ~0);
-      //wdump( (ptx) );
       const account_object& result = db.get<account_object>(ptx.operation_results[0].get<object_id_type>());
       trx.operations.clear();
       return result;
@@ -716,7 +714,6 @@ const limit_order_object*database_fixture::create_sell_order(account_id_type use
 
 const limit_order_object* database_fixture::create_sell_order( const account_object& user, const asset& amount, const asset& recv )
 {
-   //wdump((amount)(recv));
    limit_order_create_operation buy_order;
    buy_order.seller = user.id;
    buy_order.amount_to_sell = amount;
@@ -727,7 +724,6 @@ const limit_order_object* database_fixture::create_sell_order( const account_obj
    auto processed = db.push_transaction(trx, ~0);
    trx.operations.clear();
    verify_asset_supplies(db);
-   //wdump((processed));
    return db.find<limit_order_object>( processed.operation_results[0].get<object_id_type>() );
 }
 
@@ -1088,6 +1084,14 @@ void set_expiration( const database& db, transaction& tx )
    tx.set_reference_block(db.head_block_id());
    tx.set_expiration( db.head_block_time() + fc::seconds( params.block_interval * (params.maintenance_skip_slots + 1) * 3 ) );
    return;
+}
+
+void set_expiration(const database &db, transaction &tx, uint32_t time_seconds)
+{
+    const chain_parameters &params = db.get_global_properties().parameters;
+    tx.set_reference_block(db.head_block_id());
+    tx.set_expiration(db.head_block_time() + fc::seconds(params.block_interval * (params.maintenance_skip_slots + 1) * 3 + time_seconds));
+    return;
 }
 
 bool _push_block( database& db, const signed_block& b, uint32_t skip_flags /* = 0 */ )

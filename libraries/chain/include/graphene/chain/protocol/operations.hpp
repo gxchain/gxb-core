@@ -82,26 +82,26 @@ namespace graphene { namespace chain {
             witness_update_operation,//21
             proposal_create_operation,//22
             proposal_update_operation,//23
-            proposal_delete_operation,
-            withdraw_permission_create_operation,
-            withdraw_permission_update_operation,
-            withdraw_permission_claim_operation,
-            withdraw_permission_delete_operation,
-            committee_member_create_operation,
-            committee_member_update_operation,
-            committee_member_update_global_parameters_operation,
-            vesting_balance_create_operation,
-            vesting_balance_withdraw_operation,
-            worker_create_operation,
-            custom_operation,
-            assert_operation,
-            balance_claim_operation,
-            override_transfer_operation,
-            transfer_to_blind_operation,
-            blind_transfer_operation,
-            transfer_from_blind_operation,
+            proposal_delete_operation,//24
+            withdraw_permission_create_operation,//25
+            withdraw_permission_update_operation,//26
+            withdraw_permission_claim_operation,//27
+            withdraw_permission_delete_operation,//28
+            committee_member_create_operation,//29
+            committee_member_update_operation,//30
+            committee_member_update_global_parameters_operation,//31
+            vesting_balance_create_operation,//32
+            vesting_balance_withdraw_operation,//33
+            worker_create_operation,//34
+            custom_operation,//35
+            assert_operation,//36
+            balance_claim_operation,//37
+            override_transfer_operation,//38
+            transfer_to_blind_operation,//39
+            blind_transfer_operation,//40
+            transfer_from_blind_operation,//41
             asset_settle_cancel_operation,  // VIRTUAL
-            asset_claim_fees_operation,
+            asset_claim_fees_operation,//43
             fba_distribute_operation,        // VIRTUAL
             account_upgrade_merchant_operation,//45
             account_upgrade_datasource_operation,//46
@@ -127,14 +127,13 @@ namespace graphene { namespace chain {
             league_data_product_update_operation,//66
             league_create_operation,//67
             league_update_operation,//68
-            datasource_copyright_clear_operation,//69   
+            datasource_copyright_clear_operation,//69
             data_transaction_complain_operation,//70
             balance_lock_operation,//71
             balance_unlock_operation,//72
             proxy_transfer_operation, //73
             contract_deploy_operation, //74
-            contract_call_operation, //75
-            contract_deposit_operation //76
+            contract_call_operation //75
 
          > operation;
 
@@ -142,11 +141,11 @@ namespace graphene { namespace chain {
 
    /**
     *  Appends required authorites to the result vector.  The authorities appended are not the
-    *  same as those returned by get_required_auth 
+    *  same as those returned by get_required_auth
     *
     *  @return a set of required authorities for @ref op
     */
-   void operation_get_required_authorities( const operation& op, 
+   void operation_get_required_authorities( const operation& op,
                                             flat_set<account_id_type>& active,
                                             flat_set<account_id_type>& owner,
                                             vector<authority>&  other );

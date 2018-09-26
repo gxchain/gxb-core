@@ -26,6 +26,7 @@
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/asset.hpp>
 #include <graphene/chain/protocol/authority.hpp>
+#include <graphene/chain/protocol/contract_receipt.hpp>
 
 namespace graphene { namespace chain {
 
@@ -81,7 +82,7 @@ namespace graphene { namespace chain {
     */
 
    struct void_result{};
-   typedef fc::static_variant<void_result,object_id_type,asset> operation_result;
+   typedef fc::static_variant<void_result,object_id_type,asset,contract_receipt> operation_result;
 
    struct base_operation
    {
@@ -111,7 +112,9 @@ namespace graphene { namespace chain {
        data_transaction_commission_percent_t, // 3
        pocs_threshold_league_t,
        pocs_threshold_league_data_product_t,
-       lock_balance_params_t // 6
+       lock_balance_params_t, // 6
+       vm_cpu_limit_t, // 7
+       asset_symbol_t
        > future_extensions;
 
    /**

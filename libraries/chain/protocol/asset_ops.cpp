@@ -33,25 +33,26 @@ namespace graphene { namespace chain {
  */
 bool is_valid_symbol( const string& symbol )
 {
+    static const std::locale& loc = std::locale::classic();
     if( symbol.size() < GRAPHENE_MIN_ASSET_SYMBOL_LENGTH )
         return false;
 
     if( symbol.substr(0,3) == "BIT" ) 
-       return false;
+        return false;
 
     if( symbol.size() > GRAPHENE_MAX_ASSET_SYMBOL_LENGTH )
         return false;
 
-    if( !isalpha( symbol.front() ) )
+    if( !isalpha( symbol.front(), loc ) )
         return false;
 
-    if( !isalpha( symbol.back() ) )
+    if( !isalnum( symbol.back(), loc ) )
         return false;
 
     bool dot_already_present = false;
     for( const auto c : symbol )
     {
-        if( (isalpha( c ) && isupper( c )) || isdigit(c) )
+        if( (isalpha( c, loc ) && isupper( c, loc )) || isdigit( c, loc ) )
             continue;
 
         if( c == '.' )
@@ -107,8 +108,6 @@ void  asset_create_operation::validate()const
    }
    if( bitasset_opts ) bitasset_opts->validate();
 
-   asset dummy = asset(1) * common_options.core_exchange_rate;
-   FC_ASSERT(dummy.asset_id == asset_id_type(1));
    FC_ASSERT(precision <= 12);
 }
 
@@ -117,14 +116,12 @@ void asset_update_operation::validate()const
    FC_ASSERT( fee.amount >= 0 );
    if( new_issuer )
       FC_ASSERT(issuer != *new_issuer);
-   if (asset_to_update == asset_id_type()) {
+   // 1.3.0 and 1.3.1, don't validate core_exchange_rate
+   if (asset_to_update == asset_id_type() || asset_to_update == asset_id_type(1)) {
        new_options.validate(false);
    } else {
        new_options.validate();
    }
-
-   asset dummy = asset(1, asset_to_update) * new_options.core_exchange_rate;
-   FC_ASSERT(dummy.asset_id == asset_id_type());
 }
 
 share_type asset_update_operation::calculate_fee(const asset_update_operation::fee_parameters_type& k)const
@@ -171,7 +168,6 @@ void asset_issue_operation::validate()const
 void asset_fund_fee_pool_operation::validate() const
 {
    FC_ASSERT( fee.amount >= 0 );
-   FC_ASSERT( fee.asset_id == asset_id_type() );
    FC_ASSERT( amount > 0 );
 }
 
@@ -221,8 +217,6 @@ void asset_options::validate(bool check_core_exchange_rate) const
    if (check_core_exchange_rate) {
        core_exchange_rate.validate();
    }
-   FC_ASSERT( core_exchange_rate.base.asset_id.instance.value == 0 ||
-              core_exchange_rate.quote.asset_id.instance.value == 0 );
 
    if(!whitelist_authorities.empty() || !blacklist_authorities.empty())
       FC_ASSERT( flags & white_list );

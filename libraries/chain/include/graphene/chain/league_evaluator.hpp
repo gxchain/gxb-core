@@ -31,7 +31,7 @@ namespace graphene { namespace chain {
         typedef league_create_operation operation_type;
 
         void_result do_evaluate( const league_create_operation& o );
-        object_id_type do_apply( const league_create_operation& o );
+        object_id_type do_apply(const league_create_operation& o, int32_t billed_cpu_time_us = 0);
     };
 
    class league_update_evaluator : public evaluator<league_update_evaluator>
@@ -40,7 +40,7 @@ namespace graphene { namespace chain {
         typedef league_update_operation operation_type;
 
         void_result do_evaluate( const league_update_operation& o );
-        void_result do_apply( const league_update_operation& o );
+        void_result do_apply(const league_update_operation& o, int32_t billed_cpu_time_us = 0);
     };
 
 } } // graphene::chain

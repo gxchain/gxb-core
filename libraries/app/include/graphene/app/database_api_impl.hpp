@@ -37,7 +37,6 @@
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/witness_object.hpp>
-#include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/chain/data_market_object.hpp>
 #include <graphene/chain/data_transaction_object.hpp>
 #include <graphene/chain/second_hand_data_object.hpp>
@@ -60,7 +59,6 @@
 namespace graphene { namespace app {
 
 using namespace graphene::chain;
-using namespace graphene::market_history;
 using namespace std;
 
 typedef std::map< std::pair<graphene::chain::asset_id_type, graphene::chain::asset_id_type>, std::vector<fc::variant> > market_queue_type;
@@ -76,7 +74,7 @@ struct cmp_pair_by_value {
 class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 {
    public:
-      database_api_impl( graphene::chain::database& db );
+      explicit database_api_impl( graphene::chain::database& db );
       ~database_api_impl();
 
       // Objects
@@ -91,6 +89,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       void set_pending_transaction_callback( std::function<void(const variant&)> cb );
       void set_block_applied_callback( std::function<void(const variant& block_id)> cb );
       void cancel_all_subscriptions();
+      void unsubscribe_data_transaction_callback();
 
       // Blocks and transactions
       optional<block_header> get_block_header(uint32_t block_num)const;
@@ -102,6 +101,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       chain_property_object get_chain_properties()const;
       global_property_object get_global_properties()const;
       data_transaction_commission_percent_t get_commission_percent() const;
+      vm_cpu_limit_t get_cpu_limit() const;
       fc::variant_object get_config()const;
       chain_id_type get_chain_id()const;
       dynamic_global_property_object get_dynamic_global_properties()const;
@@ -114,10 +114,13 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<optional<account_object>> get_accounts(const vector<account_id_type>& account_ids)const;
       std::map<string,full_account> get_full_accounts( const vector<string>& names_or_ids, bool subscribe );
       optional<account_object> get_account_by_name( string name )const;
+      optional<account_object> get_account_by_contract_code(uint64_t code)const;
       vector<account_id_type> get_account_references( account_id_type account_id )const;
       vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
       map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
-      uint64_t get_account_count()const;
+      uint64_t get_transaction_count() const;
+      uint64_t get_account_count() const;
+      uint64_t get_asset_count() const;
       bool is_account_registered(string name) const;
 
 
@@ -134,18 +137,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<asset_object>           list_assets(const string& lower_bound_symbol, uint32_t limit)const;
       vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
 
-      // Markets / feeds
-      vector<limit_order_object>         get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
-      vector<call_order_object>          get_call_orders(asset_id_type a, uint32_t limit)const;
-      vector<force_settlement_object>    get_settle_orders(asset_id_type a, uint32_t limit)const;
-      vector<call_order_object>          get_margin_positions( const account_id_type& id )const;
-      void subscribe_to_market(std::function<void(const variant&)> callback, asset_id_type a, asset_id_type b);
-      void unsubscribe_data_transaction_callback();
-      void unsubscribe_from_market(asset_id_type a, asset_id_type b);
-      market_ticker                      get_ticker( const string& base, const string& quote )const;
-      market_volume                      get_24_volume( const string& base, const string& quote )const;
-      order_book                         get_order_book( const string& base, const string& quote, unsigned limit = 50 )const;
-      vector<market_trade>               get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
       optional<pocs_object>              get_pocs_object(league_id_type league_id, account_id_type account_id, object_id_type product_id) const;
 
       // Witnesses
@@ -179,6 +170,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Authority / validation
       std::string get_transaction_hex(const signed_transaction& trx)const;
+      std::string serialize_transaction(const signed_transaction& trx) const;
       set<public_key_type> get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const;
       set<public_key_type> get_potential_signatures( const signed_transaction& trx )const;
       set<address> get_potential_address_signatures( const signed_transaction& trx )const;
@@ -290,22 +282,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
          });
       }
 
-      template<typename T>
-      void enqueue_if_subscribed_to_market(const object* obj, market_queue_type& queue, bool full_object=true)
-      {
-         const T* order = dynamic_cast<const T*>(obj);
-         FC_ASSERT( order != nullptr);
-
-         auto market = order->get_market();
-
-         auto sub = _market_subscriptions.find( market );
-         if( sub != _market_subscriptions.end() ) {
-            queue[market].emplace_back( full_object ? obj->to_variant() : fc::variant(obj->id) );
-         }
-      }
-
       void broadcast_updates( const vector<variant>& updates );
-      void broadcast_market_updates( const market_queue_type& queue);
       void handle_object_changed(bool force_notify, bool full_object, const vector<object_id_type>& ids, const flat_set<account_id_type>& impacted_accounts, std::function<const object*(object_id_type id)> find_object);
       
       /** called every time a block is applied to report the objects that were changed */
@@ -336,7 +313,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       boost::signals2::scoped_connection                                                                                           _removed_connection;
       boost::signals2::scoped_connection                                                                                           _applied_block_connection;
       boost::signals2::scoped_connection                                                                                           _pending_trx_connection;
-      map< pair<asset_id_type,asset_id_type>, std::function<void(const variant&)> >      _market_subscriptions;
       graphene::chain::database&                                                                                                   _db;
 
 

@@ -32,7 +32,6 @@
 #include <graphene/chain/internal_exceptions.hpp>
 #include <graphene/chain/special_authority.hpp>
 #include <graphene/chain/special_authority_object.hpp>
-#include <graphene/chain/worker_object.hpp>
 #include <algorithm>
 
 
@@ -69,28 +68,13 @@ void verify_account_votes( const database& db, const account_options& options )
    FC_ASSERT( options.num_committee <= chain_params.maximum_committee_count,
               "Voted for more committee members than currently allowed (${c})", ("c", chain_params.maximum_committee_count) );
 
+   FC_ASSERT(db.find_object(options.voting_account), "Invalid proxy account specified.");
+
    uint32_t max_vote_id = gpo.next_available_vote_id;
-   bool has_worker_votes = false;
-   for( auto id : options.votes )
-   {
-      FC_ASSERT( id < max_vote_id );
-      has_worker_votes |= (id.type() == vote_id_type::worker);
+   for (auto id : options.votes) {
+       FC_ASSERT(id < max_vote_id, "assert ${a} < ${b} failed", ("a", id)("b", max_vote_id));
    }
-
-   if( has_worker_votes && (db.head_block_time() >= HARDFORK_607_TIME) )
-   {
-      const auto& against_worker_idx = db.get_index_type<worker_index>().indices().get<by_vote_against>();
-      for( auto id : options.votes )
-      {
-         if( id.type() == vote_id_type::worker )
-         {
-            FC_ASSERT( against_worker_idx.find( id ) == against_worker_idx.end() );
-         }
-      }
-   }
-
 }
-
 
 void_result account_create_evaluator::do_evaluate( const account_create_operation& op )
 { try {
@@ -108,7 +92,6 @@ void_result account_create_evaluator::do_evaluate( const account_create_operatio
       FC_ASSERT( !op.extensions.value.buyback_options.valid() );
    }
 
-   FC_ASSERT( d.find_object(op.options.voting_account), "Invalid proxy account specified." );
    FC_ASSERT( fee_paying_account->is_lifetime_member(), "Only Lifetime members may register an account." );
    FC_ASSERT( op.referrer(d).is_member(d.head_block_time()), "The referrer must be either a lifetime or annual subscriber." );
 
@@ -138,7 +121,7 @@ void_result account_create_evaluator::do_evaluate( const account_create_operatio
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type account_create_evaluator::do_apply( const account_create_operation& o )
+object_id_type account_create_evaluator::do_apply(const account_create_operation& o, uint32_t billed_cpu_time_us)
 { try {
 
    database& d = db();
@@ -273,7 +256,7 @@ void_result account_update_evaluator::do_evaluate( const account_update_operatio
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result account_update_evaluator::do_apply( const account_update_operation& o )
+void_result account_update_evaluator::do_apply(const account_update_operation& o, uint32_t billed_cpu_time_us)
 { try {
    database& d = db();
    bool sa_before, sa_after;
@@ -332,7 +315,7 @@ void_result account_whitelist_evaluator::do_evaluate(const account_whitelist_ope
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result account_whitelist_evaluator::do_apply(const account_whitelist_operation& o)
+void_result account_whitelist_evaluator::do_apply(const account_whitelist_operation& o, uint32_t billed_cpu_time_us)
 { try {
    database& d = db();
 
@@ -375,7 +358,7 @@ void_result account_whitelist_evaluator::do_apply(const account_whitelist_operat
  //} FC_CAPTURE_AND_RETHROW( (o) ) }
  } FC_RETHROW_EXCEPTIONS( error, "Unable to upgrade account '${a}'", ("a",o.account_to_upgrade(db()).name) ) }
 
- void_result account_upgrade_evaluator::do_apply(const account_upgrade_evaluator::operation_type& o)
+ void_result account_upgrade_evaluator::do_apply(const account_upgrade_evaluator::operation_type& o, uint32_t billed_cpu_time_us)
  { try {
     database& d = db();
 
@@ -448,7 +431,7 @@ void_result account_upgrade_merchant_evaluator::do_evaluate(const account_upgrad
    return {};
 } FC_RETHROW_EXCEPTIONS( error, "Unable to upgrade merchant account '${a}'", ("a",o.account_to_upgrade(db()).name) ) }
 
-void_result account_upgrade_merchant_evaluator::do_apply(const account_upgrade_merchant_evaluator::operation_type& o)
+void_result account_upgrade_merchant_evaluator::do_apply(const account_upgrade_merchant_evaluator::operation_type& o, uint32_t billed_cpu_time_us)
 { try {
    database& d = db();
    d.modify(*account, [&](account_object& a) {
@@ -482,7 +465,7 @@ void_result account_upgrade_data_transaction_member_evaluator::do_evaluate(const
     return {};
 } FC_RETHROW_EXCEPTIONS( error, "Unable to upgrade data_transaction_member account '${a}'", ("a",o.account_to_upgrade(db()).name) ) }
 
-void_result account_upgrade_data_transaction_member_evaluator::do_apply(const account_upgrade_data_transaction_member_evaluator::operation_type& o)
+void_result account_upgrade_data_transaction_member_evaluator::do_apply(const account_upgrade_data_transaction_member_evaluator::operation_type& o, uint32_t billed_cpu_time_us)
 { try {
     dlog("account_upgrade_data_transaction_member do_apply");
     database& d = db();
@@ -541,7 +524,7 @@ void_result account_upgrade_data_transaction_member_evaluator::do_apply(const ac
  //} FC_CAPTURE_AND_RETHROW( (o) ) }
  } FC_RETHROW_EXCEPTIONS( error, "Unable to upgrade datasource account '${a}'", ("a",o.account_to_upgrade(db()).name) ) }
 
- void_result account_upgrade_datasource_evaluator::do_apply(const account_upgrade_datasource_evaluator::operation_type& o)
+ void_result account_upgrade_datasource_evaluator::do_apply(const account_upgrade_datasource_evaluator::operation_type& o, uint32_t billed_cpu_time_us)
  { try {
     database& d = db();
     d.modify(*account, [&](account_object& a) {

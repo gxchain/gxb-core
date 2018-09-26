@@ -54,9 +54,11 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 { \
    const auto temp = op.field; \
    op.field = value; \
-   trx.operations.back() = op; \
+   trx.clear(); \
+   trx.operations.push_back(op); \
    op.field = temp; \
-   db.push_transaction( trx, ~0 ); \
+   set_expiration(db, trx); \
+   db.push_transaction(trx, ~0); \
 }
 
 #define GRAPHENE_REQUIRE_THROW( expr, exc_type )          \
@@ -109,7 +111,9 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 { \
    auto bak = op.field; \
    op.field = value; \
-   trx.operations.back() = op; \
+   trx.clear(); \
+   trx.operations.push_back(op); \
+   set_expiration(db, trx); \
    op.field = bak; \
    GRAPHENE_REQUIRE_THROW(db.push_transaction(trx, ~0), exc_type); \
 }
@@ -220,7 +224,9 @@ struct database_fixture {
    const asset_object& create_bitasset(const string& name,
                                        account_id_type issuer = GRAPHENE_WITNESS_ACCOUNT,
                                        uint16_t market_fee_percent = 100 /*1%*/,
-                                       uint16_t flags = charge_market_fee);
+                                       uint16_t flags = charge_market_fee,
+                                       uint16_t precision = 2,
+                                       asset_id_type backing_asset = {});
    const asset_object& create_prediction_market(const string& name,
                                        account_id_type issuer = GRAPHENE_WITNESS_ACCOUNT,
                                        uint16_t market_fee_percent = 100 /*1%*/,
@@ -287,6 +293,7 @@ struct database_fixture {
 namespace test {
 /// set a reasonable expiration time for the transaction
 void set_expiration( const database& db, transaction& tx );
+void set_expiration(const database &db, transaction &tx, uint32_t time_seconds);
 
 bool _push_block( database& db, const signed_block& b, uint32_t skip_flags = 0 );
 processed_transaction _push_transaction( database& db, const signed_transaction& tx, uint32_t skip_flags = 0 );

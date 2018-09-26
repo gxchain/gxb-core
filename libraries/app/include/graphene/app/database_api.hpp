@@ -37,7 +37,6 @@
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/witness_object.hpp>
-#include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/chain/data_market_object.hpp>
 #include <graphene/chain/data_transaction_object.hpp>
 #include <graphene/app/database_api_common.hpp>
@@ -104,6 +103,7 @@ class database_api
        * This unsubscribes from all subscribed markets and objects.
        */
       void cancel_all_subscriptions();
+      void unsubscribe_data_transaction_callback();
 
       /////////////////////////////
       // Blocks and transactions //
@@ -161,6 +161,11 @@ class database_api
        *  @brief Retrieve data_transaction commission_percent
        */
       data_transaction_commission_percent_t get_commission_percent() const;
+
+      /**
+       *  @brief Retrieve vm cpu_limit
+       */
+      vm_cpu_limit_t get_cpu_limit() const;
 
       /**
        * @brief Retrieve compile-time constants
@@ -280,9 +285,19 @@ class database_api
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
 
       /**
+       * @brief Get the total number of transactions of the blockchain
+       */
+      uint64_t get_transaction_count() const;
+
+      /**
        * @brief Get the total number of accounts registered with the blockchain
        */
       uint64_t get_account_count()const;
+
+      /**
+       * @brief Get the total number of assets registered with the blockchain
+       */
+      uint64_t get_asset_count() const;
 
       /**
       * @brief get_data_transaction_product_costs
@@ -416,86 +431,6 @@ class database_api
        */
       vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
 
-      /////////////////////
-      // Markets / feeds //
-      /////////////////////
-
-      /**
-       * @brief Get limit orders in a given market
-       * @param a ID of asset being sold
-       * @param b ID of asset being purchased
-       * @param limit Maximum number of orders to retrieve
-       * @return The limit orders, ordered from least price to greatest
-       */
-      vector<limit_order_object> get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
-
-      /**
-       * @brief Get call orders in a given asset
-       * @param a ID of asset being called
-       * @param limit Maximum number of orders to retrieve
-       * @return The call orders, ordered from earliest to be called to latest
-       */
-      vector<call_order_object> get_call_orders(asset_id_type a, uint32_t limit)const;
-
-      /**
-       * @brief Get forced settlement orders in a given asset
-       * @param a ID of asset being settled
-       * @param limit Maximum number of orders to retrieve
-       * @return The settle orders, ordered from earliest settlement date to latest
-       */
-      vector<force_settlement_object> get_settle_orders(asset_id_type a, uint32_t limit)const;
-
-      /**
-       *  @return all open margin positions for a given account id.
-       */
-      vector<call_order_object> get_margin_positions( const account_id_type& id )const;
-
-      /**
-       * @brief Request notification when the active orders in the market between two assets changes
-       * @param callback Callback method which is called when the market changes
-       * @param a First asset ID
-       * @param b Second asset ID
-       *
-       * Callback will be passed a variant containing a vector<pair<operation, operation_result>>. The vector will
-       * contain, in order, the operations which changed the market, and their results.
-       */
-      void subscribe_to_market(std::function<void(const variant&)> callback,
-                   asset_id_type a, asset_id_type b);
-
-      void unsubscribe_data_transaction_callback();
-
-      /**
-       * @brief Unsubscribe from updates to a given market
-       * @param a First asset ID
-       * @param b Second asset ID
-       */
-      void unsubscribe_from_market( asset_id_type a, asset_id_type b );
-
-      /**
-       * @brief Returns the ticker for the market assetA:assetB
-       * @param a String name of the first asset
-       * @param b String name of the second asset
-       * @return The market ticker for the past 24 hours.
-       */
-      market_ticker get_ticker( const string& base, const string& quote )const;
-
-      /**
-       * @brief Returns the 24 hour volume for the market assetA:assetB
-       * @param a String name of the first asset
-       * @param b String name of the second asset
-       * @return The market volume over the past 24 hours
-       */
-      market_volume get_24_volume( const string& base, const string& quote )const;
-
-      /**
-       * @brief Returns the order book for the market base:quote
-       * @param base String name of the first asset
-       * @param quote String name of the second asset
-       * @param depth of the order book. Up to depth of each asks and bids, capped at 50. Prioritizes most moderate of each
-       * @return Order book of the market
-       */
-      order_book get_order_book( const string& base, const string& quote, unsigned limit = 50 )const;
-
       /** get pocs_object.
        *
        * @param league_id
@@ -504,19 +439,6 @@ class database_api
        * @return pocs_object
        */
       optional<pocs_object> get_pocs_object(league_id_type league_id, account_id_type account_id, object_id_type product_id) const;
-
-      /**
-       * @brief Returns recent trades for the market assetA:assetB
-       * Note: Currentlt, timezone offsets are not supported. The time must be UTC.
-       * @param a String name of the first asset
-       * @param b String name of the second asset
-       * @param stop Stop time as a UNIX timestamp
-       * @param limit Number of trasactions to retrieve, capped at 100
-       * @param start Start time as a UNIX timestamp
-       * @return Recent transactions in the market
-       */
-      vector<market_trade> get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
-
 
 
       ///////////////
@@ -609,6 +531,9 @@ class database_api
 
       /// @brief Get a hexdump of the serialized binary form of a transaction
       std::string get_transaction_hex(const signed_transaction& trx)const;
+
+      /// @brief Get a hexdump of the serialized binary form of a transaction
+      std::string serialize_transaction(const signed_transaction& tx) const;
 
       /**
        *  This API will take a partially signed transaction and a set of public keys that the owner has the ability to sign for
@@ -805,6 +730,7 @@ FC_API(graphene::app::database_api,
    (get_objects)
    (get_table_objects)
    (serialize_contract_call_args)
+   (serialize_transaction)
    // Subscriptions
    (set_subscribe_callback)
    (set_data_transaction_subscribe_callback)
@@ -812,6 +738,7 @@ FC_API(graphene::app::database_api,
    (set_pending_transaction_callback)
    (set_block_applied_callback)
    (cancel_all_subscriptions)
+   (unsubscribe_data_transaction_callback)
 
    // Blocks and transactions
    (get_block_header)
@@ -839,7 +766,9 @@ FC_API(graphene::app::database_api,
    (get_account_references)
    (lookup_account_names)
    (lookup_accounts)
+   (get_transaction_count)
    (get_account_count)
+   (get_asset_count)
    (is_account_registered)
 
    // statistic
@@ -870,18 +799,7 @@ FC_API(graphene::app::database_api,
    (lookup_asset_symbols)
 
    // Markets / feeds
-   (get_order_book)
-   (get_limit_orders)
-   (get_call_orders)
-   (get_settle_orders)
-   (get_margin_positions)
-   (subscribe_to_market)
-   (unsubscribe_data_transaction_callback)
-   (unsubscribe_from_market)
-   (get_ticker)
-   (get_24_volume)
    (get_pocs_object)
-   (get_trade_history)
 
    // Witnesses
    (get_witnesses)

@@ -84,16 +84,43 @@ BOOST_AUTO_TEST_CASE( merge_test )
    }
 }
 
+/**
+ * Check that database modify() functors that throw do not get caught by boost, which will remove the object
+ */
+BOOST_AUTO_TEST_CASE(failed_modify_test)
+{ try {
+    database db;
+    // Create dummy object
+    const auto &obj = db.create<account_balance_object>([](account_balance_object &obj) {
+            obj.owner = account_id_type(123);
+            });
+    account_balance_id_type obj_id = obj.id;
+    BOOST_CHECK_EQUAL(obj.owner.instance.value, 123);
+
+    // Modify dummy object, check that changes stick
+    db.modify(obj, [](account_balance_object &obj) {
+            obj.owner = account_id_type(234);
+            });
+    BOOST_CHECK_EQUAL(obj_id(db).owner.instance.value, 234);
+
+    // Throw exception when modifying object, check that object still exists after
+    BOOST_CHECK_THROW(db.modify(obj, [](account_balance_object &obj) {
+                throw 5;
+                }),
+            fc::assert_exception);
+    BOOST_CHECK_NE(db.find_object(obj_id), nullptr);
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( db_store_i64_undo )
 {
    try {
       database db;
       auto ses = db._undo_db.start_undo_session();
+      auto cpu_param = vm_cpu_limit_t();
 
       const contract_call_operation op;
-      action a{(uint64_t)op.account & GRAPHENE_DB_MAX_INSTANCE_ID, op.act.name, {}};
-      transaction_context trx_context(db);
-      apply_context ctx{db, trx_context, op.act};
+      transaction_context trx_context(db, account_id_type().instance, fc::microseconds(cpu_param.trx_cpu_limit));
+      apply_context ctx{db, trx_context, {account_id_type(), N(hi), {}}, optional<asset>()};
       auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
 
       ses.undo();
@@ -116,11 +143,11 @@ BOOST_AUTO_TEST_CASE( db_store_i64_commit )
    try {
       database db;
       auto ses = db._undo_db.start_undo_session();
+      auto cpu_param = vm_cpu_limit_t();
 
       const contract_call_operation op;
-      action a{(uint64_t)op.account & GRAPHENE_DB_MAX_INSTANCE_ID, op.act.name, {}};
-      transaction_context trx_context(db);
-      apply_context ctx{db, trx_context, op.act};
+      transaction_context trx_context(db, account_id_type().instance, fc::microseconds(cpu_param.trx_cpu_limit));
+      apply_context ctx{db, trx_context, {account_id_type(), N(hi), {}}, optional<asset>()};
       auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
 
       ses.commit();

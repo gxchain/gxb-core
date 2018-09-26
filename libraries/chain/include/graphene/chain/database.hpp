@@ -95,7 +95,8 @@ namespace graphene { namespace chain {
           void open(
              const fc::path& data_dir,
              std::function<genesis_state_type()> genesis_loader,
-             const std::string& db_version );
+             const std::string& db_version,
+             bool fast_replay = false);
 
          /**
           * @brief Rebuild object graph from block history and open detabase
@@ -103,7 +104,7 @@ namespace graphene { namespace chain {
           * This method may be called after or instead of @ref database::open, and will rebuild the object graph by
           * replaying blockchain history. When this method exits successfully, the database will be open.
           */
-         void reindex(fc::path data_dir);
+         void reindex(fc::path data_dir, bool fast_replay = false);
 
          /**
           * @brief wipe Delete database from disk, and potentially the raw chain as well.
@@ -137,6 +138,10 @@ namespace graphene { namespace chain {
          void                              add_checkpoints( const flat_map<uint32_t,block_id_type>& checkpts );
          const flat_map<uint32_t,block_id_type> get_checkpoints()const { return _checkpoints; }
          bool before_last_checkpoint()const;
+
+         // set / get max_trx_cpu_time
+         void set_max_trx_cpu_time(int32_t max_trx_cpu_time) { _max_trx_cpu_time = max_trx_cpu_time; }
+         const int32_t  get_max_trx_cpu_time() { return _max_trx_cpu_time; };
 
          bool push_block( const signed_block& b, uint32_t skip = skip_nothing );
          processed_transaction push_transaction( const signed_transaction& trx, uint32_t skip = skip_nothing );
@@ -260,6 +265,12 @@ namespace graphene { namespace chain {
          const chain_property_object&           get_chain_properties()const;
          const global_property_object&          get_global_properties()const;
          const data_transaction_commission_percent_t          get_commission_percent() const;
+         const vm_cpu_limit_t                   get_cpu_limit() const;
+
+         const bool                             get_contract_log_to_console() const { return contract_log_to_console; }
+         void                                   set_contract_log_to_console(bool log_switch) { contract_log_to_console = log_switch; }
+         const bool                             get_rpc_mock_calc_fee() const { return rpc_mock_calc_fee; }
+         void                                   set_rpc_mock_calc_fee(bool mock) { rpc_mock_calc_fee = mock; }
          const dynamic_global_property_object&  get_dynamic_global_properties()const;
          const node_property_object&            get_node_properties()const;
          const fee_schedule&                    current_fee_schedule()const;
@@ -339,60 +350,6 @@ namespace graphene { namespace chain {
          void apply_debug_updates();
          void debug_update( const fc::variant_object& update );
 
-         //////////////////// db_market.cpp ////////////////////
-
-         /// @{ @group Market Helpers
-         void globally_settle_asset( const asset_object& bitasset, const price& settle_price );
-         void cancel_order(const force_settlement_object& order, bool create_virtual_op = true);
-         void cancel_order(const limit_order_object& order, bool create_virtual_op = true);
-
-         /**
-          * @brief Process a new limit order through the markets
-          * @param order The new order to process
-          * @return true if order was completely filled; false otherwise
-          *
-          * This function takes a new limit order, and runs the markets attempting to match it with existing orders
-          * already on the books.
-          */
-         bool apply_order(const limit_order_object& new_order_object, bool allow_black_swan = true);
-
-         /**
-          * Matches the two orders,
-          *
-          * @return a bit field indicating which orders were filled (and thus removed)
-          *
-          * 0 - no orders were matched
-          * 1 - bid was filled
-          * 2 - ask was filled
-          * 3 - both were filled
-          */
-         ///@{
-         template<typename OrderType>
-         int match( const limit_order_object& bid, const OrderType& ask, const price& match_price );
-         int match( const limit_order_object& bid, const limit_order_object& ask, const price& trade_price );
-         /// @return the amount of asset settled
-         asset match(const call_order_object& call,
-                   const force_settlement_object& settle,
-                   const price& match_price,
-                   asset max_settlement);
-         ///@}
-
-         /**
-          * @return true if the order was completely filled and thus freed.
-          */
-         bool fill_order( const limit_order_object& order, const asset& pays, const asset& receives, bool cull_if_small );
-         bool fill_order( const call_order_object& order, const asset& pays, const asset& receives );
-         bool fill_order( const force_settlement_object& settle, const asset& pays, const asset& receives );
-
-         bool check_call_orders( const asset_object& mia, bool enable_black_swan = true );
-
-         // helpers to fill_order
-         void pay_order( const account_object& receiver, const asset& receives, const asset& pays );
-
-         asset calculate_market_fee(const asset_object& recv_asset, const asset& trade_amount);
-         asset pay_market_fees( const asset_object& recv_asset, const asset& receives );
-
-
          ///@}
          /**
           *  This method validates transactions without adding it to the pending state.
@@ -429,11 +386,21 @@ namespace graphene { namespace chain {
        public:
          // these were formerly private, but they have a fairly well-defined API, so let's make them public
          void                  apply_block( const signed_block& next_block, uint32_t skip = skip_nothing );
-         processed_transaction apply_transaction( const signed_transaction& trx, uint32_t skip = skip_nothing );
-         operation_result      apply_operation( transaction_evaluation_state& eval_state, const operation& op );
-      private:
+         processed_transaction apply_transaction(const signed_transaction &trx, uint32_t skip = skip_nothing, const vector<operation_result> &operation_results = {});
+         operation_result      apply_operation(transaction_evaluation_state &eval_state, const operation &op, uint32_t billed_cpu_time_us = 0);
+
+       // set and get current trx
+       public:
+         const transaction *get_cur_trx() const { return cur_trx; }
+         void set_cur_trx(const transaction *trx) { cur_trx = trx; }
+
+       private:
+         const transaction *cur_trx = nullptr;
+
+
+       private:
          void                  _apply_block( const signed_block& next_block );
-         processed_transaction _apply_transaction( const signed_transaction& trx );
+         processed_transaction _apply_transaction(const signed_transaction &trx, const vector<operation_result> &operation_results = {});
 
          ///Steps involved in applying a new block
          ///@{
@@ -449,11 +416,8 @@ namespace graphene { namespace chain {
          void clear_expired_transactions();
          void clear_expired_signature_objs();
          void clear_expired_proposals();
-         void clear_expired_orders();
-         void update_expired_feeds();
          void update_maintenance_flag( bool new_maintenance_flag );
          void update_withdraw_permissions();
-         bool check_for_blackswan( const asset_object& mia, bool enable_black_swan = true );
 
          ///Steps performed only at maintenance intervals
          ///@{
@@ -462,7 +426,6 @@ namespace graphene { namespace chain {
 
          void initialize_budget_record( fc::time_point_sec now, budget_record& rec )const;
          void process_budget();
-         void pay_workers( share_type& budget );
          void perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props);
          void update_active_witnesses();
          void update_active_committee_members();
@@ -507,6 +470,9 @@ namespace graphene { namespace chain {
 
          flat_map<uint32_t,block_id_type>  _checkpoints;
 
+         // max transaction cpu time, configured by config.ini
+         int32_t                           _max_trx_cpu_time;
+
          node_property_object              _node_property_object;
 
          /**
@@ -517,6 +483,8 @@ namespace graphene { namespace chain {
           * database::close() has not been called, or failed during execution.
           */
          bool                              _opened = false;
+         bool                              contract_log_to_console = false;
+         bool                              rpc_mock_calc_fee = false;
    };
 
    namespace detail

@@ -40,13 +40,13 @@
 namespace graphene { namespace chain {
 database& generic_evaluator::db()const { return trx_state->db(); }
 
-   operation_result generic_evaluator::start_evaluate( transaction_evaluation_state& eval_state, const operation& op, bool apply )
+   operation_result generic_evaluator::start_evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply, uint32_t billed_cpu_time_us)
    { try {
       trx_state   = &eval_state;
       //check_required_authorities(op);
       auto result = evaluate( op );
 
-      if( apply ) result = this->apply( op );
+      if (apply) result = this->apply(op, billed_cpu_time_us);
       return result;
    } FC_CAPTURE_AND_RETHROW() }
 
@@ -67,28 +67,49 @@ database& generic_evaluator::db()const { return trx_state->db(); }
             ("acct", fee_paying_account->id)("name", fee_paying_account->name)("a", fee_asset->id)("sym", fee_asset->symbol) );
       }
 
-      if( fee_from_account.asset_id == asset_id_type() )
-         core_fee_paid = fee_from_account.amount;
-      else
-      {
-         asset fee_from_pool = fee_from_account * fee_asset->options.core_exchange_rate;
-         FC_ASSERT( fee_from_pool.asset_id == asset_id_type() );
-         core_fee_paid = fee_from_pool.amount;
-         FC_ASSERT( core_fee_paid <= fee_asset_dyn_data->fee_pool, "Fee pool balance of '${b}' is less than the ${r} required to convert ${c}",
-                    ("r", db().to_pretty_string( fee_from_pool))("b",db().to_pretty_string(fee_asset_dyn_data->fee_pool))("c",db().to_pretty_string(fee)) );
+      if (d.head_block_time() > HARDFORK_1008_TIME) {
+          // 1.3.1 as core asset
+          if (fee_from_account.asset_id == asset_id_type(1))
+              core_fee_paid = fee_from_account.amount;
+          else {
+              asset fee_from_pool = fee_from_account * fee_asset->options.core_exchange_rate;
+              FC_ASSERT(fee_from_pool.asset_id == asset_id_type(1), "fee asset id ${f}", ("f", fee_from_pool.asset_id));
+              core_fee_paid = fee_from_pool.amount;
+              FC_ASSERT(core_fee_paid <= fee_asset_dyn_data->fee_pool, "Fee pool balance of '${b}' is less than the ${r} required to convert ${c}",
+                        ("r", db().to_pretty_string(fee_from_pool))("b", db().to_pretty_string(fee_asset_dyn_data->fee_pool))("c", db().to_pretty_string(fee)));
+          }
+      } else {
+          // 1.3.0 as core asset
+          if (fee_from_account.asset_id == asset_id_type())
+              core_fee_paid = fee_from_account.amount;
+          else {
+              asset fee_from_pool = fee_from_account * fee_asset->options.core_exchange_rate;
+              FC_ASSERT(fee_from_pool.asset_id == asset_id_type());
+              core_fee_paid = fee_from_pool.amount;
+              FC_ASSERT(core_fee_paid <= fee_asset_dyn_data->fee_pool, "Fee pool balance of '${b}' is less than the ${r} required to convert ${c}",
+                        ("r", db().to_pretty_string(fee_from_pool))("b", db().to_pretty_string(fee_asset_dyn_data->fee_pool))("c", db().to_pretty_string(fee)));
+          }
       }
    }
 
    void generic_evaluator::convert_fee()
    {
       if( !trx_state->skip_fee ) {
-         if( fee_asset->get_id() != asset_id_type() )
-         {
-            db().modify(*fee_asset_dyn_data, [this](asset_dynamic_data_object& d) {
-               d.accumulated_fees += fee_from_account.amount;
-               d.fee_pool -= core_fee_paid;
-            });
-         }
+          if (db().head_block_time() > HARDFORK_1008_TIME) {
+              if (fee_asset->get_id() != asset_id_type(1)) {
+                  db().modify(*fee_asset_dyn_data, [this](asset_dynamic_data_object &d) {
+                      d.accumulated_fees += fee_from_account.amount;
+                      d.fee_pool -= core_fee_paid;
+                  });
+              }
+          } else {
+              if (fee_asset->get_id() != asset_id_type()) {
+                  db().modify(*fee_asset_dyn_data, [this](asset_dynamic_data_object &d) {
+                      d.accumulated_fees += fee_from_account.amount;
+                      d.fee_pool -= core_fee_paid;
+                  });
+              }
+          }
       }
    }
 
@@ -121,8 +142,13 @@ database& generic_evaluator::db()const { return trx_state->db(); }
 
    share_type generic_evaluator::calculate_fee_for_operation(const operation& op) const
    {
-     return db().current_fee_schedule().calculate_fee( op ).amount;
+       if (db().head_block_time() > HARDFORK_1008_TIME) {
+           return db().current_fee_schedule().calculate_fee(op, price::unit_price(asset_id_type(1)), asset_id_type(1)).amount;
+       } else {
+           return db().current_fee_schedule().calculate_fee(op).amount;
+       }
    }
+
    void generic_evaluator::db_adjust_balance(const account_id_type& fee_payer, asset fee_from_account)
    {
      db().adjust_balance(fee_payer, fee_from_account);

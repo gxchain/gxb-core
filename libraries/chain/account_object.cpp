@@ -75,9 +75,15 @@ void account_statistics_object::process_fees(const account_object& a, database& 
          share_type lifetime_cut = cut_fee(core_fee_total, account.lifetime_referrer_fee_percentage);
          share_type referral = core_fee_total - network_cut - lifetime_cut;
 
-         d.modify(asset_dynamic_data_id_type()(d), [network_cut](asset_dynamic_data_object& d) {
-            d.accumulated_fees += network_cut;
-         });
+         if (d.head_block_time() > HARDFORK_1008_TIME) {
+             d.modify(asset_dynamic_data_id_type(1)(d), [network_cut](asset_dynamic_data_object &d) {
+                 d.accumulated_fees += network_cut;
+             });
+         } else {
+             d.modify(asset_dynamic_data_id_type()(d), [network_cut](asset_dynamic_data_object &d) {
+                 d.accumulated_fees += network_cut;
+             });
+         }
 
          // Potential optimization: Skip some of this math and object lookups by special casing on the account type.
          // For example, if the account is a lifetime member, we can skip all this and just deposit the referral to

@@ -39,7 +39,7 @@ void_result committee_member_create_evaluator::do_evaluate( const committee_memb
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type committee_member_create_evaluator::do_apply( const committee_member_create_operation& op )
+object_id_type committee_member_create_evaluator::do_apply(const committee_member_create_operation& op, uint32_t billed_cpu_time_us)
 { try {
    vote_id_type vote_id;
    db().modify(db().get_global_properties(), [&vote_id](global_property_object& p) {
@@ -60,7 +60,7 @@ void_result committee_member_update_evaluator::do_evaluate( const committee_memb
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result committee_member_update_evaluator::do_apply( const committee_member_update_operation& op )
+void_result committee_member_update_evaluator::do_apply(const committee_member_update_operation& op, uint32_t billed_cpu_time_us)
 { try {
    database& _db = db();
    _db.modify(
@@ -81,7 +81,7 @@ void_result committee_member_update_global_parameters_evaluator::do_evaluate(con
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result committee_member_update_global_parameters_evaluator::do_apply(const committee_member_update_global_parameters_operation& o)
+void_result committee_member_update_global_parameters_evaluator::do_apply(const committee_member_update_global_parameters_operation& o, uint32_t billed_cpu_time_us)
 { try {
    db().modify(db().get_global_properties(), [&o](global_property_object& p) {
       p.pending_parameters = o.new_parameters;

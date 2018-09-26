@@ -31,7 +31,7 @@ void_result free_data_product_create_evaluator::do_evaluate( const free_data_pro
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type free_data_product_create_evaluator::do_apply( const free_data_product_create_operation& op )
+object_id_type free_data_product_create_evaluator::do_apply(const free_data_product_create_operation& op, int32_t billed_cpu_time_us)
 { try {
 
    const auto& new_object = db().create<free_data_product_object>( [&]( free_data_product_object& obj ){
@@ -63,7 +63,7 @@ void_result free_data_product_update_evaluator::do_evaluate( const free_data_pro
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 
-void_result free_data_product_update_evaluator::do_apply( const free_data_product_update_operation& op )
+void_result free_data_product_update_evaluator::do_apply(const free_data_product_update_operation& op, int32_t billed_cpu_time_us)
 {
     try {
         database& _db = db();

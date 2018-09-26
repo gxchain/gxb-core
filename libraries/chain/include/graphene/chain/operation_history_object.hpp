@@ -98,8 +98,18 @@ namespace graphene { namespace chain {
          //std::pair<account_id_type,operation_history_id_type>  account_op()const  { return std::tie( account, operation_id ); }
          //std::pair<account_id_type,uint32_t>                   account_seq()const { return std::tie( account, sequence );     }
    };
-   
+
    struct by_id;
+
+   typedef multi_index_container<
+      operation_history_object,
+      indexed_by<
+         ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >
+      >
+   > operation_history_multi_index_type;
+
+   typedef generic_index<operation_history_object, operation_history_multi_index_type> operation_history_index;
+
 struct by_seq;
 struct by_op;
 struct by_opid;
@@ -127,7 +137,7 @@ typedef multi_index_container<
 
 typedef generic_index<account_transaction_history_object, account_transaction_history_multi_index_type> account_transaction_history_index;
 
-   
+
 } } // graphene::chain
 
 FC_REFLECT_DERIVED( graphene::chain::operation_history_object, (graphene::chain::object),

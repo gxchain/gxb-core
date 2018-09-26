@@ -179,6 +179,9 @@ const uint8_t table_id_object::type_id;
 const uint8_t key_value_object::space_id;
 const uint8_t key_value_object::type_id;
 
+// const uint8_t template index64_object::space_id;
+// const uint8_t template index64_object::type_id;
+
 void database::initialize_evaluators()
 {
    _operation_evaluators.resize(255);
@@ -257,7 +260,6 @@ void database::initialize_evaluators()
    register_evaluator<proxy_transfer_evaluator>();
    register_evaluator<contract_deploy_evaluator>();
    register_evaluator<contract_call_evaluator>();
-   register_evaluator<contract_deposit_evaluator>();
 
 }
 
@@ -320,11 +322,7 @@ void database::initialize_indexes()
    // contract object indexes
    add_index< primary_index< table_id_multi_index> >();
    add_index< primary_index< key_value_index> >();
-   // add_index< primary_index< index64_index> >();
-   // add_index< primary_index< index128_index> >();
-   // add_index< primary_index< index256_index> >();
-   // add_index< primary_index< index_double_index> >();
-   // add_index< primary_index< index_long_double_index> >();
+   add_index< primary_index< index64_index> >();
 
 }
 
@@ -460,8 +458,9 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          a.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
          a.dynamic_asset_data_id = dyn_asset.id;
       });
-   assert( asset_id_type(core_asset.id) == asset().asset_id );
-   assert( get_balance(account_id_type(), asset_id_type()) == asset(dyn_asset.current_supply) );
+   FC_ASSERT( dyn_asset.id == asset_dynamic_data_id_type() );
+   FC_ASSERT( asset_id_type(core_asset.id) == asset().asset_id );
+   FC_ASSERT( get_balance(account_id_type(), asset_id_type()) == asset(dyn_asset.current_supply) );
    // Create more special assets
    while( true )
    {
@@ -699,6 +698,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
             elog( "Genesis for asset ${aname} is not balanced\n"
                   "   Debt is ${debt}\n"
                   "   Supply is ${supply}\n",
+                  ("aname", it->symbol)
                   ("debt", debt_itr->second)
                   ("supply", supply_itr->second)
                 );
@@ -741,21 +741,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       committee_member_create_operation op;
       op.committee_member_account = get_account_id(member.owner_name);
       apply_operation(genesis_eval_state, op);
-   });
-
-   // Create initial workers
-   std::for_each(genesis_state.initial_worker_candidates.begin(), genesis_state.initial_worker_candidates.end(),
-                  [&](const genesis_state_type::initial_worker_type& worker)
-   {
-       worker_create_operation op;
-       op.owner = get_account_id(worker.owner_name);
-       op.work_begin_date = genesis_state.initial_timestamp;
-       op.work_end_date = time_point_sec::maximum();
-       op.daily_pay = worker.daily_pay;
-       op.name = "Genesis-Worker-" + worker.owner_name;
-       op.initializer = vesting_balance_worker_initializer{uint16_t(0)};
-
-       apply_operation(genesis_eval_state, std::move(op));
    });
 
    // Set active witnesses
@@ -808,7 +793,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    FC_ASSERT( get_index<fba_accumulator_object>().get_next_id() == fba_accumulator_id_type( fba_accumulator_id_count ) );
 
-   debug_dump();
+   // debug_dump();
 
    _undo_db.enable();
 } FC_CAPTURE_AND_RETHROW() }

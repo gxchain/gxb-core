@@ -54,7 +54,7 @@ inline array_ptr<T> array_ptr_impl (running_instance_context& ctx, U32 ptr, size
    if (ptr >= mem_total || length > (mem_total - ptr) / sizeof(T))
       Runtime::causeException(Exception::Cause::accessViolation);
    
-   T* ret_ptr = (T*)(getMemoryBaseAddress(mem) + ptr);
+//   T* ret_ptr = (T*)(getMemoryBaseAddress(mem) + ptr);
 
    return array_ptr<T>((T*)(getMemoryBaseAddress(mem) + ptr));
 }
@@ -382,7 +382,7 @@ struct intrinsic_invoker_impl<Ret, std::tuple<array_ptr<T>, size_t, Inputs...>, 
       T* base = array_ptr_impl<T>(ctx, (U32)ptr, length);
       if ( reinterpret_cast<uintptr_t>(base) % alignof(T) != 0 ) {
          wlog( "misaligned array of const values" );
-         std::remove_const_t<T> copy[length];
+         std::vector<std::remove_const_t<T> > copy(length > 0 ? length : 1);
          T* copy_ptr = &copy[0];
          memcpy( (void*)copy_ptr, (void*)base, length * sizeof(T) );
          return Then(ctx, static_cast<array_ptr<T>>(copy_ptr), length, rest..., translated...);
@@ -397,7 +397,7 @@ struct intrinsic_invoker_impl<Ret, std::tuple<array_ptr<T>, size_t, Inputs...>, 
       T* base = array_ptr_impl<T>(ctx, (U32)ptr, length);
       if ( reinterpret_cast<uintptr_t>(base) % alignof(T) != 0 ) {
          wlog( "misaligned array of values" );
-         std::remove_const_t<T> copy[length];
+         std::vector<std::remove_const_t<T> > copy(length > 0 ? length : 1);
          T* copy_ptr = &copy[0];
          memcpy( (void*)copy_ptr, (void*)base, length * sizeof(T) );
          Ret ret = Then(ctx, static_cast<array_ptr<T>>(copy_ptr), length, rest..., translated...);  
@@ -580,7 +580,7 @@ struct intrinsic_invoker_impl<Ret, std::tuple<T &, Inputs...>, std::tuple<Transl
    template<then_type Then, typename U=T>
    static auto translate_one(running_instance_context& ctx, Inputs... rest, Translated... translated, I32 ptr) -> std::enable_if_t<std::is_const<U>::value, Ret> {
       // references cannot be created for null pointers
-      FC_ASSERT((U32)ptr != 0);
+      FC_ASSERT((U32)ptr != 0, "references cannot be created for null pointers");
       MemoryInstance* mem = ctx.memory;
       if(!mem || (U32)ptr+sizeof(T) >= IR::numBytesPerPage*Runtime::getMemoryNumPages(mem))
          Runtime::causeException(Exception::Cause::accessViolation);
@@ -598,7 +598,7 @@ struct intrinsic_invoker_impl<Ret, std::tuple<T &, Inputs...>, std::tuple<Transl
    template<then_type Then, typename U=T>
    static auto translate_one(running_instance_context& ctx, Inputs... rest, Translated... translated, I32 ptr) -> std::enable_if_t<!std::is_const<U>::value, Ret> {
       // references cannot be created for null pointers
-      FC_ASSERT((U32)ptr != 0);
+      FC_ASSERT((U32)ptr != 0, "reference cannot be created for null pointers");
       MemoryInstance* mem = ctx.memory;
       if(!mem || (U32)ptr+sizeof(T) >= IR::numBytesPerPage*Runtime::getMemoryNumPages(mem))
          Runtime::causeException(Exception::Cause::accessViolation);

@@ -2,24 +2,13 @@
 
 namespace graphene { namespace chain {
 
-   namespace config {
-       const fc::microseconds cpu_duration_limit = fc::microseconds(10 * 1000);//default 10ms TODO can config by configuration
-   }
-
    class transaction_context {
-      private:
-         void init();
-
       public:
+        transaction_context(database &d, int64_t origin, fc::microseconds max_trx_cpu_us);
 
-        void init_for_implicit_trx();
+        void pause_billing_timer();
 
-        void init_for_input_trx();
-        transaction_context(database &d);
-
-        void exec();
-        void finalize();
-        void squash();
+        void resume_billing_timer();
 
         void checktime() const;
 
@@ -29,13 +18,10 @@ namespace graphene { namespace chain {
         }
 
       private:
-        void validate_cpu_usage_to_bill() const;
-
-      private:
-        void dispatch_action(const action &a, account_name receiver);
+        void dispatch_action(const action &a, uint64_t receiver);
         inline void dispatch_action(const action &a)
         {
-            dispatch_action(a, a.account);
+            dispatch_action(a, a.contract_id);
         };
 
       private:
@@ -43,11 +29,15 @@ namespace graphene { namespace chain {
 
       public:
         database &db() const { assert(_db); return *_db; }
+        int64_t get_trx_origin() const { return trx_origin;  }
 
       private:
-        database                *_db;
-        fc::time_point          start;
-        fc::time_point          _deadline;
-        mutable uint64_t        transaction_cpu_usage_us;
+        database                    *_db;
+        int64_t                     trx_origin;
+        mutable fc::time_point      start;
+        mutable fc::time_point      _deadline;
+        mutable fc::time_point      pause_time;
+        mutable int64_t             pause_cpu_usage_us = 0;
+        mutable int64_t             transaction_cpu_usage_us = 0;
    };
 } }

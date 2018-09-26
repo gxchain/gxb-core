@@ -33,15 +33,13 @@
 #include <fc/safe.hpp>
 #include <fc/container/flat.hpp>
 #include <fc/string.hpp>
+
+#include <graphene/chain/protocol/ext.hpp>
+
 #include <fc/io/raw.hpp>
 #include <fc/uint128.hpp>
 #include <fc/static_variant.hpp>
 #include <fc/smart_ref_fwd.hpp>
-
-#include <boost/interprocess/containers/string.hpp>
-#include <boost/interprocess/allocators/allocator.hpp>
-#include <boost/interprocess/managed_mapped_file.hpp>
-
 
 #include <memory>
 #include <vector>
@@ -53,6 +51,7 @@
 #include <graphene/chain/protocol/config.hpp>
 
 #define SECONDS_PER_DAY 86400 //seconds of a day
+#include <boost/rational.hpp>
 
 namespace graphene { namespace chain {
    using namespace graphene::db;
@@ -77,7 +76,6 @@ namespace graphene { namespace chain {
    using                               fc::enum_type;
    using                               fc::optional;
    using                               fc::unsigned_int;
-   using                               fc::signed_int;
    using                               fc::time_point_sec;
    using                               fc::time_point;
    using                               fc::safe;
@@ -91,20 +89,19 @@ namespace graphene { namespace chain {
    using bytes              = std::vector<char>;
 
    struct void_t{};
-   
+
    using action_name      = name;
    using scope_name       = name;
    using account_name     = uint64_t;
    using permission_name  = name;
    using table_name       = name;
-   
-//   using int128_t            = boost::multiprecision::int128_t;
+
    using int128_t            = __int128;
-   
+
    using checksum256_type    = fc::sha256;
    using checksum512_type    = fc::sha512;
    using checksum160_type    = fc::ripemd160;
-   
+
    typedef vector<std::pair<uint16_t,vector<char>>> abi_extensions_type;
 
    struct operation_ext_version_t {
@@ -118,6 +115,16 @@ namespace graphene { namespace chain {
 
        string commission_account = GRAPHENE_DATA_TRANSACTION_COMMISSION_ACCOUNT;
        uint16_t reserve_percent = (1 * GRAPHENE_1_PERCENT); // reserve percent of commission, go to reserve pool
+   };
+
+   // vm execution cpu limit
+   struct vm_cpu_limit_t {
+       uint32_t trx_cpu_limit = 20000; // 20 ms
+       uint32_t block_cpu_limit = 800000; // 800 ms
+   };
+
+   struct asset_symbol_t {
+       std::string symbol;
    };
 
    struct operation_ext_copyright_hash_t {
@@ -149,6 +156,8 @@ namespace graphene { namespace chain {
 
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
+
+   typedef boost::rational< int32_t >   ratio_type;
 
    enum asset_issuer_permission_flags
    {
@@ -425,7 +434,6 @@ namespace graphene { namespace chain {
 
    //typedef object_id< implementation_ids, impl_search_results_object_type,search_results_object<DerivedClass>>          search_results_id_type;
 
-   typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
    typedef fc::ripemd160                                        checksum_type;
    typedef fc::ripemd160                                        transaction_id_type;
@@ -453,8 +461,6 @@ namespace graphene { namespace chain {
        friend bool operator == ( const public_key_type& p1, const fc::ecc::public_key& p2);
        friend bool operator == ( const public_key_type& p1, const public_key_type& p2);
        friend bool operator != ( const public_key_type& p1, const public_key_type& p2);
-       // TODO: This is temporary for testing
-       bool is_valid_v1( const std::string& base58str );
    };
 
    struct extended_public_key_type
@@ -500,18 +506,16 @@ namespace graphene { namespace chain {
       friend bool operator == ( const extended_private_key_type& p1, const extended_private_key_type& p2);
       friend bool operator != ( const extended_private_key_type& p1, const extended_private_key_type& p2);
    };
-
-
 } }  // graphene::chain
 
 namespace fc
 {
-    void to_variant( const graphene::chain::public_key_type& var,  fc::variant& vo );
-    void from_variant( const fc::variant& var,  graphene::chain::public_key_type& vo );
-    void to_variant( const graphene::chain::extended_public_key_type& var, fc::variant& vo );
-    void from_variant( const fc::variant& var, graphene::chain::extended_public_key_type& vo );
-    void to_variant( const graphene::chain::extended_private_key_type& var, fc::variant& vo );
-    void from_variant( const fc::variant& var, graphene::chain::extended_private_key_type& vo );
+    void to_variant( const graphene::chain::public_key_type& var,  fc::variant& vo, uint32_t max_depth = 2 );
+    void from_variant( const fc::variant& var,  graphene::chain::public_key_type& vo, uint32_t max_depth = 2 );
+    void to_variant( const graphene::chain::extended_public_key_type& var, fc::variant& vo, uint32_t max_depth = 2 );
+    void from_variant( const fc::variant& var, graphene::chain::extended_public_key_type& vo, uint32_t max_depth = 2 );
+    void to_variant( const graphene::chain::extended_private_key_type& var, fc::variant& vo, uint32_t max_depth = 2 );
+    void from_variant( const fc::variant& var, graphene::chain::extended_private_key_type& vo, uint32_t max_depth = 2 );
 }
 
 FC_REFLECT( graphene::chain::public_key_type, (key_data) )
@@ -636,16 +640,18 @@ FC_REFLECT_TYPENAME( graphene::chain::signature_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::table_id_object_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::key_value_object_id_type)
 
-FC_REFLECT( graphene::chain::void_t, )
-FC_REFLECT( graphene::chain::operation_ext_version_t, (version))
-FC_REFLECT( graphene::chain::data_transaction_commission_percent_t, (league_data_market_commission_percent)(free_data_market_commission_percent)(commission_account)(reserve_percent))
-FC_REFLECT( graphene::chain::operation_ext_copyright_hash_t, (copyright_hash))
-FC_REFLECT( graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_bases)(product_pocs_weights))
-FC_REFLECT( graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
-FC_REFLECT( graphene::chain::interest_rate_t, (lock_days)(interest_rate)(is_valid) )
-FC_REFLECT( graphene::chain::lock_balance_params_t, (params) )
+FC_REFLECT(graphene::chain::void_t, )
+FC_REFLECT(graphene::chain::operation_ext_version_t, (version))
+FC_REFLECT(graphene::chain::data_transaction_commission_percent_t, (league_data_market_commission_percent)(free_data_market_commission_percent)(commission_account)(reserve_percent))
+FC_REFLECT(graphene::chain::operation_ext_copyright_hash_t, (copyright_hash))
+FC_REFLECT(graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_bases)(product_pocs_weights))
+FC_REFLECT(graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
+FC_REFLECT(graphene::chain::interest_rate_t, (lock_days)(interest_rate)(is_valid))
+FC_REFLECT(graphene::chain::lock_balance_params_t, (params))
+FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
+FC_REFLECT(graphene::chain::asset_symbol_t, (symbol))
 
-FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
+FC_REFLECT_ENUM(graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)
    (white_list)
    (transfer_restricted)
@@ -656,4 +662,3 @@ FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (witness_fed_asset)
    (committee_fed_asset)
    )
-

@@ -1,0 +1,5 @@
+deploy_contract ccca nathan 0 0 /Users/sky/gxb_install/contract_call_contract/contracta GXC true
+
+deploy_contract cccb nathan 0 0 /Users/sky/gxb_install/contract_call_contract/contractb GXC true
+
+call_contract beita ccca null hicontract "{\"act_id\":77}" GXC true

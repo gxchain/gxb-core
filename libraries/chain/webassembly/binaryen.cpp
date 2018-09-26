@@ -23,14 +23,14 @@ class binaryen_instantiated_module : public wasm_instantiated_module_interface {
 
       void apply(apply_context& context) override {
          LiteralList args = {Literal(uint64_t(context.receiver)),
-	                     Literal(uint64_t(context.act.account)),
-                             Literal(uint64_t(context.act.name))};
-         dlog("binaryen apply");
+	                     Literal(uint64_t(context.act.contract_id)),
+                             Literal(uint64_t(context.act.method_name))};
+         dlog("receiver ${r}, contract_id ${c}, method_name ${m}", ("r", context.receiver)("c", context.act.contract_id)("m", context.act.method_name));
          call("apply", args, context);
       }
 
    private:
-      linear_memory_type&        _shared_linear_memory;      
+      linear_memory_type&        _shared_linear_memory;
       std::vector<uint8_t>       _initial_memory;
       call_indirect_table_type   _table;
       import_lut_type            _import_lut;
@@ -97,7 +97,7 @@ std::unique_ptr<wasm_instantiated_module_interface> binaryen_runtime::instantiat
          FC_ASSERT( !"unresolvable", "${module}.${export}", ("module",import->module.c_str())("export",import->base.c_str()) );
       }
 
-      return std::make_unique<binaryen_instantiated_module>(_memory, initial_memory, move(table), move(import_lut), move(module));
+      return std::make_unique<binaryen_instantiated_module>(_memory, initial_memory, fc::move(table), fc::move(import_lut), fc::move(module));
    } catch (const ParseException &e) {
       FC_THROW_EXCEPTION(wasm_execution_error, "Error building interpreter: ${s}", ("s", e.text));
    }

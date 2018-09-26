@@ -23,10 +23,6 @@ void abi_generator::set_verbose(bool verbose) {
   this->verbose = verbose;
 }
 
-void abi_generator::set_ricardian_contracts(const ricardian_contracts& contracts) {
-  this->rc = contracts;
-}
-
 void abi_generator::set_abi_context(const string& abi_context) {
   this->abi_context = abi_context;
 }
@@ -103,17 +99,24 @@ bool abi_generator::inspect_type_methods_for_actions(const Decl* decl) { try {
 
     // Try to get "action" annotation from method comment
     bool raw_comment_is_action = false;
+    bool payable = false;
     const RawComment* raw_comment = ast_context->getRawCommentForDeclNoCache(method);
     if(raw_comment != nullptr) {
       SourceManager& source_manager = ast_context->getSourceManager();
       string raw_text = raw_comment->getRawText(source_manager);
-      regex r(R"(@abi (action)((?: [a-z0-9]+)*))");
-      smatch smatch;
-      regex_search(raw_text, smatch, r);
-      raw_comment_is_action = smatch.size() == 3;
+      regex action_r(R"(@abi (action)((?: [a-z0-9]+)*))");
+      smatch action_smatch;
+      regex_search(raw_text, action_smatch, action_r);
+      raw_comment_is_action = action_smatch.size() == 3;
+      
+      regex payable_r(R"(@abi (payable)((?: [a-z0-9]+)*))");
+      smatch payable_smatch;
+      regex_search(raw_text, payable_smatch, payable_r);
+      raw_comment_is_action = payable_smatch.size() == 3;
+      payable = payable_smatch.size() == 3;
     }
 
-    // Check if current method is listed the EOSIO_ABI macro
+    // Check if current method is listed the GRAPHENE_ABI macro
     bool is_action_from_macro = rec_decl->getName().str() == target_contract && std::find(target_actions.begin(), target_actions.end(), method_name) != target_actions.end();
     
     if(!raw_comment_is_action && !is_action_from_macro) {
@@ -147,7 +150,7 @@ bool abi_generator::inspect_type_methods_for_actions(const Decl* decl) { try {
 
     full_types[method_name] = method_name;
 
-    output->actions.push_back({method_name, method_name, rc[method_name]});
+    output->actions.push_back({method_name, method_name, payable});
     at_least_one_action = true;
   };
 
@@ -157,7 +160,6 @@ bool abi_generator::inspect_type_methods_for_actions(const Decl* decl) { try {
     auto export_methods_impl = [&export_method](const CXXRecordDecl* rec_decl, auto& ref) -> void {
 
 
-      auto tmp = rec_decl->bases();
       auto rec_name = rec_decl->getName().str();
 
       rec_decl->forallBases([&ref](const CXXRecordDecl* base) -> bool {
@@ -193,7 +195,7 @@ void abi_generator::handle_decl(const Decl* decl) { try {
     return;
   }
 
-  // Check if the current declaration has actions (EOSIO_ABI, or explicit)
+  // Check if the current declaration has actions (GRAPHENE_ABI, or explicit)
   bool type_has_actions = inspect_type_methods_for_actions(decl);
   if( type_has_actions ) return;
 
@@ -206,7 +208,7 @@ void abi_generator::handle_decl(const Decl* decl) { try {
   string raw_text = raw_comment->getRawText(source_manager);
   regex r;
 
-  // If EOSIO_ABI macro was found, we will only check if the current Decl
+  // If GRAPHENE_ABI macro was found, we will only check if the current Decl
   // is intented to be an ABI table record, otherwise we check for both (action or table)
   if( target_contract.size() )
     r = regex(R"(@abi (table)((?: [a-z0-9]+)*))");
@@ -247,7 +249,7 @@ void abi_generator::handle_decl(const Decl* decl) { try {
             ABI_ASSERT(ac->type == type_name, "Same action name with different type ${action}",("action",action));
             continue;
           }
-          output->actions.push_back({action, type_name, rc[action]});
+          output->actions.push_back({action, type_name, false});
         }
 
       } else if (type == "table") {
@@ -309,7 +311,7 @@ bool abi_generator::is_string(const string& type) {
 }
 
 void abi_generator::get_all_fields(const struct_def& s, vector<field_def>& fields) {
-  abi_serializer abis(*output);
+//  abi_serializer abis(*output, fc::seconds(1)); //TODO FIXME why to create a abis instance which no using?
 
   for(const auto& field : s.fields) {
     fields.push_back(field);

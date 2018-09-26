@@ -65,8 +65,8 @@ class account_history_plugin_impl
       account_history_plugin& _self;
       flat_set<account_id_type> _tracked_accounts;
       bool _partial_operations = true;
-      primary_index< simple_index< operation_history_object > >* _oho_index;
-      uint32_t _max_ops_per_account = 0;
+      uint64_t _max_ops_per_account = 0;
+      primary_index< operation_history_index >* _oho_index;
    private:
       /** add one history record, then check and remove the earliest history record */
       void add_account_history( const account_id_type account_id, const operation_history_id_type op_id );
@@ -82,15 +82,34 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
 {
    graphene::chain::database& db = database();
    const vector<optional< operation_history_object > >& hist = db.get_applied_operations();
+   bool is_first = true;
+   auto skip_oho_id = [&is_first,&db,this]() {
+      if( is_first && db._undo_db.enabled() ) // this ensures that the current id is rolled back on undo
+      {
+         db.remove( db.create<operation_history_object>( []( operation_history_object& obj) {} ) );
+         is_first = false;
+      }
+      else
+         _oho_index->use_next_id();
+   };
+
    for( const optional< operation_history_object >& o_op : hist )
    {
       optional<operation_history_object> oho;
 
       auto create_oho = [&]() {
+         is_first = false;
          return optional<operation_history_object>( db.create<operation_history_object>( [&]( operation_history_object& h )
          {
             if( o_op.valid() )
-               h = *o_op;
+            {
+               h.op           = o_op->op;
+               h.result       = o_op->result;
+               h.block_num    = o_op->block_num;
+               h.trx_in_block = o_op->trx_in_block;
+               h.op_in_trx    = o_op->op_in_trx;
+               h.virtual_op   = o_op->virtual_op;
+            }
          } ) );
       };
 
@@ -98,7 +117,7 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
       {
          // Note: the 2nd and 3rd checks above are for better performance, when the db is not clean,
          //       they will break consistency of account_stats.total_ops and removed_ops and most_recent_op
-         _oho_index->use_next_id();
+         skip_oho_id();
          continue;
       }
       else if( !_partial_operations )
@@ -171,7 +190,7 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
          }
       }
       if (_partial_operations && ! oho.valid())
-         _oho_index->use_next_id();
+         skip_oho_id();
    }
 }
 
@@ -263,7 +282,7 @@ void account_history_plugin::plugin_set_program_options(
    cli.add_options()
          ("track-account", boost::program_options::value<std::vector<std::string>>()->composing()->multitoken(), "Account ID to track history for (may specify multiple times)")
          ("partial-operations", boost::program_options::value<bool>(), "Keep only those operations in memory that are related to account history tracking")
-         ("max-ops-per-account", boost::program_options::value<uint32_t>(), "Maximum number of operations per account will be kept in memory")
+         ("max-ops-per-account", boost::program_options::value<uint64_t>(), "Maximum number of operations per account will be kept in memory")
          ;
    cfg.add(cli);
 }
@@ -271,7 +290,7 @@ void account_history_plugin::plugin_set_program_options(
 void account_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
    database().applied_block.connect( [&]( const signed_block& b){ my->update_account_histories(b); } );
-   my->_oho_index = database().add_index< primary_index< simple_index< operation_history_object > > >();
+   my->_oho_index = database().add_index< primary_index< operation_history_index > >();
    database().add_index< primary_index< account_transaction_history_index > >();
 
    LOAD_VALUE_SET(options, "track-account", my->_tracked_accounts, graphene::chain::account_id_type);
@@ -279,7 +298,7 @@ void account_history_plugin::plugin_initialize(const boost::program_options::var
        my->_partial_operations = options["partial-operations"].as<bool>();
    }
    if (options.count("max-ops-per-account")) {
-       my->_max_ops_per_account = options["max-ops-per-account"].as<uint32_t>();
+       my->_max_ops_per_account = options["max-ops-per-account"].as<uint64_t>();
    }
 }
 
