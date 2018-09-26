@@ -96,6 +96,9 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
 void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operation &op)
 { try {
     database &d = db();
+    if (d.head_block_time() <= HARDFORK_1007_TIME) {
+        FC_ASSERT(false, "contract is disabled before hardfork 1007");
+    }
 
     // check contract name
     auto &account_idx = d.get_index_type<account_index>();
