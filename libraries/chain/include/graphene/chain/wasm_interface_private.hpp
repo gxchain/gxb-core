@@ -3,6 +3,7 @@
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/webassembly/wavm.hpp>
 #include <graphene/chain/webassembly/binaryen.hpp>
+#include <graphene/chain/webassembly/wabt.hpp>
 #include <graphene/chain/webassembly/runtime_interface.hpp>
 #include <graphene/chain/wasm_injection.hpp>
 #include <fc/scoped_exit.hpp>
@@ -26,6 +27,8 @@ namespace graphene { namespace chain {
             runtime_interface = std::make_unique<webassembly::wavm::wavm_runtime>();
          else if(vm == wasm_interface::vm_type::binaryen)
             runtime_interface = std::make_unique<webassembly::binaryen::binaryen_runtime>();
+         else if(vm == wasm_interface::vm_type::wabt)
+            runtime_interface = std::make_unique<webassembly::wabt_runtime::wabt_runtime>();
          else
             FC_THROW("wasm_interface_impl fall through");
       }
@@ -93,7 +96,8 @@ namespace graphene { namespace chain {
 
 #define _REGISTER_INTRINSIC_EXPLICIT(CLS, MOD, METHOD, WASM_SIG, NAME, SIG)\
    _REGISTER_WAVM_INTRINSIC(CLS, MOD, METHOD, WASM_SIG, NAME, SIG)\
-   _REGISTER_BINARYEN_INTRINSIC(CLS, MOD, METHOD, WASM_SIG, NAME, SIG)
+   _REGISTER_BINARYEN_INTRINSIC(CLS, MOD, METHOD, WASM_SIG, NAME, SIG)\
+   _REGISTER_WABT_INTRINSIC(CLS, MOD, METHOD, WASM_SIG, NAME, SIG)
 
 #define _REGISTER_INTRINSIC4(CLS, MOD, METHOD, WASM_SIG, NAME, SIG)\
    _REGISTER_INTRINSIC_EXPLICIT(CLS, MOD, METHOD, WASM_SIG, NAME, SIG )
