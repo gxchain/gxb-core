@@ -952,7 +952,7 @@ uint64_t database_api_impl::get_committee_member_count() const
 
 vector<account_id_type> database_api_impl::get_trust_nodes() const
 {
-    vector<account_object> result;
+    vector<account_id_type> result;
     const auto& committee_idx = _db.get_index_type<committee_member_index>().indices().get<by_account>();
     const auto& witness_idx = _db.get_index_type<witness_index>().indices().get<by_id>();
     for (const auto &w : witness_idx) {
