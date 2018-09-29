@@ -79,11 +79,6 @@ void verify_account_votes( const database& db, const account_options& options )
 void_result account_create_evaluator::do_evaluate( const account_create_operation& op )
 { try {
    database& d = db();
-   if( d.head_block_time() < HARDFORK_516_TIME )
-   {
-      FC_ASSERT( !op.extensions.value.owner_special_authority.valid() );
-      FC_ASSERT( !op.extensions.value.active_special_authority.valid() );
-   }
    if( d.head_block_time() < HARDFORK_599_TIME )
    {
       FC_ASSERT( !op.extensions.value.null_ext.valid() );
@@ -223,11 +218,6 @@ object_id_type account_create_evaluator::do_apply(const account_create_operation
 void_result account_update_evaluator::do_evaluate( const account_update_operation& o )
 { try {
    database& d = db();
-   if( d.head_block_time() < HARDFORK_516_TIME )
-   {
-      FC_ASSERT( !o.extensions.value.owner_special_authority.valid() );
-      FC_ASSERT( !o.extensions.value.active_special_authority.valid() );
-   }
    if( d.head_block_time() < HARDFORK_599_TIME )
    {
       FC_ASSERT( !o.extensions.value.null_ext.valid() );
