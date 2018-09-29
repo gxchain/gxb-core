@@ -120,10 +120,6 @@
 #ifndef HARDFORK_572_TIME
 #define HARDFORK_572_TIME (fc::time_point_sec( 1456250400 ))
 #endif
-// #599 Unpacking of extension is incorrect
-#ifndef HARDFORK_599_TIME
-#define HARDFORK_599_TIME (fc::time_point_sec( 1459789200 ))
-#endif
 // #607 Disable negative voting on workers
 #ifndef HARDFORK_607_TIME
 #define HARDFORK_607_TIME (fc::time_point_sec( 1458752400 ))
