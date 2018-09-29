@@ -3465,6 +3465,8 @@
 
        bool verify_proxy_transfer_signature(const proxy_transfer_params& param, public_key_type pub_key)
        {
+           auto p = param; p.signatures.clear();
+           idump((fc::to_hex(fc::raw::pack(p))));
            return param.verify_proxy_transfer_signature(pub_key);
        }
 
@@ -3542,6 +3544,16 @@
        fc::sha256 get_hash(const string& value)
        {
            return fc::sha256::hash(value);
+       }
+
+       string get_pub_key_from_wif_key (string wif_key)
+       {
+          fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
+          if (!optional_private_key)
+             FC_THROW("Invalid private key");
+          graphene::chain::public_key_type wif_pub_key = optional_private_key->get_public_key();
+
+          return fc::string(wif_pub_key);
        }
 
       signature_type sign_string(string wif_key, const string &raw_string)
@@ -4801,6 +4813,11 @@
     fc::sha256 wallet_api::get_hash(const string& value)
     {
         return my->get_hash(value);
+    }
+
+    string wallet_api::get_pub_key_from_wif_key(const string& wif_key)
+    {
+        return my->get_pub_key_from_wif_key(wif_key);
     }
 
     signature_type wallet_api::sign_string(string wif_key, const string &raw_string)

@@ -2010,6 +2010,8 @@ class wallet_api
        */
       fc::sha256 get_hash(const string& value);
 
+      string get_pub_key_from_wif_key(const string& wif_key);
+
       /** sign_string
        *
        * @param wif_key private key
@@ -2225,6 +2227,7 @@ FC_API( graphene::wallet::wallet_api,
         (flood_transfer)
         (transfer_test)
         (get_hash)
+        (get_pub_key_from_wif_key)
         (sign_string)
         (verify_transaction_signature)
         (verify_proxy_transfer_signature)
