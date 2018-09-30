@@ -158,72 +158,38 @@ string database_fixture::generate_anon_acct_name()
 
 void database_fixture::verify_asset_supplies( const database& db )
 {
-   //wlog("*** Begin asset supply verification ***");
+   wlog("*** Begin asset supply verification ***");
    const asset_dynamic_data_object& core_asset_data = db.get_core_asset().dynamic_asset_data_id(db);
    BOOST_CHECK(core_asset_data.fee_pool == 0);
 
    const simple_index<account_statistics_object>& statistics_index = db.get_index_type<simple_index<account_statistics_object>>();
    const auto& balance_index = db.get_index_type<account_balance_index>().indices();
-   const auto& settle_index = db.get_index_type<force_settlement_index>().indices();
    map<asset_id_type,share_type> total_balances;
-   map<asset_id_type,share_type> total_debts;
-   share_type core_in_orders;
-   share_type reported_core_in_orders;
+   asset_id_type core_asset_id = db.head_block_time() > HARDFORK_1008_TIME ? asset_id_type(1) : asset_id_type();
 
    for( const account_balance_object& b : balance_index )
       total_balances[b.asset_type] += b.balance;
-   for( const force_settlement_object& s : settle_index )
-      total_balances[s.balance.asset_id] += s.balance.amount;
    for( const account_statistics_object& a : statistics_index )
    {
-      reported_core_in_orders += a.total_core_in_orders;
-      total_balances[asset_id_type()] += a.pending_fees + a.pending_vested_fees;
-   }
-   for( const limit_order_object& o : db.get_index_type<limit_order_index>().indices() )
-   {
-      asset for_sale = o.amount_for_sale();
-      if( for_sale.asset_id == asset_id_type() ) core_in_orders += for_sale.amount;
-      total_balances[for_sale.asset_id] += for_sale.amount;
-      total_balances[asset_id_type()] += o.deferred_fee;
-   }
-   for( const call_order_object& o : db.get_index_type<call_order_index>().indices() )
-   {
-      asset col = o.get_collateral();
-      if( col.asset_id == asset_id_type() ) core_in_orders += col.amount;
-      total_balances[col.asset_id] += col.amount;
-      total_debts[o.get_debt().asset_id] += o.get_debt().amount;
+      total_balances[core_asset_id] += a.pending_fees + a.pending_vested_fees;
    }
    for( const asset_object& asset_obj : db.get_index_type<asset_index>().indices() )
    {
       const auto& dasset_obj = asset_obj.dynamic_asset_data_id(db);
       total_balances[asset_obj.id] += dasset_obj.accumulated_fees;
-      total_balances[asset_id_type()] += dasset_obj.fee_pool;
-      if( asset_obj.is_market_issued() )
-      {
-         const auto& bad = asset_obj.bitasset_data(db);
-         total_balances[bad.options.short_backing_asset] += bad.settlement_fund;
-      }
+      total_balances[core_asset_id] += dasset_obj.fee_pool;
       total_balances[asset_obj.id] += dasset_obj.confidential_supply.value;
    }
    for( const vesting_balance_object& vbo : db.get_index_type< vesting_balance_index >().indices() )
       total_balances[ vbo.balance.asset_id ] += vbo.balance.amount;
-   for( const fba_accumulator_object& fba : db.get_index_type< simple_index< fba_accumulator_object > >() )
-      total_balances[ asset_id_type() ] += fba.accumulated_fba_fees;
 
-   total_balances[asset_id_type()] += db.get_dynamic_global_properties().witness_budget;
-
-   for( const auto& item : total_debts )
-   {
-      BOOST_CHECK_EQUAL(item.first(db).dynamic_asset_data_id(db).current_supply.value, item.second.value);
-   }
+   total_balances[core_asset_id] += db.get_dynamic_global_properties().witness_budget;
 
    for( const asset_object& asset_obj : db.get_index_type<asset_index>().indices() )
    {
       BOOST_CHECK_EQUAL(total_balances[asset_obj.id].value, asset_obj.dynamic_asset_data_id(db).current_supply.value);
    }
-
-   BOOST_CHECK_EQUAL( core_in_orders.value , reported_core_in_orders.value );
-//   wlog("***  End  asset supply verification ***");
+   wlog("***  End  asset supply verification ***");
 }
 
 void database_fixture::verify_account_history_plugin_index( )const
