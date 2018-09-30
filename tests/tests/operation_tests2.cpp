@@ -88,6 +88,53 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_create )
    trx.clear();
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( hardfork1008_transfer_test )
+{ try {
+   auto nathan_private_key = generate_private_key("nathan");
+   auto dan_private_key = generate_private_key("dan");
+   account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).id;
+   account_id_type dan_id = create_account("dan", dan_private_key.get_public_key()).id;
+
+   transfer(account_id_type(), nathan_id, asset(10000));
+   transfer(account_id_type(), dan_id, asset(10000));
+   
+   asset_id_type gxs_id = create_user_issued_asset( "GXS", nathan_id(db), 0 ).id;
+   issue_uia( nathan_id, asset( 10000, gxs_id ) );
+   generate_block();
+   
+   transfer(nathan_id, dan_id, asset(1000,asset_id_type(1)));
+   transfer(nathan_id, dan_id, asset(1000,asset_id_type(0)));
+   generate_block();
+   
+   generate_blocks(HARDFORK_1008_TIME + 60);
+   
+   transfer_operation op1;
+   op1.from = nathan_id;
+   op1.to   = dan_id;
+   op1.amount = asset(1000, asset_id_type(1));
+   
+   transfer_operation op2;
+   op2.from = nathan_id;
+   op2.to   = dan_id;
+   op2.amount = asset(1000, asset_id_type(0));
+   
+   trx.clear();
+   trx.operations.push_back(op1);
+   trx.operations.push_back(op2);
+   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, price(asset(1,asset_id_type(1)), asset(1,asset_id_type(1))), asset_id_type(1));
+   set_expiration(db, trx);
+   trx.validate();
+   sign(trx, nathan_private_key);
+   PUSH_TX(db, trx);
+   
+   generate_block();
+   
+   BOOST_REQUIRE_EQUAL(get_balance(dan_id, asset_id_type(0)), 12000);
+   BOOST_REQUIRE_EQUAL(get_balance(dan_id, asset_id_type(1)), 2000);
+   BOOST_REQUIRE_EQUAL(get_balance(nathan_id, asset_id_type(0)), 8000);
+   BOOST_REQUIRE_EQUAL(get_balance(nathan_id, asset_id_type(1)), 8000);
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE(proxy_transfer_test)
 { try {
    // alice --> dan, and bob is proxy_account
