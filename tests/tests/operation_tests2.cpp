@@ -166,6 +166,24 @@ BOOST_AUTO_TEST_CASE( hardfork1008_asset_rename_test )
    sign(trx, nathan_private_key);
    PUSH_TX(db, trx);
    BOOST_REQUIRE_EQUAL(asset_id_type(1)(db).symbol, "GXX");
+   
+   //TEST after 1103 can not rename asset name
+   generate_blocks(HARDFORK_1103_TIME);
+   generate_block();
+   
+   new_sym.symbol = "GXW";
+   op.extensions.clear();
+   op.extensions.insert(new_sym);
+   
+   trx.clear();
+   trx.operations.push_back(op);
+   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, price::unit_price(asset_id_type(1)), asset_id_type(1));
+   set_expiration(db, trx);
+   trx.validate();
+   sign(trx, nathan_private_key);
+   
+   GRAPHENE_REQUIRE_THROW(PUSH_TX( db, trx ), fc::exception);
+   BOOST_REQUIRE_EQUAL(asset_id_type(1)(db).symbol, "GXX");
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE(proxy_transfer_test)
