@@ -34,7 +34,11 @@ namespace graphene { namespace chain {
 
 const asset_object& database::get_core_asset() const
 {
-   return get(asset_id_type());
+    if (head_block_time() > HARDFORK_1008_TIME) {
+        return get(asset_id_type(1));
+    } else {
+        return get(asset_id_type());
+    }
 }
 
 const global_property_object& database::get_global_properties()const
