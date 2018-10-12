@@ -947,8 +947,9 @@
           _builder_transactions.erase(handle);
        }
 
-       variants get_table_objects(string contract, string table)
+       variants get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit)
        { try {
+             GRAPHENE_ASSERT(lower < upper && limit > 0, table_not_found_exception, "invalid parameters");
              account_object contract_obj = get_account(contract);
 
              const auto& tables = contract_obj.abi.tables;
@@ -956,7 +957,7 @@
                      [&](const table_def& t) { return t.name == table; });
 
              if (iter != tables.end()) {
-                 return _remote_db->get_table_objects(contract_obj.id.number, contract_obj.id.number, name(table));
+                 return _remote_db->get_table_objects(contract_obj.id.number, contract_obj.id.number, name(table), lower, upper, limit);
              } else {
                  GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
              }
@@ -4532,9 +4533,9 @@
         return my->get_contract_tables(contract);
     }
 
-    variant wallet_api::get_table_objects(string contract, string table) const
+    variant wallet_api::get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit) const
     {
-        return my->get_table_objects(contract, table);
+        return my->get_table_objects(contract, table, lower, upper, limit);
     }
 
     signed_transaction wallet_api::register_account(string name,

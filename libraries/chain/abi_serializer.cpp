@@ -56,7 +56,7 @@ abi_serializer::abi_serializer(const abi_def &abi, const fc::microseconds &max_s
 
 void abi_serializer::configure_built_in_types()
 {
-
+    //TODO 每次实例化abi_serializer时候都会做这个操作，能否把built_in_types 声明成static作为类成员？
     built_in_types.emplace("bool", pack_unpack<uint8_t>());
     built_in_types.emplace("int8", pack_unpack<int8_t>());
     built_in_types.emplace("uint8", pack_unpack<uint8_t>());
