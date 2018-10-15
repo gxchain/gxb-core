@@ -149,13 +149,11 @@ fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope,
         auto upper = kv_idx.lower_bound(boost::make_tuple(existing_tid->id, uppper_id));
 
         auto end = fc::time_point::now() + fc::microseconds(1000 * 10);
-        vector<char> data;
         name tname(table);
         uint64_t count = 0;
         for(auto it = lower; it != upper; ++it) {
             if(fc::time_point::now() > end || count == limit) break;
-            copy_inline_row(*it, data);//TODO binary_to_variant不会修改data数据，这里可以不需要拷贝数据，直接使用it指向的数据
-            result.emplace_back(abis.binary_to_variant(tname.to_string(), data, fc::microseconds(1000 * 10)));
+            result.emplace_back(abis.binary_to_variant(tname.to_string(), it->value, fc::microseconds(1000 * 10)));
             ++count;
         }
     }
