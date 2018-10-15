@@ -1068,9 +1068,12 @@ class wallet_api
        *
        * @param contract the name of the contract to query
        * @param table the table of the contract to query
+       * @param lower the start primary key of the table primary index
+       * @param upper the end primary key of the table primary index
+       * @param limit the max item to return
        * @returns the table names/types stored in the blockchain
        */
-      variant get_table_objects(string contract, string table) const;
+      variant get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit) const;
 
       /** Registers a third party's account on the blockckain.
        *
