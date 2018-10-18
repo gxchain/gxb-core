@@ -123,11 +123,12 @@ class betdice : public contract
         int tx_size = transaction_size();
         char *tx = (char *) malloc(tx_size);
         read_transaction(tx, tx_size);
-        free(tx);
-
+        
         checksum256 tx_hash;
         sha256(tx, tx_size, &tx_hash);
 
+        free(tx);
+        
         st_seeds seeds;
         seeds.seed1 = roll_seed_hash;
         seeds.seed2 = tx_hash;
@@ -138,7 +139,7 @@ class betdice : public contract
         uint64_t random_roll = ((seed_hash.hash[0] + seed_hash.hash[1] + seed_hash.hash[2] + seed_hash.hash[3] + seed_hash.hash[4] + seed_hash.hash[5] + seed_hash.hash[6] + seed_hash.hash[7]) * (seed_hash.hash[20] + seed_hash.hash[30]) % 100) + 1;
 
         if (random_roll < roll_under) {
-            print("you won");
+            print("you win");
             increment_global_var(TOTALAMTWON_ID, payout);
             decrement_global_var(LIABILITIES_ID, payout);
             withdraw_asset(_self, bettor, ASSET_ID, payout);
