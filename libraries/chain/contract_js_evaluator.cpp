@@ -26,8 +26,8 @@
 #include <graphene/chain/protocol/name.hpp>
 #include <graphene/chain/protocol/contract_receipt.hpp>
 
-#include <graphene/chain/apply_context.hpp>
-#include <graphene/chain/transaction_context.hpp>
+#include <graphene/chain/apply_js_context.hpp>
+#include <graphene/chain/transaction_js_context.hpp>
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/wast_to_wasm.hpp>
 #include <graphene/chain/abi_serializer.hpp>
@@ -77,7 +77,70 @@ object_id_type contract_js_deploy_evaluator::do_apply(const contract_js_deploy_o
 contract_receipt contract_js_call_evaluator::contract_exec(database& db, const contract_js_call_operation& op, uint32_t billed_cpu_time_us)
 { try {
     dlog("contract_js_call_evaluator contract_exec");
-    return contract_receipt{0, 0, {0, asset_id_type(0)}};
+    
+    
+    
+    
+    
+    int32_t witness_cpu_limit = db.get_max_trx_cpu_time();
+    int32_t gpo_cpu_limit = db.get_cpu_limit().trx_cpu_limit;
+    fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(std::min(witness_cpu_limit, gpo_cpu_limit)) : fc::days(1);
+    dlog("max_trx_cpu_time ${a}, cpu_limit ${b}, real cpu limit ${c}", ("a", db.get_max_trx_cpu_time())("b", db.get_cpu_limit().trx_cpu_limit)("c", max_trx_cpu_us));
+
+    transaction_js_context trx_context(db, op.fee_payer().instance, max_trx_cpu_us);
+    action act{op.contract_id, op.method_name, op.data};
+    apply_js_context ctx{db, trx_context, act, op.amount};
+    ctx.exec();
+
+    auto fee_param = contract_js_call_operation::fee_parameters_type();
+    const auto& p = db.get_global_properties().parameters;
+    for (auto& param : p.current_fees->parameters) {
+        if (param.which() == operation::tag<contract_js_call_operation>::value) {
+            fee_param = param.get<contract_js_call_operation::fee_parameters_type>();
+            dlog("use gpo params, ${s}", ("s", fee_param));
+            break;
+        }
+    }
+
+    uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
+    uint32_t ram_usage_bs = ctx.get_ram_usage();
+    auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
+    auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
+
+    // calculate real fee, core_fee_paid and fee_from_account
+    core_fee_paid = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
+    const auto &asset_obj = db.get<asset_object>(op.fee.asset_id);
+    if (db.head_block_time() > HARDFORK_1008_TIME) {
+        if (asset_obj.id == asset_id_type(1)) {
+            fee_from_account = asset(core_fee_paid, asset_id_type(1));
+        } else {
+            fee_from_account = asset(core_fee_paid / uint64_t(asset_obj.options.core_exchange_rate.to_real()), op.fee.asset_id);
+        }
+    } else {
+        if (asset_obj.id == asset_id_type()) {
+            fee_from_account = asset(core_fee_paid, asset_id_type());
+        } else {
+            fee_from_account = asset(core_fee_paid / uint64_t(asset_obj.options.core_exchange_rate.to_real()), op.fee.asset_id);
+        }
+    }
+
+    dlog("real_fee=${r}, ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
+            ("r", fee_from_account)("rf",ram_fee.to_uint64())("cf",cpu_fee.to_uint64())("ru",ctx.get_ram_usage())
+            ("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
+
+    // pay fee, core_fee_paid
+    generic_evaluator::prepare_fee(op.fee_payer(), fee_from_account, op);
+    generic_evaluator::convert_fee();
+    generic_evaluator::pay_fee();
+
+    contract_receipt receipt{cpu_time_us, ram_usage_bs, fee_from_account};
+    return receipt;
+    
+    
+    
+    
+    
+    
 } FC_CAPTURE_AND_RETHROW((op)(billed_cpu_time_us)) }
 
 void_result contract_js_call_evaluator::do_evaluate(const contract_js_call_operation &op)

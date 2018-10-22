@@ -88,6 +88,8 @@ add_library( graphene_chain
 
              apply_context.cpp
              transaction_context.cpp
+             apply_js_context.cpp
+             transaction_js_context.cpp
              wast_to_wasm.cpp
              wasm_interface.cpp
              wasm_validation.cpp
@@ -114,7 +116,7 @@ add_library( graphene_chain
            )
 
 target_link_libraries( graphene_chain fc graphene_db Logging IR WAST WASM Runtime wasm
-    asmjs passes ast emscripten-optimizer support softfloat builtins wabt)
+    asmjs passes ast emscripten-optimizer support softfloat builtins wabt v8 v8_libplatform)
 
 target_include_directories( graphene_chain
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
