@@ -1077,6 +1077,102 @@
              return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW( (account)(contract)(amount)(method)(args)(fee_asset_symbol)(broadcast)) }
 
+       signed_transaction deploy_js_contract(string name,
+                                          string account,
+                                          string vm_version,
+                                          string contract_dir,
+                                          string fee_asset_symbol,
+                                          bool broadcast = false)
+       { try {
+           FC_ASSERT(!self.is_locked());
+           FC_ASSERT(is_valid_name(name));
+           fc::optional<asset_object> fee_asset_obj = get_asset(fee_asset_symbol);
+
+           bytes js_source;
+           variant abi_def_data;
+
+           auto load_contract = [&]() {
+               fc::path cpath(contract_dir);
+               if (cpath.filename().generic_string() == ".") cpath = cpath.parent_path();
+
+               fc::path js_path = cpath / (cpath.filename().generic_string() + ".js");
+               fc::path abi_path = cpath / (cpath.filename().generic_string() + ".abi");
+
+               bool js_exist = fc::exists(js_path);
+               bool abi_exist = fc::exists(abi_path);
+
+               FC_ASSERT(abi_exist, "no abi file exist");
+               FC_ASSERT(js_exist, "no js file exist");
+
+               abi_def_data = fc::json::from_file(abi_path);
+
+               std::string js_string;
+               fc::read_file_contents(js_path, js_string);
+               //TODO check js valid
+               FC_ASSERT(js_string.size() > 0, "invalid js");
+
+               js_source = bytes(js_string.begin(), js_string.end());
+               dlog("js_string = ${x}", ("x", js_string));
+           };
+
+           load_contract();
+
+           account_object creator_account_object = this->get_account(account);
+           account_id_type creator_account_id = creator_account_object.id;
+
+           contract_js_deploy_operation op;
+           op.name = name;
+           op.account = creator_account_id;
+           op.vm_type = "1";
+           op.vm_version = vm_version;
+           op.code = js_source;
+           op.abi = abi_def_data.as<abi_def>(GRAPHENE_MAX_NESTED_OBJECTS);
+
+           signed_transaction tx;
+           tx.operations.push_back(op);
+           set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+           tx.validate();
+
+           return sign_transaction(tx, broadcast);
+       } FC_CAPTURE_AND_RETHROW( (name)(account)(vm_version)(contract_dir)(fee_asset_symbol)(broadcast)) }
+
+       signed_transaction call_js_contract(string account,
+                                        string contract,
+                                        optional<asset> amount,
+                                        string method,
+                                        string args,
+                                        string fee_asset_symbol,
+                                        bool broadcast = false)
+       { try {
+             FC_ASSERT(!self.is_locked());
+             fc::optional<asset_object> fee_asset_obj = get_asset(fee_asset_symbol);
+
+             account_object caller = get_account(account);
+             account_object contract_obj = get_account(contract);
+
+             contract_js_call_operation contract_call_op;
+             contract_call_op.account = caller.id;
+             contract_call_op.contract_id = contract_obj.id;
+             if (amount.valid()) {
+                 contract_call_op.amount = amount;
+             }
+             contract_call_op.method_name = string_to_name(method.c_str());
+             fc::variant action_args_var = fc::json::from_string(args);
+
+             abi_serializer abis(contract_obj.abi, fc::milliseconds(1000000));
+             auto action_type = abis.get_action_type(method);
+             GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
+             contract_call_op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+
+             signed_transaction tx;
+             tx.operations.push_back(contract_call_op);
+             set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+             tx.validate();
+
+             return sign_transaction(tx, broadcast);
+       } FC_CAPTURE_AND_RETHROW( (account)(contract)(amount)(method)(args)(fee_asset_symbol)(broadcast)) }
+       
+       
        signed_transaction register_account(string name,
                                            public_key_type owner,
                                            public_key_type active,
@@ -4526,6 +4622,27 @@
                                       bool broadcast)
     {
         return my->call_contract(account, contract, amount, method, args, fee_asset_symbol, broadcast);
+    }
+    
+    signed_transaction wallet_api::deploy_js_contract(string name,
+                                                  string account,
+                                                  string vm_version,
+                                                  string contract_dir,
+                                                  string fee_asset_symbol,
+                                                  bool broadcast)
+    {
+        return my->deploy_js_contract(name, account, vm_version, contract_dir, fee_asset_symbol, broadcast);
+    }
+
+    signed_transaction wallet_api::call_js_contract(string account,
+                                      string contract,
+                                      optional<asset> amount,
+                                      string method,
+                                      string args,
+                                      string fee_asset_symbol,
+                                      bool broadcast)
+    {
+        return my->call_js_contract(account, contract, amount, method, args, fee_asset_symbol, broadcast);
     }
 
     variant wallet_api::get_contract_tables(string contract) const

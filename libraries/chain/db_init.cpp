@@ -81,6 +81,7 @@
 #include <graphene/chain/loyalty_evaluator.hpp>
 #include <graphene/chain/proxy_transfer_evaluator.hpp>
 #include <graphene/chain/contract_evaluator.hpp>
+#include <graphene/chain/contract_js_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -260,7 +261,8 @@ void database::initialize_evaluators()
    register_evaluator<proxy_transfer_evaluator>();
    register_evaluator<contract_deploy_evaluator>();
    register_evaluator<contract_call_evaluator>();
-
+   register_evaluator<contract_js_deploy_evaluator>();
+   register_evaluator<contract_js_call_evaluator>();
 }
 
 void database::initialize_indexes()

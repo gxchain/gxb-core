@@ -1056,6 +1056,47 @@ class wallet_api
                                      string arg,
                                      string fee_asset_symbol,
                                      bool broadcast = false);
+    
+    
+    /** Deploy contract
+     *
+     * deploy contract
+     * @param name name
+     * @param account this account use to deploy contract
+     * @param vm_version vm_version
+     * @param contract_dir contract_dir
+     * @param fee_asset_symbol the symbol of the fee asset.
+     * @param broadcast broadcast
+     * @returns signed_transaction
+     */
+    signed_transaction deploy_js_contract(string name,
+                                       string account,
+                                       string vm_version,
+                                       string contract_dir,
+                                       string fee_asset_symbol,
+                                       bool broadcast = false);
+
+
+  /** Call contract
+   *
+   * call contract
+   * @param account this account use to call contract
+   * @param contract contract
+   * @param amount amount of asset sent to contract
+   * @param method method
+   * @param arg arg
+   * @param fee_asset_symbol the symbol of the fee asset.
+   * @param broadcast broadcast
+   * @returns signed_transaction
+   */
+  signed_transaction call_js_contract(string account,
+                                   string contract,
+                                   optional<asset> amount,
+                                   string method,
+                                   string arg,
+                                   string fee_asset_symbol,
+                                   bool broadcast = false);
+  
 
       /** Returns table infos about the given contract.
        *
@@ -2152,6 +2193,8 @@ FC_API( graphene::wallet::wallet_api,
         (register_account)
         (deploy_contract)
         (call_contract)
+        (deploy_js_contract)
+        (call_js_contract)
         (get_contract_tables)
         (get_table_objects)
         (register_account2)

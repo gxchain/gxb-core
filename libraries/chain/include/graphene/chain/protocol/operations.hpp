@@ -49,6 +49,7 @@
 #include <graphene/chain/protocol/loyalty_ops.hpp>
 #include <graphene/chain/protocol/proxy_transfer_ops.hpp>
 #include <graphene/chain/protocol/contract_ops.hpp>
+#include <graphene/chain/protocol/contract_js_ops.hpp>
 
 namespace graphene { namespace chain {
 
@@ -133,7 +134,9 @@ namespace graphene { namespace chain {
             balance_unlock_operation,//72
             proxy_transfer_operation, //73
             contract_deploy_operation, //74
-            contract_call_operation //75
+            contract_call_operation, //75
+            contract_js_deploy_operation, //76
+            contract_js_call_operation //77
 
          > operation;
 
