@@ -56,10 +56,6 @@
 #define HARDFORK_1008_TIME (fc::time_point_sec( 1536210000 )) // for test, 2018-09-06T13:00:00
 #endif
 
-// #359 Allow digits in asset name
-#ifndef HARDFORK_359_TIME
-#define HARDFORK_359_TIME (fc::time_point_sec( 1444416300 ))
-#endif
 // #385 October 23 enforce PARENT.CHILD and allow short names
 #ifndef HARDFORK_385_TIME
 #define HARDFORK_385_TIME (fc::time_point_sec( 1445558400 ))
