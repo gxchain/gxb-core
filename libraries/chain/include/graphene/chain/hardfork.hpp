@@ -56,10 +56,6 @@
 #define HARDFORK_1008_TIME (fc::time_point_sec( 1536210000 )) // for test, 2018-09-06T13:00:00
 #endif
 
-// #385 October 23 enforce PARENT.CHILD and allow short names
-#ifndef HARDFORK_385_TIME
-#define HARDFORK_385_TIME (fc::time_point_sec( 1445558400 ))
-#endif
 // #413 Add operation to claim asset fees
 #ifndef HARDFORK_413_TIME
 #define HARDFORK_413_TIME (fc::time_point_sec( 1446652800 ))
