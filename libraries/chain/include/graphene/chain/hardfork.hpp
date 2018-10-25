@@ -56,10 +56,6 @@
 #define HARDFORK_1008_TIME (fc::time_point_sec( 1536210000 )) // for test, 2018-09-06T13:00:00
 #endif
 
-// #357 Disallow publishing certain malformed price feeds
-#ifndef HARDFORK_357_TIME
-#define HARDFORK_357_TIME (fc::time_point_sec( 1444416300 ))
-#endif
 // #359 Allow digits in asset name
 #ifndef HARDFORK_359_TIME
 #define HARDFORK_359_TIME (fc::time_point_sec( 1444416300 ))
