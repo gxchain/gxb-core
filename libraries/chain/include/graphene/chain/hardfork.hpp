@@ -108,10 +108,6 @@
 #ifndef HARDFORK_572_TIME
 #define HARDFORK_572_TIME (fc::time_point_sec( 1456250400 ))
 #endif
-// #607 Disable negative voting on workers
-#ifndef HARDFORK_607_TIME
-#define HARDFORK_607_TIME (fc::time_point_sec( 1458752400 ))
-#endif
 // #615 Fix price feed expiration check, so websocket server will never spam too much data
 #ifndef HARDFORK_615_TIME
 #define HARDFORK_615_TIME (fc::time_point_sec( 1458752400 ))
