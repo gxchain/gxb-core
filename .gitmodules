@@ -19,3 +19,6 @@
 [submodule "contracts/musl/upstream"]
 	path = contracts/musl/upstream
 	url = https://github.com/gxchain/musl.git
+[submodule "libraries/wabt"]
+	path = libraries/wabt
+	url = https://github.com/gxchain/wabt.git

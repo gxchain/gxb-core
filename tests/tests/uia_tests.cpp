@@ -438,20 +438,6 @@ BOOST_AUTO_TEST_CASE( asset_name_test )
          return assets_by_symbol.find( symbol ) != assets_by_symbol.end();
       };
 
-      // Alice creates asset "ALPHA"
-      BOOST_CHECK( !has_asset("ALPHA") );    BOOST_CHECK( !has_asset("ALPHA.ONE") );
-      create_user_issued_asset( "ALPHA", alice_id(db), 0 );
-      BOOST_CHECK(  has_asset("ALPHA") );    BOOST_CHECK( !has_asset("ALPHA.ONE") );
-
-      // Nobody can create another asset named ALPHA
-      GRAPHENE_REQUIRE_THROW( create_user_issued_asset( "ALPHA",   bob_id(db), 0 ), fc::exception );
-      BOOST_CHECK(  has_asset("ALPHA") );    BOOST_CHECK( !has_asset("ALPHA.ONE") );
-      GRAPHENE_REQUIRE_THROW( create_user_issued_asset( "ALPHA", alice_id(db), 0 ), fc::exception );
-      BOOST_CHECK(  has_asset("ALPHA") );    BOOST_CHECK( !has_asset("ALPHA.ONE") );
-
-      generate_blocks( HARDFORK_385_TIME );
-      generate_block();
-
       // Bob can't create ALPHA.ONE
       GRAPHENE_REQUIRE_THROW( create_user_issued_asset( "ALPHA.ONE", bob_id(db), 0 ), fc::exception );
       BOOST_CHECK(  has_asset("ALPHA") );    BOOST_CHECK( !has_asset("ALPHA.ONE") );
