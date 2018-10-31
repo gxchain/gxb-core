@@ -1056,6 +1056,24 @@ class wallet_api
                                      string arg,
                                      string fee_asset_symbol,
                                      bool broadcast = false);
+    
+    /** Update contract
+     *
+     * call contract
+     * @param owner this account use to update contract
+     * @param contract contract
+     * @param new_owner new_owner
+     * @param contract_dir contract_dir
+     * @param fee_asset_symbol fee_asset_symbol
+     * @param broadcast broadcast
+     * @returns signed_transaction
+     */
+    signed_transaction update_contract(string owner,
+                                     string contract,
+                                     string new_owner,
+                                     string contract_dir,
+                                     string fee_asset_symbol,
+                                     bool broadcast = false);
 
       /** Returns table infos about the given contract.
        *
@@ -2151,6 +2169,7 @@ FC_API( graphene::wallet::wallet_api,
         (derive_owner_keys_from_brain_key)
         (register_account)
         (deploy_contract)
+        (update_contract)
         (call_contract)
         (get_contract_tables)
         (get_table_objects)
