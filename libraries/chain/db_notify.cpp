@@ -379,16 +379,6 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
             break;
         } case lock_balance_object_type: {
             break;
-        } case index64_object_type: {
-            break;
-        } case index128_object_type: {
-            break;
-        } case index256_object_type: {
-            break;
-        } case index_double_object_type: {
-            break;
-        } case index_long_double_object_type: {
-            break;
         }
       }
    }
@@ -457,6 +447,16 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
              case impl_table_id_object_type:
               break;
              case impl_key_value_object_type:
+              break;
+             case index64_object_type:
+              break;
+             case index128_object_type:
+              break;
+             case index256_object_type:
+              break;
+             case index_double_object_type:
+              break;
+             case index_long_double_object_type:
               break;
       }
 
