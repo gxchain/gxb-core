@@ -143,16 +143,22 @@ void_result contract_update_evaluator::do_evaluate(const contract_update_operati
 { try {
     database &d = db();
 
+    if (d.head_block_time() <= HARDFORK_1009_TIME) {
+        FC_ASSERT(false, "contract can not update before hardfork 1009");
+    }
+    
     const account_object& contract_obj = op.contract(d);
     FC_ASSERT(op.owner == contract_obj.registrar, "only owner can update contract, current owner: ${o}", ("o", contract_obj.registrar));
 
+    code_hash = fc::sha256::hash(op.code);
+    FC_ASSERT(code_hash != contract_obj.code_version, "code not updated");
+    
     FC_ASSERT(op.code.size() > 0, "contract code cannot be empty");
     FC_ASSERT(op.abi.actions.size() > 0, "contract has no actions");
 
     if(op.new_owner.valid()) {
     	FC_ASSERT(d.find_object(*op.new_owner), "new owner not exist");
     }
-    FC_ASSERT(d.find_object(op.owner), "owner not exist");
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op.owner)(op.contract)(op.fee)(op.abi)) }
@@ -162,8 +168,6 @@ void_result contract_update_evaluator::do_apply(const contract_update_operation 
     database &d = db();
     const account_object& contract_obj = op.contract(d);
     
-    string code_version = fc::sha256::hash(op.code);
-    FC_ASSERT(code_version != contract_obj.code_version, "code not updated");
     db().modify(contract_obj, [&](account_object &obj) {
         if(op.new_owner.valid()) {
             obj.registrar = *op.new_owner;
@@ -171,7 +175,7 @@ void_result contract_update_evaluator::do_apply(const contract_update_operation 
             obj.lifetime_referrer = *op.new_owner;
         }
         obj.code = op.code;
-        obj.code_version = code_version;
+        obj.code_version = code_hash;
         obj.abi = op.abi;
     });
     

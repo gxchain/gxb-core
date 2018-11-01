@@ -38,6 +38,7 @@ class contract_update_evaluator : public evaluator<contract_update_evaluator>
 
     void_result do_evaluate(const contract_update_operation &op);
     void_result do_apply(const contract_update_operation &op, uint32_t billed_cpu_time_us = 0);
+    string code_hash;
 };
 
 class contract_call_evaluator : public evaluator<contract_call_evaluator>

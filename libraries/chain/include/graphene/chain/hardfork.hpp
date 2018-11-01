@@ -56,6 +56,11 @@
 #define HARDFORK_1008_TIME (fc::time_point_sec( 1536210000 )) // for test, 2018-09-06T13:00:00
 #endif
 
+// enable smart contract update
+#ifndef HARDFORK_1009_TIME
+#define HARDFORK_1009_TIME (fc::time_point_sec( 1541030400 )) // for test, 2018-11-01T00:00:00
+#endif
+
 // #413 Add operation to claim asset fees
 #ifndef HARDFORK_413_TIME
 #define HARDFORK_413_TIME (fc::time_point_sec( 1446652800 ))
