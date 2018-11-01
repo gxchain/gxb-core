@@ -144,35 +144,38 @@ void_result contract_update_evaluator::do_evaluate(const contract_update_operati
     database &d = db();
 
     const account_object& contract_obj = op.contract(d);
-    FC_ASSERT(op.owner == contract_obj.registrar, "contract registrar must be ${n}, but current updator id is ${c}", ("n", contract_obj.registrar)("c", op.owner));
+    FC_ASSERT(op.owner == contract_obj.registrar, "only owner can update contract, current owner: ${o}", ("o", contract_obj.registrar));
 
     FC_ASSERT(op.code.size() > 0, "contract code cannot be empty");
     FC_ASSERT(op.abi.actions.size() > 0, "contract has no actions");
 
-    if (d.head_block_time() > HARDFORK_1006_TIME) {
-        wasm_interface::validate(op.code);
+    if(op.new_owner.valid()) {
+    	FC_ASSERT(d.find_object(*op.new_owner), "new owner not exist");
     }
+    FC_ASSERT(d.find_object(op.owner), "owner not exist");
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op.owner)(op.contract)(op.fee)(op.abi)) }
 
-object_id_type contract_update_evaluator::do_apply(const contract_update_operation &op, uint32_t billed_cpu_time_us)
+void_result contract_update_evaluator::do_apply(const contract_update_operation &op, uint32_t billed_cpu_time_us)
 { try {
     database &d = db();
-    const account_object& owner_obj = op.owner(d);
     const account_object& contract_obj = op.contract(d);
-    const account_object& new_owner_obj = op.new_owner(d);
     
+    string code_version = fc::sha256::hash(op.code);
+    FC_ASSERT(code_version != contract_obj.code_version, "code not updated");
     db().modify(contract_obj, [&](account_object &obj) {
-			obj.registrar = op.new_owner;
-			obj.referrer = op.new_owner;
-			obj.lifetime_referrer = op.new_owner;
-            obj.code = op.code;
-            obj.code_version = fc::sha256::hash(op.code);
-            obj.abi = op.abi;
-            });
-
-    return contract_obj.id;
+        if(op.new_owner.valid()) {
+            obj.registrar = *op.new_owner;
+            obj.referrer = *op.new_owner;
+            obj.lifetime_referrer = *op.new_owner;
+        }
+        obj.code = op.code;
+        obj.code_version = code_version;
+        obj.abi = op.abi;
+    });
+    
+    return void_result();
 } FC_CAPTURE_AND_RETHROW((op.owner)(op.contract)(op.fee)(op.abi)) }
 
 void_result contract_call_evaluator::do_evaluate(const contract_call_operation &op)

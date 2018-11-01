@@ -1041,12 +1041,11 @@
            return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW( (name)(account)(vm_type)(vm_version)(contract_dir)(fee_asset_symbol)(broadcast)) }
 
-       signed_transaction update_contract(string owner,
-                                        string contract,
-                                        string new_owner,
+       signed_transaction update_contract(string contract,
+                                        optional<string> new_owner,
                                         string contract_dir,
                                         string fee_asset_symbol,
-                                        bool broadcast = false)
+                                        bool broadcast /* = false */)
        { try {
            FC_ASSERT(!self.is_locked());
            
@@ -1082,14 +1081,19 @@
 
            load_contract();
 
-           account_object owner_obj = this->get_account(owner);
            account_object contract_obj = this->get_account(contract);
-           account_object new_owner_obj = this->get_account(new_owner);
+           account_object owner_obj = this->get_account(contract_obj.registrar);
+           
+           optional<account_id_type> new_owner_account_id;
+           if(new_owner.valid() && (*new_owner).length() > 0) {
+        	   account_object new_owner_obj = this->get_account(*new_owner);
+        	   new_owner_account_id = new_owner_obj.id.instance();
+           }
 
            contract_update_operation op;
            op.owner = owner_obj.id;
            op.contract = contract_obj.id;
-           op.new_owner = new_owner_obj.id;
+           op.new_owner = new_owner_account_id;
            op.code = bytes(wasm.begin(), wasm.end());
            op.abi = abi_def_data.as<abi_def>(GRAPHENE_MAX_NESTED_OBJECTS);
 
@@ -1099,7 +1103,7 @@
            tx.validate();
 
            return sign_transaction(tx, broadcast);
-       } FC_CAPTURE_AND_RETHROW( (owner)(contract)(contract_dir)(fee_asset_symbol)(broadcast)) }
+       } FC_CAPTURE_AND_RETHROW( (contract)(contract_dir)(fee_asset_symbol)(broadcast)) }
        
        signed_transaction call_contract(string account,
                                         string contract,
@@ -4577,14 +4581,13 @@
         return my->deploy_contract(name, account, vm_type, vm_version, contract_dir, fee_asset_symbol, broadcast);
     }
     
-    signed_transaction wallet_api::update_contract(string owner,
-                                                  string contract,
+    signed_transaction wallet_api::update_contract(string contract,
                                                   string new_owner,
                                                   string contract_dir,
                                                   string fee_asset_symbol,
                                                   bool broadcast)
     {
-        return my->update_contract(owner, contract, new_owner, contract_dir, fee_asset_symbol, broadcast);
+        return my->update_contract(contract, new_owner, contract_dir, fee_asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::call_contract(string account,

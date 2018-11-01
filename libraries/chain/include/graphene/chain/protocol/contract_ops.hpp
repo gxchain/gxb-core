@@ -67,7 +67,7 @@ struct contract_update_operation : public base_operation {
     asset                           fee;
     account_id_type                 owner;
     account_id_type                 contract;
-    account_id_type                 new_owner;
+    optional<account_id_type>       new_owner;
     bytes                           code;
     abi_def                         abi;
     extensions_type                 extensions;

@@ -1060,7 +1060,6 @@ class wallet_api
     /** Update contract
      *
      * call contract
-     * @param owner this account use to update contract
      * @param contract contract
      * @param new_owner new_owner
      * @param contract_dir contract_dir
@@ -1068,8 +1067,7 @@ class wallet_api
      * @param broadcast broadcast
      * @returns signed_transaction
      */
-    signed_transaction update_contract(string owner,
-                                     string contract,
+    signed_transaction update_contract(string contract,
                                      string new_owner,
                                      string contract_dir,
                                      string fee_asset_symbol,
