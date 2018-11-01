@@ -1041,6 +1041,70 @@
            return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW( (name)(account)(vm_type)(vm_version)(contract_dir)(fee_asset_symbol)(broadcast)) }
 
+       signed_transaction update_contract(string contract,
+                                        optional<string> new_owner,
+                                        string contract_dir,
+                                        string fee_asset_symbol,
+                                        bool broadcast /* = false */)
+       { try {
+           FC_ASSERT(!self.is_locked());
+           
+           fc::optional<asset_object> fee_asset_obj = get_asset(fee_asset_symbol);
+
+           std::vector<uint8_t> wasm;
+           variant abi_def_data;
+
+           auto load_contract = [&]() {
+               fc::path cpath(contract_dir);
+               if (cpath.filename().generic_string() == ".") cpath = cpath.parent_path();
+
+               fc::path wasm_path = cpath / (cpath.filename().generic_string() + ".wasm");
+               fc::path abi_path = cpath / (cpath.filename().generic_string() + ".abi");
+
+               bool wasm_exist = fc::exists(wasm_path);
+               bool abi_exist = fc::exists(abi_path);
+
+               FC_ASSERT(abi_exist, "no abi file exist");
+               FC_ASSERT(wasm_exist, "no wasm file exist");
+
+               abi_def_data = fc::json::from_file(abi_path);
+
+               std::string wasm_string;
+               fc::read_file_contents(wasm_path, wasm_string);
+               const string binary_wasm_header("\x00\x61\x73\x6d", 4);
+               FC_ASSERT(wasm_string.size() > 4 && (wasm_string.compare(0, 4, binary_wasm_header) == 0), "wasm invalid");
+
+               for (auto it = wasm_string.begin(); it != wasm_string.end(); ++it) {
+                   wasm.push_back(*it); //TODO
+               }
+           };
+
+           load_contract();
+
+           account_object contract_obj = this->get_account(contract);
+           account_object owner_obj = this->get_account(contract_obj.registrar);
+           
+           optional<account_id_type> new_owner_account_id;
+           if(new_owner.valid() && (*new_owner).length() > 0) {
+        	   account_object new_owner_obj = this->get_account(*new_owner);
+        	   new_owner_account_id = new_owner_obj.id.instance();
+           }
+
+           contract_update_operation op;
+           op.owner = owner_obj.id;
+           op.contract = contract_obj.id;
+           op.new_owner = new_owner_account_id;
+           op.code = bytes(wasm.begin(), wasm.end());
+           op.abi = abi_def_data.as<abi_def>(GRAPHENE_MAX_NESTED_OBJECTS);
+
+           signed_transaction tx;
+           tx.operations.push_back(op);
+           set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+           tx.validate();
+
+           return sign_transaction(tx, broadcast);
+       } FC_CAPTURE_AND_RETHROW( (contract)(contract_dir)(fee_asset_symbol)(broadcast)) }
+       
        signed_transaction call_contract(string account,
                                         string contract,
                                         optional<asset> amount,
@@ -4515,6 +4579,15 @@
                                                   bool broadcast)
     {
         return my->deploy_contract(name, account, vm_type, vm_version, contract_dir, fee_asset_symbol, broadcast);
+    }
+    
+    signed_transaction wallet_api::update_contract(string contract,
+                                                  string new_owner,
+                                                  string contract_dir,
+                                                  string fee_asset_symbol,
+                                                  bool broadcast)
+    {
+        return my->update_contract(contract, new_owner, contract_dir, fee_asset_symbol, broadcast);
     }
 
     signed_transaction wallet_api::call_contract(string account,
