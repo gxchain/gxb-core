@@ -39,9 +39,9 @@ void fork_database::reset()
 
 void fork_database::pop_block()
 {
-   FC_ASSERT( _head, "no blocks to pop" );
+   FC_ASSERT( _head, "no block to pop" );
    auto prev = _head->prev.lock();
-   FC_ASSERT( prev, "poping block would leave head block null" );
+   FC_ASSERT( prev, "popping block would leave head block null" );
     _head = prev;
 }
 
@@ -65,9 +65,8 @@ shared_ptr<fork_item>  fork_database::push_block(const signed_block& b)
    }
    catch ( const unlinkable_block_exception& e )
    {
-      wlog("Pushing block to fork database exception:\n${e}", ("e", e.to_detail_string()));
-      wlog("Pushing block to fork database that failed to link, block_id: ${id}, block_num: ${num}", ("id",b.id())("num",b.block_num()));
-      wlog("fork db head block_num: ${num}, block_id: ${id}", ("num",_head->data.block_num())("id",_head->data.id()));
+      wlog( "Pushing block to fork database that failed to link: ${id}, ${num}", ("id",b.id())("num",b.block_num()) );
+      wlog( "Head: ${num}, ${id}", ("num",_head->data.block_num())("id",_head->data.id()) );
       throw;
       _unlinked_index.insert( item );
    }
@@ -89,18 +88,16 @@ void  fork_database::_push_block(const item_ptr& item)
       auto& index = _index.get<block_id>();
       auto itr = index.find(item->previous_id());
       GRAPHENE_ASSERT(itr != index.end(), unlinkable_block_exception, "block does not link to known chain");
-      FC_ASSERT(!(*itr)->invalid);
       item->prev = *itr;
    }
 
-   // dlog("fork_database _push_block(), insert block_num: ${block_num}, block: ${block}", ("block_num", item->num)("block", item->data));
    _index.insert(item);
    if( !_head ) _head = item;
    else if( item->num > _head->num )
    {
       _head = item;
       uint32_t min_num = _head->num - std::min( _max_size, _head->num );
-      // dlog( "fork DB min block_num: ${n}, max_size: ${m}, head_num: ${head_num}", ("n",min_num)("m",_max_size)("head_num", _head->num));
+//      ilog( "min block in fork DB ${n}, max_size: ${m}", ("n",min_num)("m",_max_size) );
       auto& num_idx = _index.get<block_num>();
       while( num_idx.size() && (*num_idx.begin())->num < min_num )
          num_idx.erase( num_idx.begin() );
@@ -118,7 +115,6 @@ void  fork_database::_push_block(const item_ptr& item)
  */
 void fork_database::_push_next( const item_ptr& new_item )
 {
-    idump(("fork_database _push_next()"));
     auto& prev_idx = _unlinked_index.get<by_previous>();
 
     auto itr = prev_idx.find( new_item->id );
@@ -255,6 +251,18 @@ void fork_database::set_head(shared_ptr<fork_item> h)
 void fork_database::remove(block_id_type id)
 {
    _index.get<block_id>().erase(id);
+   // If we're removing head, try to pop it
+   if( _head && _head->id == id )
+   {
+      try
+      {
+         pop_block();
+      }
+      catch( fc::exception& e ) // If unable to pop normally, E.G. if head's prev is null, reset it
+      {
+         _head.reset();
+      }
+   }
 }
 
 } } // graphene::chain

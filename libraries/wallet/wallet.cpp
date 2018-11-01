@@ -947,8 +947,9 @@
           _builder_transactions.erase(handle);
        }
 
-       variants get_table_objects(string contract, string table)
+       variants get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit)
        { try {
+             GRAPHENE_ASSERT(lower < upper && limit > 0, table_not_found_exception, "invalid parameters");
              account_object contract_obj = get_account(contract);
 
              const auto& tables = contract_obj.abi.tables;
@@ -956,7 +957,7 @@
                      [&](const table_def& t) { return t.name == table; });
 
              if (iter != tables.end()) {
-                 return _remote_db->get_table_objects(contract_obj.id.number, contract_obj.id.number, name(table));
+                 return _remote_db->get_table_objects(contract_obj.id.number, contract_obj.id.number, name(table), lower, upper, limit);
              } else {
                  GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
              }
@@ -3465,6 +3466,8 @@
 
        bool verify_proxy_transfer_signature(const proxy_transfer_params& param, public_key_type pub_key)
        {
+           auto p = param; p.signatures.clear();
+           idump((fc::to_hex(fc::raw::pack(p))));
            return param.verify_proxy_transfer_signature(pub_key);
        }
 
@@ -3542,6 +3545,16 @@
        fc::sha256 get_hash(const string& value)
        {
            return fc::sha256::hash(value);
+       }
+
+       string get_pub_key_from_wif_key (string wif_key)
+       {
+          fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
+          if (!optional_private_key)
+             FC_THROW("Invalid private key");
+          graphene::chain::public_key_type wif_pub_key = optional_private_key->get_public_key();
+
+          return fc::string(wif_pub_key);
        }
 
       signature_type sign_string(string wif_key, const string &raw_string)
@@ -4520,9 +4533,9 @@
         return my->get_contract_tables(contract);
     }
 
-    variant wallet_api::get_table_objects(string contract, string table) const
+    variant wallet_api::get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit) const
     {
-        return my->get_table_objects(contract, table);
+        return my->get_table_objects(contract, table, lower, upper, limit);
     }
 
     signed_transaction wallet_api::register_account(string name,
@@ -4801,6 +4814,11 @@
     fc::sha256 wallet_api::get_hash(const string& value)
     {
         return my->get_hash(value);
+    }
+
+    string wallet_api::get_pub_key_from_wif_key(const string& wif_key)
+    {
+        return my->get_pub_key_from_wif_key(wif_key);
     }
 
     signature_type wallet_api::sign_string(string wif_key, const string &raw_string)

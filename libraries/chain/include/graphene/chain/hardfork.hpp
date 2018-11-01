@@ -63,18 +63,6 @@
 #define HARDFORK_1009_TIME (fc::time_point_sec( 1537891200 )) // for testnet
 #endif
 
-// #357 Disallow publishing certain malformed price feeds
-#ifndef HARDFORK_357_TIME
-#define HARDFORK_357_TIME (fc::time_point_sec( 1444416300 ))
-#endif
-// #359 Allow digits in asset name
-#ifndef HARDFORK_359_TIME
-#define HARDFORK_359_TIME (fc::time_point_sec( 1444416300 ))
-#endif
-// #385 October 23 enforce PARENT.CHILD and allow short names
-#ifndef HARDFORK_385_TIME
-#define HARDFORK_385_TIME (fc::time_point_sec( 1445558400 ))
-#endif
 // #413 Add operation to claim asset fees
 #ifndef HARDFORK_413_TIME
 #define HARDFORK_413_TIME (fc::time_point_sec( 1446652800 ))
@@ -111,10 +99,6 @@
 #ifndef HARDFORK_483_TIME
 #define HARDFORK_483_TIME (fc::time_point_sec( 1450378800 ))
 #endif
-// #516 Special authorities
-#ifndef HARDFORK_516_TIME
-#define HARDFORK_516_TIME (fc::time_point_sec( 1456250400 ))
-#endif
 // #538 Buyback accounts
 #ifndef HARDFORK_538_TIME
 #define HARDFORK_538_TIME (fc::time_point_sec( 1456250400 ))
@@ -130,18 +114,6 @@
 // #572 Allow asset to update permission flags when no supply exists
 #ifndef HARDFORK_572_TIME
 #define HARDFORK_572_TIME (fc::time_point_sec( 1456250400 ))
-#endif
-// #599 Unpacking of extension is incorrect
-#ifndef HARDFORK_599_TIME
-#define HARDFORK_599_TIME (fc::time_point_sec( 1459789200 ))
-#endif
-// #607 Disable negative voting on workers
-#ifndef HARDFORK_607_TIME
-#define HARDFORK_607_TIME (fc::time_point_sec( 1458752400 ))
-#endif
-// #613 Deprecate annual membership
-#ifndef HARDFORK_613_TIME
-#define HARDFORK_613_TIME (fc::time_point_sec( 1458752400 ))
 #endif
 // #615 Fix price feed expiration check, so websocket server will never spam too much data
 #ifndef HARDFORK_615_TIME

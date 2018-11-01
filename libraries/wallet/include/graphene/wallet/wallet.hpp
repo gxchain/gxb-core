@@ -1068,9 +1068,12 @@ class wallet_api
        *
        * @param contract the name of the contract to query
        * @param table the table of the contract to query
+       * @param lower the start primary key of the table primary index
+       * @param upper the end primary key of the table primary index
+       * @param limit the max item to return
        * @returns the table names/types stored in the blockchain
        */
-      variant get_table_objects(string contract, string table) const;
+      variant get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit) const;
 
       /** Registers a third party's account on the blockckain.
        *
@@ -2010,6 +2013,8 @@ class wallet_api
        */
       fc::sha256 get_hash(const string& value);
 
+      string get_pub_key_from_wif_key(const string& wif_key);
+
       /** sign_string
        *
        * @param wif_key private key
@@ -2225,6 +2230,7 @@ FC_API( graphene::wallet::wallet_api,
         (flood_transfer)
         (transfer_test)
         (get_hash)
+        (get_pub_key_from_wif_key)
         (sign_string)
         (verify_transaction_signature)
         (verify_proxy_transfer_signature)
