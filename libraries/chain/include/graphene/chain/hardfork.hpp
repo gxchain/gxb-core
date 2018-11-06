@@ -55,12 +55,6 @@
 #define HARDFORK_1008_TIME (fc::time_point_sec( 1541433600 )) // for mainnet
 #endif
 
-// #1103 the time point before you can renaming asset symbol
-// UTC 2018-11-30 00:00:00
-#ifndef HARDFORK_1103_TIME
-#define HARDFORK_1103_TIME (fc::time_point_sec( 1543507200 ))
-#endif
-
 // #357 Disallow publishing certain malformed price feeds
 #ifndef HARDFORK_357_TIME
 #define HARDFORK_357_TIME (fc::time_point_sec( 1444416300 ))
