@@ -383,6 +383,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
             break;
         } case lock_balance_object_type: {
             break;
+        } case witness_lock_balance_object_type: {
+            break;
         }
       }
    }

@@ -45,4 +45,13 @@ namespace graphene { namespace chain {
          void_result do_apply(const witness_update_operation& o, int32_t billed_cpu_time_us = 0);
    };
 
+   class witness_lock_balance_withdraw_evaluator : public evaluator<witness_lock_balance_withdraw_evaluator>
+   {
+      public:
+         typedef witness_lock_balance_withdraw_evaluator operation_type;
+
+         void_result do_evaluate( const witness_lock_balance_withdraw_operation& o );
+         void_result do_apply(const witness_lock_balance_withdraw_operation& o, int32_t billed_cpu_time_us = 0);
+   };
+
 } } // graphene::chain
