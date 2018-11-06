@@ -38,4 +38,9 @@ void witness_update_operation::validate() const
        FC_ASSERT(new_url->size() < GRAPHENE_MAX_URL_LENGTH );
 }
 
+void witness_lock_balance_withdraw_operation::validate() const
+{
+   FC_ASSERT(fee.amount >= 0);
+}
+
 } } // graphene::chain

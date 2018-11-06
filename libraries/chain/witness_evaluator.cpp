@@ -111,26 +111,19 @@ void_result witness_lock_balance_withdraw_evaluator::do_apply(const witness_lock
 
    auto &acnt = _db.get(op.witness_account);
    if(acnt.cashback_vb.valid()) {
-	   _db.modify((*acnt.cashback_vb)(_db), [](vesting_balance_object &o) {
+	   _db.modify((*acnt.cashback_vb)(_db), [&witness_lock_balance_it](vesting_balance_object &o) {
 		   o.balance += witness_lock_balance_it->amount;
 	   });
    } else {
 	   const vesting_balance_object& vbo = _db.create< vesting_balance_object >( [&]( vesting_balance_object& obj )
 	   {
-		  cdd_vesting_policy policy;
-	      policy.vesting_seconds = 0;
-	      policy.coin_seconds_earned = 0;
-	      policy.start_claim = fc::time_point_sec(0);
-	      policy.coin_seconds_earned_last_update = fc::time_point_sec(0);
-
-	      fc::time_point now = fc::time_point::now()
-	      cdd_vesting_policy_initializer policyer(3600*24*60, now);
-
-	      //WARNING: The logic to create a vesting balance object is replicated in vesting_balance_worker_type::initializer::init.
-	      // If making changes to this logic, check if those changes should also be made there as well.
+	      fc::time_point now = fc::time_point::now();
+	      cdd_vesting_policy cdd_policy;
+	      cdd_policy.start_claim = now;
+	      cdd_policy.vesting_seconds = 3600*24*30;
 	      obj.owner = op.witness_account;
-	      obj.balance = op.amount;
-	      policyer.visit( init_policy_visitor( obj.policy, op.amount.amount, now ) );
+	      obj.balance = witness_lock_balance_it->amount;
+	      obj.policy = cdd_policy;
 	   } );
    }
 
@@ -138,21 +131,11 @@ void_result witness_lock_balance_withdraw_evaluator::do_apply(const witness_lock
       _db.get(op.witness_account),
       [](account_object &acnt) {
          if(acnt.cashback_vb.valid()) {
-        	 acnt.cashback_vb
          } else {
 
          }
 
    });
-   _db.modify(
-      _db.get(op.witness),
-      [&op]( witness_object& wit )
-      {
-         if( op.new_url.valid() )
-            wit.url = *op.new_url;
-         if( op.new_signing_key.valid() )
-            wit.signing_key = *op.new_signing_key;
-      });
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 

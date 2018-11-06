@@ -135,7 +135,7 @@ namespace graphene { namespace chain {
             contract_deploy_operation, //74
             contract_call_operation, //75
             contract_update_operation, //76
-            withdraw_witness_lock_balance //77
+            witness_lock_balance_withdraw_operation //77
 
          > operation;
 
