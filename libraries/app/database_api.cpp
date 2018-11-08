@@ -65,9 +65,9 @@ fc::variants database_api::get_objects(const vector<object_id_type>& ids)const
    return my->get_objects( ids );
 }
 
-fc::variants database_api::get_table_objects(uint64_t code, uint64_t scope, uint64_t table) const
+fc::variants database_api::get_table_objects(uint64_t code, uint64_t scope, uint64_t table, uint64_t lower, uint64_t uppper, uint64_t limit) const
 {
-    return my->get_table_objects(code, scope, table);
+    return my->get_table_objects(code, scope, table, lower, uppper, limit);
 }
 
 bytes database_api::serialize_contract_call_args(string contract, string method, string json_args) const 

@@ -121,6 +121,7 @@ namespace graphene { namespace chain {
    FC_DECLARE_DERIVED_EXCEPTION( graphene_assert_message_exception, graphene::chain::action_validate_exception, 3070008, "graphene_assert_message assertion failure" )
    FC_DECLARE_DERIVED_EXCEPTION( graphene_assert_code_exception,    graphene::chain::action_validate_exception, 3070009, "graphene_assert_code assertion failure" )
 
+   FC_DECLARE_DERIVED_EXCEPTION( wabt_execution_error,              graphene::chain::wasm_exception, 3070020, "Runtime Error Processing WABT" )
 
    FC_DECLARE_DERIVED_EXCEPTION( resource_exhausted_exception, chain_exception, 3080000, "resource exhausted exception" )
    FC_DECLARE_DERIVED_EXCEPTION( ram_usage_exceeded, resource_exhausted_exception, 3080001, "account using more than allotted RAM usage" )
