@@ -81,4 +81,5 @@ FC_REFLECT_DERIVED( graphene::chain::witness_object, (graphene::db::object),
                     (url) 
                     (total_missed)
                     (last_confirmed_block_num)
+					(is_valid)
                   )

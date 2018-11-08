@@ -462,6 +462,12 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
          d._witness_count_histogram_buffer.resize(props.parameters.maximum_witness_count / 2 + 1);
          d._committee_count_histogram_buffer.resize(props.parameters.maximum_committee_count / 2 + 1);
          d._total_voting_stake = 0;
+
+
+         const auto& witness_idx_by_vote_id = d.get_index_type<witness_index>().indices().get<by_vote_id>();
+         for(auto witness_it = witness_idx_by_vote_id.begin(); witness_it != witness_idx_by_vote_id.end(); ++ witness_it) {
+        	 d._witness_vote_id_valid[witness_it->vote_id.instance()] = witness_it->is_valid;
+         }
       }
 
       void operator()(const account_object& stake_account) {
@@ -494,6 +500,20 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
             } else {
                 voting_stake += d.get_balance(stake_account.get_id(), asset_id_type()).amount.value;
             }
+
+            // witness locked balance
+            if (d.head_block_time() > HARDFORK_1129_TIME) {
+				const auto& witness_lock_balance_idx = d.get_index_type<witness_account_balance_locked_index>().indices().get<by_account>();
+				auto witness_account_lock_balance_it = witness_lock_balance_idx.find(stake_account.id);
+				if(witness_account_lock_balance_it != witness_lock_balance_idx.end()) {
+					dlog("find it");
+					if (asset_id_type(1) == witness_account_lock_balance_it->amount.asset_id) {
+						dlog("voting_stake before = ${x}", ("x", voting_stake));
+						voting_stake += witness_account_lock_balance_it->amount.amount.value;
+						dlog("voting_stake after = ${x}", ("x", voting_stake));
+					}
+				}
+            }
             // dlog("account ${a}, core voting_stake ${v}", ("a", stake_account.get_id())("v", voting_stake));
 
             // voting_stake, add GXS
@@ -507,12 +527,22 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                 // dlog("total voting_stake ${v}", ("v", voting_stake));
             }
 
+
+
             for( vote_id_type id : opinion_account.options.votes )
             {
                uint32_t offset = id.instance();
+               uint32_t vote_type = id.type();
                // if they somehow managed to specify an illegal offset, ignore it.
-               if( offset < d._vote_tally_buffer.size() )
-                  d._vote_tally_buffer[offset] += voting_stake;
+               if( offset < d._vote_tally_buffer.size() ) {
+            	  if(vote_type == vote_id_type::witness) {
+                     if(d._witness_vote_id_valid[offset]) {
+                    	 d._vote_tally_buffer[offset] += voting_stake;
+                     }
+            	  } else {
+                     d._vote_tally_buffer[offset] += voting_stake;
+            	  }
+               }
             }
 
             if( opinion_account.options.num_witness <= props.parameters.maximum_witness_count )

@@ -467,6 +467,7 @@ namespace graphene { namespace chain {
          vector<uint64_t>                  _witness_count_histogram_buffer;
          vector<uint64_t>                  _committee_count_histogram_buffer;
          uint64_t                          _total_voting_stake;
+         map<uint32_t, bool>               _witness_vote_id_valid;
 
          flat_map<uint32_t,block_id_type>  _checkpoints;
 
