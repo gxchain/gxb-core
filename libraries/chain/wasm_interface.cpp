@@ -1474,11 +1474,14 @@ class asset_api : public context_aware_api
         : context_aware_api(ctx, true)
     {}
 
-    void withdraw_asset(uint64_t from, uint64_t to, uint64_t asset_id, int64_t amount)
+    void withdraw_asset(int64_t from, int64_t to, int64_t asset_id, int64_t amount)
     {
         FC_ASSERT(from == context.receiver, "can only withdraw from contract ${c}", ("c", context.receiver));
         FC_ASSERT(from != to, "cannot transfer to self");
-        FC_ASSERT(amount> 0, "amount must > 0");
+        FC_ASSERT(amount > 0, "amount must > 0");
+        FC_ASSERT(from >= 0, "account id from must  > 0");
+        FC_ASSERT(to >= 0, "account id to must > 0");
+        FC_ASSERT(asset_id >= 0, "asset id to must > 0");
 
         dlog("${f} -> ${t}, amount ${a}, asset_id ${i}", ("f", from)("t", to)("a", amount)("i", asset_id));
         auto &d = context.db();
@@ -1491,6 +1494,9 @@ class asset_api : public context_aware_api
     // get account balance by asset_id
     int64_t get_balance(int64_t account, int64_t asset_id)
     {
+        FC_ASSERT(account >= 0, "account id must > 0");
+        FC_ASSERT(asset_id >= 0, "asset id to must > 0");
+
         auto &d = context.db();
         auto account_id = account_id_type(account & GRAPHENE_DB_MAX_INSTANCE_ID);
         auto aid = asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID);
