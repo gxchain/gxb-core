@@ -264,6 +264,7 @@ void database::initialize_evaluators()
    register_evaluator<contract_deploy_evaluator>();
    register_evaluator<contract_call_evaluator>();
    register_evaluator<contract_update_evaluator>();
+   register_evaluator<witness_lock_balance_withdraw_evaluator>();
 }
 
 void database::initialize_indexes()

@@ -119,6 +119,13 @@ void_result witness_update_evaluator::do_apply(const witness_update_operation& o
 			   _db.adjust_balance( op.witness_account, -lock_balance_add );
 		   }
 	   }
+
+	   _db.modify(
+	      _db.get(op.witness),
+	      [](witness_object &witness_obj) {
+	         witness_obj.is_valid = true;
+	      }
+	   );
    }
 
    return void_result();
@@ -141,32 +148,8 @@ void_result witness_lock_balance_withdraw_evaluator::do_evaluate( const witness_
 void_result witness_lock_balance_withdraw_evaluator::do_apply(const witness_lock_balance_withdraw_operation& op, int32_t billed_cpu_time_us)
 { try {
    database& _db = db();
-
-   optional<vesting_balance_object> vbo;
-   auto vesting_range = _db.get_index_type<vesting_balance_index>().indices().get<by_account>().equal_range(op.witness_account);
-   std::for_each(
-		   vesting_range.first,
-		   vesting_range.second,
-           [&vbo](const vesting_balance_object& balance) {
-               if(balance.balance.asset_id == asset_id_type(1)) vbo = balance;
-           }
-   );
-
-   if(vbo.valid()) {
-	   _db.modify(_db.get<vesting_balance_object>((*vbo).id), [&](vesting_balance_object &o) {
-          o.balance += witness_lock_balance_obj->amount;
-	   });
-   } else {
-	  cdd_vesting_policy cdd_policy;
-	  cdd_policy.start_claim = fc::time_point::now();
-	  cdd_policy.vesting_seconds = 60;//just for test, real is (3600 * 24 * 30)
-	  _db.create<vesting_balance_object>([&](vesting_balance_object& obj) {
-		  obj.owner = op.witness_account;
-		  obj.balance = witness_lock_balance_obj->amount;
-		  obj.policy = cdd_policy;
-	  });
-   }
-
+   _db.deposit_lazy_vesting(optional<vesting_balance_id_type>(), witness_lock_balance_obj->amount.amount, 60, op.witness_account, true);//TODO 60 seconds for test
+   _db.remove(*witness_lock_balance_obj);
    _db.modify(
       _db.get(op.witness),
       [](witness_object &witness_obj) {
