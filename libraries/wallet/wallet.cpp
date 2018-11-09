@@ -2364,29 +2364,18 @@
                                                         string fee_asset_symbol,
                                                         bool broadcast /*= false */)
        { try {
-dlog("1");
           asset_object fee_asset_obj = get_asset(fee_asset_symbol);
-          dlog("2");
           witness_object witness = get_witness(witness_name);
-          dlog("3");
           account_object witness_account = get_account( witness.witness_account );
-          dlog("14");
 
           witness_lock_balance_withdraw_operation op;
-          dlog("15");
           op.witness = witness.id;
-          dlog("16");
           op.witness_account = witness_account.id;
-          dlog("17");
 
           signed_transaction tx;
-          dlog("18");
           tx.operations.push_back( op );
-          dlog("19");
           set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
-          dlog("1111");
           tx.validate();
-          dlog("11111");
 
           return sign_transaction( tx, broadcast );
        } FC_CAPTURE_AND_RETHROW( (witness_name)(fee_asset_symbol)(broadcast) ) }
@@ -4783,7 +4772,7 @@ dlog("1");
                                                      string fee_asset_symbol,
                                                      bool broadcast /*= false */)
     {
-
+    	return my->withdraw_witness_lock_balance(witness_name, fee_asset_symbol, broadcast);
     }
 
     vector< vesting_balance_object_with_info > wallet_api::get_vesting_balances( string account_name )
