@@ -260,7 +260,7 @@ void database::initialize_evaluators()
    register_evaluator<proxy_transfer_evaluator>();
    register_evaluator<contract_deploy_evaluator>();
    register_evaluator<contract_call_evaluator>();
-
+   register_evaluator<contract_update_evaluator>();
 }
 
 void database::initialize_indexes()

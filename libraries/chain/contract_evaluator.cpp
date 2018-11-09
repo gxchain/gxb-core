@@ -139,6 +139,49 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
     return new_acnt_object.id;
 } FC_CAPTURE_AND_RETHROW((op.name)(op.account)(op.fee)(op.vm_type)(op.vm_version)(op.abi)) }
 
+void_result contract_update_evaluator::do_evaluate(const contract_update_operation &op)
+{ try {
+    database &d = db();
+
+    if (d.head_block_time() <= HARDFORK_1009_TIME) {
+        FC_ASSERT(false, "contract can not update before hardfork 1009");
+    }
+    
+    const account_object& contract_obj = op.contract(d);
+    FC_ASSERT(op.owner == contract_obj.registrar, "only owner can update contract, current owner: ${o}", ("o", contract_obj.registrar));
+
+    code_hash = fc::sha256::hash(op.code);
+    FC_ASSERT(code_hash != contract_obj.code_version, "code not updated");
+    
+    FC_ASSERT(op.code.size() > 0, "contract code cannot be empty");
+    FC_ASSERT(op.abi.actions.size() > 0, "contract has no actions");
+
+    if(op.new_owner.valid()) {
+    	FC_ASSERT(d.find_object(*op.new_owner), "new owner not exist");
+    }
+
+    return void_result();
+} FC_CAPTURE_AND_RETHROW((op.owner)(op.contract)(op.fee)(op.abi)) }
+
+void_result contract_update_evaluator::do_apply(const contract_update_operation &op, uint32_t billed_cpu_time_us)
+{ try {
+    database &d = db();
+    const account_object& contract_obj = op.contract(d);
+    
+    db().modify(contract_obj, [&](account_object &obj) {
+        if(op.new_owner.valid()) {
+            obj.registrar = *op.new_owner;
+            obj.referrer = *op.new_owner;
+            obj.lifetime_referrer = *op.new_owner;
+        }
+        obj.code = op.code;
+        obj.code_version = code_hash;
+        obj.abi = op.abi;
+    });
+    
+    return void_result();
+} FC_CAPTURE_AND_RETHROW((op.owner)(op.contract)(op.fee)(op.abi)) }
+
 void_result contract_call_evaluator::do_evaluate(const contract_call_operation &op)
 { try {
     database& d = db();
