@@ -1481,7 +1481,7 @@ class asset_api : public context_aware_api
         FC_ASSERT(amount > 0, "amount ${a} must > 0", ("a", amount));
         FC_ASSERT(from >= 0, "account id ${a} from must  > 0", ("a", from));
         FC_ASSERT(to >= 0, "account id ${a} to must > 0", ("a", to));
-        FC_ASSERT(asset_id >= 0, "asset id ${a} must > 0", ("a", aset_id));
+        FC_ASSERT(asset_id >= 0, "asset id ${a} must > 0", ("a", asset_id));
 
         // dlog("${f} -> ${t}, amount ${a}, asset_id ${i}", ("f", from)("t", to)("a", amount)("i", asset_id));
         auto &d = context.db();
