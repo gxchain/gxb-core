@@ -628,6 +628,75 @@ BOOST_AUTO_TEST_CASE( witness_create )
    BOOST_CHECK_GE( produced, 1 );
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( witness_create1 )
+{ try {
+   ACTOR(wit1);
+   ACTOR(wit2);
+   ACTOR(nathan);
+
+   upgrade_to_lifetime_member(wit1_id);
+   upgrade_to_lifetime_member(wit2_id);
+   upgrade_to_lifetime_member(nathan_id);
+
+   asset_id_type gxs_id = create_user_issued_asset("GXS", nathan_id(db), 0).id;
+
+   witness_id_type wit1_witness_id = create_witness(wit1_id, wit1_private_key).id;
+
+   generate_blocks(HARDFORK_1129_TIME, true);
+   generate_block();
+
+   set_expiration( db, trx );
+   witness_create_operation op;
+   op.witness_account = wit2_id;
+   op.block_signing_key = wit2_private_key.get_public_key();
+
+   signed_transaction tx;
+   tx.operations.push_back( op );
+   sign(tx, wit2_private_key);
+   GRAPHENE_REQUIRE_THROW( PUSH_TX( db, tx ), fc::exception );
+
+   issue_uia( wit2_id(db), asset( 10000*100000, gxs_id ), asset_id_type(1) );
+   witness_id_type wit2_witness_id = create_witness(wit2_id, wit2_private_key).id;
+
+//   {
+//      account_update_operation op;
+//      op.account = nathan_id;
+//      op.new_options = nathan_id(db).options;
+//      op.new_options->votes.insert(wit1_witness_id(db).vote_id);
+//      op.new_options->num_witness = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
+//                                                  [](vote_id_type id) { return id.type() == vote_id_type::witness; });
+//      op.new_options->num_committee = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
+//                                                    [](vote_id_type id) { return id.type() == vote_id_type::committee; });
+//      trx.operations.push_back(op);
+//      sign( trx, nathan_private_key );
+//      PUSH_TX( db, trx );
+//      trx.clear();
+//   }
+//
+//   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+//   const auto& witnesses = db.get_global_properties().active_witnesses;
+//
+//   // make sure we're in active_witnesses
+//   auto itr = std::find(witnesses.begin(), witnesses.end(), nathan_witness_id);
+//   BOOST_CHECK(itr != witnesses.end());
+//
+//   // generate blocks until we are at the beginning of a round
+//   while( ((db.get_dynamic_global_properties().current_aslot + 1) % witnesses.size()) != 0 )
+//      generate_block();
+//
+//   int produced = 0;
+//   // Make sure we get scheduled at least once in witnesses.size()*2 blocks
+//   // may take this many unless we measure where in the scheduling round we are
+//   // TODO:  intense_test that repeats this loop many times
+//   for( size_t i=0, n=witnesses.size()*2; i<n; i++ )
+//   {
+//      signed_block block = generate_block();
+//      if( block.witness == nathan_witness_id )
+//         produced++;
+//   }
+//   BOOST_CHECK_GE( produced, 1 );
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( assert_op_test )
 {
    try {
