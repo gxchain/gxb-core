@@ -1,5 +1,8 @@
 #pragma once
 #include <graphene/chain/protocol/types.hpp>
+#include <graphene/chain/protocol/transaction.hpp>
+#include <graphene/chain/protocol/fee_schedule.hpp>
+
 #include "Runtime/Linker.h"
 #include "Runtime/Runtime.h"
 
