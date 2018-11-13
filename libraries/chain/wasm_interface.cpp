@@ -204,6 +204,19 @@ class crypto_api : public context_aware_api {
       explicit crypto_api( apply_context& ctx )
       :context_aware_api(ctx,true){}
 
+      void assert_recover_key(const fc::sha256 &digest,
+                              const fc::ecc::compact_signature &sig,
+                              array_ptr<char> pub, size_t publen)
+      {
+
+          public_key_type pk;
+          datastream<const char *> pubds(pub, publen);
+          fc::raw::unpack(pubds, pk);
+
+          auto check = public_key_type(fc::ecc::public_key(sig, digest, true));
+          FC_ASSERT(check == pk, "Error expected key different than recovered key");
+      }
+
       template<class Encoder> auto encode(char* data, size_t datalen) {
          Encoder e;
          const size_t bs = 10*1024;
@@ -1051,6 +1064,7 @@ class context_free_transaction_api : public context_aware_api {
       context_free_transaction_api( apply_context& ctx )
       :context_aware_api(ctx,true){}
 
+      /*
       int read_transaction(array_ptr<char> data, size_t buffer_size)
       {
           auto cur_trx = context.db().get_cur_trx();
@@ -1070,6 +1084,7 @@ class context_free_transaction_api : public context_aware_api {
           auto tmp_trx = context.db().get_cur_trx();
           return fc::raw::pack(*tmp_trx).size();
       }
+      */
 
       uint64_t expiration() {
           return context.db().get_cur_trx()->expiration.sec_since_epoch();
@@ -1481,7 +1496,7 @@ class asset_api : public context_aware_api
         FC_ASSERT(amount > 0, "amount ${a} must > 0", ("a", amount));
         FC_ASSERT(from >= 0, "account id ${a} from must  > 0", ("a", from));
         FC_ASSERT(to >= 0, "account id ${a} to must > 0", ("a", to));
-        FC_ASSERT(asset_id >= 0, "asset id ${a} must > 0", ("a", aset_id));
+        FC_ASSERT(asset_id >= 0, "asset id ${a} must > 0", ("a", asset_id));
 
         // dlog("${f} -> ${t}, amount ${a}, asset_id ${i}", ("f", from)("t", to)("a", amount)("i", asset_id));
         auto &d = context.db();
@@ -1521,8 +1536,8 @@ REGISTER_INTRINSICS(transaction_api,
 );
 
 REGISTER_INTRINSICS(context_free_transaction_api,
-(read_transaction,               int(int, int))
-(transaction_size,               int())
+// (read_transaction,               int(int, int))
+// (transaction_size,               int())
 (expiration,                     int64_t())
 (tapos_block_num,                int())
 (tapos_block_prefix,             int64_t())
@@ -1562,6 +1577,7 @@ REGISTER_INTRINSICS(global_api,
 );
 
 REGISTER_INTRINSICS(crypto_api,
+(assert_recover_key,     void(int, int, int, int)       )
 (assert_sha256,          void(int, int, int)           )
 (assert_sha1,            void(int, int, int)           )
 (assert_sha512,          void(int, int, int)           )
