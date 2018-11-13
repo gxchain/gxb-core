@@ -50,10 +50,9 @@
 
 // hardfork 1008
 // core asset hardfork
-// 2018-11-01 00:00:00
 #ifndef HARDFORK_1008_TIME
-// #define HARDFORK_1008_TIME (fc::time_point_sec( 1541001600 ))
-#define HARDFORK_1008_TIME (fc::time_point_sec( 1566210000 )) // for test, 2018-09-06T13:00:00
+// #define HARDFORK_1008_TIME (fc::time_point_sec( 1541001600 )) // 2018-11-01 00:00:00
+#define HARDFORK_1008_TIME (fc::time_point_sec( 1542096000 )) // for test, 2018-11-13T08:00:00(UTC)
 #endif
 
 // enable smart contract update
@@ -61,9 +60,9 @@
 #define HARDFORK_1009_TIME (fc::time_point_sec( 1541030400 )) // for test, 2018-11-01T00:00:00
 #endif
 
-// enable smart contract update
+// enable witness guaranty
 #ifndef HARDFORK_1129_TIME
-#define HARDFORK_1129_TIME (fc::time_point_sec( 1541376000 )) // for test, 2018-11-05T00:00:00
+#define HARDFORK_1129_TIME (fc::time_point_sec( 1542099600 )) // for test, 2018-11-13T09:00:00(UTC)
 #endif
 
 // #413 Add operation to claim asset fees

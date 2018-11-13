@@ -234,9 +234,11 @@ struct database_fixture {
    const asset_object& create_user_issued_asset( const string& name );
    const asset_object& create_user_issued_asset( const string& name,
                                                  const account_object& issuer,
-                                                 uint16_t flags );
+                                                 uint16_t flags,
+												 uint8_t precision = 2);
    void issue_uia( const account_object& recipient, asset amount );
    void issue_uia( account_id_type recipient_id, asset amount );
+   void update_operation_fee(signed_transaction& tx);
 
    const account_object& create_account(
       const string& name,

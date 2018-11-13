@@ -56,7 +56,7 @@ object_id_type witness_create_evaluator::do_apply(const witness_create_operation
    });
 
    const auto &global_dyn_prop = _db.get_dynamic_global_properties();
-   if(global_dyn_prop.time >= HARDFORK_1129_TIME) {
+   if(global_dyn_prop.time > HARDFORK_1129_TIME) {
 	   auto witness_lock_balance = global_prop.parameters.witness_lock_balance;
 	   dlog("witness_lock_balance = ${x}", ("x", witness_lock_balance));
 	   asset lock_balance{witness_lock_balance, asset_id_type(1)};
@@ -94,7 +94,7 @@ void_result witness_update_evaluator::do_apply(const witness_update_operation& o
    const auto &global_prop = _db.get_global_properties();
    const auto &global_dyn_prop = _db.get_dynamic_global_properties();
 
-   if(global_dyn_prop.time >= HARDFORK_1129_TIME) {
+   if(global_dyn_prop.time > HARDFORK_1129_TIME) {
 	   const auto &witness_lock_balance_idx_by_account = _db.get_index_type<witness_account_balance_locked_index>().indices().get<by_account>();
 	   auto witness_lock_balance_it = witness_lock_balance_idx_by_account.find(op.witness_account);
 	   auto witness_lock_balance = global_prop.parameters.witness_lock_balance;
