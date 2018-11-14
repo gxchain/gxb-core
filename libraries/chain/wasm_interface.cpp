@@ -178,6 +178,20 @@ class global_api : public context_aware_api
         return context.trx_context.get_trx_origin();
     }
 
+    int64_t get_account_name_by_id(array_ptr<char> data, int64_t account_id)
+    {
+        FC_ASSERT(accout_id >= 0, "account_id ${a} must > 0", ("a", account_id));
+        auto &d = context.db();
+        auto obj = d.find(account_id_type(account_id));
+        if (obj) {
+            string account_name = o->name;
+            memcpy(data, account_name.c_str(), account_name.size());
+            return 0;
+        }
+        // account not exist, return -1
+        return -1;
+    }
+
     int64_t get_account_id(array_ptr<char> data, size_t datalen)
     {
         std::string account_name(data, datalen);
@@ -1080,12 +1094,12 @@ class context_free_transaction_api : public context_aware_api {
 
           return copy_size;
       }
-      */
 
       int transaction_size() {
           const transaction* trx = context.db().get_cur_trx();
           return fc::raw::pack(*trx).size();
       }
+      */
 
       uint64_t expiration() {
           return context.db().get_cur_trx()->expiration.sec_since_epoch();
@@ -1538,7 +1552,7 @@ REGISTER_INTRINSICS(transaction_api,
 
 REGISTER_INTRINSICS(context_free_transaction_api,
 // (read_transaction,               int(int, int))
-(transaction_size,               int())
+// (transaction_size,               int())
 (expiration,                     int64_t())
 (tapos_block_num,                int())
 (tapos_block_prefix,             int64_t())
@@ -1569,12 +1583,13 @@ REGISTER_INTRINSICS(context_free_system_api,
 REGISTER_INTRINSICS(global_api,
 (get_head_block_num,    int64_t()          )
 (get_head_block_id,     void(int)          )
-(get_block_id_for_num,     void(int, int)          )
+(get_block_id_for_num,  void(int, int)     )
 (get_head_block_time,   int64_t()          )
 (get_trx_sender,        int64_t()          )
 (get_trx_origin,        int64_t()          )
+(get_account_name_by_id,int64_t(int, int)  )
 (get_account_id,        int64_t(int, int)  )
-(get_asset_id,          int64_t(int, int)       )
+(get_asset_id,          int64_t(int, int)  )
 );
 
 REGISTER_INTRINSICS(crypto_api,
