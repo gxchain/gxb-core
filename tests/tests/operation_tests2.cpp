@@ -628,38 +628,47 @@ BOOST_AUTO_TEST_CASE( witness_create )
    BOOST_CHECK_GE( produced, 1 );
 } FC_LOG_AND_RETHROW() }
 
+//test create witness after hardfork_1129_time failing for not enough GXS
 BOOST_AUTO_TEST_CASE( witness_create1 )
 { try {
+   //prepare
    ACTOR(wit1);
    ACTOR(wit2);
-   ACTOR(nathan);
-
+   create_user_issued_asset("GXS", wit2_id(db), 0, 5);
    upgrade_to_lifetime_member(wit1_id);
    upgrade_to_lifetime_member(wit2_id);
-   upgrade_to_lifetime_member(nathan_id);
 
-   asset_id_type gxs_id = create_user_issued_asset("GXS", nathan_id(db), 0, 5).id;
+   //test create witness before hardfork_1129_time
+   create_witness(wit1_id, wit1_private_key);
 
-   witness_id_type wit1_witness_id = create_witness(wit1_id, wit1_private_key).id;
-
+   //test create witness after hardfork_1129_time failing for not enough GXS
    generate_blocks(HARDFORK_1129_TIME, true, ~0);
    generate_block();
 
    witness_create_operation op;
    op.witness_account = wit2_id;
    op.block_signing_key = wit2_private_key.get_public_key();
-   signed_transaction tx;
-   set_expiration( db, tx );
-   tx.operations.push_back( op );
-   update_operation_fee(tx);
-   sign(tx, wit2_private_key);
-   GRAPHENE_REQUIRE_THROW( PUSH_TX( db, tx ), fc::exception );
+   trx.operations.push_back( op );
+   update_operation_fee(trx);
+   sign(trx, wit2_private_key);
+   set_expiration( db, trx );
+   GRAPHENE_REQUIRE_THROW( PUSH_TX( db, trx, ~0 ), fc::exception );
+} FC_LOG_AND_RETHROW() }
+
+//test create witness after hardfork_1129_time success
+BOOST_AUTO_TEST_CASE( witness_create2 )
+{ try {
+   //prepare
+   ACTOR(wit2);
+   asset_id_type gxs_id = create_user_issued_asset("GXS", wit2_id(db), 0, 5).id;
+   upgrade_to_lifetime_member(wit2_id);
+
+   generate_blocks(HARDFORK_1129_TIME, true, ~0);
+   generate_block();
 
    set_expiration( db, trx );
-   issue_uia( wit2_id(db), asset( 100000*10000, gxs_id ) );
-
-   set_expiration( db, trx );
-   witness_id_type wit2_witness_id = create_witness(wit2_id(db), wit2_private_key).id;
+   issue_uia( wit2_id(db), asset( (uint64_t)100000*10000, gxs_id ) );
+   create_witness(wit2_id(db), wit2_private_key);
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( assert_op_test )

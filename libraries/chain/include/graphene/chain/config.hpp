@@ -128,8 +128,6 @@
 
 #define GRAPHENE_IRREVERSIBLE_THRESHOLD                      (70 * GRAPHENE_1_PERCENT)
 
-#define GRAPHENE_WITNESS_LOCK_BALANCE                        1000000000 //10000 GXC(1.3.1)
-
 /**
  *  Reserved Account IDs with special meaning
  */

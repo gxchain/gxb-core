@@ -34,7 +34,6 @@ namespace graphene { namespace chain {
 void_result witness_create_evaluator::do_evaluate( const witness_create_operation& op )
 { try {
    FC_ASSERT(db().get(op.witness_account).is_lifetime_member());
-//   db().get_balance( op.witness_account, asset_id_type(1) ).amount
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -57,12 +56,11 @@ object_id_type witness_create_evaluator::do_apply(const witness_create_operation
 
    const auto &global_dyn_prop = _db.get_dynamic_global_properties();
    if(global_dyn_prop.time > HARDFORK_1129_TIME) {
-	   auto witness_lock_balance = global_prop.parameters.witness_lock_balance;
-	   dlog("witness_lock_balance = ${x}", ("x", witness_lock_balance));
-	   asset lock_balance{witness_lock_balance, asset_id_type(1)};
+	   uint64_t lock_balance_amount = _db.get_witness_lock_balance().amount;
+	   FC_ASSERT(lock_balance_amount > 0, "witness lock balance invalid");
+	   asset lock_balance{lock_balance_amount, asset_id_type(1)};
 	   _db.create<witness_lock_balance_object>([&op,&new_witness_object,&lock_balance]( witness_lock_balance_object& obj ) {
 	         obj.owner_account  = op.witness_account;
-	         obj.owner_witness  = new_witness_object.id;
 	         obj.amount         = lock_balance;
 	   });
 
@@ -91,20 +89,17 @@ void_result witness_update_evaluator::do_apply(const witness_update_operation& o
             wit.signing_key = *op.new_signing_key;
       });
 
-   const auto &global_prop = _db.get_global_properties();
    const auto &global_dyn_prop = _db.get_dynamic_global_properties();
-
    if(global_dyn_prop.time > HARDFORK_1129_TIME) {
 	   const auto &witness_lock_balance_idx_by_account = _db.get_index_type<witness_account_balance_locked_index>().indices().get<by_account>();
 	   auto witness_lock_balance_it = witness_lock_balance_idx_by_account.find(op.witness_account);
-	   auto witness_lock_balance = global_prop.parameters.witness_lock_balance;
 
+	   uint64_t witness_lock_balance = _db.get_witness_lock_balance().amount;
+	   FC_ASSERT(witness_lock_balance > 0, "witness lock balance invalid");
 	   if(witness_lock_balance_it == witness_lock_balance_idx_by_account.end()) {
-		   dlog("witness_lock_balance = ${x}", ("x", witness_lock_balance));
 		   asset lock_balance{witness_lock_balance, asset_id_type(1)};
 		   _db.create<witness_lock_balance_object>([&op,&lock_balance]( witness_lock_balance_object& obj ) {
 				 obj.owner_account  = op.witness_account;
-				 obj.owner_witness  = op.witness;
 				 obj.amount         = lock_balance;
 		   });
 

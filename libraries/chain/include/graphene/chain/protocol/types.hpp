@@ -127,6 +127,10 @@ namespace graphene { namespace chain {
        std::string symbol;
    };
 
+   struct witness_lock_balance_t {
+       uint64_t amount = GRAPHENE_BLOCKCHAIN_PRECISION * 10000;// 10000 GXS
+   };
+
    struct operation_ext_copyright_hash_t {
        fc::optional<string> copyright_hash;
    };
@@ -655,6 +659,8 @@ FC_REFLECT(graphene::chain::interest_rate_t, (lock_days)(interest_rate)(is_valid
 FC_REFLECT(graphene::chain::lock_balance_params_t, (params))
 FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
 FC_REFLECT(graphene::chain::asset_symbol_t, (symbol))
+FC_REFLECT(graphene::chain::witness_lock_balance_t, (amount))
+
 
 FC_REFLECT_ENUM(graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)

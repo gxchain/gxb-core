@@ -149,7 +149,6 @@ namespace graphene { namespace chain {
           static const uint8_t type_id  = witness_lock_balance_object_type;
 
           account_id_type   owner_account;
-          witness_id_type   owner_witness;
           asset             amount;
     };
 
@@ -478,8 +477,7 @@ namespace graphene { namespace chain {
      witness_lock_balance_object,
      indexed_by<
         ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
-        ordered_unique< tag<by_account>, member< witness_lock_balance_object, account_id_type, &witness_lock_balance_object::owner_account> >,
-		ordered_unique< tag<by_witness>, member< witness_lock_balance_object, witness_id_type, &witness_lock_balance_object::owner_witness> >
+        ordered_unique< tag<by_account>, member< witness_lock_balance_object, account_id_type, &witness_lock_balance_object::owner_account> >
       >
    >witness_lock_balance_object_multi_index_type;
 
@@ -531,7 +529,7 @@ FC_REFLECT_DERIVED( graphene::chain::lock_balance_object,
 
 FC_REFLECT_DERIVED( graphene::chain::witness_lock_balance_object,
 					(graphene::db::object),
-					(owner_account)(owner_witness)(amount) )
+					(owner_account)(amount) )
 
 FC_REFLECT_DERIVED( graphene::chain::account_statistics_object,
                     (graphene::chain::object),
