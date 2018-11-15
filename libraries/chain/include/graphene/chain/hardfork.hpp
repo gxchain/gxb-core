@@ -53,6 +53,7 @@
 // UTC "2018-09-12 00:00:00"
 #ifndef HARDFORK_1008_TIME
 #define HARDFORK_1008_TIME (fc::time_point_sec( 1536681600 )) // for devnet
+#endif
 
 // enable smart contract update
 #ifndef HARDFORK_1009_TIME
