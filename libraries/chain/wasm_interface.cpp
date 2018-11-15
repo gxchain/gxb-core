@@ -180,11 +180,11 @@ class global_api : public context_aware_api
 
     int64_t get_account_name_by_id(array_ptr<char> data, int64_t account_id)
     {
-        FC_ASSERT(accout_id >= 0, "account_id ${a} must > 0", ("a", account_id));
+        FC_ASSERT(account_id >= 0, "account_id ${a} must > 0", ("a", account_id));
         auto &d = context.db();
         auto obj = d.find(account_id_type(account_id));
         if (obj) {
-            string account_name = o->name;
+            string account_name = obj->name;
             memcpy(data, account_name.c_str(), account_name.size());
             return 0;
         }
@@ -199,20 +199,6 @@ class global_api : public context_aware_api
         auto itr = idx.find(account_name);
         if (itr != idx.end())
             return (itr->get_id()).instance;
-        return -1;
-    }
-
-    int64_t get_account_name_by_id(array_ptr<char> data, int64_t account_id)
-    {
-        FC_ASSERT(accout_id >= 0, "account_id ${a} must > 0", ("a", account_id));
-        auto &d = context.db();
-        auto obj = d.find(account_id_type(account_id));
-        if (obj) {
-            string account_name = o->name;
-            memcpy(data, account_name.c_str(), account_name.size());
-            return 0;
-        }
-        // account not exist, return -1
         return -1;
     }
 
