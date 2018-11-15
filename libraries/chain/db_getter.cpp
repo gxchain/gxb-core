@@ -70,6 +70,18 @@ const vm_cpu_limit_t database::get_cpu_limit() const
     return vm_cpu_limit_t();
 }
 
+const witness_lock_balance_t database::get_witness_lock_balance() const
+{
+	const chain_parameters& params = get_global_properties().parameters;
+	for (auto& ext : params.extensions) {
+		if (ext.which() == future_extensions::tag<witness_lock_balance_t>::value) {
+			return ext.get<witness_lock_balance_t>();
+		}
+	}
+	// return default value
+	return witness_lock_balance_t();
+}
+
 const chain_property_object& database::get_chain_properties()const
 {
    return get( chain_property_id_type() );

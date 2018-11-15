@@ -135,6 +135,23 @@ namespace graphene { namespace chain {
           string            memo;
     };
 
+    /**
+    * @brief Tracks the locked balance of a single account/asset pair
+    * @ingroup object
+    *
+    * This object is indexed on owner and asset_type so that black swan
+    * events in asset_type can be processed quickly.
+    */
+    class witness_lock_balance_object : public abstract_object<witness_lock_balance_object>
+    {
+       public:
+          static const uint8_t space_id = protocol_ids;
+          static const uint8_t type_id  = witness_lock_balance_object_type;
+
+          account_id_type   owner_account;
+          asset             amount;
+    };
+
    /**
     *
     * @account_merchant_object
@@ -446,10 +463,28 @@ namespace graphene { namespace chain {
        >
     >lock_balance_object_multi_index_type;
 
-    /**
-    * @ingroup object_index
-    */
-   typedef generic_index<lock_balance_object, lock_balance_object_multi_index_type> account_balance_locked_index;
+   /**
+   * @ingroup object_index
+   */
+  typedef generic_index<lock_balance_object, lock_balance_object_multi_index_type> account_balance_locked_index;
+
+   /**
+   * @ingroup object_index
+   */
+   struct by_account{};
+   struct by_witness{};
+  typedef multi_index_container<
+     witness_lock_balance_object,
+     indexed_by<
+        ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+        ordered_unique< tag<by_account>, member< witness_lock_balance_object, account_id_type, &witness_lock_balance_object::owner_account> >
+      >
+   >witness_lock_balance_object_multi_index_type;
+
+  /**
+  * @ingroup object_index
+  */
+ typedef generic_index<witness_lock_balance_object, witness_lock_balance_object_multi_index_type> witness_account_balance_locked_index;
 
    struct by_name{};
 
@@ -491,6 +526,10 @@ FC_REFLECT_DERIVED( graphene::chain::account_balance_object,
 FC_REFLECT_DERIVED( graphene::chain::lock_balance_object,
                     (graphene::db::object),
                     (owner)(create_date_time)(lock_days)(program_id)(amount)(interest_rate)(memo) )
+
+FC_REFLECT_DERIVED( graphene::chain::witness_lock_balance_object,
+					(graphene::db::object),
+					(owner_account)(amount) )
 
 FC_REFLECT_DERIVED( graphene::chain::account_statistics_object,
                     (graphene::chain::object),

@@ -53,6 +53,15 @@
 // UTC "2018-09-12 00:00:00"
 #ifndef HARDFORK_1008_TIME
 #define HARDFORK_1008_TIME (fc::time_point_sec( 1536681600 )) // for devnet
+
+// enable smart contract update
+#ifndef HARDFORK_1009_TIME
+#define HARDFORK_1009_TIME (fc::time_point_sec( 1541030400 )) // for test, 2018-11-01T00:00:00
+#endif
+
+// enable witness guaranty
+#ifndef HARDFORK_1129_TIME
+#define HARDFORK_1129_TIME (fc::time_point_sec( 1542099600 )) // for test, 2018-11-13T09:00:00(UTC)
 #endif
 
 // #413 Add operation to claim asset fees
@@ -110,9 +119,5 @@
 // #615 Fix price feed expiration check, so websocket server will never spam too much data
 #ifndef HARDFORK_615_TIME
 #define HARDFORK_615_TIME (fc::time_point_sec( 1458752400 ))
-// #1103 the time point before you can renaming asset symbol
-#ifndef HARDFORK_1103_TIME
-#define HARDFORK_1103_TIME (fc::time_point_sec( 1541203200 ))
-#endif
 
 #endif

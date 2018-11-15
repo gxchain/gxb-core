@@ -1056,6 +1056,22 @@ class wallet_api
                                      string arg,
                                      string fee_asset_symbol,
                                      bool broadcast = false);
+    
+    /** Update contract
+     *
+     * call contract
+     * @param contract contract
+     * @param new_owner new_owner
+     * @param contract_dir contract_dir
+     * @param fee_asset_symbol fee_asset_symbol
+     * @param broadcast broadcast
+     * @returns signed_transaction
+     */
+    signed_transaction update_contract(string contract,
+                                     string new_owner,
+                                     string contract_dir,
+                                     string fee_asset_symbol,
+                                     bool broadcast = false);
 
       /** Returns table infos about the given contract.
        *
@@ -1662,6 +1678,17 @@ class wallet_api
                                         string fee_asset_symbol,
                                         bool broadcast = false);
 
+      /**
+       * Withdraw witness lock balance, this opration will make the vote for this witness invalid.
+       *
+       * @param witness_name The name of the witness's owner account.  Also accepts the ID of the owner account or the ID of the witness.
+       * @param fee_asset_symbol the symbol or id of the fee.
+       * @param broadcast true if you wish to broadcast the transaction.
+       */
+      signed_transaction withdraw_witness_lock_balance(string witness_name,
+                                                       string fee_asset_symbol,
+                                                       bool broadcast = false);
+
 
       /**
        * Get information about a vesting balance object.
@@ -2151,6 +2178,7 @@ FC_API( graphene::wallet::wallet_api,
         (derive_owner_keys_from_brain_key)
         (register_account)
         (deploy_contract)
+        (update_contract)
         (call_contract)
         (get_contract_tables)
         (get_table_objects)
@@ -2175,6 +2203,7 @@ FC_API( graphene::wallet::wallet_api,
         (list_committee_members)
         (create_witness)
         (update_witness)
+		(withdraw_witness_lock_balance)
         (get_vesting_balances)
         (withdraw_vesting)
         (vote_for_committee_member)

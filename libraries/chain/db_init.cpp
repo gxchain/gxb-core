@@ -170,6 +170,9 @@ const uint8_t data_transaction_complain_object::type_id;
 const uint8_t lock_balance_object::space_id;
 const uint8_t lock_balance_object::type_id;
 
+const uint8_t witness_lock_balance_object::space_id;
+const uint8_t witness_lock_balance_object::type_id;
+
 const uint8_t signature_object::space_id;
 const uint8_t signature_object::type_id;
 
@@ -260,7 +263,8 @@ void database::initialize_evaluators()
    register_evaluator<proxy_transfer_evaluator>();
    register_evaluator<contract_deploy_evaluator>();
    register_evaluator<contract_call_evaluator>();
-
+   register_evaluator<contract_update_evaluator>();
+   register_evaluator<witness_lock_balance_withdraw_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -303,6 +307,7 @@ void database::initialize_indexes()
    add_index< primary_index<transaction_index                             > >();
    add_index< primary_index<account_balance_index                         > >();
    add_index< primary_index<account_balance_locked_index                  > >();
+   add_index< primary_index<witness_account_balance_locked_index          > >();
    add_index< primary_index<asset_bitasset_data_index                     > >();
    add_index< primary_index<simple_index<global_property_object          >> >();
    add_index< primary_index<simple_index<dynamic_global_property_object  >> >();
@@ -643,7 +648,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    for( const auto& handout : genesis_state.initial_balances )
    {
       const auto asset_id = get_asset_id(handout.asset_symbol);
-      create<balance_object>([&handout,&get_asset_id,total_allocation,asset_id](balance_object& b) {
+      create<balance_object>([&handout,total_allocation,asset_id](balance_object& b) {
          b.balance = asset(handout.amount, asset_id);
          b.owner = handout.owner;
       });
