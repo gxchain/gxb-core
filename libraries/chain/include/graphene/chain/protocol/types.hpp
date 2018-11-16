@@ -128,7 +128,7 @@ namespace graphene { namespace chain {
    };
 
    struct witness_lock_balance_t {
-       uint64_t amount = GRAPHENE_BLOCKCHAIN_PRECISION * 10000;// 10000 GXS
+       uint64_t amount = GRAPHENE_BLOCKCHAIN_PRECISION * 10000;// 10000 GXC (asset 1.3.1)
    };
 
    struct operation_ext_copyright_hash_t {
