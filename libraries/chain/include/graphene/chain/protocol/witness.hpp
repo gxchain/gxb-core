@@ -75,10 +75,10 @@ namespace graphene { namespace chain {
    /// TODO: witness_resign_operation : public base_operation
 
    /**
-     * @brief withdraw witness_lock_balance
+     * @brief withdraw witness pledge
      * @ingroup operations
      */
-    struct witness_lock_balance_withdraw_operation : public base_operation
+    struct witness_pledge_withdraw_operation : public base_operation
     {
        struct fee_parameters_type
        {
@@ -87,7 +87,6 @@ namespace graphene { namespace chain {
 
        asset             fee;
        account_id_type   witness_account;
-       witness_id_type   witness;
 
        account_id_type fee_payer()const { return witness_account; }
        void            validate()const;
@@ -102,5 +101,5 @@ FC_REFLECT( graphene::chain::witness_create_operation, (fee)(witness_account)(ur
 FC_REFLECT( graphene::chain::witness_update_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::witness_update_operation, (fee)(witness)(witness_account)(new_url)(new_signing_key) )
 
-FC_REFLECT( graphene::chain::witness_lock_balance_withdraw_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::witness_lock_balance_withdraw_operation, (fee)(witness_account)(witness) )
+FC_REFLECT( graphene::chain::witness_pledge_withdraw_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::witness_pledge_withdraw_operation, (fee)(witness_account) )

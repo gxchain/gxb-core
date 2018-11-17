@@ -1685,7 +1685,7 @@ class wallet_api
        * @param fee_asset_symbol the symbol or id of the fee.
        * @param broadcast true if you wish to broadcast the transaction.
        */
-      signed_transaction withdraw_witness_lock_balance(string witness_name,
+      signed_transaction withdraw_witness_pledge(string witness_name,
                                                        string fee_asset_symbol,
                                                        bool broadcast = false);
 
@@ -2203,7 +2203,7 @@ FC_API( graphene::wallet::wallet_api,
         (list_committee_members)
         (create_witness)
         (update_witness)
-		(withdraw_witness_lock_balance)
+		(withdraw_witness_pledge)
         (get_vesting_balances)
         (withdraw_vesting)
         (vote_for_committee_member)

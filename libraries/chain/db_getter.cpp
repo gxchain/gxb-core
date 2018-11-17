@@ -70,16 +70,16 @@ const vm_cpu_limit_t database::get_cpu_limit() const
     return vm_cpu_limit_t();
 }
 
-const witness_lock_balance_t database::get_witness_lock_balance() const
+const witness_pledge_t database::get_witness_pledge() const
 {
 	const chain_parameters& params = get_global_properties().parameters;
 	for (auto& ext : params.extensions) {
-		if (ext.which() == future_extensions::tag<witness_lock_balance_t>::value) {
-			return ext.get<witness_lock_balance_t>();
+		if (ext.which() == future_extensions::tag<witness_pledge_t>::value) {
+			return ext.get<witness_pledge_t>();
 		}
 	}
 	// return default value
-	return witness_lock_balance_t();
+	return witness_pledge_t();
 }
 
 const chain_property_object& database::get_chain_properties()const

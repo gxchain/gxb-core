@@ -503,13 +503,13 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
 
             // witness locked balance
             if (d.head_block_time() > HARDFORK_1129_TIME) {
-				const auto& witness_lock_balance_idx = d.get_index_type<witness_account_balance_locked_index>().indices().get<by_account>();
-				auto witness_account_lock_balance_it = witness_lock_balance_idx.find(stake_account.id);
-				if(witness_account_lock_balance_it != witness_lock_balance_idx.end()) {
+				const auto& witness_pledge_idx = d.get_index_type<witness_pledge_index>().indices().get<by_account>();
+				auto witness_pledge_it = witness_pledge_idx.find(stake_account.id);
+				if(witness_pledge_it != witness_pledge_idx.end()) {
 					dlog("find it");
-					if (asset_id_type(1) == witness_account_lock_balance_it->amount.asset_id) {
+					if (asset_id_type(1) == witness_pledge_it->amount.asset_id) {
 						dlog("voting_stake before = ${x}", ("x", voting_stake));
-						voting_stake += witness_account_lock_balance_it->amount.amount.value;
+						voting_stake += witness_pledge_it->amount.amount.value;
 						dlog("voting_stake after = ${x}", ("x", voting_stake));
 					}
 				}
