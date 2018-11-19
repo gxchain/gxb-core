@@ -178,7 +178,7 @@ class global_api : public context_aware_api
         return context.trx_context.get_trx_origin();
     }
 
-    int64_t get_account_name_by_id(array_ptr<char> data, int64_t account_id)
+    int64_t get_account_name_by_id(array_ptr<char> data, size_t datalen, int64_t account_id)
     {
         FC_ASSERT(account_id >= 0, "account_id ${a} must > 0", ("a", account_id));
         auto &d = context.db();
@@ -1587,7 +1587,7 @@ REGISTER_INTRINSICS(global_api,
 (get_head_block_time,   int64_t()          )
 (get_trx_sender,        int64_t()          )
 (get_trx_origin,        int64_t()          )
-(get_account_name_by_id,int64_t(int, int)  )
+(get_account_name_by_id,int64_t(int, int, int64_t)  )
 (get_account_id,        int64_t(int, int)  )
 (get_asset_id,          int64_t(int, int)  )
 );
