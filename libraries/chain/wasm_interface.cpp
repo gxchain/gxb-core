@@ -1051,6 +1051,7 @@ class context_free_transaction_api : public context_aware_api {
       context_free_transaction_api( apply_context& ctx )
       :context_aware_api(ctx,true){}
 
+      /*
       int read_transaction(array_ptr<char> data, size_t buffer_size)
       {
           auto cur_trx = context.db().get_cur_trx();
@@ -1070,6 +1071,7 @@ class context_free_transaction_api : public context_aware_api {
           auto tmp_trx = context.db().get_cur_trx();
           return fc::raw::pack(*tmp_trx).size();
       }
+      */
 
       uint64_t expiration() {
           return context.db().get_cur_trx()->expiration.sec_since_epoch();
@@ -1515,8 +1517,10 @@ REGISTER_INTRINSICS(transaction_api,
 );
 
 REGISTER_INTRINSICS(context_free_transaction_api,
+/*
 (read_transaction,               int(int, int))
 (transaction_size,               int())
+*/
 (expiration,                     int64_t())
 (tapos_block_num,                int())
 (tapos_block_prefix,             int64_t())
