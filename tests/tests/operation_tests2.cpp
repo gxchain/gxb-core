@@ -667,8 +667,83 @@ BOOST_AUTO_TEST_CASE( witness_create2 )
    generate_block();
 
    set_expiration( db, trx );
-   issue_uia( wit2_id(db), asset( (uint64_t)100000*10000, gxs_id ) );
-   create_witness(wit2_id(db), wit2_private_key);
+   issue_uia( wit2_id(db), asset( (uint64_t)100000*1000000, gxs_id ) );
+   witness_id_type wit2_witness_id = create_witness(wit2_id(db), wit2_private_key).id;
+
+   {
+      account_update_operation op;
+      op.account = wit2_id;
+      op.new_options = wit2_id(db).options;
+      op.new_options->votes.insert(wit2_witness_id(db).vote_id);
+      op.new_options->num_witness = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
+                                                  [](vote_id_type id) { return id.type() == vote_id_type::witness; });
+      op.new_options->num_committee = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
+                                                    [](vote_id_type id) { return id.type() == vote_id_type::committee; });
+      trx.operations.push_back(op);
+      update_operation_fee(trx);
+      sign( trx, wit2_private_key );
+      PUSH_TX( db, trx );
+      trx.clear();
+   }
+
+   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+   const auto& witnesses = db.get_global_properties().active_witnesses;
+
+   // make sure we're in active_witnesses
+   auto itr = std::find(witnesses.begin(), witnesses.end(), wit2_witness_id);
+   BOOST_CHECK(itr != witnesses.end());
+
+   // generate blocks until we are at the beginning of a round
+   while( ((db.get_dynamic_global_properties().current_aslot + 1) % witnesses.size()) != 0 )
+      generate_block();
+
+   int produced = 0;
+   // Make sure we get scheduled at least once in witnesses.size()*2 blocks
+   // may take this many unless we measure where in the scheduling round we are
+   // TODO:  intense_test that repeats this loop many times
+   for( size_t i=0, n=witnesses.size()*2; i<n; i++ )
+   {
+      signed_block block = generate_block();
+      if( block.witness == wit2_witness_id )
+         produced++;
+   }
+   BOOST_CHECK_GE( produced, 1 );
+
+   BOOST_CHECK(wit2_witness_id(db).is_valid == true);
+   BOOST_CHECK(wit2_witness_id(db).total_votes > 0);
+
+   {
+       witness_pledge_withdraw_operation op;
+       op.witness_account = wit2_id;
+       trx.operations.push_back( op );
+       update_operation_fee(trx);
+       set_expiration( db, trx );
+       sign( trx, wit2_private_key );
+       PUSH_TX( db, trx );
+       trx.clear();
+   }
+
+   generate_block();
+   BOOST_CHECK(wit2_witness_id(db).is_valid == false);
+   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+   generate_block();
+   BOOST_CHECK(wit2_witness_id(db).total_votes == 0);
+
+   {
+       witness_update_operation witness_update_op;
+       witness_update_op.witness = wit2_witness_id;
+       witness_update_op.witness_account = wit2_id;
+       witness_update_op.new_url = "https://gxb.witness.org";
+       trx.operations.push_back( witness_update_op );
+       update_operation_fee(trx);
+       set_expiration( db, trx );
+       sign( trx, wit2_private_key );
+       PUSH_TX( db, trx );
+       trx.clear();
+   }
+
+   generate_block();
+   BOOST_CHECK(wit2_witness_id(db).is_valid == true);
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( assert_op_test )

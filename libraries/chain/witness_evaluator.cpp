@@ -95,7 +95,7 @@ void_result witness_update_evaluator::do_evaluate( const witness_update_operatio
 		   int64_t pledge_add = witness_pledge > pledge_it->amount.amount.value ?
 				   witness_pledge - pledge_it->amount.amount.value : 0;
 		   pledge = asset{pledge_add, asset_id_type(1)};
-		   witness_pledge_obj_ptr =const_cast<witness_pledge_object*>(&(*pledge_it));
+		   witness_pledge_obj_ptr = const_cast<witness_pledge_object*>(&(*pledge_it));
 	   }
 
 	   FC_ASSERT(_db.get_balance(op.witness_account, asset_id_type(1)) >= pledge, "account balance not enough");
@@ -114,7 +114,8 @@ void_result witness_update_evaluator::do_apply(const witness_update_operation& o
             wit.url = *op.new_url;
          if( op.new_signing_key.valid() )
             wit.signing_key = *op.new_signing_key;
-      });
+      }
+   );
 
    if(_db.get_dynamic_global_properties().time > HARDFORK_1129_TIME) {
 	   if(witness_pledge_obj_ptr == nullptr) {
@@ -163,7 +164,13 @@ void_result witness_pledge_withdraw_evaluator::do_evaluate( const witness_pledge
 void_result witness_pledge_withdraw_evaluator::do_apply(const witness_pledge_withdraw_operation& op, int32_t billed_cpu_time_us)
 { try {
    database& _db = db();
-   _db.deposit_lazy_vesting(optional<vesting_balance_id_type>(), witness_pledge_obj->amount.amount, 60, op.witness_account, true);//TODO 60 seconds for test
+   _db.deposit_lazy_vesting(
+       optional<vesting_balance_id_type>(),
+       witness_pledge_obj->amount.amount,
+       _db.get_global_properties().parameters.cashback_vesting_period_seconds,
+       op.witness_account, true
+   );
+
    _db.remove(*witness_pledge_obj);
    _db.modify(
       *witness_obj,

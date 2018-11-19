@@ -47,7 +47,7 @@ namespace graphene { namespace chain {
          void_result do_apply(const witness_update_operation& o, int32_t billed_cpu_time_us = 0);
       private:
          asset pledge;
-         witness_pledge_object *witness_pledge_obj_ptr;
+         witness_pledge_object *witness_pledge_obj_ptr = nullptr;
    };
 
    class witness_pledge_withdraw_evaluator : public evaluator<witness_pledge_withdraw_evaluator>
@@ -58,8 +58,8 @@ namespace graphene { namespace chain {
          void_result do_evaluate( const witness_pledge_withdraw_operation& o );
          void_result do_apply(const witness_pledge_withdraw_operation& o, int32_t billed_cpu_time_us = 0);
       private:
-         const witness_object *witness_obj;
-         const witness_pledge_object *witness_pledge_obj;
+         const witness_object *witness_obj = nullptr;
+         const witness_pledge_object *witness_pledge_obj = nullptr;
    };
 
 } } // graphene::chain

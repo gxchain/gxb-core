@@ -507,9 +507,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
 				auto witness_pledge_it = witness_pledge_idx.find(stake_account.id);
 				if(witness_pledge_it != witness_pledge_idx.end()) {
 					if (asset_id_type(1) == witness_pledge_it->amount.asset_id) {
-						dlog("voting_stake before = ${x}", ("x", voting_stake));
 						voting_stake += witness_pledge_it->amount.amount.value;
-						dlog("voting_stake after = ${x}", ("x", voting_stake));
 					}
 				}
             }
