@@ -2359,6 +2359,25 @@
           return sign_transaction( tx, broadcast );
        } FC_CAPTURE_AND_RETHROW( (witness_name)(url)(block_signing_key)(broadcast) ) }
 
+
+       signed_transaction withdraw_witness_pledge(string witness_name,
+                                                        string fee_asset_symbol,
+                                                        bool broadcast /*= false */)
+       { try {
+          asset_object fee_asset_obj = get_asset(fee_asset_symbol);
+          account_object witness_account = get_account(witness_name);
+
+          witness_pledge_withdraw_operation op;
+          op.witness_account = witness_account.id;
+
+          signed_transaction tx;
+          tx.operations.push_back( op );
+          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+          tx.validate();
+
+          return sign_transaction( tx, broadcast );
+       } FC_CAPTURE_AND_RETHROW( (witness_name)(fee_asset_symbol)(broadcast) ) }
+
        vector< vesting_balance_object_with_info > get_vesting_balances( string account_name )
        { try {
           fc::optional<vesting_balance_id_type> vbid = maybe_id<vesting_balance_id_type>( account_name );
@@ -4745,6 +4764,13 @@
        bool broadcast /* = false */)
     {
        return my->update_witness(witness_name, url, block_signing_key, fee_asset_symbol, broadcast);
+    }
+
+    signed_transaction wallet_api::withdraw_witness_pledge(string witness_name,
+                                                     string fee_asset_symbol,
+                                                     bool broadcast /*= false */)
+    {
+    	return my->withdraw_witness_pledge(witness_name, fee_asset_symbol, broadcast);
     }
 
     vector< vesting_balance_object_with_info > wallet_api::get_vesting_balances( string account_name )

@@ -127,6 +127,10 @@ namespace graphene { namespace chain {
        std::string symbol;
    };
 
+   struct witness_pledge_t {
+       int64_t amount = GRAPHENE_BLOCKCHAIN_PRECISION * 10000;// 10000 GXC (asset 1.3.1)
+   };
+
    struct operation_ext_copyright_hash_t {
        fc::optional<string> copyright_hash;
    };
@@ -286,6 +290,7 @@ namespace graphene { namespace chain {
       second_hand_data_object_type,//23
       data_transaction_complain_object_type,//24
       lock_balance_object_type,//25
+	  witness_pledge_object_type,//26
 
       OBJECT_TYPE_COUNT /////< Sentry value which contains the number of different object types
 
@@ -355,6 +360,7 @@ namespace graphene { namespace chain {
    class second_hand_data_object;
    class data_transaction_complain_object;
    class lock_balance_object;
+   class witness_pledge_object;
 
    typedef object_id< protocol_ids, account_object_type,            account_object>               account_id_type;
    typedef object_id< protocol_ids, asset_object_type,              asset_object>                 asset_id_type;
@@ -380,6 +386,7 @@ namespace graphene { namespace chain {
    typedef object_id< protocol_ids, second_hand_data_object_type, second_hand_data_object>         second_hand_data_id_type;
    typedef object_id< protocol_ids, data_transaction_complain_object_type, data_transaction_complain_object> data_transaction_complain_id_type;
    typedef object_id< protocol_ids, lock_balance_object_type, lock_balance_object>       lock_balance_id_type;
+   typedef object_id< protocol_ids, witness_pledge_object_type, witness_pledge_object>       witness_pledge_id_type;
 
    // implementation types
    class global_property_object;
@@ -557,6 +564,7 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (second_hand_data_object_type)
                  (data_transaction_complain_object_type)
                  (lock_balance_object_type)
+                 (witness_pledge_object_type)
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,
@@ -636,6 +644,7 @@ FC_REFLECT_TYPENAME( graphene::chain::datasource_copyright_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::second_hand_data_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::data_transaction_complain_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::lock_balance_id_type)
+FC_REFLECT_TYPENAME( graphene::chain::witness_pledge_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::signature_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::table_id_object_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::key_value_object_id_type)
@@ -650,6 +659,8 @@ FC_REFLECT(graphene::chain::interest_rate_t, (lock_days)(interest_rate)(is_valid
 FC_REFLECT(graphene::chain::lock_balance_params_t, (params))
 FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
 FC_REFLECT(graphene::chain::asset_symbol_t, (symbol))
+FC_REFLECT(graphene::chain::witness_pledge_t, (amount))
+
 
 FC_REFLECT_ENUM(graphene::chain::asset_issuer_permission_flags,
    (charge_market_fee)

@@ -278,6 +278,9 @@ struct get_impacted_account_visitor
        _impacted.insert(op.contract_id);
    }
 
+   void operator() (const witness_pledge_withdraw_operation& op) {
+   }
+
 };
 
 void graphene::chain::operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
@@ -382,6 +385,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
         } case data_transaction_complain_object_type: {
             break;
         } case lock_balance_object_type: {
+            break;
+        } case witness_pledge_object_type: {
             break;
         }
       }

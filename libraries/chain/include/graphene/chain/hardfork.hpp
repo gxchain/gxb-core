@@ -60,6 +60,11 @@
 #define HARDFORK_1009_TIME (fc::time_point_sec( 1541030400 )) // for test, 2018-11-01T00:00:00
 #endif
 
+// enable witness guaranty
+#ifndef HARDFORK_1129_TIME
+#define HARDFORK_1129_TIME (fc::time_point_sec( 1542099600 )) // for test, 2018-11-13T09:00:00(UTC)
+#endif
+
 // #413 Add operation to claim asset fees
 #ifndef HARDFORK_413_TIME
 #define HARDFORK_413_TIME (fc::time_point_sec( 1446652800 ))
