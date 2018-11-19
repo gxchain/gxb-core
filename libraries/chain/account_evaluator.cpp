@@ -79,18 +79,6 @@ void verify_account_votes( const database& db, const account_options& options )
 void_result account_create_evaluator::do_evaluate( const account_create_operation& op )
 { try {
    database& d = db();
-   if( d.head_block_time() < HARDFORK_516_TIME )
-   {
-      FC_ASSERT( !op.extensions.value.owner_special_authority.valid() );
-      FC_ASSERT( !op.extensions.value.active_special_authority.valid() );
-   }
-   if( d.head_block_time() < HARDFORK_599_TIME )
-   {
-      FC_ASSERT( !op.extensions.value.null_ext.valid() );
-      FC_ASSERT( !op.extensions.value.owner_special_authority.valid() );
-      FC_ASSERT( !op.extensions.value.active_special_authority.valid() );
-      FC_ASSERT( !op.extensions.value.buyback_options.valid() );
-   }
 
    FC_ASSERT( fee_paying_account->is_lifetime_member(), "Only Lifetime members may register an account." );
    FC_ASSERT( op.referrer(d).is_member(d.head_block_time()), "The referrer must be either a lifetime or annual subscriber." );
@@ -223,17 +211,6 @@ object_id_type account_create_evaluator::do_apply(const account_create_operation
 void_result account_update_evaluator::do_evaluate( const account_update_operation& o )
 { try {
    database& d = db();
-   if( d.head_block_time() < HARDFORK_516_TIME )
-   {
-      FC_ASSERT( !o.extensions.value.owner_special_authority.valid() );
-      FC_ASSERT( !o.extensions.value.active_special_authority.valid() );
-   }
-   if( d.head_block_time() < HARDFORK_599_TIME )
-   {
-      FC_ASSERT( !o.extensions.value.null_ext.valid() );
-      FC_ASSERT( !o.extensions.value.owner_special_authority.valid() );
-      FC_ASSERT( !o.extensions.value.active_special_authority.valid() );
-   }
 
    try
    {
@@ -370,19 +347,6 @@ void_result account_whitelist_evaluator::do_apply(const account_whitelist_operat
           a.membership_expiration_date = time_point_sec::maximum();
           a.referrer = a.registrar = a.lifetime_referrer = a.get_id();
           a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - a.network_fee_percentage;
-       } else if( a.is_annual_member(d.head_block_time()) ) {
-          // Renew an annual subscription that's still in effect.
-          FC_ASSERT( d.head_block_time() <= HARDFORK_613_TIME );
-          FC_ASSERT(a.membership_expiration_date - d.head_block_time() < fc::days(3650),
-                    "May not extend annual membership more than a decade into the future.");
-          a.membership_expiration_date += fc::days(365);
-       } else {
-          // Upgrade from basic account.
-          FC_ASSERT( d.head_block_time() <= HARDFORK_613_TIME );
-          a.statistics(d).process_fees(a, d);
-          assert(a.is_basic_account(d.head_block_time()));
-          a.referrer = a.get_id();
-          a.membership_expiration_date = d.head_block_time() + fc::days(365);
        }
     });
 

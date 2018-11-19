@@ -65,9 +65,9 @@ fc::variants database_api::get_objects(const vector<object_id_type>& ids)const
    return my->get_objects( ids );
 }
 
-fc::variants database_api::get_table_objects(uint64_t code, uint64_t scope, uint64_t table) const
+fc::variants database_api::get_table_objects(uint64_t code, uint64_t scope, uint64_t table, uint64_t lower, uint64_t uppper, uint64_t limit) const
 {
-    return my->get_table_objects(code, scope, table);
+    return my->get_table_objects(code, scope, table, lower, uppper, limit);
 }
 
 bytes database_api::serialize_contract_call_args(string contract, string method, string json_args) const 
@@ -430,6 +430,16 @@ map<string, witness_id_type> database_api::lookup_witness_accounts(const string&
 uint64_t database_api::get_witness_count()const
 {
    return my->get_witness_count();
+}
+
+uint64_t database_api::get_committee_member_count() const
+{
+   return my->get_committee_member_count();
+}
+
+vector<account_id_type> database_api::get_trust_nodes() const
+{
+    return my->get_trust_nodes();
 }
 
 //////////////////////////////////////////////////////////////////////

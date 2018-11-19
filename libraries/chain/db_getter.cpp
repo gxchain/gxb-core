@@ -34,7 +34,11 @@ namespace graphene { namespace chain {
 
 const asset_object& database::get_core_asset() const
 {
-   return get(asset_id_type());
+    if (head_block_time() > HARDFORK_1008_TIME) {
+        return get(asset_id_type(1));
+    } else {
+        return get(asset_id_type());
+    }
 }
 
 const global_property_object& database::get_global_properties()const
@@ -64,6 +68,18 @@ const vm_cpu_limit_t database::get_cpu_limit() const
     }
     // return default value
     return vm_cpu_limit_t();
+}
+
+const witness_pledge_t database::get_witness_pledge() const
+{
+	const chain_parameters& params = get_global_properties().parameters;
+	for (auto& ext : params.extensions) {
+		if (ext.which() == future_extensions::tag<witness_pledge_t>::value) {
+			return ext.get<witness_pledge_t>();
+		}
+	}
+	// return default value
+	return witness_pledge_t();
 }
 
 const chain_property_object& database::get_chain_properties()const

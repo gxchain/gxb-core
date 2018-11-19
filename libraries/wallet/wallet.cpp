@@ -947,8 +947,9 @@
           _builder_transactions.erase(handle);
        }
 
-       variants get_table_objects(string contract, string table)
+       variants get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit)
        { try {
+             GRAPHENE_ASSERT(lower < upper && limit > 0, table_not_found_exception, "invalid parameters");
              account_object contract_obj = get_account(contract);
 
              const auto& tables = contract_obj.abi.tables;
@@ -956,7 +957,7 @@
                      [&](const table_def& t) { return t.name == table; });
 
              if (iter != tables.end()) {
-                 return _remote_db->get_table_objects(contract_obj.id.number, contract_obj.id.number, name(table));
+                 return _remote_db->get_table_objects(contract_obj.id.number, contract_obj.id.number, name(table), lower, upper, limit);
              } else {
                  GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
              }
@@ -1040,6 +1041,70 @@
            return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW( (name)(account)(vm_type)(vm_version)(contract_dir)(fee_asset_symbol)(broadcast)) }
 
+       signed_transaction update_contract(string contract,
+                                        optional<string> new_owner,
+                                        string contract_dir,
+                                        string fee_asset_symbol,
+                                        bool broadcast /* = false */)
+       { try {
+           FC_ASSERT(!self.is_locked());
+           
+           fc::optional<asset_object> fee_asset_obj = get_asset(fee_asset_symbol);
+
+           std::vector<uint8_t> wasm;
+           variant abi_def_data;
+
+           auto load_contract = [&]() {
+               fc::path cpath(contract_dir);
+               if (cpath.filename().generic_string() == ".") cpath = cpath.parent_path();
+
+               fc::path wasm_path = cpath / (cpath.filename().generic_string() + ".wasm");
+               fc::path abi_path = cpath / (cpath.filename().generic_string() + ".abi");
+
+               bool wasm_exist = fc::exists(wasm_path);
+               bool abi_exist = fc::exists(abi_path);
+
+               FC_ASSERT(abi_exist, "no abi file exist");
+               FC_ASSERT(wasm_exist, "no wasm file exist");
+
+               abi_def_data = fc::json::from_file(abi_path);
+
+               std::string wasm_string;
+               fc::read_file_contents(wasm_path, wasm_string);
+               const string binary_wasm_header("\x00\x61\x73\x6d", 4);
+               FC_ASSERT(wasm_string.size() > 4 && (wasm_string.compare(0, 4, binary_wasm_header) == 0), "wasm invalid");
+
+               for (auto it = wasm_string.begin(); it != wasm_string.end(); ++it) {
+                   wasm.push_back(*it); //TODO
+               }
+           };
+
+           load_contract();
+
+           account_object contract_obj = this->get_account(contract);
+           account_object owner_obj = this->get_account(contract_obj.registrar);
+           
+           optional<account_id_type> new_owner_account_id;
+           if(new_owner.valid() && (*new_owner).length() > 0) {
+        	   account_object new_owner_obj = this->get_account(*new_owner);
+        	   new_owner_account_id = new_owner_obj.id.instance();
+           }
+
+           contract_update_operation op;
+           op.owner = owner_obj.id;
+           op.contract = contract_obj.id;
+           op.new_owner = new_owner_account_id;
+           op.code = bytes(wasm.begin(), wasm.end());
+           op.abi = abi_def_data.as<abi_def>(GRAPHENE_MAX_NESTED_OBJECTS);
+
+           signed_transaction tx;
+           tx.operations.push_back(op);
+           set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+           tx.validate();
+
+           return sign_transaction(tx, broadcast);
+       } FC_CAPTURE_AND_RETHROW( (contract)(contract_dir)(fee_asset_symbol)(broadcast)) }
+       
        signed_transaction call_contract(string account,
                                         string contract,
                                         optional<asset> amount,
@@ -2294,6 +2359,25 @@
           return sign_transaction( tx, broadcast );
        } FC_CAPTURE_AND_RETHROW( (witness_name)(url)(block_signing_key)(broadcast) ) }
 
+
+       signed_transaction withdraw_witness_pledge(string witness_name,
+                                                        string fee_asset_symbol,
+                                                        bool broadcast /*= false */)
+       { try {
+          asset_object fee_asset_obj = get_asset(fee_asset_symbol);
+          account_object witness_account = get_account(witness_name);
+
+          witness_pledge_withdraw_operation op;
+          op.witness_account = witness_account.id;
+
+          signed_transaction tx;
+          tx.operations.push_back( op );
+          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+          tx.validate();
+
+          return sign_transaction( tx, broadcast );
+       } FC_CAPTURE_AND_RETHROW( (witness_name)(fee_asset_symbol)(broadcast) ) }
+
        vector< vesting_balance_object_with_info > get_vesting_balances( string account_name )
        { try {
           fc::optional<vesting_balance_id_type> vbid = maybe_id<vesting_balance_id_type>( account_name );
@@ -3465,6 +3549,8 @@
 
        bool verify_proxy_transfer_signature(const proxy_transfer_params& param, public_key_type pub_key)
        {
+           auto p = param; p.signatures.clear();
+           idump((fc::to_hex(fc::raw::pack(p))));
            return param.verify_proxy_transfer_signature(pub_key);
        }
 
@@ -3542,6 +3628,16 @@
        fc::sha256 get_hash(const string& value)
        {
            return fc::sha256::hash(value);
+       }
+
+       string get_pub_key_from_wif_key (string wif_key)
+       {
+          fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
+          if (!optional_private_key)
+             FC_THROW("Invalid private key");
+          graphene::chain::public_key_type wif_pub_key = optional_private_key->get_public_key();
+
+          return fc::string(wif_pub_key);
        }
 
       signature_type sign_string(string wif_key, const string &raw_string)
@@ -4503,6 +4599,15 @@
     {
         return my->deploy_contract(name, account, vm_type, vm_version, contract_dir, fee_asset_symbol, broadcast);
     }
+    
+    signed_transaction wallet_api::update_contract(string contract,
+                                                  string new_owner,
+                                                  string contract_dir,
+                                                  string fee_asset_symbol,
+                                                  bool broadcast)
+    {
+        return my->update_contract(contract, new_owner, contract_dir, fee_asset_symbol, broadcast);
+    }
 
     signed_transaction wallet_api::call_contract(string account,
                                       string contract,
@@ -4520,9 +4625,9 @@
         return my->get_contract_tables(contract);
     }
 
-    variant wallet_api::get_table_objects(string contract, string table) const
+    variant wallet_api::get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit) const
     {
-        return my->get_table_objects(contract, table);
+        return my->get_table_objects(contract, table, lower, upper, limit);
     }
 
     signed_transaction wallet_api::register_account(string name,
@@ -4659,6 +4764,13 @@
        bool broadcast /* = false */)
     {
        return my->update_witness(witness_name, url, block_signing_key, fee_asset_symbol, broadcast);
+    }
+
+    signed_transaction wallet_api::withdraw_witness_pledge(string witness_name,
+                                                     string fee_asset_symbol,
+                                                     bool broadcast /*= false */)
+    {
+    	return my->withdraw_witness_pledge(witness_name, fee_asset_symbol, broadcast);
     }
 
     vector< vesting_balance_object_with_info > wallet_api::get_vesting_balances( string account_name )
@@ -4801,6 +4913,11 @@
     fc::sha256 wallet_api::get_hash(const string& value)
     {
         return my->get_hash(value);
+    }
+
+    string wallet_api::get_pub_key_from_wif_key(const string& wif_key)
+    {
+        return my->get_pub_key_from_wif_key(wif_key);
     }
 
     signature_type wallet_api::sign_string(string wif_key, const string &raw_string)

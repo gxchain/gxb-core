@@ -88,6 +88,106 @@ BOOST_AUTO_TEST_CASE( withdraw_permission_create )
    trx.clear();
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( hardfork1008_transfer_test )
+{ try {
+   auto nathan_private_key = generate_private_key("nathan");
+   auto dan_private_key = generate_private_key("dan");
+   account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).id;
+   account_id_type dan_id = create_account("dan", dan_private_key.get_public_key()).id;
+
+   transfer(account_id_type(), nathan_id, asset(10000));
+   transfer(account_id_type(), dan_id, asset(10000));
+   
+   asset_id_type gxs_id = create_user_issued_asset( "GXS", nathan_id(db), 0 ).id;
+   issue_uia( nathan_id, asset( 10000, gxs_id ) );
+   generate_block();
+   
+   transfer(nathan_id, dan_id, asset(1000,asset_id_type(1)));
+   transfer(nathan_id, dan_id, asset(1000,asset_id_type(0)));
+   generate_block();
+   
+   generate_blocks(HARDFORK_1008_TIME);
+   generate_block();
+   
+   transfer_operation op1;
+   op1.from = nathan_id;
+   op1.to   = dan_id;
+   op1.amount = asset(1000, asset_id_type(1));
+   
+   transfer_operation op2;
+   op2.from = nathan_id;
+   op2.to   = dan_id;
+   op2.amount = asset(1000, asset_id_type(0));
+   
+   trx.clear();
+   trx.operations.push_back(op1);
+   trx.operations.push_back(op2);
+   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, price::unit_price(asset_id_type(1)), asset_id_type(1));
+   set_expiration(db, trx);
+   trx.validate();
+   sign(trx, nathan_private_key);
+   PUSH_TX(db, trx);
+   
+   generate_block();
+   
+   BOOST_REQUIRE_EQUAL(get_balance(dan_id, asset_id_type(0)), 12000);
+   BOOST_REQUIRE_EQUAL(get_balance(dan_id, asset_id_type(1)), 2000);
+   BOOST_REQUIRE_EQUAL(get_balance(nathan_id, asset_id_type(0)), 8000);
+   BOOST_REQUIRE_EQUAL(get_balance(nathan_id, asset_id_type(1)), 8000);
+} FC_LOG_AND_RETHROW() }
+
+/*
+BOOST_AUTO_TEST_CASE( hardfork1008_asset_rename_test )
+{ try {
+   auto nathan_private_key = generate_private_key("nathan");
+   account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).id;
+
+   transfer(account_id_type(), nathan_id, asset(10000));
+
+   asset_id_type gxs_id = create_user_issued_asset( "GXS", nathan_id(db), 0 ).id;
+   issue_uia( nathan_id, asset( 100000, gxs_id ) );
+   generate_block();
+   generate_blocks(HARDFORK_1008_TIME);
+   generate_block();
+
+   asset_update_operation op;
+   asset_symbol_t new_sym;
+   new_sym.symbol = "GXX";
+   op.issuer = nathan_id;
+   op.asset_to_update = asset_id_type(1);
+   op.new_options = asset_id_type(1)(db).options;
+   op.new_options.core_exchange_rate = price::unit_price(asset_id_type(1)), asset_id_type(1);
+   op.extensions.insert(new_sym);
+
+   trx.clear();
+   trx.operations.push_back(op);
+   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, price::unit_price(asset_id_type(1)), asset_id_type(1));
+   set_expiration(db, trx);
+   trx.validate();
+   sign(trx, nathan_private_key);
+   PUSH_TX(db, trx);
+   BOOST_REQUIRE_EQUAL(asset_id_type(1)(db).symbol, "GXX");
+
+   //TEST after 1103 can not rename asset name
+   generate_blocks(HARDFORK_1103_TIME);
+   generate_block();
+
+   new_sym.symbol = "GXW";
+   op.extensions.clear();
+   op.extensions.insert(new_sym);
+
+   trx.clear();
+   trx.operations.push_back(op);
+   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, price::unit_price(asset_id_type(1)), asset_id_type(1));
+   set_expiration(db, trx);
+   trx.validate();
+   sign(trx, nathan_private_key);
+
+   GRAPHENE_REQUIRE_THROW(PUSH_TX( db, trx ), fc::exception);
+   BOOST_REQUIRE_EQUAL(asset_id_type(1)(db).symbol, "GXX");
+} FC_LOG_AND_RETHROW() }
+ */
+
 BOOST_AUTO_TEST_CASE(proxy_transfer_test)
 { try {
    // alice --> dan, and bob is proxy_account
@@ -530,6 +630,124 @@ BOOST_AUTO_TEST_CASE( witness_create )
    BOOST_CHECK_GE( produced, 1 );
 } FC_LOG_AND_RETHROW() }
 
+//test create witness after hardfork_1129_time failing for not enough GXS
+BOOST_AUTO_TEST_CASE( witness_create1 )
+{ try {
+   //prepare
+   ACTOR(wit1);
+   ACTOR(wit2);
+   create_user_issued_asset("GXS", wit2_id(db), 0, 5);
+   upgrade_to_lifetime_member(wit1_id);
+   upgrade_to_lifetime_member(wit2_id);
+
+   //test create witness before hardfork_1129_time
+   create_witness(wit1_id, wit1_private_key);
+
+   //test create witness after hardfork_1129_time failing for not enough GXS
+   generate_blocks(HARDFORK_1129_TIME, true, ~0);
+   generate_block();
+
+   witness_create_operation op;
+   op.witness_account = wit2_id;
+   op.block_signing_key = wit2_private_key.get_public_key();
+   trx.operations.push_back( op );
+   update_operation_fee(trx);
+   sign(trx, wit2_private_key);
+   set_expiration( db, trx );
+   GRAPHENE_REQUIRE_THROW( PUSH_TX( db, trx, ~0 ), fc::exception );
+} FC_LOG_AND_RETHROW() }
+
+//test create witness after hardfork_1129_time success
+BOOST_AUTO_TEST_CASE( witness_create2 )
+{ try {
+   //prepare
+   ACTOR(wit2);
+   asset_id_type gxs_id = create_user_issued_asset("GXS", wit2_id(db), 0, 5).id;
+   upgrade_to_lifetime_member(wit2_id);
+
+   generate_blocks(HARDFORK_1129_TIME, true, ~0);
+   generate_block();
+
+   set_expiration( db, trx );
+   issue_uia( wit2_id(db), asset( (uint64_t)100000*1000000, gxs_id ) );
+   witness_id_type wit2_witness_id = create_witness(wit2_id(db), wit2_private_key).id;
+
+   {
+      account_update_operation op;
+      op.account = wit2_id;
+      op.new_options = wit2_id(db).options;
+      op.new_options->votes.insert(wit2_witness_id(db).vote_id);
+      op.new_options->num_witness = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
+                                                  [](vote_id_type id) { return id.type() == vote_id_type::witness; });
+      op.new_options->num_committee = std::count_if(op.new_options->votes.begin(), op.new_options->votes.end(),
+                                                    [](vote_id_type id) { return id.type() == vote_id_type::committee; });
+      trx.operations.push_back(op);
+      update_operation_fee(trx);
+      sign( trx, wit2_private_key );
+      PUSH_TX( db, trx );
+      trx.clear();
+   }
+
+   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+   const auto& witnesses = db.get_global_properties().active_witnesses;
+
+   // make sure we're in active_witnesses
+   auto itr = std::find(witnesses.begin(), witnesses.end(), wit2_witness_id);
+   BOOST_CHECK(itr != witnesses.end());
+
+   // generate blocks until we are at the beginning of a round
+   while( ((db.get_dynamic_global_properties().current_aslot + 1) % witnesses.size()) != 0 )
+      generate_block();
+
+   int produced = 0;
+   // Make sure we get scheduled at least once in witnesses.size()*2 blocks
+   // may take this many unless we measure where in the scheduling round we are
+   // TODO:  intense_test that repeats this loop many times
+   for( size_t i=0, n=witnesses.size()*2; i<n; i++ )
+   {
+      signed_block block = generate_block();
+      if( block.witness == wit2_witness_id )
+         produced++;
+   }
+   BOOST_CHECK_GE( produced, 1 );
+
+   BOOST_CHECK(wit2_witness_id(db).is_valid == true);
+   BOOST_CHECK(wit2_witness_id(db).total_votes > 0);
+
+   {
+       witness_pledge_withdraw_operation op;
+       op.witness_account = wit2_id;
+       trx.operations.push_back( op );
+       update_operation_fee(trx);
+       set_expiration( db, trx );
+       sign( trx, wit2_private_key );
+       PUSH_TX( db, trx );
+       trx.clear();
+   }
+
+   generate_block();
+   BOOST_CHECK(wit2_witness_id(db).is_valid == false);
+   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+   generate_block();
+   BOOST_CHECK(wit2_witness_id(db).total_votes == 0);
+
+   {
+       witness_update_operation witness_update_op;
+       witness_update_op.witness = wit2_witness_id;
+       witness_update_op.witness_account = wit2_id;
+       witness_update_op.new_url = "https://gxb.witness.org";
+       trx.operations.push_back( witness_update_op );
+       update_operation_fee(trx);
+       set_expiration( db, trx );
+       sign( trx, wit2_private_key );
+       PUSH_TX( db, trx );
+       trx.clear();
+   }
+
+   generate_block();
+   BOOST_CHECK(wit2_witness_id(db).is_valid == true);
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( assert_op_test )
 {
    try {
@@ -887,9 +1105,6 @@ BOOST_AUTO_TEST_CASE( top_n_special )
 {
    ACTORS( (alice)(bob)(chloe)(dan)(izzy)(stan) );
 
-   generate_blocks( HARDFORK_516_TIME );
-   generate_blocks( HARDFORK_599_TIME );
-
    try
    {
       {
@@ -1041,7 +1256,6 @@ BOOST_AUTO_TEST_CASE( buyback )
 
    generate_blocks( HARDFORK_538_TIME );
    generate_blocks( HARDFORK_555_TIME );
-   generate_blocks( HARDFORK_599_TIME );
 
    try
    {

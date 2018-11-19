@@ -1056,6 +1056,22 @@ class wallet_api
                                      string arg,
                                      string fee_asset_symbol,
                                      bool broadcast = false);
+    
+    /** Update contract
+     *
+     * call contract
+     * @param contract contract
+     * @param new_owner new_owner
+     * @param contract_dir contract_dir
+     * @param fee_asset_symbol fee_asset_symbol
+     * @param broadcast broadcast
+     * @returns signed_transaction
+     */
+    signed_transaction update_contract(string contract,
+                                     string new_owner,
+                                     string contract_dir,
+                                     string fee_asset_symbol,
+                                     bool broadcast = false);
 
       /** Returns table infos about the given contract.
        *
@@ -1068,9 +1084,12 @@ class wallet_api
        *
        * @param contract the name of the contract to query
        * @param table the table of the contract to query
+       * @param lower the start primary key of the table primary index
+       * @param upper the end primary key of the table primary index
+       * @param limit the max item to return
        * @returns the table names/types stored in the blockchain
        */
-      variant get_table_objects(string contract, string table) const;
+      variant get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit) const;
 
       /** Registers a third party's account on the blockckain.
        *
@@ -1353,7 +1372,10 @@ class wallet_api
           /**
        *  This method is used to convert a JSON transaction to its transactin ID.
        */
-      transaction_id_type get_transaction_id( const signed_transaction& trx )const { return trx.id(); }
+      transaction_id_type get_transaction_id(const signed_transaction &trx) const
+      {
+          return trx.id();
+      }
 
       /** Sign a memo message.
        *
@@ -1658,6 +1680,17 @@ class wallet_api
                                         string block_signing_key,
                                         string fee_asset_symbol,
                                         bool broadcast = false);
+
+      /**
+       * Withdraw witness lock balance, this opration will make the vote for this witness invalid.
+       *
+       * @param witness_name The name of the witness's owner account.  Also accepts the ID of the owner account or the ID of the witness.
+       * @param fee_asset_symbol the symbol or id of the fee.
+       * @param broadcast true if you wish to broadcast the transaction.
+       */
+      signed_transaction withdraw_witness_pledge(string witness_name,
+                                                       string fee_asset_symbol,
+                                                       bool broadcast = false);
 
 
       /**
@@ -2010,6 +2043,8 @@ class wallet_api
        */
       fc::sha256 get_hash(const string& value);
 
+      string get_pub_key_from_wif_key(const string& wif_key);
+
       /** sign_string
        *
        * @param wif_key private key
@@ -2146,6 +2181,7 @@ FC_API( graphene::wallet::wallet_api,
         (derive_owner_keys_from_brain_key)
         (register_account)
         (deploy_contract)
+        (update_contract)
         (call_contract)
         (get_contract_tables)
         (get_table_objects)
@@ -2170,6 +2206,7 @@ FC_API( graphene::wallet::wallet_api,
         (list_committee_members)
         (create_witness)
         (update_witness)
+		(withdraw_witness_pledge)
         (get_vesting_balances)
         (withdraw_vesting)
         (vote_for_committee_member)
@@ -2225,6 +2262,7 @@ FC_API( graphene::wallet::wallet_api,
         (flood_transfer)
         (transfer_test)
         (get_hash)
+        (get_pub_key_from_wif_key)
         (sign_string)
         (verify_transaction_signature)
         (verify_proxy_transfer_signature)

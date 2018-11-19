@@ -1,5 +1,8 @@
 #pragma once
 #include <graphene/chain/protocol/types.hpp>
+#include <graphene/chain/protocol/transaction.hpp>
+#include <graphene/chain/protocol/fee_schedule.hpp>
+
 #include "Runtime/Linker.h"
 #include "Runtime/Runtime.h"
 
@@ -52,6 +55,7 @@ namespace graphene { namespace chain {
          enum class vm_type {
             wavm,
             binaryen,
+            wabt
          };
 
          wasm_interface(vm_type vm);
@@ -74,4 +78,4 @@ namespace graphene{ namespace chain {
    std::istream& operator>>(std::istream& in, wasm_interface::vm_type& runtime);
 }}
 
-FC_REFLECT_ENUM( graphene::chain::wasm_interface::vm_type, (wavm)(binaryen) )
+FC_REFLECT_ENUM( graphene::chain::wasm_interface::vm_type, (wavm)(binaryen)(wabt) )
