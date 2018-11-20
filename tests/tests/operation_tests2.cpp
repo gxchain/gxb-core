@@ -715,7 +715,7 @@ BOOST_AUTO_TEST_CASE( witness_create2 )
    BOOST_CHECK(wit2_witness_id(db).total_votes > 0);
 
    {
-       witness_pledge_withdraw_operation op;
+       trust_node_pledge_withdraw_operation op;
        op.witness_account = wit2_id;
        trx.operations.push_back( op );
        update_operation_fee(trx);

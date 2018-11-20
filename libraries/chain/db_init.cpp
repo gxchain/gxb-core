@@ -170,8 +170,8 @@ const uint8_t data_transaction_complain_object::type_id;
 const uint8_t lock_balance_object::space_id;
 const uint8_t lock_balance_object::type_id;
 
-const uint8_t witness_pledge_object::space_id;
-const uint8_t witness_pledge_object::type_id;
+const uint8_t trust_node_pledge_object::space_id;
+const uint8_t trust_node_pledge_object::type_id;
 
 const uint8_t signature_object::space_id;
 const uint8_t signature_object::type_id;
@@ -264,7 +264,7 @@ void database::initialize_evaluators()
    register_evaluator<contract_deploy_evaluator>();
    register_evaluator<contract_call_evaluator>();
    register_evaluator<contract_update_evaluator>();
-   register_evaluator<witness_pledge_withdraw_evaluator>();
+   register_evaluator<trust_node_pledge_withdraw_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -307,7 +307,7 @@ void database::initialize_indexes()
    add_index< primary_index<transaction_index                             > >();
    add_index< primary_index<account_balance_index                         > >();
    add_index< primary_index<account_balance_locked_index                  > >();
-   add_index< primary_index<witness_pledge_index          > >();
+   add_index< primary_index<trust_node_pledge_index          > >();
    add_index< primary_index<asset_bitasset_data_index                     > >();
    add_index< primary_index<simple_index<global_property_object          >> >();
    add_index< primary_index<simple_index<dynamic_global_property_object  >> >();

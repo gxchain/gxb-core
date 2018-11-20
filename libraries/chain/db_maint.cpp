@@ -503,11 +503,11 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
 
             // witness pledge
             if (d.head_block_time() > HARDFORK_1129_TIME) {
-				const auto& witness_pledge_idx = d.get_index_type<witness_pledge_index>().indices().get<by_account>();
-				auto witness_pledge_it = witness_pledge_idx.find(stake_account.id);
-				if(witness_pledge_it != witness_pledge_idx.end()) {
-					if (asset_id_type(1) == witness_pledge_it->amount.asset_id) {
-						voting_stake += witness_pledge_it->amount.amount.value;
+				const auto& trust_node_pledge_idx = d.get_index_type<trust_node_pledge_index>().indices().get<by_account>();
+				auto trust_node_pledge_it = trust_node_pledge_idx.find(stake_account.id);
+				if(trust_node_pledge_it != trust_node_pledge_idx.end()) {
+					if (asset_id_type(1) == trust_node_pledge_it->amount.asset_id) {
+						voting_stake += trust_node_pledge_it->amount.amount.value;
 					}
 				}
             }

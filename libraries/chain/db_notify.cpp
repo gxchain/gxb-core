@@ -278,7 +278,7 @@ struct get_impacted_account_visitor
        _impacted.insert(op.contract_id);
    }
 
-   void operator() (const witness_pledge_withdraw_operation& op) {
+   void operator() (const trust_node_pledge_withdraw_operation& op) {
    }
 
 };
@@ -386,7 +386,7 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
             break;
         } case lock_balance_object_type: {
             break;
-        } case witness_pledge_object_type: {
+        } case trust_node_pledge_object_type: {
             break;
         }
       }

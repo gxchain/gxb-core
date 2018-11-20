@@ -181,7 +181,7 @@ void database_fixture::verify_asset_supplies( const database& db )
       total_balances[asset_obj.id] += dasset_obj.confidential_supply.value;
    }
 
-   for( const witness_pledge_object &wlbo : db.get_index_type<witness_pledge_index>().indices() ) {
+   for( const trust_node_pledge_object &wlbo : db.get_index_type<trust_node_pledge_index>().indices() ) {
 	   total_balances[wlbo.amount.asset_id] +=wlbo.amount.amount;
    }
 

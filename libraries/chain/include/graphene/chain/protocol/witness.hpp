@@ -78,7 +78,7 @@ namespace graphene { namespace chain {
      * @brief withdraw witness pledge
      * @ingroup operations
      */
-    struct witness_pledge_withdraw_operation : public base_operation
+    struct trust_node_pledge_withdraw_operation : public base_operation
     {
        struct fee_parameters_type
        {
@@ -101,5 +101,5 @@ FC_REFLECT( graphene::chain::witness_create_operation, (fee)(witness_account)(ur
 FC_REFLECT( graphene::chain::witness_update_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::witness_update_operation, (fee)(witness)(witness_account)(new_url)(new_signing_key) )
 
-FC_REFLECT( graphene::chain::witness_pledge_withdraw_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::witness_pledge_withdraw_operation, (fee)(witness_account) )
+FC_REFLECT( graphene::chain::trust_node_pledge_withdraw_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::trust_node_pledge_withdraw_operation, (fee)(witness_account) )

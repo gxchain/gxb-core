@@ -38,10 +38,10 @@ void_result witness_create_evaluator::do_evaluate( const witness_create_operatio
    FC_ASSERT(_db.get(op.witness_account).is_lifetime_member());
 
    if(_db.get_dynamic_global_properties().time > HARDFORK_1129_TIME) {
-	   uint64_t witness_pledge = _db.get_witness_pledge().amount;
-	   FC_ASSERT(witness_pledge > 0, "witness lock balance invalid");
+	   uint64_t trust_node_pledge = _db.get_trust_node_pledge().amount;
+	   FC_ASSERT(trust_node_pledge > 0, "trust node pledge must > 0");
 
-	   pledge = asset{witness_pledge, asset_id_type(1)};
+	   pledge = asset{trust_node_pledge, asset_id_type(1)};
 	   FC_ASSERT(_db.get_balance(op.witness_account, asset_id_type(1)) >= pledge, "account balance not enough");
    }
 
@@ -66,7 +66,7 @@ object_id_type witness_create_evaluator::do_apply(const witness_create_operation
    });
 
    if(_db.get_dynamic_global_properties().time > HARDFORK_1129_TIME) {
-	   _db.create<witness_pledge_object>([&op,this](witness_pledge_object& obj) {
+	   _db.create<trust_node_pledge_object>([&op,this](trust_node_pledge_object& obj) {
 	         obj.owner_account  = op.witness_account;
 	         obj.amount         = pledge;
 	   });
@@ -83,19 +83,19 @@ void_result witness_update_evaluator::do_evaluate( const witness_update_operatio
 	FC_ASSERT(_db.get(op.witness).witness_account == op.witness_account);
 
    if(_db.get_dynamic_global_properties().time > HARDFORK_1129_TIME) {
-	   int64_t witness_pledge = _db.get_witness_pledge().amount;
-	   FC_ASSERT(witness_pledge > 0, "witness lock balance invalid");
+	   int64_t trust_node_pledge = _db.get_trust_node_pledge().amount;
+	   FC_ASSERT(trust_node_pledge > 0, "trust node pledge must > 0");
 
-	   const auto &pledge_idx_by_account = _db.get_index_type<witness_pledge_index>().indices().get<by_account>();
+	   const auto &pledge_idx_by_account = _db.get_index_type<trust_node_pledge_index>().indices().get<by_account>();
 	   auto pledge_it = pledge_idx_by_account.find(op.witness_account);
 
 	   if(pledge_it == pledge_idx_by_account.end()) {
-		   pledge = asset{witness_pledge, asset_id_type(1)};
+		   pledge = asset{trust_node_pledge, asset_id_type(1)};
 	   } else {
-		   int64_t pledge_add = witness_pledge > pledge_it->amount.amount.value ?
-				   witness_pledge - pledge_it->amount.amount.value : 0;
+		   int64_t pledge_add = trust_node_pledge > pledge_it->amount.amount.value ?
+				   trust_node_pledge - pledge_it->amount.amount.value : 0;
 		   pledge = asset{pledge_add, asset_id_type(1)};
-		   witness_pledge_obj_ptr = const_cast<witness_pledge_object*>(&(*pledge_it));
+		   trust_node_pledge_obj_ptr = const_cast<trust_node_pledge_object*>(&(*pledge_it));
 	   }
 
 	   FC_ASSERT(_db.get_balance(op.witness_account, asset_id_type(1)) >= pledge, "account balance not enough");
@@ -118,60 +118,60 @@ void_result witness_update_evaluator::do_apply(const witness_update_operation& o
    );
 
    if(_db.get_dynamic_global_properties().time > HARDFORK_1129_TIME) {
-	   if(witness_pledge_obj_ptr == nullptr) {
-		   _db.create<witness_pledge_object>([&op,this](witness_pledge_object& obj) {
-				 obj.owner_account  = op.witness_account;
-				 obj.amount         = pledge;
-		   });
-	   } else {
-		   if(pledge.amount > 0) {
-			   _db.modify(*witness_pledge_obj_ptr, [this](witness_pledge_object &obj) {
-				   obj.amount += pledge;
-			   });
-		   }
-	   }
+       if(trust_node_pledge_obj_ptr == nullptr) {
+           _db.create<trust_node_pledge_object>([&op,this](trust_node_pledge_object& obj) {
+               obj.owner_account  = op.witness_account;
+               obj.amount         = pledge;
+           });
+       } else {
+           if(pledge.amount > 0) {
+               _db.modify(*trust_node_pledge_obj_ptr, [this](trust_node_pledge_object &obj) {
+               obj.amount += pledge;
+               });
+           }
+       }
 
-	   _db.adjust_balance(op.witness_account, -pledge);
+       _db.adjust_balance(op.witness_account, -pledge);
 
-	   _db.modify(
-	      _db.get(op.witness),
-	      [](witness_object &witness_obj) {
-	         witness_obj.is_valid = true;
-	      }
-	   );
+       _db.modify(
+          _db.get(op.witness),
+          [](witness_object &witness_obj) {
+              witness_obj.is_valid = true;
+          }
+       );
    }
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result witness_pledge_withdraw_evaluator::do_evaluate( const witness_pledge_withdraw_operation& op )
+void_result trust_node_pledge_withdraw_evaluator::do_evaluate( const trust_node_pledge_withdraw_operation& op )
 { try {
    database& _db = db();
-   auto &witness_pledge_idx_by_account = _db.get_index_type<witness_pledge_index>().indices().get<by_account>();
-   auto witness_pledge_it = witness_pledge_idx_by_account.find(op.witness_account);
-   FC_ASSERT( witness_pledge_it != witness_pledge_idx_by_account.end(), "have no locked balance");
+   auto &trust_node_pledge_idx = _db.get_index_type<trust_node_pledge_index>().indices().get<by_account>();
+   auto trust_node_pledge_it = trust_node_pledge_idx.find(op.witness_account);
+   FC_ASSERT( trust_node_pledge_it != trust_node_pledge_idx.end(), "have no locked balance");
 
    auto &witness_idx_by_account = _db.get_index_type<witness_index>().indices().get<by_account>();
    auto witness_it = witness_idx_by_account.find(op.witness_account);
-   FC_ASSERT( witness_it != witness_idx_by_account.end(), "have no locked balance");
+   FC_ASSERT( witness_it != witness_idx_by_account.end(), "witness not exist");
 
    witness_obj = &(*witness_it);
-   witness_pledge_obj = &(*witness_pledge_it);
+   trust_node_pledge_obj = &(*trust_node_pledge_it);
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result witness_pledge_withdraw_evaluator::do_apply(const witness_pledge_withdraw_operation& op, int32_t billed_cpu_time_us)
+void_result trust_node_pledge_withdraw_evaluator::do_apply(const trust_node_pledge_withdraw_operation& op, int32_t billed_cpu_time_us)
 { try {
    database& _db = db();
    _db.deposit_lazy_vesting(
        optional<vesting_balance_id_type>(),
-       witness_pledge_obj->amount.amount,
+       trust_node_pledge_obj->amount.amount,
        _db.get_global_properties().parameters.cashback_vesting_period_seconds,
        op.witness_account, true
    );
 
-   _db.remove(*witness_pledge_obj);
+   _db.remove(*trust_node_pledge_obj);
    _db.modify(
       *witness_obj,
       [](witness_object &witness_obj) {
