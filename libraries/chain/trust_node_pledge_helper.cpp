@@ -33,14 +33,12 @@ void trust_node_pledge_helper::do_evaluate(database& db, const witness_update_op
 void trust_node_pledge_helper::do_apply(database& db, const witness_update_operation& op)
 {
 	do_apply(db, op.witness_account);
-    if(pledge_to_charge.amount != 0) {
-        db.modify(
-           db.get(op.witness),
-           [](witness_object &witness_obj) {
-               witness_obj.is_valid = true;
-           }
-        );
-    }
+	db.modify(
+	   db.get(op.witness),
+	   [](witness_object &witness_obj) {
+		   witness_obj.is_valid = true;
+	   }
+	);
 }
 
 void trust_node_pledge_helper::do_evaluate(database& db, const trust_node_pledge_withdraw_operation& op)
@@ -116,14 +114,12 @@ void trust_node_pledge_helper::do_evaluate(database& db, const committee_member_
 void trust_node_pledge_helper::do_apply(database& db, const committee_member_update_operation& op)
 {
 	do_apply(db, op.committee_member_account);
-    if(pledge_to_charge.amount != 0) {
-        db.modify(
-           db.get(op.committee_member),
-           [](committee_member_object &committee_obj) {
-        	committee_obj.is_valid = true;
-           }
-        );
-    }
+	db.modify(
+	   db.get(op.committee_member),
+	   [](committee_member_object &committee_obj) {
+		committee_obj.is_valid = true;
+	   }
+	);
 }
 
 void trust_node_pledge_helper::reset()
