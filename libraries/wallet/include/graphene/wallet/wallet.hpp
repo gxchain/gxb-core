@@ -1684,11 +1684,11 @@ class wallet_api
       /**
        * Withdraw trust_node pledge, this opration will make the vote for this witness invalid.
        *
-       * @param witness_name The name of the witness's owner account.  Also accepts the ID of the owner account or the ID of the witness.
+       * @param account_name The name of the witness's owner account.  Also accepts the ID of the owner account or the ID of the witness.
        * @param fee_asset_symbol the symbol or id of the fee.
        * @param broadcast true if you wish to broadcast the transaction.
        */
-      signed_transaction withdraw_trust_node_pledge(string witness_name,
+      signed_transaction withdraw_trust_node_pledge(string account_name,
                                                        string fee_asset_symbol,
                                                        bool broadcast = false);
 

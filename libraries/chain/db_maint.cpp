@@ -464,9 +464,14 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
          d._total_voting_stake = 0;
 
 
-         const auto& witness_idx_by_vote_id = d.get_index_type<witness_index>().indices().get<by_vote_id>();
-         for(auto witness_it = witness_idx_by_vote_id.begin(); witness_it != witness_idx_by_vote_id.end(); ++ witness_it) {
-        	 d._witness_vote_id_valid[witness_it->vote_id.instance()] = witness_it->is_valid;
+         const auto& witness_idx = d.get_index_type<witness_index>().indices().get<by_vote_id>();
+         for(auto witness_itr = witness_idx.begin(); witness_itr != witness_idx.end(); ++witness_itr) {
+        	 d._vote_id_valid[witness_itr->vote_id.instance()] = witness_itr->is_valid;
+         }
+
+         const auto& committee_idx = d.get_index_type<committee_member_index>().indices().get<by_vote_id>();
+         for(auto committee_itr = committee_idx.begin(); committee_itr != committee_idx.end(); ++committee_itr) {
+        	 d._vote_id_valid[committee_itr->vote_id.instance()] = committee_itr->is_valid;
          }
       }
 
@@ -532,8 +537,8 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                uint32_t vote_type = id.type();
                // if they somehow managed to specify an illegal offset, ignore it.
                if( offset < d._vote_tally_buffer.size() ) {
-            	  if(vote_type == vote_id_type::witness) {
-                     if(d._witness_vote_id_valid[offset]) {
+            	  if(vote_type == vote_id_type::witness || vote_type == vote_id_type::committee) {
+                     if(d._vote_id_valid[offset]) {
                     	 d._vote_tally_buffer[offset] += voting_stake;
                      }
             	  } else {
