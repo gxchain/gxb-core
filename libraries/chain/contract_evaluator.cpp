@@ -143,9 +143,7 @@ void_result contract_update_evaluator::do_evaluate(const contract_update_operati
 { try {
     database &d = db();
 
-    if (d.head_block_time() <= HARDFORK_1009_TIME) {
-        FC_ASSERT(false, "contract can not update before hardfork 1009");
-    }
+    FC_ASSERT(d.head_block_time() > HARDFORK_1009_TIME, "contract can not update before hardfork 1009");
     
     const account_object& contract_obj = op.contract(d);
     FC_ASSERT(op.owner == contract_obj.registrar, "only owner can update contract, current owner: ${o}", ("o", contract_obj.registrar));
@@ -154,6 +152,9 @@ void_result contract_update_evaluator::do_evaluate(const contract_update_operati
     FC_ASSERT(code_hash != contract_obj.code_version, "code not updated");
     
     FC_ASSERT(op.code.size() > 0, "contract code cannot be empty");
+
+    wasm_interface::validate(op.code);
+
     FC_ASSERT(op.abi.actions.size() > 0, "contract has no actions");
 
     if(op.new_owner.valid()) {
