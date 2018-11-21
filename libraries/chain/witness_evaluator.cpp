@@ -36,7 +36,7 @@ void_result witness_create_evaluator::do_evaluate( const witness_create_operatio
 { try {
    database& _db = db();
    FC_ASSERT(_db.get(op.witness_account).is_lifetime_member());
-   if(_db.get_dynamic_global_properties().time > HARDFORK_1129_TIME) {
+   if(_db.head_block_time() > HARDFORK_1129_TIME) {
 	   trust_node_pledge_helper::do_evaluate(_db, op);
    }
    return void_result();
@@ -59,7 +59,7 @@ object_id_type witness_create_evaluator::do_apply(const witness_create_operation
          obj.url              = op.url;
    });
 
-   if(_db.get_dynamic_global_properties().time > HARDFORK_1129_TIME) {
+   if(_db.head_block_time() > HARDFORK_1129_TIME) {
 	   trust_node_pledge_helper::do_apply(_db, op);
    }
 
@@ -71,7 +71,7 @@ void_result witness_update_evaluator::do_evaluate( const witness_update_operatio
 	database& _db = db();
 	FC_ASSERT(_db.get(op.witness).witness_account == op.witness_account);
 
-   if(_db.get_dynamic_global_properties().time > HARDFORK_1129_TIME) {
+   if(_db.head_block_time() > HARDFORK_1129_TIME) {
 	   trust_node_pledge_helper::do_evaluate(_db, op);
    }
    return void_result();
@@ -91,7 +91,7 @@ void_result witness_update_evaluator::do_apply(const witness_update_operation& o
       }
    );
 
-   if(_db.get_dynamic_global_properties().time > HARDFORK_1129_TIME) {
+   if(_db.head_block_time() > HARDFORK_1129_TIME) {
 	   trust_node_pledge_helper::do_apply(_db, op);
    }
 

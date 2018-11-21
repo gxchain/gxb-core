@@ -38,7 +38,7 @@ void_result committee_member_create_evaluator::do_evaluate( const committee_memb
 { try {
    database &_db = db();
    FC_ASSERT(_db.get(op.committee_member_account).is_lifetime_member());
-   if(_db.get_dynamic_global_properties().time > HARDFORK_1129_TIME) {
+   if(_db.head_block_time() > HARDFORK_1129_TIME) {
 	   trust_node_pledge_helper::do_evaluate(_db, op);
    }
    return void_result();
@@ -58,7 +58,7 @@ object_id_type committee_member_create_evaluator::do_apply(const committee_membe
          obj.url                = op.url;
    });
 
-   if(_db.get_dynamic_global_properties().time > HARDFORK_1129_TIME) {
+   if(_db.head_block_time() > HARDFORK_1129_TIME) {
 	   trust_node_pledge_helper::do_apply(_db, op);
    }
    return new_del_object.id;
@@ -68,7 +68,7 @@ void_result committee_member_update_evaluator::do_evaluate( const committee_memb
 { try {
    database &_db = db();
    FC_ASSERT(_db.get(op.committee_member).committee_member_account == op.committee_member_account);
-   if(_db.get_dynamic_global_properties().time > HARDFORK_1129_TIME) {
+   if(_db.head_block_time() > HARDFORK_1129_TIME) {
 	   trust_node_pledge_helper::do_evaluate(_db, op);
    }
    return void_result();
@@ -84,7 +84,7 @@ void_result committee_member_update_evaluator::do_apply(const committee_member_u
          if( op.new_url.valid() )
             com.url = *op.new_url;
       });
-   if(_db.get_dynamic_global_properties().time > HARDFORK_1129_TIME) {
+   if(_db.head_block_time() > HARDFORK_1129_TIME) {
 	   trust_node_pledge_helper::do_apply(_db, op);
    }
    return void_result();
