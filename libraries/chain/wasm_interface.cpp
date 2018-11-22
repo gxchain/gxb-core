@@ -183,7 +183,7 @@ class global_api : public context_aware_api
         FC_ASSERT(account_id >= 0, "account_id ${a} must > 0", ("a", account_id));
         auto &d = context.db();
         auto obj = d.find(account_id_type(account_id));
-        if (obj) {
+        if (obj && obj->name.size() <= buffer_size) {
             string account_name = obj->name;
             memcpy(data, account_name.c_str(), account_name.size());
             return 0;

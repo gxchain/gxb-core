@@ -107,6 +107,8 @@ add_library( graphene_chain
              is_authorized_asset.cpp
 
              abi_serializer.cpp
+             
+             trust_node_pledge_helper.cpp
 
              ${HEADERS}
              ${PROTOCOL_HEADERS}

@@ -34,8 +34,6 @@ namespace graphene { namespace chain {
 
          void_result do_evaluate( const witness_create_operation& o );
          object_id_type do_apply(const witness_create_operation& o, int32_t billed_cpu_time_us = 0);
-      private:
-         asset pledge;
    };
 
    class witness_update_evaluator : public evaluator<witness_update_evaluator>
@@ -45,21 +43,15 @@ namespace graphene { namespace chain {
 
          void_result do_evaluate( const witness_update_operation& o );
          void_result do_apply(const witness_update_operation& o, int32_t billed_cpu_time_us = 0);
-      private:
-         asset pledge;
-         witness_pledge_object *witness_pledge_obj_ptr = nullptr;
    };
 
-   class witness_pledge_withdraw_evaluator : public evaluator<witness_pledge_withdraw_evaluator>
+   class trust_node_pledge_withdraw_evaluator : public evaluator<trust_node_pledge_withdraw_evaluator>
    {
       public:
-         typedef witness_pledge_withdraw_operation operation_type;
+         typedef trust_node_pledge_withdraw_operation operation_type;
 
-         void_result do_evaluate( const witness_pledge_withdraw_operation& o );
-         void_result do_apply(const witness_pledge_withdraw_operation& o, int32_t billed_cpu_time_us = 0);
-      private:
-         const witness_object *witness_obj = nullptr;
-         const witness_pledge_object *witness_pledge_obj = nullptr;
+         void_result do_evaluate( const trust_node_pledge_withdraw_operation& o );
+         void_result do_apply(const trust_node_pledge_withdraw_operation& o, int32_t billed_cpu_time_us = 0);
    };
 
 } } // graphene::chain
