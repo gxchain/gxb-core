@@ -266,6 +266,8 @@ struct database_fixture {
                                         const fc::ecc::private_key& signing_private_key = generate_private_key("null_key"));
    const witness_object& create_witness(const account_object& owner,
                                         const fc::ecc::private_key& signing_private_key = generate_private_key("null_key"));
+   void update_witness(const witness_id_type &witness_id, const account_id_type &account_id, const fc::ecc::private_key private_key, const string &new_url);
+   void update_committee(const committee_member_id_type &committee_id, const account_id_type &account_id, const fc::ecc::private_key private_key, const string &new_url);
    uint64_t fund( const account_object& account, const asset& amount = asset(500000) );
    signature_type sign_proxy_transfer_param(const private_key_type& key, const proxy_transfer_params& param);
    digest_type digest( const transaction& tx );
