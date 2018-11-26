@@ -656,6 +656,7 @@ const committee_member_object& database_fixture::create_committee_member( const 
    committee_member_create_operation op;
    op.committee_member_account = owner.id;
    trx.operations.push_back(op);
+   update_operation_fee(trx);
    trx.validate();
    processed_transaction ptx = db.push_transaction(trx, ~0);
    trx.operations.clear();
@@ -679,6 +680,34 @@ const witness_object& database_fixture::create_witness( const account_object& ow
    processed_transaction ptx = db.push_transaction(trx, ~0);
    trx.clear();
    return db.get<witness_object>(ptx.operation_results[0].get<object_id_type>());
+} FC_CAPTURE_AND_RETHROW() }
+
+void database_fixture::update_witness(const witness_id_type &witness_id, const account_id_type &account_id, const fc::ecc::private_key private_key, const string &new_url)
+{ try {
+   witness_update_operation witness_update_op;
+   witness_update_op.witness = witness_id;
+   witness_update_op.witness_account = account_id;
+   witness_update_op.new_url = new_url;
+   trx.operations.push_back(witness_update_op);
+   update_operation_fee(trx);
+   set_expiration(db, trx);
+   sign(trx, private_key);
+   PUSH_TX(db, trx);
+   trx.clear();
+} FC_CAPTURE_AND_RETHROW() }
+
+void database_fixture::update_committee(const committee_member_id_type &committee_id, const account_id_type &account_id, const fc::ecc::private_key private_key, const string &new_url)
+{ try {
+   committee_member_update_operation committee_op;
+   committee_op.committee_member = committee_id;
+   committee_op.committee_member_account = account_id;
+   committee_op.new_url = new_url;
+   trx.operations.push_back(committee_op);
+   update_operation_fee(trx);
+   set_expiration(db, trx);
+   sign(trx, private_key);
+   PUSH_TX(db, trx);
+   trx.clear();
 } FC_CAPTURE_AND_RETHROW() }
 
 uint64_t database_fixture::fund(
