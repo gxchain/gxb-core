@@ -167,7 +167,7 @@ namespace detail {
                 "47.254.18.74:6789",  // node15 (us)
                 "47.74.22.124:6789",  // node16 (jp)
                 "47.88.158.101:6789", // node17 (singapore)
-                "172.25.111.27:6789", // node23 (germany)
+                "node23.gxb.io:6789", // node23 (germany)
                 "47.52.114.135:6789"  // node11 (hk)
             };
             for( const string& endpoint_string : seeds )

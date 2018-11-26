@@ -350,6 +350,40 @@ BOOST_AUTO_TEST_CASE( update_uia )
    }
 }
 
+BOOST_AUTO_TEST_CASE( update_asset_symbol_test )
+{
+   ACTORS( (nathan) );
+   using namespace graphene;
+   try {
+	  generate_block();
+//	  const auto &test_asset_obj = create_user_issued_asset( "GXC", nathan, 0 );
+	  const auto &gxs_asset_obj = create_user_issued_asset( "GXS", nathan, 0 );
+	  BOOST_CHECK(gxs_asset_obj.id == asset_id_type(1));
+
+	  generate_blocks(HARDFORK_1008_TIME + 100, true);
+
+      trx.operations.clear();
+      asset_update_operation op;
+      op.issuer = gxs_asset_obj.issuer;
+      op.asset_to_update = gxs_asset_obj.id;
+      op.new_options = gxs_asset_obj.options;
+      op.extensions.emplace(asset_symbol_t{"GXC"});
+
+      trx.operations.push_back(op);
+      set_expiration( db, trx );
+      sign( trx, nathan_private_key );
+      PUSH_TX( db, trx, ~0 );
+      generate_block();
+
+      const auto &new_gxc_asset_obj = get_asset("GXC");
+      BOOST_CHECK(new_gxc_asset_obj.symbol == "GXC");
+
+   } catch(fc::exception& e) {
+      edump((e.to_detail_string()));
+      throw;
+   }
+}
+
 BOOST_AUTO_TEST_CASE( issue_uia )
 {
    try {
