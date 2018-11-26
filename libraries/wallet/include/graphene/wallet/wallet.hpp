@@ -1716,6 +1716,15 @@ class wallet_api
          string fee_asset_symbol,
          bool broadcast = false);
 
+
+      /** Vote for a list of trust_nodes
+       * @param voting_account the name or id of the account who is voting with their shares
+       * @param account_names the name or id of the trust_nodes' owner account
+       * @param broadcast true if you wish to broadcast the transaction
+       * @return the signed transaction changing your vote for the given trust_nodes
+       */
+      signed_transaction vote_for_trust_nodes(string voting_account, vector<string> account_names, bool broadcast);
+
       /** Vote for a given committee_member.
        *
        * An account can publish a list of all committee_memberes they approve of.  This
@@ -2209,6 +2218,7 @@ FC_API( graphene::wallet::wallet_api,
 		(withdraw_trust_node_pledge)
         (get_vesting_balances)
         (withdraw_vesting)
+        (vote_for_trust_nodes)
         (vote_for_committee_member)
         (update_account_multisig)
         (update_account_multisig_keys)
