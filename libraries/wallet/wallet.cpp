@@ -2533,8 +2533,8 @@
            }
            account_options opts = voting_account_object.options;
            opts.votes = votes;
-           opts.num_witness = std::min(account_names.size(),  _remote_db->get_global_properties().parameters.maximum_witness_count);
-           opts.num_committee = std::min(account_names.size(), _remote_db->get_global_properties().parameters.maximum_committee_count);
+           opts.num_witness = std::min((uint16_t)account_names.size(),  _remote_db->get_global_properties().parameters.maximum_witness_count);
+           opts.num_committee = std::min((uint16_t)account_names.size(), _remote_db->get_global_properties().parameters.maximum_committee_count);
 
            account_update_operation op;
            op.account = voting_account_object.id;
