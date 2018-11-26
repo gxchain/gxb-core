@@ -61,6 +61,7 @@
 // for vesting balance object
 #ifndef HARDFORK_1009_TIME
 #define HARDFORK_1009_TIME (fc::time_point_sec( 1537891200 )) // for testnet
+#endif
 
 // enable witness guaranty
 #ifndef HARDFORK_1129_TIME
