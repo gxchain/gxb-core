@@ -495,6 +495,13 @@ std::map<std::string, full_account> database_api_impl::get_full_accounts( const 
                        acnt.vesting_balances.emplace_back(balance);
                     });
 
+      // Add the account's pledge balances
+      auto pledge_range = _db.get_index_type<trust_node_pledge_index>().indices().get<by_account>().equal_range(account->id);
+      std::for_each(pledge_range.first, pledge_range.second,
+                    [&acnt](const trust_node_pledge_object& pledge) {
+                       acnt.pledge_balances.emplace_back(pledge);
+                    });
+
       // get assets issued by user
       auto asset_range = _db.get_index_type<asset_index>().indices().get<by_issuer>().equal_range(account->id);
       std::for_each(asset_range.first, asset_range.second,
