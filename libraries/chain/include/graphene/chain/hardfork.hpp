@@ -58,7 +58,7 @@
 
 // for contract update
 #ifndef HARDFORK_1009_TIME
-#define HARDFORK_1009_TIME (fc::time_point_sec( 1541030400 )) // for testnet
+#define HARDFORK_1009_TIME (fc::time_point_sec( 1543276800 )) // for testnet, 2018-11-27T00:00:00(UTC)
 #endif
 
 // enable witness guaranty
