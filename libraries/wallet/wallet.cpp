@@ -2515,6 +2515,43 @@
              return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW((account)(type)(weight_threshold)(account_auths)(account_weights)(fee_symbol)(broadcast)) }
 
+       signed_transaction vote_for_trust_nodes(string voting_account, vector<string> account_names, bool broadcast)
+       { try {
+           account_object voting_account_object = get_account(voting_account);
+
+           // collect votes
+           flat_set<vote_id_type> votes;
+           for (auto& account_name : account_names) {
+               account_id_type account_id = get_account_id(account_name);
+               fc::optional<committee_member_object> committee_member_obj = _remote_db->get_committee_member_by_account(account_id);
+               fc::optional<witness_object> witness_obj = _remote_db->get_witness_by_account(account_id);
+               FC_ASSERT(witness_obj.valid(), "${a} not a witness", ("a", account_name));
+               FC_ASSERT(committee_member_obj.valid(), "${a} not a committee_member", ("a", account_name));
+
+             votes.insert(witness_obj->vote_id);
+             votes.insert(committee_member_obj->vote_id);
+           }
+           account_options opts = voting_account_object.options;
+           opts.votes = votes;
+           opts.num_witness = std::min((uint16_t)account_names.size(),  _remote_db->get_global_properties().parameters.maximum_witness_count);
+           opts.num_committee = std::min((uint16_t)account_names.size(), _remote_db->get_global_properties().parameters.maximum_committee_count);
+
+           account_update_operation op;
+           op.account = voting_account_object.id;
+           op.new_options = opts;
+
+           signed_transaction tx;
+           tx.operations.push_back(op);
+           if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+               auto fee_asset_obj = find_asset(asset_id_type(1));
+               set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+           } else {
+               set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+           }
+           tx.validate();
+           return sign_transaction(tx, broadcast);
+       } FC_CAPTURE_AND_RETHROW((voting_account)(account_names)(broadcast))}
+
        signed_transaction vote_for_committee_member(string voting_account,
                                             string committee_member,
                                             bool approve,
@@ -4816,6 +4853,11 @@
                                                      bool broadcast /* = false */)
     {
        return my->vote_for_committee_member(voting_account, witness, approve, broadcast);
+    }
+
+    signed_transaction wallet_api::vote_for_trust_nodes(string voting_account, vector<string> account_names, bool broadcast)
+    {
+        return my->vote_for_trust_nodes(voting_account, account_names, broadcast);
     }
 
     signed_transaction wallet_api::vote_for_witness(string voting_account,
