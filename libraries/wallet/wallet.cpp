@@ -949,7 +949,7 @@
 
        get_table_rows_result get_table_rows(string contract, string table, uint64_t start, uint64_t limit)
        { try {
-             GRAPHENE_ASSERT(start>=0 && limit > 0, table_not_found_exception, "invalid parameters");
+             FC_ASSERT(start>=0 && limit > 0, "start must >=0 and limit must > 0");
              account_object contract_obj = get_account(contract);
 
              const auto& tables = contract_obj.abi.tables;
