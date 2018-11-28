@@ -1084,17 +1084,6 @@ class wallet_api
        *
        * @param contract the name of the contract to query
        * @param table the table of the contract to query
-       * @param lower the start primary key of the table primary index
-       * @param upper the end primary key of the table primary index
-       * @param limit the max item to return
-       * @returns the table items stored in the blockchain
-       */
-      variant get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit) const;
-
-      /** Returns table infos about the given contract.
-       *
-       * @param contract the name of the contract to query
-       * @param table the table of the contract to query
        * @param start the start primary key of the table primary index
        * @param limit the max item to return
        * @returns the table rows stored in the blockchain
@@ -2203,7 +2192,6 @@ FC_API( graphene::wallet::wallet_api,
         (update_contract)
         (call_contract)
         (get_contract_tables)
-        (get_table_objects)
         (get_table_rows)
         (register_account2)
         (upgrade_account)
