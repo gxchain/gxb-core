@@ -1084,12 +1084,11 @@ class wallet_api
        *
        * @param contract the name of the contract to query
        * @param table the table of the contract to query
-       * @param lower the start primary key of the table primary index
-       * @param upper the end primary key of the table primary index
+       * @param start the start primary key of the table primary index
        * @param limit the max item to return
-       * @returns the table names/types stored in the blockchain
+       * @returns the table rows stored in the blockchain
        */
-      variant get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit) const;
+      get_table_rows_result get_table_rows(string contract, string table, uint64_t start, uint64_t limit) const;
 
       /** Registers a third party's account on the blockckain.
        *
@@ -2193,7 +2192,7 @@ FC_API( graphene::wallet::wallet_api,
         (update_contract)
         (call_contract)
         (get_contract_tables)
-        (get_table_objects)
+        (get_table_rows)
         (register_account2)
         (upgrade_account)
         (create_account_with_brain_key)
