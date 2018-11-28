@@ -947,9 +947,9 @@
           _builder_transactions.erase(handle);
        }
 
-       variants get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit)
+       get_table_rows_result get_table_rows(string contract, string table, uint64_t start, uint64_t limit)
        { try {
-             GRAPHENE_ASSERT(lower < upper && limit > 0, table_not_found_exception, "invalid parameters");
+             FC_ASSERT(start>=0 && limit > 0, "start must >=0 and limit must > 0");
              account_object contract_obj = get_account(contract);
 
              const auto& tables = contract_obj.abi.tables;
@@ -957,11 +957,11 @@
                      [&](const table_def& t) { return t.name == table; });
 
              if (iter != tables.end()) {
-                 return _remote_db->get_table_objects(contract_obj.id.number, contract_obj.id.number, name(table), lower, upper, limit);
+                 return _remote_db->get_table_rows(contract, table, start, limit);
              } else {
                  GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
              }
-             return variants();
+             return get_table_rows_result();
        } FC_CAPTURE_AND_RETHROW((contract)(table)) }
 
        variant get_contract_tables(string contract)
@@ -2514,6 +2514,43 @@
 
              return sign_transaction(tx, broadcast);
        } FC_CAPTURE_AND_RETHROW((account)(type)(weight_threshold)(account_auths)(account_weights)(fee_symbol)(broadcast)) }
+
+       signed_transaction vote_for_trust_nodes(string voting_account, vector<string> account_names, bool broadcast)
+       { try {
+           account_object voting_account_object = get_account(voting_account);
+
+           // collect votes
+           flat_set<vote_id_type> votes;
+           for (auto& account_name : account_names) {
+               account_id_type account_id = get_account_id(account_name);
+               fc::optional<committee_member_object> committee_member_obj = _remote_db->get_committee_member_by_account(account_id);
+               fc::optional<witness_object> witness_obj = _remote_db->get_witness_by_account(account_id);
+               FC_ASSERT(witness_obj.valid(), "${a} not a witness", ("a", account_name));
+               FC_ASSERT(committee_member_obj.valid(), "${a} not a committee_member", ("a", account_name));
+
+             votes.insert(witness_obj->vote_id);
+             votes.insert(committee_member_obj->vote_id);
+           }
+           account_options opts = voting_account_object.options;
+           opts.votes = votes;
+           opts.num_witness = std::min((uint16_t)account_names.size(),  _remote_db->get_global_properties().parameters.maximum_witness_count);
+           opts.num_committee = std::min((uint16_t)account_names.size(), _remote_db->get_global_properties().parameters.maximum_committee_count);
+
+           account_update_operation op;
+           op.account = voting_account_object.id;
+           op.new_options = opts;
+
+           signed_transaction tx;
+           tx.operations.push_back(op);
+           if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+               auto fee_asset_obj = find_asset(asset_id_type(1));
+               set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+           } else {
+               set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+           }
+           tx.validate();
+           return sign_transaction(tx, broadcast);
+       } FC_CAPTURE_AND_RETHROW((voting_account)(account_names)(broadcast))}
 
        signed_transaction vote_for_committee_member(string voting_account,
                                             string committee_member,
@@ -4625,9 +4662,9 @@
         return my->get_contract_tables(contract);
     }
 
-    variant wallet_api::get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit) const
+    get_table_rows_result wallet_api::get_table_rows(string contract, string table, uint64_t start, uint64_t limit) const
     {
-        return my->get_table_objects(contract, table, lower, upper, limit);
+        return my->get_table_rows(contract, table, start, limit);
     }
 
     signed_transaction wallet_api::register_account(string name,
@@ -4816,6 +4853,11 @@
                                                      bool broadcast /* = false */)
     {
        return my->vote_for_committee_member(voting_account, witness, approve, broadcast);
+    }
+
+    signed_transaction wallet_api::vote_for_trust_nodes(string voting_account, vector<string> account_names, bool broadcast)
+    {
+        return my->vote_for_trust_nodes(voting_account, account_names, broadcast);
     }
 
     signed_transaction wallet_api::vote_for_witness(string voting_account,

@@ -13,6 +13,7 @@
 #include <fc/crypto/sha1.hpp>
 #include <fc/crypto/hex.hpp>
 #include <fc/io/raw.hpp>
+#include <fc/smart_ref_impl.hpp>
 
 #include <softfloat.hpp>
 #include <compiler_builtins.hpp>
