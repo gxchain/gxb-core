@@ -964,6 +964,40 @@
              return variants();
        } FC_CAPTURE_AND_RETHROW((contract)(table)) }
 
+       get_table_rows_result get_table_rows(string contract, string table, uint64_t start, uint64_t limit)
+       { try {
+             GRAPHENE_ASSERT(start>=0 && limit > 0, table_not_found_exception, "invalid parameters");
+             account_object contract_obj = get_account(contract);
+
+             const auto& tables = contract_obj.abi.tables;
+             auto iter = std::find_if(tables.begin(), tables.end(),
+                     [&](const table_def& t) { return t.name == table; });
+
+             if (iter != tables.end()) {
+                 return _remote_db->get_table_rows(contract, table, start, limit);
+             } else {
+                 GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
+             }
+             return get_table_rows_result();
+       } FC_CAPTURE_AND_RETHROW((contract)(table)) }
+
+       variants get_table_rows(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit)
+       { try {
+             GRAPHENE_ASSERT(lower < upper && limit > 0, table_not_found_exception, "invalid parameters");
+             account_object contract_obj = get_account(contract);
+
+             const auto& tables = contract_obj.abi.tables;
+             auto iter = std::find_if(tables.begin(), tables.end(),
+                     [&](const table_def& t) { return t.name == table; });
+
+             if (iter != tables.end()) {
+                 return _remote_db->get_table_objects(contract_obj.id.number, contract_obj.id.number, name(table), lower, upper, limit);
+             } else {
+                 GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
+             }
+             return variants();
+       } FC_CAPTURE_AND_RETHROW((contract)(table)) }
+
        variant get_contract_tables(string contract)
        { try {
              account_object contract_obj = get_account(contract);
@@ -4665,6 +4699,11 @@
     variant wallet_api::get_table_objects(string contract, string table, uint64_t lower, uint64_t upper, uint64_t limit) const
     {
         return my->get_table_objects(contract, table, lower, upper, limit);
+    }
+
+    get_table_rows_result wallet_api::get_table_rows(string contract, string table, uint64_t start, uint64_t limit) const
+    {
+        return my->get_table_rows(contract, table, start, limit);
     }
 
     signed_transaction wallet_api::register_account(string name,
