@@ -21,7 +21,6 @@
 
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/db/generic_index.hpp>
-#include <graphene/chain/protocol/transaction.hpp>
 
 namespace graphene
 {

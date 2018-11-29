@@ -180,6 +180,11 @@ void database_fixture::verify_asset_supplies( const database& db )
       total_balances[core_asset_id] += dasset_obj.fee_pool;
       total_balances[asset_obj.id] += dasset_obj.confidential_supply.value;
    }
+
+   for( const trust_node_pledge_object &wlbo : db.get_index_type<trust_node_pledge_index>().indices() ) {
+	   total_balances[wlbo.amount.asset_id] +=wlbo.amount.amount;
+   }
+
    for( const vesting_balance_object& vbo : db.get_index_type< vesting_balance_index >().indices() )
       total_balances[ vbo.balance.asset_id ] += vbo.balance.amount;
 
@@ -465,37 +470,47 @@ const asset_object& database_fixture::create_prediction_market(
 
 const asset_object& database_fixture::create_user_issued_asset( const string& name )
 {
+   auto dyn_props = db.get_dynamic_global_properties();
    asset_create_operation creator;
    creator.issuer = account_id_type();
    creator.fee = asset();
    creator.symbol = name;
    creator.common_options.max_supply = 0;
    creator.precision = 2;
-   creator.common_options.core_exchange_rate = price({asset(1,asset_id_type(1)),asset(1)});
+   creator.common_options.core_exchange_rate = price({asset(1),asset(1,asset_id_type(1))});
+   if (dyn_props.time > HARDFORK_1008_TIME) {
+	   creator.common_options.core_exchange_rate = price({asset(1,asset_id_type(1)),asset(1,asset_id_type(2))});
+   }
    creator.common_options.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
    creator.common_options.flags = charge_market_fee;
    creator.common_options.issuer_permissions = charge_market_fee;
    trx.operations.push_back(std::move(creator));
+   update_operation_fee(trx);
    trx.validate();
    processed_transaction ptx = db.push_transaction(trx, ~0);
    trx.operations.clear();
    return db.get<asset_object>(ptx.operation_results[0].get<object_id_type>());
 }
 
-const asset_object& database_fixture::create_user_issued_asset( const string& name, const account_object& issuer, uint16_t flags )
+const asset_object& database_fixture::create_user_issued_asset( const string& name, const account_object& issuer, uint16_t flags, uint8_t precision )
 {
+   auto dyn_props = db.get_dynamic_global_properties();
    asset_create_operation creator;
    creator.issuer = issuer.id;
    creator.fee = asset();
    creator.symbol = name;
    creator.common_options.max_supply = 0;
-   creator.precision = 2;
-   creator.common_options.core_exchange_rate = price({asset(1,asset_id_type(1)),asset(1)});
+   creator.precision = precision;
+   creator.common_options.core_exchange_rate = price({asset(1),asset(1,asset_id_type(1))});
+   if (dyn_props.time > HARDFORK_1008_TIME) {
+	   creator.common_options.core_exchange_rate = price({asset(1,asset_id_type(1)),asset(1,asset_id_type(2))});
+   }
    creator.common_options.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
    creator.common_options.flags = flags;
    creator.common_options.issuer_permissions = flags;
    trx.operations.clear();
    trx.operations.push_back(std::move(creator));
+   update_operation_fee(trx);
    set_expiration( db, trx );
    trx.validate();
    processed_transaction ptx = db.push_transaction(trx, ~0);
@@ -511,8 +526,28 @@ void database_fixture::issue_uia( const account_object& recipient, asset amount 
    op.asset_to_issue = amount;
    op.issue_to_account = recipient.id;
    trx.operations.push_back(op);
+   update_operation_fee(trx);
    db.push_transaction( trx, ~0 );
    trx.operations.clear();
+}
+
+void database_fixture::update_operation_fee(signed_transaction& tx)
+{
+	fc::optional<asset_object> fee_asset =fc::optional<asset_object>();
+    auto core_asset_id = asset_id_type();
+    auto dyn_props = db.get_dynamic_global_properties();
+    if (dyn_props.time > HARDFORK_1008_TIME) {
+        core_asset_id = asset_id_type(1);
+        fee_asset = core_asset_id(db);
+    }
+    for( auto& op : tx.operations )  {
+        if (fee_asset.valid()) {
+        	db.get_global_properties().parameters.current_fees->set_fee(op, fee_asset->options.core_exchange_rate, core_asset_id);
+        }
+        else {
+        	db.get_global_properties().parameters.current_fees->set_fee(op, price::unit_price(core_asset_id), core_asset_id);
+        }
+    }
 }
 
 void database_fixture::issue_uia( account_id_type recipient_id, asset amount )
@@ -621,6 +656,7 @@ const committee_member_object& database_fixture::create_committee_member( const 
    committee_member_create_operation op;
    op.committee_member_account = owner.id;
    trx.operations.push_back(op);
+   update_operation_fee(trx);
    trx.validate();
    processed_transaction ptx = db.push_transaction(trx, ~0);
    trx.operations.clear();
@@ -639,10 +675,39 @@ const witness_object& database_fixture::create_witness( const account_object& ow
    op.witness_account = owner.id;
    op.block_signing_key = signing_private_key.get_public_key();
    trx.operations.push_back(op);
+   update_operation_fee(trx);
    trx.validate();
    processed_transaction ptx = db.push_transaction(trx, ~0);
    trx.clear();
    return db.get<witness_object>(ptx.operation_results[0].get<object_id_type>());
+} FC_CAPTURE_AND_RETHROW() }
+
+void database_fixture::update_witness(const witness_id_type &witness_id, const account_id_type &account_id, const fc::ecc::private_key private_key, const string &new_url)
+{ try {
+   witness_update_operation witness_update_op;
+   witness_update_op.witness = witness_id;
+   witness_update_op.witness_account = account_id;
+   witness_update_op.new_url = new_url;
+   trx.operations.push_back(witness_update_op);
+   update_operation_fee(trx);
+   set_expiration(db, trx);
+   sign(trx, private_key);
+   PUSH_TX(db, trx);
+   trx.clear();
+} FC_CAPTURE_AND_RETHROW() }
+
+void database_fixture::update_committee(const committee_member_id_type &committee_id, const account_id_type &account_id, const fc::ecc::private_key private_key, const string &new_url)
+{ try {
+   committee_member_update_operation committee_op;
+   committee_op.committee_member = committee_id;
+   committee_op.committee_member_account = account_id;
+   committee_op.new_url = new_url;
+   trx.operations.push_back(committee_op);
+   update_operation_fee(trx);
+   set_expiration(db, trx);
+   sign(trx, private_key);
+   PUSH_TX(db, trx);
+   trx.clear();
 } FC_CAPTURE_AND_RETHROW() }
 
 uint64_t database_fixture::fund(

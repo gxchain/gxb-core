@@ -34,7 +34,13 @@ struct order
    double                     base;
 };
 
+struct get_table_rows_result {
+   vector<fc::variant> rows;
+   bool                more = false;
+};
+
 }} //
 
 FC_REFLECT( graphene::app::order, (price)(quote)(base) );
+FC_REFLECT( graphene::app::get_table_rows_result, (rows)(more) );
 
