@@ -27,6 +27,7 @@ APIs are separated into two categories, namely
 
  1. [Build on Ubuntu](https://github.com/gxchain/gxb-core/wiki/BUILD_UBUNTU)
  2. [Build on OS X](https://github.com/gxchain/gxb-core/wiki/BUILD_OS_X)
+ 3. [Build on CentOS7](https://github.com/gxchain/gxb-core/wiki/BUILD_CENTOS7)
 
 #### Running
 After building, the witness node can be launched with:

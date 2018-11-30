@@ -1056,6 +1056,22 @@ class wallet_api
                                      string arg,
                                      string fee_asset_symbol,
                                      bool broadcast = false);
+    
+    /** Update contract
+     *
+     * call contract
+     * @param contract contract
+     * @param new_owner new_owner
+     * @param contract_dir contract_dir
+     * @param fee_asset_symbol fee_asset_symbol
+     * @param broadcast broadcast
+     * @returns signed_transaction
+     */
+    signed_transaction update_contract(string contract,
+                                     string new_owner,
+                                     string contract_dir,
+                                     string fee_asset_symbol,
+                                     bool broadcast = false);
 
       /** Returns table infos about the given contract.
        *
@@ -1068,9 +1084,11 @@ class wallet_api
        *
        * @param contract the name of the contract to query
        * @param table the table of the contract to query
-       * @returns the table names/types stored in the blockchain
+       * @param start the start primary key of the table primary index
+       * @param limit the max item to return
+       * @returns the table rows stored in the blockchain
        */
-      variant get_table_objects(string contract, string table) const;
+      get_table_rows_result get_table_rows(string contract, string table, uint64_t start, uint64_t limit) const;
 
       /** Registers a third party's account on the blockckain.
        *
@@ -1353,7 +1371,10 @@ class wallet_api
           /**
        *  This method is used to convert a JSON transaction to its transactin ID.
        */
-      transaction_id_type get_transaction_id( const signed_transaction& trx )const { return trx.id(); }
+      transaction_id_type get_transaction_id(const signed_transaction &trx) const
+      {
+          return trx.id();
+      }
 
       /** Sign a memo message.
        *
@@ -1659,6 +1680,17 @@ class wallet_api
                                         string fee_asset_symbol,
                                         bool broadcast = false);
 
+      /**
+       * Withdraw trust_node pledge, this opration will make the vote for this witness invalid.
+       *
+       * @param account_name The name of the witness's owner account.  Also accepts the ID of the owner account or the ID of the witness.
+       * @param fee_asset_symbol the symbol or id of the fee.
+       * @param broadcast true if you wish to broadcast the transaction.
+       */
+      signed_transaction withdraw_trust_node_pledge(string account_name,
+                                                       string fee_asset_symbol,
+                                                       bool broadcast = false);
+
 
       /**
        * Get information about a vesting balance object.
@@ -1682,6 +1714,15 @@ class wallet_api
          string asset_symbol,
          string fee_asset_symbol,
          bool broadcast = false);
+
+
+      /** Vote for a list of trust_nodes
+       * @param voting_account the name or id of the account who is voting with their shares
+       * @param account_names the name or id of the trust_nodes' owner account
+       * @param broadcast true if you wish to broadcast the transaction
+       * @return the signed transaction changing your vote for the given trust_nodes
+       */
+      signed_transaction vote_for_trust_nodes(string voting_account, vector<string> account_names, bool broadcast);
 
       /** Vote for a given committee_member.
        *
@@ -2148,9 +2189,10 @@ FC_API( graphene::wallet::wallet_api,
         (derive_owner_keys_from_brain_key)
         (register_account)
         (deploy_contract)
+        (update_contract)
         (call_contract)
         (get_contract_tables)
-        (get_table_objects)
+        (get_table_rows)
         (register_account2)
         (upgrade_account)
         (create_account_with_brain_key)
@@ -2172,8 +2214,10 @@ FC_API( graphene::wallet::wallet_api,
         (list_committee_members)
         (create_witness)
         (update_witness)
+		(withdraw_trust_node_pledge)
         (get_vesting_balances)
         (withdraw_vesting)
+        (vote_for_trust_nodes)
         (vote_for_committee_member)
         (update_account_multisig)
         (update_account_multisig_keys)

@@ -55,18 +55,16 @@
 #define HARDFORK_1008_TIME (fc::time_point_sec( 1936210000 )) // for private-net
 #endif
 
-// #357 Disallow publishing certain malformed price feeds
-#ifndef HARDFORK_357_TIME
-#define HARDFORK_357_TIME (fc::time_point_sec( 1444416300 ))
+// enable smart contract update
+#ifndef HARDFORK_1009_TIME
+#define HARDFORK_1009_TIME (fc::time_point_sec( 1541030400 )) // for test, 2018-11-01T00:00:00
 #endif
-// #359 Allow digits in asset name
-#ifndef HARDFORK_359_TIME
-#define HARDFORK_359_TIME (fc::time_point_sec( 1444416300 ))
+
+// enable witness guaranty
+#ifndef HARDFORK_1129_TIME
+#define HARDFORK_1129_TIME (fc::time_point_sec( 1542099600 )) // for test, 2018-11-13T09:00:00(UTC)
 #endif
-// #385 October 23 enforce PARENT.CHILD and allow short names
-#ifndef HARDFORK_385_TIME
-#define HARDFORK_385_TIME (fc::time_point_sec( 1445558400 ))
-#endif
+
 // #413 Add operation to claim asset fees
 #ifndef HARDFORK_413_TIME
 #define HARDFORK_413_TIME (fc::time_point_sec( 1446652800 ))
@@ -119,20 +117,8 @@
 #ifndef HARDFORK_572_TIME
 #define HARDFORK_572_TIME (fc::time_point_sec( 1456250400 ))
 #endif
-// #607 Disable negative voting on workers
-#ifndef HARDFORK_607_TIME
-#define HARDFORK_607_TIME (fc::time_point_sec( 1458752400 ))
-#endif
-// #613 Deprecate annual membership
-#ifndef HARDFORK_613_TIME
-#define HARDFORK_613_TIME (fc::time_point_sec( 1458752400 ))
-#endif
 // #615 Fix price feed expiration check, so websocket server will never spam too much data
 #ifndef HARDFORK_615_TIME
 #define HARDFORK_615_TIME (fc::time_point_sec( 1458752400 ))
-// #1103 the time point before you can renaming asset symbol
-#ifndef HARDFORK_1103_TIME
-#define HARDFORK_1103_TIME (fc::time_point_sec( 1541203200 ))
-#endif
 
 #endif

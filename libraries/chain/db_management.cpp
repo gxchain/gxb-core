@@ -36,7 +36,7 @@
 namespace graphene { namespace chain {
 
 database::database()
-    : wasmif(graphene::chain::wasm_interface::vm_type::binaryen)
+    : wasmif(graphene::chain::wasm_interface::vm_type::wabt)
 {
    initialize_indexes();
    initialize_evaluators();
@@ -57,13 +57,13 @@ void database::reindex(fc::path data_dir, bool fast_replay)
    }
    if( last_block->block_num() <= head_block_num()) return;
 
-   ilog( "reindexing blockchain" );
+   std::cerr << "reindexing blockchain" << std::endl;
    auto start = fc::time_point::now();
    const auto last_block_num = last_block->block_num();
    uint32_t flush_point = last_block_num < 10000 ? 0 : last_block_num - 10000;
    uint32_t undo_point = last_block_num < 50 ? 0 : last_block_num - 50;
 
-   ilog( "Replaying blocks, starting at ${next}...", ("next",head_block_num() + 1) );
+   std::cerr << "Replaying blocks, starting at " << head_block_num() + 1 << std::endl;
    if( head_block_num() >= undo_point )
    {
       if( head_block_num() > 0 )
@@ -71,6 +71,19 @@ void database::reindex(fc::path data_dir, bool fast_replay)
    }
    else
       _undo_db.disable();
+
+   uint32_t skip = skip_witness_signature |
+                   skip_block_size_check |
+                   skip_merkle_check |
+                   skip_transaction_signatures |
+                   skip_transaction_dupe_check |
+                   skip_tapos_check |
+                   skip_witness_schedule_check |
+                   skip_authority_check;
+
+   size_t total_processed_block_size;
+   size_t total_block_size = _block_id_to_block.total_block_size();
+   const auto& gpo = get_global_properties();
    for( uint32_t i = head_block_num() + 1; i <= last_block_num; ++i )
    {
       if (i % 1000 == 0)
@@ -79,18 +92,24 @@ void database::reindex(fc::path data_dir, bool fast_replay)
           if (!fast_replay) {
               fc::usleep(fc::milliseconds(100));
           }
-          std::cerr << "   " << double(i * 100) / last_block_num << "%   " << i << " of " << last_block_num << "   \n";
+         total_processed_block_size = _block_id_to_block.blocks_current_position();
+
+         std::cerr << "[by size: " << double(total_processed_block_size) / total_block_size * 100 << "% " << total_processed_block_size << " of "  << total_block_size 
+             << "] [by num: " << double(i*100)/last_block_num << "% " << i << " of " << last_block_num
+             << "]" << std::endl;
       }
       if( i == flush_point )
       {
-         ilog( "Writing database to disk at block ${i}", ("i",i) );
+         std::cerr << "Writing database to disk at block " << i << std::endl;
          flush();
-         ilog( "Done" );
+         std::cerr << "Done" << std::endl;
       }
+      if( head_block_time() >= last_block->timestamp - gpo.parameters.maximum_time_until_expiration )
+         skip &= ~skip_transaction_dupe_check;
       fc::optional< signed_block > block = _block_id_to_block.fetch_by_number(i);
       if( !block.valid() )
       {
-         wlog( "Reindexing terminated due to gap:  Block ${i} does not exist!", ("i", i) );
+         std::cerr << "Reindexing terminated due to gap:  Block " << i << " does not exist!";
          uint32_t dropped_count = 0;
          while( true )
          {
@@ -104,38 +123,27 @@ void database::reindex(fc::path data_dir, bool fast_replay)
             _block_id_to_block.remove( *last_id );
             dropped_count++;
          }
-         wlog( "Dropped ${n} blocks from after the gap", ("n", dropped_count) );
+         std::cerr << "Dropped " << dropped_count << " blocks from after the gap";
          break;
       }
       if( i < undo_point )
-         apply_block(*block, skip_witness_signature |
-                             skip_transaction_signatures |
-                             skip_transaction_dupe_check |
-                             skip_tapos_check |
-                             skip_witness_schedule_check |
-                             skip_authority_check);
+         apply_block( *block, skip );
       else
       {
          _undo_db.enable();
-         push_block(*block, skip_witness_signature |
-                            skip_transaction_signatures |
-                            skip_transaction_dupe_check |
-                            skip_tapos_check |
-                            skip_witness_schedule_check |
-                            skip_authority_check);
+         push_block( *block, skip );
       }
    }
    _undo_db.enable();
    auto end = fc::time_point::now();
-   ilog( "Done reindexing, elapsed time: ${t} sec", ("t",double((end-start).count())/1000000.0 ) );
+   std::cerr << "Done reindexing, elapsed time: " << double((end-start).count())/1000000.0 << " sec";
 } FC_CAPTURE_AND_RETHROW( (data_dir) ) }
 
 void database::wipe(const fc::path& data_dir, bool include_blocks)
 {
-   ilog("Wiping database, data_dir ${data_dir} ${include_blocks}", ("data_dir", data_dir)("include_blocks", include_blocks));
-   close();
+   std::cerr << "Wiping database, data_dir " << data_dir.generic_string() << " " << include_blocks << std::endl;
    if (_opened) {
-       close();
+     close();
    }
    object_database::wipe(data_dir);
    if( include_blocks )
@@ -160,7 +168,7 @@ void database::open(
          wipe_object_db = ( version_string != db_version );
       }
       if( wipe_object_db ) {
-          ilog("Wiping object_database due to missing or wrong version");
+          std::cerr << "Wiping object_database due to missing or wrong version" << std::endl;
           object_database::wipe( data_dir );
           std::ofstream version_file( (data_dir / "db_version").generic_string().c_str(),
                                       std::ios::out | std::ios::binary | std::ios::trunc );

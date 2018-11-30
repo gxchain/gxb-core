@@ -97,8 +97,8 @@ private:
    map<name,type_name>        tables;
    map<uint64_t, string>      error_messages;
 
-   map<type_name, pair<unpack_function, pack_function>> built_in_types;
-   void configure_built_in_types();
+   static map<type_name, pair<unpack_function, pack_function>> built_in_types;
+   static void configure_built_in_types();
 
    fc::variant _binary_to_variant(const type_name& type, const bytes& binary,
                                   size_t recursion_depth, const fc::time_point& deadline, const fc::microseconds& max_serialization_time)const;

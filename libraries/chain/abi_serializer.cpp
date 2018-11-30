@@ -48,6 +48,8 @@ auto pack_unpack()
         });
 }
 
+map<type_name, pair<graphene::chain::abi_serializer::unpack_function, graphene::chain::abi_serializer::pack_function>> abi_serializer::built_in_types;
+
 abi_serializer::abi_serializer(const abi_def &abi, const fc::microseconds &max_serialization_time)
 {
     configure_built_in_types();
@@ -56,7 +58,8 @@ abi_serializer::abi_serializer(const abi_def &abi, const fc::microseconds &max_s
 
 void abi_serializer::configure_built_in_types()
 {
-
+    if(built_in_types.size() > 0) return;
+    
     built_in_types.emplace("bool", pack_unpack<uint8_t>());
     built_in_types.emplace("int8", pack_unpack<int8_t>());
     built_in_types.emplace("uint8", pack_unpack<uint8_t>());

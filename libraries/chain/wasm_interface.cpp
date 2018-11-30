@@ -7,11 +7,13 @@
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/asset_object.hpp>
 
+
 #include <fc/exception/exception.hpp>
 #include <fc/crypto/sha256.hpp>
 #include <fc/crypto/sha1.hpp>
 #include <fc/crypto/hex.hpp>
 #include <fc/io/raw.hpp>
+#include <fc/smart_ref_impl.hpp>
 
 #include <softfloat.hpp>
 #include <compiler_builtins.hpp>
@@ -177,6 +179,20 @@ class global_api : public context_aware_api
         return context.trx_context.get_trx_origin();
     }
 
+    int64_t get_account_name_by_id(array_ptr<char> data, size_t buffer_size, int64_t account_id)
+    {
+        FC_ASSERT(account_id >= 0, "account_id ${a} must > 0", ("a", account_id));
+        auto &d = context.db();
+        auto obj = d.find(account_id_type(account_id));
+        if (obj && obj->name.size() <= buffer_size) {
+            string account_name = obj->name;
+            memcpy(data, account_name.c_str(), account_name.size());
+            return 0;
+        }
+        // account not exist, return -1
+        return -1;
+    }
+
     int64_t get_account_id(array_ptr<char> data, size_t datalen)
     {
         std::string account_name(data, datalen);
@@ -203,6 +219,19 @@ class crypto_api : public context_aware_api {
    public:
       explicit crypto_api( apply_context& ctx )
       :context_aware_api(ctx,true){}
+
+      void assert_recover_key(const fc::sha256 &digest,
+                              const fc::ecc::compact_signature &sig,
+                              array_ptr<char> pub, size_t publen)
+      {
+
+          public_key_type pk;
+          datastream<const char *> pubds(pub, publen);
+          fc::raw::unpack(pubds, pk);
+
+          auto check = public_key_type(fc::ecc::public_key(sig, digest, true));
+          FC_ASSERT(check == pk, "Error expected key different than recovered key");
+      }
 
       template<class Encoder> auto encode(char* data, size_t datalen) {
          Encoder e;
@@ -1054,8 +1083,8 @@ class context_free_transaction_api : public context_aware_api {
       /*
       int read_transaction(array_ptr<char> data, size_t buffer_size)
       {
-          auto cur_trx = context.db().get_cur_trx();
-          FC_ASSERT(nullptr != cur_trx, "cur_trx is null");
+          const transaction* cur_trx = context.db().get_cur_trx();
+          FC_ASSERT(nullptr != cur_trx, "current transaction not set");
           bytes trx = fc::raw::pack(*cur_trx);
 
           auto s = trx.size();
@@ -1068,8 +1097,9 @@ class context_free_transaction_api : public context_aware_api {
       }
 
       int transaction_size() {
-          auto tmp_trx = context.db().get_cur_trx();
-          return fc::raw::pack(*tmp_trx).size();
+          const transaction* trx = context.db().get_cur_trx();
+          FC_ASSERT(nullptr != trx, "current transaction not set");
+          return fc::raw::pack(*trx).size();
       }
       */
 
@@ -1476,13 +1506,16 @@ class asset_api : public context_aware_api
         : context_aware_api(ctx, true)
     {}
 
-    void withdraw_asset(uint64_t from, uint64_t to, uint64_t asset_id, int64_t amount)
+    void withdraw_asset(int64_t from, int64_t to, int64_t asset_id, int64_t amount)
     {
         FC_ASSERT(from == context.receiver, "can only withdraw from contract ${c}", ("c", context.receiver));
         FC_ASSERT(from != to, "cannot transfer to self");
-        FC_ASSERT(amount> 0, "amount must > 0");
+        FC_ASSERT(amount > 0, "amount ${a} must > 0", ("a", amount));
+        FC_ASSERT(from >= 0, "account id ${a} from must  > 0", ("a", from));
+        FC_ASSERT(to >= 0, "account id ${a} to must > 0", ("a", to));
+        FC_ASSERT(asset_id >= 0, "asset id ${a} must > 0", ("a", asset_id));
 
-        dlog("${f} -> ${t}, amount ${a}, asset_id ${i}", ("f", from)("t", to)("a", amount)("i", asset_id));
+        // dlog("${f} -> ${t}, amount ${a}, asset_id ${i}", ("f", from)("t", to)("a", amount)("i", asset_id));
         auto &d = context.db();
         asset a{amount, asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID)};
         // adjust balance
@@ -1493,6 +1526,9 @@ class asset_api : public context_aware_api
     // get account balance by asset_id
     int64_t get_balance(int64_t account, int64_t asset_id)
     {
+        FC_ASSERT(account >= 0, "account id must > 0");
+        FC_ASSERT(asset_id >= 0, "asset id to must > 0");
+
         auto &d = context.db();
         auto account_id = account_id_type(account & GRAPHENE_DB_MAX_INSTANCE_ID);
         auto aid = asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID);
@@ -1551,15 +1587,17 @@ REGISTER_INTRINSICS(context_free_system_api,
 REGISTER_INTRINSICS(global_api,
 (get_head_block_num,    int64_t()          )
 (get_head_block_id,     void(int)          )
-(get_block_id_for_num,     void(int, int)          )
+(get_block_id_for_num,  void(int, int)     )
 (get_head_block_time,   int64_t()          )
 (get_trx_sender,        int64_t()          )
 (get_trx_origin,        int64_t()          )
+(get_account_name_by_id,int64_t(int, int, int64_t))
 (get_account_id,        int64_t(int, int)  )
-(get_asset_id,          int64_t(int, int)       )
+(get_asset_id,          int64_t(int, int)  )
 );
 
 REGISTER_INTRINSICS(crypto_api,
+(assert_recover_key,     void(int, int, int, int)       )
 (assert_sha256,          void(int, int, int)           )
 (assert_sha1,            void(int, int, int)           )
 (assert_sha512,          void(int, int, int)           )
@@ -1742,6 +1780,8 @@ std::istream& operator>>(std::istream& in, wasm_interface::vm_type& runtime) {
       runtime = graphene::chain::wasm_interface::vm_type::wavm;
    else if (s == "binaryen")
       runtime = graphene::chain::wasm_interface::vm_type::binaryen;
+   else if (s == "wabt")
+      runtime = graphene::chain::wasm_interface::vm_type::wabt;
    else
       in.setstate(std::ios_base::failbit);
    return in;

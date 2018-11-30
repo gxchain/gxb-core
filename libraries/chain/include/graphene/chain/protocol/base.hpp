@@ -114,7 +114,8 @@ namespace graphene { namespace chain {
        pocs_threshold_league_data_product_t,
        lock_balance_params_t, // 6
        vm_cpu_limit_t, // 7
-       asset_symbol_t
+       asset_symbol_t,
+	   trust_node_pledge_t
        > future_extensions;
 
    /**
