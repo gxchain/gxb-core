@@ -1283,6 +1283,12 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
        return result;
    }
 
+
+   transaction trx;
+   for( operation& op : _ops )
+	   trx.operations.push_back(op);
+   _db.set_cur_trx(&trx);
+
    for( operation& op : _ops )
    {
        if (op.which() == operation::tag<contract_call_operation>::value) {
@@ -1327,6 +1333,8 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
            result.push_back(helper.set_op_fees(op));
       }
    }
+
+   _db.set_cur_trx(nullptr);
    return result;
 }
 
