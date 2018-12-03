@@ -100,8 +100,14 @@ void database::update_active_witnesses()
    }
 
    const chain_property_object& cpo = get_chain_properties();
-   auto wits = sort_votable_objects<witness_index>(std::max(witness_count*2+1, (size_t)cpo.immutable_parameters.min_witness_count));
-   // dlog("witness_count_histogram size ${a}, witness_count*2+1 ${b}, active witness count ${c}", ("a", _witness_count_histogram_buffer.size())("b", witness_count*2+1)("c", wits.size()));
+   int min_witness_count = cpo.immutable_parameters.min_witness_count;
+   if (head_block_time() > HARDFORK_1010_TIME) {
+       // set min witness num as 21
+       min_witness_count = std::max(GRAPHENE_MIN_WITNESS_COUNT, min_witness_count);
+   }
+   uint16_t num_witness = std::max(witness_count*2+1, (size_t)min_witness_count);
+   auto wits = sort_votable_objects<witness_index>(num_witness);
+   dlog("witness_count_histogram size ${a}, witness_count*2+1 ${b}, min_witness_count ${m}, active witness count ${c}", ("a", _witness_count_histogram_buffer.size())("b", witness_count*2+1)("m", min_witness_count)("c", wits.size()));
 
    const global_property_object& gpo = get_global_properties();
 
