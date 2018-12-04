@@ -61,6 +61,11 @@
 #define HARDFORK_1009_TIME (fc::time_point_sec( 1543276800 )) // for testnet, 2018-11-27T00:00:00(UTC)
 #endif
 
+// set min witness num 21
+#ifndef HARDFORK_1010_TIME
+#define HARDFORK_1010_TIME (fc::time_point_sec( 1543852800 )) // for test, 2018-12-04T00:00:00
+#endif
+
 // enable witness guaranty
 #ifndef HARDFORK_1129_TIME
 #define HARDFORK_1129_TIME (fc::time_point_sec( 1543276800 )) // for testnet, 2018-11-27T00:00:00(UTC)
