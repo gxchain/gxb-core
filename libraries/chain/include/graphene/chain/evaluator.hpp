@@ -150,7 +150,8 @@ namespace graphene { namespace chain {
          eval->prepare_fee(op.fee_payer(), op.fee, o);
          //head_block_time later than HRADFORK_1001_TIME we use pocs caculator fee, so the fee may be less than required_fee
          if (!trx_state->skip_fee_schedule_check
-                 && (o.which() != operation::tag<pay_data_transaction_operation>::value)) {
+                 && (o.which() != operation::tag<pay_data_transaction_operation>::value)
+                 && (o.which() != operation::tag<contract_call_operation>::value)) {
             share_type required_fee = calculate_fee_for_operation(op);
             GRAPHENE_ASSERT( core_fee_paid >= required_fee,
                        insufficient_fee,

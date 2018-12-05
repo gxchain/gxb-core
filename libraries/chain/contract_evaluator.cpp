@@ -84,6 +84,13 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
             ("r", fee_from_account)("rf",ram_fee.to_uint64())("cf",cpu_fee.to_uint64())("ru",ctx.get_ram_usage())
             ("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
 
+    if (db.head_block_time() > HARDFORK_1011_TIME) {
+        // validation: trx.op.fee >= real charged fee
+        if (op.fee.amount > 0) {
+            FC_ASSERT(op.fee >= fee_from_account, "insufficient fee paid in trx, ${a} needed", ("a", db.to_pretty_string(fee_from_account)));
+        }
+    }
+
     // pay fee, core_fee_paid
     generic_evaluator::prepare_fee(op.fee_payer(), fee_from_account, op);
     generic_evaluator::convert_fee();
