@@ -1295,39 +1295,15 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
 
            auto tmp_session = _db._undo_db.start_undo_session();
            contract_call_operation &opr = op.get<contract_call_operation>();
-           transaction_context trx_context(_db, opr.fee_payer().instance, fc::microseconds(_db.get_cpu_limit().trx_cpu_limit));
-           action act{opr.contract_id, opr.method_name, opr.data};
-           apply_context ctx{_db, trx_context, act, opr.amount};
-           ctx.exec();
-           auto fee_param = contract_call_operation::fee_parameters_type();
-           const auto &p = _db.get_global_properties().parameters;
-           for (auto &param : p.current_fees->parameters) {
-               if (param.which() == operation::tag<contract_call_operation>::value) {
-                   fee_param = param.get<contract_call_operation::fee_parameters_type>();
-                   break;
-               }
-           }
-           auto ram_fee = fc::uint128(ctx.get_ram_usage() * fee_param.price_per_kbyte_ram) / 1024;
-           auto cpu_fee = fc::uint128(trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu);
-           uint64_t core_fee_paid = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
+
+           signed_transaction tx;
+           tx.operations.push_back(opr);
+           tx.set_expiration(_db.get_dynamic_global_properties().time + fc::seconds(30));
+           processed_transaction ptx = _db.push_transaction(tx, ~0);
+           auto receipt = ptx.operation_results.back().get<contract_receipt>();
 
            fc::variant r;
-           asset fee = asset(0);
-           const auto &asset_obj = _db.get<asset_object>(id);
-           if (_db.head_block_time() > HARDFORK_1008_TIME) {
-               if (asset_obj.id == asset_id_type(1)) {
-                   fee = asset(core_fee_paid, asset_id_type(1));
-               } else {
-                   fee = asset(core_fee_paid / uint64_t(asset_obj.options.core_exchange_rate.to_real()), asset_obj.id);
-               }
-           } else {
-               if (asset_obj.id == asset_id_type()) {
-                   fee = asset(core_fee_paid, asset_id_type());
-               } else {
-                   fee = asset(core_fee_paid / uint64_t(asset_obj.options.core_exchange_rate.to_real()), asset_obj.id);
-               }
-           }
-           fc::to_variant(fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
+           fc::to_variant(receipt.fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
            result.push_back(r);
        } else {
            result.push_back(helper.set_op_fees(op));
