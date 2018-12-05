@@ -53,7 +53,7 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     for (auto& param : p.current_fees->parameters) {
         if (param.which() == operation::tag<contract_call_operation>::value) {
             fee_param = param.get<contract_call_operation::fee_parameters_type>();
-            dlog("use gpo params, ${s}", ("s", fee_param));
+            // dlog("use gpo params, ${s}", ("s", fee_param));
             break;
         }
     }
@@ -144,13 +144,13 @@ void_result contract_update_evaluator::do_evaluate(const contract_update_operati
     database &d = db();
 
     FC_ASSERT(d.head_block_time() > HARDFORK_1009_TIME, "contract can not update before hardfork 1009");
-    
+
     const account_object& contract_obj = op.contract(d);
     FC_ASSERT(op.owner == contract_obj.registrar, "only owner can update contract, current owner: ${o}", ("o", contract_obj.registrar));
 
     code_hash = fc::sha256::hash(op.code);
     FC_ASSERT(code_hash != contract_obj.code_version, "code not updated");
-    
+
     FC_ASSERT(op.code.size() > 0, "contract code cannot be empty");
 
     wasm_interface::validate(op.code);
@@ -168,7 +168,7 @@ void_result contract_update_evaluator::do_apply(const contract_update_operation 
 { try {
     database &d = db();
     const account_object& contract_obj = op.contract(d);
-    
+
     db().modify(contract_obj, [&](account_object &obj) {
         if(op.new_owner.valid()) {
             obj.registrar = *op.new_owner;
@@ -179,7 +179,7 @@ void_result contract_update_evaluator::do_apply(const contract_update_operation 
         obj.code_version = code_hash;
         obj.abi = op.abi;
     });
-    
+
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op.owner)(op.contract)(op.fee)(op.abi)) }
 
@@ -201,7 +201,7 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 
     // check balance
     if (op.amount.valid()) {
-        FC_ASSERT(op.amount->amount > 0, "amount > 0");
+        FC_ASSERT(op.amount->amount > 0, "amount must > 0");
         // check balance
         const asset_object &asset_type = op.amount->asset_id(d);
         bool sufficient_balance = d.get_balance(op.account(d), asset_type).amount >= op.amount->amount;
@@ -219,7 +219,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     database& d = db();
     if (op.amount.valid()) {
         auto amnt = *op.amount;
-        dlog("contract_call adjust balance, ${f} -> ${t}, asset ${a}", ("f", op.account)("t", op.contract_id)("a", amnt));
+        // dlog("contract_call adjust balance, ${f} -> ${t}, asset ${a}", ("f", op.account)("t", op.contract_id)("a", amnt));
         d.adjust_balance(op.account, -amnt);
         d.adjust_balance(op.contract_id, amnt);
     }
