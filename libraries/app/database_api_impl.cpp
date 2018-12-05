@@ -1283,21 +1283,10 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
        return result;
    }
 
-
-   transaction trx;
-   for( operation& op : _ops )
-	   trx.operations.push_back(op);
-   _db.set_cur_trx(&trx);
-
-   for( operation& op : _ops )
-   {
+   for (operation &op : _ops) {
        if (op.which() == operation::tag<contract_call_operation>::value) {
-
-           auto tmp_session = _db._undo_db.start_undo_session();
-           contract_call_operation &opr = op.get<contract_call_operation>();
-
            signed_transaction tx;
-           tx.operations.push_back(opr);
+           tx.operations.push_back(op.get<contract_call_operation>());
            tx.set_expiration(_db.get_dynamic_global_properties().time + fc::seconds(30));
            processed_transaction ptx = _db.push_transaction(tx, ~0);
            auto receipt = ptx.operation_results.back().get<contract_receipt>();
@@ -1310,7 +1299,6 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
       }
    }
 
-   _db.set_cur_trx(nullptr);
    return result;
 }
 
