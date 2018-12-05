@@ -107,7 +107,7 @@ void database::update_active_witnesses()
    }
    uint16_t num_witness = std::max(witness_count*2+1, (size_t)min_witness_count);
    auto wits = sort_votable_objects<witness_index>(num_witness);
-   dlog("witness_count_histogram size ${a}, witness_count*2+1 ${b}, min_witness_count ${m}, active witness count ${c}", ("a", _witness_count_histogram_buffer.size())("b", witness_count*2+1)("m", min_witness_count)("c", wits.size()));
+   // dlog("witness_count_histogram size ${a}, witness_count*2+1 ${b}, min_witness_count ${m}, active witness count ${c}", ("a", _witness_count_histogram_buffer.size())("b", witness_count*2+1)("m", min_witness_count)("c", wits.size()));
 
    const global_property_object& gpo = get_global_properties();
 
