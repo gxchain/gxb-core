@@ -1285,6 +1285,8 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
 
    for (operation &op : _ops) {
        if (op.which() == operation::tag<contract_call_operation>::value) {
+           auto tmp_session = _db._undo_db.start_undo_session();
+
            signed_transaction tx;
            tx.operations.push_back(op.get<contract_call_operation>());
            tx.set_expiration(_db.get_dynamic_global_properties().time + fc::seconds(30));
