@@ -94,7 +94,7 @@ void database::reindex(fc::path data_dir, bool fast_replay)
           }
          total_processed_block_size = _block_id_to_block.blocks_current_position();
 
-         std::cerr << "[by size: " << double(total_processed_block_size) / total_block_size * 100 << "% " << total_processed_block_size << " of "  << total_block_size 
+         std::cerr << "Replaying blocks, [by size: " << double(total_processed_block_size) / total_block_size * 100 << "% " << total_processed_block_size << " of "  << total_block_size 
              << "] [by num: " << double(i*100)/last_block_num << "% " << i << " of " << last_block_num
              << "]" << std::endl;
       }
