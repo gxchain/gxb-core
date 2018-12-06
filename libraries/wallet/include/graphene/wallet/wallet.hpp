@@ -1059,7 +1059,7 @@ class wallet_api
     
     /** Update contract
      *
-     * call contract
+     * update contract
      * @param contract contract
      * @param new_owner new_owner
      * @param contract_dir contract_dir
