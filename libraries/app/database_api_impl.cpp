@@ -181,6 +181,20 @@ get_table_rows_result database_api_impl::get_table_rows(string contract, string 
     FC_CAPTURE_AND_RETHROW((contract)(table))
 }
 
+fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope, uint64_t table, uint64_t lower_id, uint64_t uppper_id, uint64_t limit) const
+{ try {
+    fc::variants result;
+
+    const auto &account_obj = get_account_by_contract_code(code);
+    if(!account_obj.valid())
+        return result;
+
+    bool more = false;
+    return ::graphene::app::get_table_objects(more, _db, *account_obj, table, lower_id, uppper_id, limit);
+    }
+    FC_CAPTURE_AND_RETHROW((code)(scope)(table))
+}
+
 bytes database_api_impl::serialize_contract_call_args(string contract, string method, string json_args) const
 {
     auto contract_obj = get_account_by_name(contract);
