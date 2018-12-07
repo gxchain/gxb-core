@@ -739,6 +739,7 @@ class database_api
 FC_API(graphene::app::database_api,
    // Objects
    (get_objects)
+   (get_table_objects)
    (get_table_rows)
    (serialize_contract_call_args)
    (serialize_transaction)
