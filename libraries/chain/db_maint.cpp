@@ -133,17 +133,41 @@ void database::update_active_trustnodes()
    // calc committee member count
    std::vector<committee_member_object> committee_members;
    uint16_t num_committee_member = (gpo.parameters.maximum_witness_count / 2) * 2 + 1;
+   uint16_t committee_member_count = 0;
    for (const witness_object &wit : wits) {
        // get committee member from active_witnesses
        const auto& idx = _db.get_index_type<committee_member_index>().indices().get<by_account>();
        auto iter = idx.find(wit.witness_account);
        if (iter != idx.end()) {
            modify(idx, [&](committee_member_object& obj) {
-                   obj.total_votes = _vote_tally_buffer[del.vote_id];
+                   obj.total_votes = _vote_tally_buffer[wit.vote_id];
                    });
            committee_members.push_back(*idx);
+
+           if (++committee_member_count >= num_committee_member) {
+               break;
+           }
        }
    }
+
+   // Update committee authorities
+   if (!committee_members.empty()) {
+       modify(get(GRAPHENE_COMMITTEE_ACCOUNT), [&](account_object &a) {
+           vote_counter vc;
+           for (const committee_member_object &cm : committee_members)
+               vc.add(cm.committee_member_account, cm.total_votes);
+           vc.finish(a.active);
+       });
+       modify(get(GRAPHENE_RELAXED_COMMITTEE_ACCOUNT), [&](account_object &a) {
+           a.active = get(GRAPHENE_COMMITTEE_ACCOUNT).active;
+       });
+   }
+   modify(get_global_properties(), [&](global_property_object& gp) {
+      gp.active_committee_members.clear();
+      std::transform(committee_members.begin(), committee_members.end(),
+                     std::inserter(gp.active_committee_members, gp.active_committee_members.begin()),
+                     [](const committee_member_object& d) { return d.id; });
+   });
 
 } FC_CAPTURE_AND_RETHROW() }
 
