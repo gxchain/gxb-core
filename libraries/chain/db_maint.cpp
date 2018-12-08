@@ -136,7 +136,7 @@ void database::update_active_trustnodes()
    uint16_t committee_member_count = 0;
    for (const witness_object &wit : wits) {
        // get committee member from active_witnesses
-       const auto& idx = _db.get_index_type<committee_member_index>().indices().get<by_account>();
+       const auto& idx = get_index_type<committee_member_index>().indices().get<by_account>();
        auto iter = idx.find(wit.witness_account);
        if (iter != idx.end()) {
            modify(idx, [&](committee_member_object& obj) {
