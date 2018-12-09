@@ -381,7 +381,7 @@ class apply_context {
 
                 const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
                 auto obj = idx.find(boost::make_tuple(tab->id, primary));
-                if (obj != idx.end()) return table_end_itr;
+                if (obj == idx.end()) return table_end_itr;
                 secondary_key_helper_t::get(secondary, obj->secondary_key);
 
                 return itr_cache.add(*obj);
