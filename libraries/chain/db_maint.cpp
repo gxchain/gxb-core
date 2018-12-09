@@ -139,10 +139,11 @@ void database::update_active_trustnodes()
        const auto& idx = get_index_type<committee_member_index>().indices().get<by_account>();
        auto iter = idx.find(wit.witness_account);
        if (iter != idx.end()) {
-           modify(idx, [&](committee_member_object& obj) {
+           auto& obj = *iter;
+           modify(obj, [&](committee_member_object& obj) {
                    obj.total_votes = _vote_tally_buffer[wit.vote_id];
                    });
-           committee_members.push_back(*idx);
+           committee_members.push_back(obj);
 
            if (++committee_member_count >= num_committee_member) {
                break;
