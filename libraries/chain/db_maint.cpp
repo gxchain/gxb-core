@@ -100,7 +100,7 @@ void database::update_active_trustnodes()
    }
    uint16_t num_witness = std::max(witness_count*2+1, (size_t)min_witness_count);
    auto wits = sort_votable_objects<witness_index>(num_witness);
-   dlog("witness_count_histogram size ${a}, witness_count*2+1 ${b}, min_witness_count ${m}, active witness count ${c}", ("a", _witness_count_histogram_buffer.size())("b", witness_count*2+1)("m", min_witness_count)("c", wits.size()));
+   // dlog("witness_count_histogram size ${a}, witness_count*2+1 ${b}, min_witness_count ${m}, active witness count ${c}", ("a", _witness_count_histogram_buffer.size())("b", witness_count*2+1)("m", min_witness_count)("c", wits.size()));
 
    const auto& all_witnesses = get_index_type<witness_index>().indices();
    for (const witness_object &wit : all_witnesses) {
@@ -133,21 +133,15 @@ void database::update_active_trustnodes()
    // calc committee member count
    std::vector<committee_member_object> committee_members;
    uint16_t num_committee_member = (gpo.parameters.maximum_committee_count / 2) * 2 + 1;
-   uint16_t committee_member_count = 0;
    for (const witness_object &wit : wits) {
        // get committee member from active_witnesses
        const auto& idx = get_index_type<committee_member_index>().indices().get<by_account>();
        auto iter = idx.find(wit.witness_account);
        if (iter != idx.end()) {
            auto& obj = *iter;
-           modify(obj, [&](committee_member_object& obj) {
-                   obj.total_votes = _vote_tally_buffer[wit.vote_id];
-                   });
+           modify(obj, [&](committee_member_object& obj) { obj.total_votes = _vote_tally_buffer[wit.vote_id]; });
            committee_members.push_back(obj);
-
-           if (++committee_member_count >= num_committee_member) {
-               break;
-           }
+           if (--num_committee_member > 0) break;
        }
    }
 
