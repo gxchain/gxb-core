@@ -132,7 +132,7 @@ void database::update_active_trustnodes()
 
    // calc committee member count
    std::vector<committee_member_object> committee_members;
-   uint16_t num_committee_member = (gpo.parameters.maximum_committee_count / 2) * 2 + 1;
+   int32_t num_committee_member = (gpo.parameters.maximum_committee_count / 2) * 2 + 1;
    for (const witness_object &wit : wits) {
        // get committee member from active_witnesses
        const auto& idx = get_index_type<committee_member_index>().indices().get<by_account>();
@@ -141,7 +141,7 @@ void database::update_active_trustnodes()
            auto& obj = *iter;
            modify(obj, [&](committee_member_object& obj) { obj.total_votes = _vote_tally_buffer[wit.vote_id]; });
            committee_members.push_back(obj);
-           if (--num_committee_member > 0) break;
+           if (--num_committee_member <= 0) break;
        }
    }
 
