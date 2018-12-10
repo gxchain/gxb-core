@@ -132,7 +132,7 @@ void database::update_active_trustnodes()
 
    // calc committee member count
    std::vector<committee_member_object> committee_members;
-   uint16_t num_committee_member = (gpo.parameters.maximum_witness_count / 2) * 2 + 1;
+   uint16_t num_committee_member = (gpo.parameters.maximum_committee_count / 2) * 2 + 1;
    uint16_t committee_member_count = 0;
    for (const witness_object &wit : wits) {
        // get committee member from active_witnesses
