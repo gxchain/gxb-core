@@ -62,17 +62,17 @@
 
 // set min witness num 21
 #ifndef HARDFORK_1010_TIME
-#define HARDFORK_1010_TIME (fc::time_point_sec( 1543910400 )) // for test, 2018-12-04T08:00:00(UTC)
+#define HARDFORK_1010_TIME (fc::time_point_sec( 1543910400 )) // for devnet, 2018-12-04T08:00:00(UTC)
 #endif
 
 // contract call fee
 #ifndef HARDFORK_1011_TIME
-#define HARDFORK_1011_TIME (fc::time_point_sec( 1544112000 )) // for test, 2018-12-07T00:00:00
+#define HARDFORK_1011_TIME (fc::time_point_sec( 1544407200 )) // for devnet, 2018-12-10T00:00:00
 #endif
 
 // update active trustnodes
 #ifndef HARDFORK_1012_TIME
-#define HARDFORK_1012_TIME (fc::time_point_sec( 1544112000 )) // for test, 2018-12-10T00:00:00
+#define HARDFORK_1012_TIME (fc::time_point_sec( 1544407200 )) // for devnet, 2018-12-10T00:00:00
 #endif
 
 // enable witness guaranty
