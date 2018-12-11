@@ -62,22 +62,22 @@
 
 // set min witness num 21
 #ifndef HARDFORK_1010_TIME
-#define HARDFORK_1010_TIME (fc::time_point_sec( 1545768000 )) // for mainnet, 2018-12-26T04:00:00
+#define HARDFORK_1010_TIME (fc::time_point_sec( 1545796800 )) // for mainnet, 2018-12-26T04:00:00
 #endif
 
 // contract call fee
 #ifndef HARDFORK_1011_TIME
-#define HARDFORK_1011_TIME (fc::time_point_sec( 1545768000 )) // for mainnet, 2018-12-26T04:00:00
+#define HARDFORK_1011_TIME (fc::time_point_sec( 1545796800 )) // for mainnet, 2018-12-26T04:00:00
 #endif
 
 // update active trustnodes
 #ifndef HARDFORK_1012_TIME
-#define HARDFORK_1012_TIME (fc::time_point_sec( 1545768000 )) // for mainnet, 2018-12-26T04:00:00
+#define HARDFORK_1012_TIME (fc::time_point_sec( 1545796800 )) // for mainnet, 2018-12-26T04:00:00
 #endif
 
 // enable witness guaranty
 #ifndef HARDFORK_1129_TIME
-#define HARDFORK_1129_TIME (fc::time_point_sec( 1545768000 )) // for mainnet, 2018-12-26T04:00:00
+#define HARDFORK_1129_TIME (fc::time_point_sec( 1545796800 )) // for mainnet, 2018-12-26T04:00:00
 #endif
 
 // #1103 the time point before you can renaming asset symbol
