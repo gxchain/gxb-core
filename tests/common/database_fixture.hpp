@@ -234,9 +234,11 @@ struct database_fixture {
    const asset_object& create_user_issued_asset( const string& name );
    const asset_object& create_user_issued_asset( const string& name,
                                                  const account_object& issuer,
-                                                 uint16_t flags );
+                                                 uint16_t flags,
+												 uint8_t precision = 2);
    void issue_uia( const account_object& recipient, asset amount );
    void issue_uia( account_id_type recipient_id, asset amount );
+   void update_operation_fee(signed_transaction& tx);
 
    const account_object& create_account(
       const string& name,
@@ -264,6 +266,8 @@ struct database_fixture {
                                         const fc::ecc::private_key& signing_private_key = generate_private_key("null_key"));
    const witness_object& create_witness(const account_object& owner,
                                         const fc::ecc::private_key& signing_private_key = generate_private_key("null_key"));
+   void update_witness(const witness_id_type &witness_id, const account_id_type &account_id, const fc::ecc::private_key private_key, const string &new_url);
+   void update_committee(const committee_member_id_type &committee_id, const account_id_type &account_id, const fc::ecc::private_key private_key, const string &new_url);
    uint64_t fund( const account_object& account, const asset& amount = asset(500000) );
    signature_type sign_proxy_transfer_param(const private_key_type& key, const proxy_transfer_params& param);
    digest_type digest( const transaction& tx );

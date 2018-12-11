@@ -266,6 +266,7 @@ namespace graphene { namespace chain {
          const global_property_object&          get_global_properties()const;
          const data_transaction_commission_percent_t          get_commission_percent() const;
          const vm_cpu_limit_t                   get_cpu_limit() const;
+         const trust_node_pledge_t              get_trust_node_pledge() const;
 
          const bool                             get_contract_log_to_console() const { return contract_log_to_console; }
          void                                   set_contract_log_to_console(bool log_switch) { contract_log_to_console = log_switch; }
@@ -427,6 +428,7 @@ namespace graphene { namespace chain {
          void initialize_budget_record( fc::time_point_sec now, budget_record& rec )const;
          void process_budget();
          void perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props);
+         void update_active_trustnodes();
          void update_active_witnesses();
          void update_active_committee_members();
          void update_worker_votes();
@@ -467,6 +469,7 @@ namespace graphene { namespace chain {
          vector<uint64_t>                  _witness_count_histogram_buffer;
          vector<uint64_t>                  _committee_count_histogram_buffer;
          uint64_t                          _total_voting_stake;
+         map<uint32_t, bool>               _vote_id_valid;
 
          flat_map<uint32_t,block_id_type>  _checkpoints;
 

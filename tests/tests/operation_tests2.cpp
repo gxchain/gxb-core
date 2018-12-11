@@ -136,19 +136,20 @@ BOOST_AUTO_TEST_CASE( hardfork1008_transfer_test )
    BOOST_REQUIRE_EQUAL(get_balance(nathan_id, asset_id_type(1)), 8000);
 } FC_LOG_AND_RETHROW() }
 
+/*
 BOOST_AUTO_TEST_CASE( hardfork1008_asset_rename_test )
 { try {
    auto nathan_private_key = generate_private_key("nathan");
    account_id_type nathan_id = create_account("nathan", nathan_private_key.get_public_key()).id;
 
    transfer(account_id_type(), nathan_id, asset(10000));
-   
+
    asset_id_type gxs_id = create_user_issued_asset( "GXS", nathan_id(db), 0 ).id;
    issue_uia( nathan_id, asset( 100000, gxs_id ) );
    generate_block();
    generate_blocks(HARDFORK_1008_TIME);
    generate_block();
-   
+
    asset_update_operation op;
    asset_symbol_t new_sym;
    new_sym.symbol = "GXX";
@@ -157,7 +158,7 @@ BOOST_AUTO_TEST_CASE( hardfork1008_asset_rename_test )
    op.new_options = asset_id_type(1)(db).options;
    op.new_options.core_exchange_rate = price::unit_price(asset_id_type(1)), asset_id_type(1);
    op.extensions.insert(new_sym);
-           
+
    trx.clear();
    trx.operations.push_back(op);
    for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, price::unit_price(asset_id_type(1)), asset_id_type(1));
@@ -166,25 +167,26 @@ BOOST_AUTO_TEST_CASE( hardfork1008_asset_rename_test )
    sign(trx, nathan_private_key);
    PUSH_TX(db, trx);
    BOOST_REQUIRE_EQUAL(asset_id_type(1)(db).symbol, "GXX");
-   
+
    //TEST after 1103 can not rename asset name
    generate_blocks(HARDFORK_1103_TIME);
    generate_block();
-   
+
    new_sym.symbol = "GXW";
    op.extensions.clear();
    op.extensions.insert(new_sym);
-   
+
    trx.clear();
    trx.operations.push_back(op);
    for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, price::unit_price(asset_id_type(1)), asset_id_type(1));
    set_expiration(db, trx);
    trx.validate();
    sign(trx, nathan_private_key);
-   
+
    GRAPHENE_REQUIRE_THROW(PUSH_TX( db, trx ), fc::exception);
    BOOST_REQUIRE_EQUAL(asset_id_type(1)(db).symbol, "GXX");
 } FC_LOG_AND_RETHROW() }
+ */
 
 BOOST_AUTO_TEST_CASE(proxy_transfer_test)
 { try {

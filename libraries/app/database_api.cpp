@@ -65,6 +65,11 @@ fc::variants database_api::get_objects(const vector<object_id_type>& ids)const
    return my->get_objects( ids );
 }
 
+get_table_rows_result database_api::get_table_rows(string contract, string table, uint64_t start, uint64_t limit) const
+{
+    return my->get_table_rows(contract, table, start, limit);
+}
+
 fc::variants database_api::get_table_objects(uint64_t code, uint64_t scope, uint64_t table, uint64_t lower, uint64_t uppper, uint64_t limit) const
 {
     return my->get_table_objects(code, scope, table, lower, uppper, limit);

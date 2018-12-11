@@ -130,6 +130,57 @@ static void copy_inline_row(const key_value_object& obj, vector<char>& data) {
    memcpy( data.data(), obj.value.data(), obj.value.size() );
 }
 
+fc::variants get_table_objects(bool &more, const database &db, const account_object &account_obj, uint64_t table, uint64_t lower_id, uint64_t uppper_id, uint64_t limit)
+{ try {
+    fc::variants result;
+
+    abi_serializer abis(account_obj.abi, fc::milliseconds(10000));
+
+    const auto &table_idx = db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
+    auto existing_tid = table_idx.find(boost::make_tuple(account_obj.id.instance(), name(account_obj.id.instance()), name(table)));
+    if (existing_tid != table_idx.end()) {
+        const auto &kv_idx = db.get_index_type<key_value_index>().indices().get<by_scope_primary>();
+
+        auto lower = kv_idx.lower_bound(boost::make_tuple(existing_tid->id, lower_id));
+        auto upper = kv_idx.lower_bound(boost::make_tuple(existing_tid->id, uppper_id));
+
+        auto end = fc::time_point::now() + fc::microseconds(1000 * 10);
+        name tname(table);
+        uint64_t count = 0;
+        auto it = lower;
+        for(; it != upper; ++it) {
+            if(fc::time_point::now() > end || count == limit) break;
+            result.emplace_back(abis.binary_to_variant(tname.to_string(), it->value, fc::microseconds(1000 * 10)));
+            ++count;
+        }
+
+        if(count < limit && it != upper && ++it != upper) {
+        	more = true;
+        }
+    }
+    return result;
+    }
+    FC_CAPTURE_AND_RETHROW((account_obj)(table)(lower_id)(uppper_id)(limit))
+}
+
+get_table_rows_result database_api_impl::get_table_rows(string contract, string table, uint64_t start, uint64_t limit) const
+{ try {
+	get_table_rows_result result;
+
+    const auto& accounts_idx = _db.get_index_type<account_index>().indices().get<by_name>();
+    const auto& account_itr = accounts_idx.find(contract);
+    if(account_itr == accounts_idx.end()) {
+    	return result;
+    }
+
+    const account_object &account_obj = *account_itr;
+
+    result.rows = ::graphene::app::get_table_objects(result.more, _db, account_obj, name(table).value, start, start + limit, limit);
+    return result;
+    }
+    FC_CAPTURE_AND_RETHROW((contract)(table))
+}
+
 fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope, uint64_t table, uint64_t lower_id, uint64_t uppper_id, uint64_t limit) const
 { try {
     fc::variants result;
@@ -138,26 +189,8 @@ fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope,
     if(!account_obj.valid())
         return result;
 
-    abi_serializer abis(account_obj->abi, fc::milliseconds(10000));
-
-    const auto &table_idx = _db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
-    auto existing_tid = table_idx.find(boost::make_tuple(code & GRAPHENE_DB_MAX_INSTANCE_ID, name(scope & GRAPHENE_DB_MAX_INSTANCE_ID), name(table)));
-    if (existing_tid != table_idx.end()) {
-        const auto &kv_idx = _db.get_index_type<key_value_index>().indices().get<by_scope_primary>();
-
-        auto lower = kv_idx.lower_bound(boost::make_tuple(existing_tid->id, lower_id));
-        auto upper = kv_idx.lower_bound(boost::make_tuple(existing_tid->id, uppper_id));
-
-        auto end = fc::time_point::now() + fc::microseconds(1000 * 10);
-        name tname(table);
-        uint64_t count = 0;
-        for(auto it = lower; it != upper; ++it) {
-            if(fc::time_point::now() > end || count == limit) break;
-            result.emplace_back(abis.binary_to_variant(tname.to_string(), it->value, fc::microseconds(1000 * 10)));
-            ++count;
-        }
-    }
-    return result;
+    bool more = false;
+    return ::graphene::app::get_table_objects(more, _db, *account_obj, table, lower_id, uppper_id, limit);
     }
     FC_CAPTURE_AND_RETHROW((code)(scope)(table))
 }
@@ -493,6 +526,13 @@ std::map<std::string, full_account> database_api_impl::get_full_accounts( const 
       std::for_each(vesting_range.first, vesting_range.second,
                     [&acnt](const vesting_balance_object& balance) {
                        acnt.vesting_balances.emplace_back(balance);
+                    });
+
+      // Add the account's pledge balances
+      auto pledge_range = _db.get_index_type<trust_node_pledge_index>().indices().get<by_account>().equal_range(account->id);
+      std::for_each(pledge_range.first, pledge_range.second,
+                    [&acnt](const trust_node_pledge_object& pledge) {
+                       acnt.pledge_balances.emplace_back(pledge);
                     });
 
       // get assets issued by user
@@ -1257,50 +1297,24 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
        return result;
    }
 
-   for( operation& op : _ops )
-   {
+   for (operation &op : _ops) {
        if (op.which() == operation::tag<contract_call_operation>::value) {
-
            auto tmp_session = _db._undo_db.start_undo_session();
-           contract_call_operation &opr = op.get<contract_call_operation>();
-           transaction_context trx_context(_db, opr.fee_payer().instance, fc::microseconds(_db.get_cpu_limit().trx_cpu_limit));
-           action act{opr.contract_id, opr.method_name, opr.data};
-           apply_context ctx{_db, trx_context, act, opr.amount};
-           ctx.exec();
-           auto fee_param = contract_call_operation::fee_parameters_type();
-           const auto &p = _db.get_global_properties().parameters;
-           for (auto &param : p.current_fees->parameters) {
-               if (param.which() == operation::tag<contract_call_operation>::value) {
-                   fee_param = param.get<contract_call_operation::fee_parameters_type>();
-                   break;
-               }
-           }
-           auto ram_fee = fc::uint128(ctx.get_ram_usage() * fee_param.price_per_kbyte_ram) / 1024;
-           auto cpu_fee = fc::uint128(trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu);
-           uint64_t core_fee_paid = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
+
+           signed_transaction tx;
+           tx.operations.push_back(op.get<contract_call_operation>());
+           tx.set_expiration(_db.get_dynamic_global_properties().time + fc::seconds(30));
+           processed_transaction ptx = _db.push_transaction(tx, ~0);
+           auto receipt = ptx.operation_results.back().get<contract_receipt>();
 
            fc::variant r;
-           asset fee = asset(0);
-           const auto &asset_obj = _db.get<asset_object>(id);
-           if (_db.head_block_time() > HARDFORK_1008_TIME) {
-               if (asset_obj.id == asset_id_type(1)) {
-                   fee = asset(core_fee_paid, asset_id_type(1));
-               } else {
-                   fee = asset(core_fee_paid / uint64_t(asset_obj.options.core_exchange_rate.to_real()), asset_obj.id);
-               }
-           } else {
-               if (asset_obj.id == asset_id_type()) {
-                   fee = asset(core_fee_paid, asset_id_type());
-               } else {
-                   fee = asset(core_fee_paid / uint64_t(asset_obj.options.core_exchange_rate.to_real()), asset_obj.id);
-               }
-           }
-           fc::to_variant(fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
+           fc::to_variant(receipt.fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
            result.push_back(r);
        } else {
            result.push_back(helper.set_op_fees(op));
       }
    }
+
    return result;
 }
 
