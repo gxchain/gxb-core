@@ -128,6 +128,7 @@
 
 #define GRAPHENE_IRREVERSIBLE_THRESHOLD                      (70 * GRAPHENE_1_PERCENT)
 
+#define GRAPHENE_MIN_WITNESS_COUNT                          21
 /**
  *  Reserved Account IDs with special meaning
  */

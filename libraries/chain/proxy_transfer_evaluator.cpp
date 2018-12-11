@@ -104,11 +104,10 @@ void_result proxy_transfer_evaluator::do_evaluate(const proxy_transfer_operation
 void_result proxy_transfer_evaluator::do_apply(const proxy_transfer_operation &op, int32_t billed_cpu_time_us)
 { try {
     // create signature_object
-    const auto& new_object = db().create<signature_object>([&](signature_object& obj) {
+    db().create<signature_object>([&](signature_object& obj) {
             obj.signature     = op.request_params.signatures.at(0);
             obj.expiration    = op.request_params.expiration;
             });
-    // dlog("signature_object ${o}", ("o", new_object));
 
     // transfer asset
     share_type commission_amount = cut_fee(op.request_params.amount.amount, op.request_params.percentage);

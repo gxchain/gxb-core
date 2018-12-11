@@ -79,6 +79,93 @@ void database::perform_account_maintenance(std::tuple<Types...> helpers)
       detail::for_each(helpers, a, detail::gen_seq<sizeof...(Types)>());
 }
 
+void database::update_active_trustnodes()
+{ try {
+    assert(_witness_count_histogram_buffer.size() > 0);
+    share_type stake_target = (_total_voting_stake-_witness_count_histogram_buffer[0]) / 2;
+
+    share_type stake_tally = 0;
+    size_t witness_count = 0;
+    if (stake_target > 0) {
+        while ((witness_count < _witness_count_histogram_buffer.size() - 1) && (stake_tally <= stake_target)) {
+            stake_tally += _witness_count_histogram_buffer[++witness_count];
+        }
+    }
+   // calc witness count
+   const chain_property_object& cpo = get_chain_properties();
+   int min_witness_count = cpo.immutable_parameters.min_witness_count;
+   if (head_block_time() > HARDFORK_1010_TIME) {
+       // set min witness num as 21
+       min_witness_count = std::max(GRAPHENE_MIN_WITNESS_COUNT, min_witness_count);
+   }
+   uint16_t num_witness = std::max(witness_count*2+1, (size_t)min_witness_count);
+   auto wits = sort_votable_objects<witness_index>(num_witness);
+   // dlog("witness_count_histogram size ${a}, witness_count*2+1 ${b}, min_witness_count ${m}, active witness count ${c}", ("a", _witness_count_histogram_buffer.size())("b", witness_count*2+1)("m", min_witness_count)("c", wits.size()));
+
+   const auto& all_witnesses = get_index_type<witness_index>().indices();
+   for (const witness_object &wit : all_witnesses) {
+       modify(wit, [&](witness_object &obj) {
+           obj.total_votes = _vote_tally_buffer[wit.vote_id];
+       });
+   }
+
+   // update witness authority
+   modify(get(GRAPHENE_WITNESS_ACCOUNT), [&](account_object &a) {
+       vote_counter vc;
+       for (const witness_object &wit : wits) {
+           vc.add(wit.witness_account, _vote_tally_buffer[wit.vote_id]);
+       }
+       vc.finish(a.active);
+   });
+
+   // update active witnesses
+   const global_property_object& gpo = get_global_properties();
+   modify(gpo, [&]( global_property_object& gp ){
+      gp.active_witnesses.clear();
+      gp.active_witnesses.reserve(wits.size());
+      std::transform(wits.begin(), wits.end(),
+                     std::inserter(gp.active_witnesses, gp.active_witnesses.end()),
+                     [](const witness_object& w) {
+         return w.id;
+      });
+   });
+
+   // calc committee member count
+   std::vector<committee_member_object> committee_members;
+   int32_t num_committee_member = (gpo.parameters.maximum_committee_count / 2) * 2 + 1;
+   for (const witness_object &wit : wits) {
+       // get committee member from active_witnesses
+       const auto& idx = get_index_type<committee_member_index>().indices().get<by_account>();
+       auto iter = idx.find(wit.witness_account);
+       if (iter != idx.end()) {
+           auto& obj = *iter;
+           modify(obj, [&](committee_member_object& obj) { obj.total_votes = _vote_tally_buffer[wit.vote_id]; });
+           committee_members.push_back(obj);
+           if (--num_committee_member <= 0) break;
+       }
+   }
+
+   // Update committee authorities
+   if (!committee_members.empty()) {
+       modify(get(GRAPHENE_COMMITTEE_ACCOUNT), [&](account_object &a) {
+           vote_counter vc;
+           for (const committee_member_object &cm : committee_members)
+               vc.add(cm.committee_member_account, cm.total_votes);
+           vc.finish(a.active);
+       });
+       modify(get(GRAPHENE_RELAXED_COMMITTEE_ACCOUNT), [&](account_object &a) {
+           a.active = get(GRAPHENE_COMMITTEE_ACCOUNT).active;
+       });
+   }
+   modify(get_global_properties(), [&](global_property_object& gp) {
+      gp.active_committee_members.clear();
+      std::transform(committee_members.begin(), committee_members.end(),
+                     std::inserter(gp.active_committee_members, gp.active_committee_members.begin()),
+                     [](const committee_member_object& d) { return d.id; });
+   });
+
+} FC_CAPTURE_AND_RETHROW() }
+
 void database::update_active_witnesses()
 { try {
    assert( _witness_count_histogram_buffer.size() > 0 );
@@ -87,7 +174,7 @@ void database::update_active_witnesses()
    /// accounts that vote for 0 or 1 witness do not get to express an opinion on
    /// the number of witnesses to have (they abstain and are non-voting accounts)
 
-   share_type stake_tally = 0; 
+   share_type stake_tally = 0;
 
    size_t witness_count = 0;
    if( stake_target > 0 )
@@ -100,8 +187,14 @@ void database::update_active_witnesses()
    }
 
    const chain_property_object& cpo = get_chain_properties();
-   auto wits = sort_votable_objects<witness_index>(std::max(witness_count*2+1, (size_t)cpo.immutable_parameters.min_witness_count));
-   // dlog("witness_count_histogram size ${a}, witness_count*2+1 ${b}, active witness count ${c}", ("a", _witness_count_histogram_buffer.size())("b", witness_count*2+1)("c", wits.size()));
+   int min_witness_count = cpo.immutable_parameters.min_witness_count;
+   if (head_block_time() > HARDFORK_1010_TIME) {
+       // set min witness num as 21
+       min_witness_count = std::max(GRAPHENE_MIN_WITNESS_COUNT, min_witness_count);
+   }
+   uint16_t num_witness = std::max(witness_count*2+1, (size_t)min_witness_count);
+   auto wits = sort_votable_objects<witness_index>(num_witness);
+   // dlog("witness_count_histogram size ${a}, witness_count*2+1 ${b}, min_witness_count ${m}, active witness count ${c}", ("a", _witness_count_histogram_buffer.size())("b", witness_count*2+1)("m", min_witness_count)("c", wits.size()));
 
    const global_property_object& gpo = get_global_properties();
 
@@ -602,8 +695,13 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                 c(_vote_tally_buffer);
 
    update_top_n_authorities(*this);
-   update_active_witnesses();
-   update_active_committee_members();
+   if (head_block_time() > HARDFORK_1012_TIME) {
+       update_active_trustnodes();
+   }
+   else {
+       update_active_witnesses();
+       update_active_committee_members();
+   }
 
    modify(gpo, [this](global_property_object& p) {
       // Remove scaling of account registration fee

@@ -272,7 +272,7 @@ class apply_context {
 
                 const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_secondary>();
                 auto obj = idx.find(secondary_key_helper_t::create_tuple(*tab, secondary));
-                if (obj != idx.end()) return table_end_itr;
+                if (obj == idx.end()) return table_end_itr;
 
                 primary = obj->primary_key;
 
@@ -381,7 +381,7 @@ class apply_context {
 
                 const auto &idx = context._db->get_index_type<typename get_gph_index_type<ObjectType>::type>().indices().template get<by_primary>();
                 auto obj = idx.find(boost::make_tuple(tab->id, primary));
-                if (obj != idx.end()) return table_end_itr;
+                if (obj == idx.end()) return table_end_itr;
                 secondary_key_helper_t::get(secondary, obj->secondary_key);
 
                 return itr_cache.add(*obj);
@@ -574,12 +574,12 @@ class apply_context {
           }
 
           if (!(ram_delta <= 0 || UINT64_MAX - ram_usage >= (uint64_t) ram_delta)) {
-              dlog("Ram usage delta would overflow UINT64_MAX");
+              // dlog("Ram usage delta would overflow UINT64_MAX");
               ram_delta = 0;
           }
 
           if (!(ram_delta >= 0 || ram_usage >= (uint64_t)(-ram_delta))) {
-              dlog("Ram usage delta would underflow UINT64_MAX");
+              // dlog("Ram usage delta would underflow UINT64_MAX");
               ram_delta = 0;
           }
 
