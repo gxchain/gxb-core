@@ -181,6 +181,20 @@ get_table_rows_result database_api_impl::get_table_rows(string contract, string 
     FC_CAPTURE_AND_RETHROW((contract)(table))
 }
 
+fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope, uint64_t table, uint64_t lower_id, uint64_t uppper_id, uint64_t limit) const
+{ try {
+    fc::variants result;
+
+    const auto &account_obj = get_account_by_contract_code(code);
+    if(!account_obj.valid())
+        return result;
+
+    bool more = false;
+    return ::graphene::app::get_table_objects(more, _db, *account_obj, table, lower_id, uppper_id, limit);
+    }
+    FC_CAPTURE_AND_RETHROW((code)(scope)(table))
+}
+
 bytes database_api_impl::serialize_contract_call_args(string contract, string method, string json_args) const
 {
     auto contract_obj = get_account_by_name(contract);
@@ -1283,58 +1297,24 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
        return result;
    }
 
-
-   transaction trx;
-   for( operation& op : _ops )
-	   trx.operations.push_back(op);
-   _db.set_cur_trx(&trx);
-
-   for( operation& op : _ops )
-   {
+   for (operation &op : _ops) {
        if (op.which() == operation::tag<contract_call_operation>::value) {
-
            auto tmp_session = _db._undo_db.start_undo_session();
-           contract_call_operation &opr = op.get<contract_call_operation>();
-           transaction_context trx_context(_db, opr.fee_payer().instance, fc::microseconds(_db.get_cpu_limit().trx_cpu_limit));
-           action act{opr.contract_id, opr.method_name, opr.data};
-           apply_context ctx{_db, trx_context, act, opr.amount};
-           ctx.exec();
-           auto fee_param = contract_call_operation::fee_parameters_type();
-           const auto &p = _db.get_global_properties().parameters;
-           for (auto &param : p.current_fees->parameters) {
-               if (param.which() == operation::tag<contract_call_operation>::value) {
-                   fee_param = param.get<contract_call_operation::fee_parameters_type>();
-                   break;
-               }
-           }
-           auto ram_fee = fc::uint128(ctx.get_ram_usage() * fee_param.price_per_kbyte_ram) / 1024;
-           auto cpu_fee = fc::uint128(trx_context.get_cpu_usage() * fee_param.price_per_ms_cpu);
-           uint64_t core_fee_paid = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
+
+           signed_transaction tx;
+           tx.operations.push_back(op.get<contract_call_operation>());
+           tx.set_expiration(_db.get_dynamic_global_properties().time + fc::seconds(30));
+           processed_transaction ptx = _db.push_transaction(tx, ~0);
+           auto receipt = ptx.operation_results.back().get<contract_receipt>();
 
            fc::variant r;
-           asset fee = asset(0);
-           const auto &asset_obj = _db.get<asset_object>(id);
-           if (_db.head_block_time() > HARDFORK_1008_TIME) {
-               if (asset_obj.id == asset_id_type(1)) {
-                   fee = asset(core_fee_paid, asset_id_type(1));
-               } else {
-                   fee = asset(core_fee_paid / uint64_t(asset_obj.options.core_exchange_rate.to_real()), asset_obj.id);
-               }
-           } else {
-               if (asset_obj.id == asset_id_type()) {
-                   fee = asset(core_fee_paid, asset_id_type());
-               } else {
-                   fee = asset(core_fee_paid / uint64_t(asset_obj.options.core_exchange_rate.to_real()), asset_obj.id);
-               }
-           }
-           fc::to_variant(fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
+           fc::to_variant(receipt.fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
            result.push_back(r);
        } else {
            result.push_back(helper.set_op_fees(op));
       }
    }
 
-   _db.set_cur_trx(nullptr);
    return result;
 }
 
