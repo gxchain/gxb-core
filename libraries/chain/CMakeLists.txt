@@ -107,6 +107,8 @@ add_library( graphene_chain
              is_authorized_asset.cpp
 
              abi_serializer.cpp
+             
+             trust_node_pledge_helper.cpp
 
              ${HEADERS}
              ${PROTOCOL_HEADERS}
@@ -119,9 +121,8 @@ target_include_directories( graphene_chain
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
            "${CMAKE_CURRENT_SOURCE_DIR}/../wasm-jit/Include"
            "${CMAKE_CURRENT_SOURCE_DIR}/../../externals/binaryen/src"
-           "${CMAKE_CURRENT_BINARY_DIR}/include"
            "${CMAKE_SOURCE_DIR}/libraries/wabt"
-           "${CMAKE_BINARY_DIR}/libraries/wabt" )
+           "${CMAKE_BINARY_DIR}/libraries/wabt")
 
 if(MSVC)
   set_source_files_properties( db_init.cpp db_block.cpp database.cpp block_database.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

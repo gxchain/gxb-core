@@ -115,7 +115,7 @@ object_id_type account_create_evaluator::do_apply(const account_create_operation
    database& d = db();
    uint16_t referrer_percent = o.referrer_percent;
    bool has_small_percent = (
-         (db().head_block_time() <= HARDFORK_453_TIME)
+         (d.head_block_time() <= HARDFORK_453_TIME)
       && (o.referrer != o.registrar  )
       && (o.referrer_percent != 0    )
       && (o.referrer_percent <= 0x100)
@@ -132,12 +132,14 @@ object_id_type account_create_evaluator::do_apply(const account_create_operation
          referrer_percent = GRAPHENE_100_PERCENT;
    }
 
-   const auto& new_acnt_object = db().create<account_object>( [&]( account_object& obj ){
+   const auto& global_properties = d.get_global_properties();
+
+   const auto& new_acnt_object = d.create<account_object>( [&o, &d, &global_properties, referrer_percent]( account_object& obj ){
          obj.registrar = o.registrar;
          obj.referrer = o.referrer;
-         obj.lifetime_referrer = o.referrer(db()).lifetime_referrer;
+         obj.lifetime_referrer = o.referrer(d).lifetime_referrer;
 
-         auto& params = db().get_global_properties().parameters;
+         auto& params = global_properties.parameters;
          obj.network_fee_percentage = params.network_percent_of_fee;
          obj.lifetime_referrer_fee_percentage = params.lifetime_referrer_percent_of_fee;
          obj.referrer_rewards_percentage = referrer_percent;
@@ -146,7 +148,7 @@ object_id_type account_create_evaluator::do_apply(const account_create_operation
          obj.owner            = o.owner;
          obj.active           = o.active;
          obj.options          = o.options;
-         obj.statistics = db().create<account_statistics_object>([&](account_statistics_object& s){s.owner = obj.id;}).id;
+         obj.statistics = d.create<account_statistics_object>([&](account_statistics_object& s){s.owner = obj.id;}).id;
 
          if( o.extensions.value.owner_special_authority.valid() )
             obj.owner_special_authority = *(o.extensions.value.owner_special_authority);
@@ -159,31 +161,34 @@ object_id_type account_create_evaluator::do_apply(const account_create_operation
          }
    });
 
+   /*
    if( has_small_percent )
    {
       wlog( "Account affected by #453 registered in block ${n}:  ${na} reg=${reg} ref=${ref}:${refp} ltr=${ltr}:${ltrp}",
-         ("n", db().head_block_num()) ("na", new_acnt_object.id)
+         ("n", d.head_block_num()) ("na", new_acnt_object.id)
          ("reg", o.registrar) ("ref", o.referrer) ("ltr", new_acnt_object.lifetime_referrer)
          ("refp", new_acnt_object.referrer_rewards_percentage) ("ltrp", new_acnt_object.lifetime_referrer_fee_percentage) );
       wlog( "Affected account object is ${o}", ("o", new_acnt_object) );
    }
+   */
 
-   const auto& dynamic_properties = db().get_dynamic_global_properties();
-   db().modify(dynamic_properties, [](dynamic_global_property_object& p) {
+   const auto& dynamic_properties = d.get_dynamic_global_properties();
+   d.modify(dynamic_properties, [](dynamic_global_property_object& p) {
       ++p.accounts_registered_this_interval;
    });
 
-   const auto& global_properties = db().get_global_properties();
-   if( dynamic_properties.accounts_registered_this_interval %
-       global_properties.parameters.accounts_per_fee_scale == 0 )
-      db().modify(global_properties, [&dynamic_properties](global_property_object& p) {
+   if( dynamic_properties.accounts_registered_this_interval % global_properties.parameters.accounts_per_fee_scale == 0
+         && global_properties.parameters.account_fee_scale_bitshifts != 0 )
+   {
+      d.modify(global_properties, [](global_property_object& p) {
          p.parameters.current_fees->get<account_create_operation>().basic_fee <<= p.parameters.account_fee_scale_bitshifts;
       });
+   }
 
    if(    o.extensions.value.owner_special_authority.valid()
        || o.extensions.value.active_special_authority.valid() )
    {
-      db().create< special_authority_object >( [&]( special_authority_object& sa )
+      d.create< special_authority_object >( [&]( special_authority_object& sa )
       {
          sa.account = new_acnt_object.id;
       } );
