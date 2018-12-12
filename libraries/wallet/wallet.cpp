@@ -1132,10 +1132,17 @@
              auto action_type = abis.get_action_type(method);
              GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
              contract_call_op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+             contract_call_op.fee = asset{0, asset_id_type(1)};
 
              signed_transaction tx;
              tx.operations.push_back(contract_call_op);
-             set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+             vector<fc::variant> fees = _remote_db->get_required_fees(tx.operations, fee_asset_obj->id);
+             asset fee;
+             fc::from_variant(fees[0], fee, GRAPHENE_MAX_NESTED_OBJECTS);
+             contract_call_op.fee = fee;
+
+             tx.operations.clear();
+             tx.operations.push_back(contract_call_op);
              tx.validate();
 
              return sign_transaction(tx, broadcast);
