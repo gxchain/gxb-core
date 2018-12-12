@@ -110,7 +110,7 @@ void apply_context::db_update_i64(int iterator, account_name payer, const char *
     FC_ASSERT(table_obj.code == receiver, "db access violation");
 
     update_ram_usage((int64_t)(buffer_size - obj.value.size()));
-    dlog("db_update_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", (buffer_size - obj.value.size()))("n", ram_usage));
+    // dlog("db_update_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", (buffer_size - obj.value.size()))("n", ram_usage));
 
     _db->modify(obj, [&](key_value_object &o) {
         o.value.resize(buffer_size);
@@ -127,7 +127,7 @@ void apply_context::db_remove_i64(int iterator)
     FC_ASSERT(table_obj.code == receiver, "db access violation");
 
     update_ram_usage(-(obj.value.size() + config::billable_size_v<key_value_object>));
-    dlog("db_remove_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", -(obj.value.size() + config::billable_size_v<key_value_object>))("n", ram_usage));
+    // dlog("db_remove_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", -(obj.value.size() + config::billable_size_v<key_value_object>))("n", ram_usage));
 
     _db->remove(obj);
     keyval_cache.remove(iterator);
