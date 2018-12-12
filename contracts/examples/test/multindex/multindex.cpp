@@ -42,14 +42,16 @@ class multindex : public contract
     {
         auto idx = offers.template get_index<N(idx1)>();
         auto matched_offer_itr = idx.lower_bound(key);
-        if (matched_offer_itr != idx.end()) {
+        for(;matched_offer_itr != idx.end();++matched_offer_itr)
+        {
             dump_item(*matched_offer_itr);
         }
 
+        print("***************");
+
         auto ii = idx.find(key);
-        if (ii != idx.end()) {
+        for(;ii != idx.end();++ii) {
             dump_item(*ii);
-            idx.erase(ii);
         }
     }
 
@@ -58,9 +60,26 @@ class multindex : public contract
     {
         auto idx = offers.template get_index<N(idx2)>();
         auto matched_offer_itr = idx.lower_bound(key);
-        if (matched_offer_itr != idx.end()) {
+        for(;matched_offer_itr != idx.end();++matched_offer_itr)
+        {
             dump_item(*matched_offer_itr);
         }
+
+        print("***************");
+
+        auto ii = idx.find(key);
+        for(;ii != idx.end();++ii) {
+            dump_item(*ii);
+        }
+    }
+
+    // @abi action
+    void droptable()
+    {
+        for(auto itr = offers.begin(); itr!=offers.end();){
+            itr = offers.erase(itr);
+        }
+        print("drop table finish","\n");
     }
 
   private:
@@ -95,4 +114,4 @@ class multindex : public contract
     offer_index offers;
 };
 
-GRAPHENE_ABI(multindex, (additem)(getbypk)(getbyidx1)(getbyidx2))
+GRAPHENE_ABI(multindex, (additem)(getbypk)(getbyidx1)(getbyidx2)(droptable))
