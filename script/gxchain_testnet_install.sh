@@ -1,4 +1,6 @@
 #!/bin/bash
+set -x
+
 ARCH=$(uname)
 if [ "$ARCH" == "Linux" ]; then
     OS_NAME=$( cat /etc/os-release | grep ^NAME | cut -d'=' -f2 | sed 's/\"//gI' )
@@ -13,7 +15,7 @@ if [ "$ARCH" == "Linux" ]; then
         tar zxvf gxb_1.0.181212-ubuntu-14.04.testnet.tar.g
     else
         curl -L 'http://gxb-package.oss-cn-hangzhou.aliyuncs.com/gxb-core/testnet/gxb_1.0.181212-ubuntu-16.04.testnet.tar.gz' -o gxb_1.0.181212-ubuntu-16.04.testnet.tar.gz
-        tar zxvf gxb_1.0.181212-ubuntu-16.04.tar.gz
+        tar zxvf gxb_1.0.181212-ubuntu-16.04.testnet.tar.gz
     fi
 elif [ "$ARCH" == "Darwin" ]; then
     curl -L 'http://gxb-package.oss-cn-hangzhou.aliyuncs.com/gxb-core/testnet/gxb_1.0.181212-osx.testnet.tar.gz' -o gxb_1.0.181212-osx.testnet.tar.gz
