@@ -75,6 +75,11 @@
 #define HARDFORK_1012_TIME (fc::time_point_sec( 1544112000 )) // for test, 2018-12-10T00:00:00
 #endif
 
+// apply block optimize
+#ifndef HARDFORK_1013_TIME
+#define HARDFORK_1013_TIME (fc::time_point_sec( 1544112000 )) // for test, 2018-12-10T00:00:00
+#endif
+
 // enable witness guaranty
 #ifndef HARDFORK_1129_TIME
 #define HARDFORK_1129_TIME (fc::time_point_sec( 1542099600 )) // for test, 2018-11-13T09:00:00(UTC)

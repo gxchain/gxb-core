@@ -532,10 +532,13 @@ void database::_apply_block( const signed_block& next_block )
        for (const auto op_result : trx.operation_results) {
            if (op_result.which() == operation_result::tag<contract_receipt>::value) {
                block_cpu_time_us += op_result.get<contract_receipt>().billed_cpu_time_us;
+               if(head_block_time() > HARDFORK_1013_TIME) {
+            	   FC_ASSERT(block_cpu_time_us <= get_cpu_limit().block_cpu_limit, "block cpu time exceed global block limit");
+               }
            }
        }
    }
-   FC_ASSERT(block_cpu_time_us <= get_cpu_limit().block_cpu_limit, "block cpu time exceed global block limit");
+
 
    update_global_dynamic_data(next_block);
    update_signing_witness(signing_witness, next_block);
