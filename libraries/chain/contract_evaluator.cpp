@@ -75,7 +75,11 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
         fee_from_account = asset(core_fee_paid, op.fee.asset_id);
     } else {
         const auto &pr = db.get<asset_object>(op.fee.asset_id).options.core_exchange_rate;
-        fee_from_account = asset(core_fee_paid * pr.quote.amount / pr.base.amount, op.fee.asset_id);
+        if(db.head_block_time() > HARDFORK_1013_TIME) {
+            fee_from_account = asset(core_fee_paid * pr.quote.amount / pr.base.amount, op.fee.asset_id);
+        } else {
+            fee_from_account = asset(core_fee_paid / uint64_t(pr.to_real()), op.fee.asset_id);
+        }
     }
 
     dlog("real_fee=${r}, ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
