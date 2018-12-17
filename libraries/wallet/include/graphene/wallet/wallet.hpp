@@ -1088,7 +1088,7 @@ class wallet_api
        * @param limit the max item to return
        * @returns the table rows stored in the blockchain
        */
-      get_table_rows_result get_table_rows(string contract, string table, uint64_t start, uint64_t limit) const;
+      get_table_rows_result get_table_rows(string contract, string table, uint64_t start, uint64_t limit, uint64_t end = 0) const;
 
       /** Registers a third party's account on the blockckain.
        *

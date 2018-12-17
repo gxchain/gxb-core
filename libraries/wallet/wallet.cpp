@@ -947,7 +947,7 @@
           _builder_transactions.erase(handle);
        }
 
-       get_table_rows_result get_table_rows(string contract, string table, uint64_t start, uint64_t limit)
+       get_table_rows_result get_table_rows(string contract, string table, uint64_t start, uint64_t limit, uint64_t end)
        { try {
              FC_ASSERT(start>=0 && limit > 0, "start must >=0 and limit must > 0");
              account_object contract_obj = get_account(contract);
@@ -957,7 +957,7 @@
                      [&](const table_def& t) { return t.name == table; });
 
              if (iter != tables.end()) {
-                 return _remote_db->get_table_rows(contract, table, start, limit);
+                 return _remote_db->get_table_rows(contract, table, start, limit, end);
              } else {
                  GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
              }
@@ -4669,9 +4669,9 @@
         return my->get_contract_tables(contract);
     }
 
-    get_table_rows_result wallet_api::get_table_rows(string contract, string table, uint64_t start, uint64_t limit) const
+    get_table_rows_result wallet_api::get_table_rows(string contract, string table, uint64_t start, uint64_t limit, uint64_t end) const
     {
-        return my->get_table_rows(contract, table, start, limit);
+        return my->get_table_rows(contract, table, start, limit, end);
     }
 
     signed_transaction wallet_api::register_account(string name,

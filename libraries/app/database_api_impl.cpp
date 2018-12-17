@@ -163,7 +163,7 @@ fc::variants get_table_objects(bool &more, const database &db, const account_obj
     FC_CAPTURE_AND_RETHROW((account_obj)(table)(lower_id)(uppper_id)(limit))
 }
 
-get_table_rows_result database_api_impl::get_table_rows(string contract, string table, uint64_t start, uint64_t limit) const
+get_table_rows_result database_api_impl::get_table_rows(string contract, string table, uint64_t start, uint64_t limit, uint64_t end) const
 { try {
 	get_table_rows_result result;
 
@@ -175,7 +175,7 @@ get_table_rows_result database_api_impl::get_table_rows(string contract, string 
 
     const account_object &account_obj = *account_itr;
 
-    result.rows = ::graphene::app::get_table_objects(result.more, _db, account_obj, name(table).value, start, start + limit, limit);
+    result.rows = ::graphene::app::get_table_objects(result.more, _db, account_obj, name(table).value, start, end == 0 ? (start + limit) : end, limit);
     return result;
     }
     FC_CAPTURE_AND_RETHROW((contract)(table))
