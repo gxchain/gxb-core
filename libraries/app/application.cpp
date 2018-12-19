@@ -231,9 +231,11 @@ namespace detail {
          auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c, GRAPHENE_NET_MAX_NESTED_OBJECTS);
          auto login = std::make_shared<graphene::app::login_api>( std::ref(*_self) );
          login->enable_api("database_api");
+         login->enable_api("network_broadcast_api");
 
          wsc->register_api(login->database());
          wsc->register_api(fc::api<graphene::app::login_api>(login));
+         wsc->register_api(login->network_broadcast());
          c->set_session_data( wsc );
 
          std::string username = "*";
