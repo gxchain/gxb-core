@@ -38,9 +38,26 @@ struct get_table_rows_result {
    vector<fc::variant> rows;
    bool                more = false;
 };
+struct get_table_rows_params {
+   //bool        json = false;
+   //name        code;
+   //string      scope;
+   //name        table;
+   //string      table_key;
+   uint64_t      lower_bound = 0;
+   uint64_t      upper_bound = -1;  // 0xFFFFFFFFFFFFFFFF
+   uint32_t      limit = 10;
+   //string      key_type;  // type of key specified by index_position
+   std::string   index_position = "1"; // 1 - primary (first), 2 - secondary index (in order defined by multi_index), 3 - third index, etc
+   //string      encode_type{"dec"}; //dec, hex , default=dec
+   optional<bool>  reverse = false;
+   //optional<bool>  show_payer; // show RAM pyer
+};
 
 }} //
 
 FC_REFLECT( graphene::app::order, (price)(quote)(base) );
 FC_REFLECT( graphene::app::get_table_rows_result, (rows)(more) );
+FC_REFLECT( graphene::app::get_table_rows_params, (lower_bound)(upper_bound)(limit)(index_position)(reverse));
+
 

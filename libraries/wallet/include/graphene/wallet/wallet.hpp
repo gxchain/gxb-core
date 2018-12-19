@@ -1079,7 +1079,16 @@ class wallet_api
        * @returns the table names/types stored in the blockchain
        */
       variant get_contract_tables(string contract) const;
-
+      /** Returns table infos about the given contract.
+       *
+       * @param contract the name of the contract to query
+       * @param table the table of the contract to query
+       * @param start the start primary key of the table primary index
+       * @param limit the max item to return
+       * @param index_type the type of index(primary secondary  )
+       * @returns the table rows stored in the blockchain
+       */
+      get_table_rows_result get_table_rows_ex(string contract, string table, const get_table_rows_params& params) const;
       /** Returns table infos about the given contract.
        *
        * @param contract the name of the contract to query
@@ -2192,6 +2201,7 @@ FC_API( graphene::wallet::wallet_api,
         (update_contract)
         (call_contract)
         (get_contract_tables)
+        (get_table_rows_ex)
         (get_table_rows)
         (register_account2)
         (upgrade_account)
