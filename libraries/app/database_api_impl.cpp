@@ -124,14 +124,11 @@ fc::variants database_api_impl::get_objects(const vector<object_id_type>& ids)co
 
    return result;
 }
-/* un used
-static void copy_inline_row(const key_value_object& obj, vector<char>& data) {
-   data.resize( obj.value.size() );
-   memcpy( data.data(), obj.value.data(), obj.value.size() );
-}*/ 
-uint64_t get_table_index_name(name tablename, const std::string &index_position, bool& primary) {
+
+uint64_t get_table_index_name(name tablename, const std::string &index_position, bool &primary)
+{
     try {
-        
+
         using boost::algorithm::starts_with;
         // see multi_index packing of index name
         const uint64_t table = tablename;
@@ -166,8 +163,7 @@ uint64_t get_table_index_name(name tablename, const std::string &index_position,
             try {
                 pos = fc::to_uint64(index_position);
             } catch (...) {
-                FC_ASSERT(false, "Invalid index_position: ${p}",("p", index_position));
-
+                FC_ASSERT(false, "Invalid index_position: ${p}", ("p", index_position));
             }
             if (pos < 2) {
                 primary = true;
@@ -181,22 +177,22 @@ uint64_t get_table_index_name(name tablename, const std::string &index_position,
     }
     FC_CAPTURE_AND_RETHROW((tablename)(index_position)(primary))
 }
-fc::variants get_table_objects_ex(bool &more, const database &db, const account_object &account_obj, uint64_t table, const get_table_rows_params& params)
+fc::variants get_table_objects_ex(bool &more, const database &db, const account_object &account_obj, uint64_t table, const get_table_rows_params &params)
 {
     try {
         fc::variants result;
         // check lower_bound and upper_bound
-        FC_ASSERT(params.lower_bound < params.upper_bound ,"lower_bound must < upper_bound");
+        FC_ASSERT(params.lower_bound < params.upper_bound, "lower_bound must < upper_bound");
         abi_serializer abis(account_obj.abi, fc::milliseconds(10000));
 
         name tname(table);
-        uint64_t count = 0 ;
+        uint64_t count = 0;
         auto end = fc::time_point::now() + fc::microseconds(1000 * 10);
 
         bool is_primary = false;
-        uint64_t _index_position = get_table_index_name(tname,params.index_position,is_primary);
+        uint64_t _index_position = get_table_index_name(tname, params.index_position, is_primary);
 
-        if(is_primary == true){  // get table by primary
+        if (is_primary == true) { // get table by primary
             const auto &table_idx = db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
             auto existing_tid = table_idx.find(boost::make_tuple(account_obj.id.instance(), name(account_obj.id.instance()), name(table)));
             if (existing_tid != table_idx.end()) {
@@ -205,37 +201,37 @@ fc::variants get_table_objects_ex(bool &more, const database &db, const account_
                 auto lower = kv_idx.lower_bound(boost::make_tuple(existing_tid->id, params.lower_bound));
                 auto upper = kv_idx.lower_bound(boost::make_tuple(existing_tid->id, params.upper_bound));
 
-                auto traver =[&](auto lower,auto upper){
+                auto traver = [&](auto lower, auto upper) {
                     auto it = lower;
                     for (; it != upper; ++it) {
                         if (fc::time_point::now() > end || count == params.limit) break;
                         result.emplace_back(abis.binary_to_variant(tname.to_string(), it->value, fc::microseconds(1000 * 10)));
                         ++count;
                     }
-                    if (count<params.limit && it != upper && ++it != upper) {
+                    if (count < params.limit && it != upper && ++it != upper) {
                         more = true;
                     }
                 };
-                auto traver_reverse =[&](auto lower,auto upper){
-                    auto it = upper;        // the itor before of the end
-                    for (; it != lower ;) {
+                auto traver_reverse = [&](auto lower, auto upper) {
+                    auto it = upper; // the itor before of the end
+                    for (; it != lower;) {
                         --it;
                         if (fc::time_point::now() > end || count == params.limit) break;
                         result.emplace_back(abis.binary_to_variant(tname.to_string(), it->value, fc::microseconds(1000 * 10)));
                         ++count;
                     }
-                    if (count<params.limit && it != lower && --it != lower) {
+                    if (count < params.limit && it != lower && --it != lower) {
                         more = true;
                     }
                 };
-                if(params.reverse && *params.reverse )  // reverse
+                if (params.reverse && *params.reverse) // reverse
                 {
-                    traver_reverse(lower,upper);
-                }else{        //  unreverse
-                    traver(lower,upper);
+                    traver_reverse(lower, upper);
+                } else { //  unreverse
+                    traver(lower, upper);
                 }
             }
-        }else{      // get table by secondary/ternary
+        } else { // get table by secondary/ternary
             const auto &table_idx = db.get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
             auto primary_tid = table_idx.find(boost::make_tuple(account_obj.id.instance(), name(account_obj.id.instance()), name(table)));
             auto sec_tid = table_idx.find(boost::make_tuple(account_obj.id.instance(), name(account_obj.id.instance()), _index_position)); // table name with index
@@ -245,42 +241,42 @@ fc::variants get_table_objects_ex(bool &more, const database &db, const account_
                 auto sec_lower = sec_idx.lower_bound(boost::make_tuple(sec_tid->id, params.lower_bound, std::numeric_limits<uint64_t>::lowest()));
                 //auto sec_upper = sec_idx.lower_bound(boost::make_tuple(sec_tid->id, params.upper_bound, std::numeric_limits<uint64_t>::max()));
                 auto sec_upper = sec_idx.lower_bound(boost::make_tuple(sec_tid->id, params.upper_bound, std::numeric_limits<uint64_t>::lowest()));
-                auto traver =[&](auto lower,auto upper){
-                  const auto &kv_idx_for_sec = db.get_index_type<key_value_index>().indices().get<by_scope_primary>();
-                  auto sec_it = lower;
-
-                  for(; sec_it != upper; ++sec_it){
-                     if(fc::time_point::now() > end || count == params.limit)
-                           break;
-                     auto itr2 = kv_idx_for_sec.find(boost::make_tuple(primary_tid->id,sec_it->primary_key));
-                     result.emplace_back(abis.binary_to_variant(tname.to_string(), itr2->value, fc::microseconds(1000 * 10)));
-                     ++count;
-                  }
-                  if(count < params.limit && sec_it != upper && ++sec_it != upper) {
-                     more = true;
-                  }
-                };
-                auto traver_reverse =[&](auto lower,auto upper){
+                auto traver = [&](auto lower, auto upper) {
                     const auto &kv_idx_for_sec = db.get_index_type<key_value_index>().indices().get<by_scope_primary>();
-                    auto sec_it = upper;
+                    auto sec_it = lower;
 
-                    for(; sec_it != lower ;){
-                        --sec_it;
-                        if(fc::time_point::now() > end || count == params.limit)
+                    for (; sec_it != upper; ++sec_it) {
+                        if (fc::time_point::now() > end || count == params.limit)
                             break;
-                        auto itr2 = kv_idx_for_sec.find(boost::make_tuple(primary_tid->id,sec_it->primary_key));
+                        auto itr2 = kv_idx_for_sec.find(boost::make_tuple(primary_tid->id, sec_it->primary_key));
                         result.emplace_back(abis.binary_to_variant(tname.to_string(), itr2->value, fc::microseconds(1000 * 10)));
                         ++count;
                     }
-                    if(count < params.limit && sec_it != lower && --sec_it != lower) {
+                    if (count < params.limit && sec_it != upper && ++sec_it != upper) {
                         more = true;
                     }
                 };
-                if(params.reverse && *params.reverse )  // reverse
+                auto traver_reverse = [&](auto lower, auto upper) {
+                    const auto &kv_idx_for_sec = db.get_index_type<key_value_index>().indices().get<by_scope_primary>();
+                    auto sec_it = upper;
+
+                    for (; sec_it != lower;) {
+                        --sec_it;
+                        if (fc::time_point::now() > end || count == params.limit)
+                            break;
+                        auto itr2 = kv_idx_for_sec.find(boost::make_tuple(primary_tid->id, sec_it->primary_key));
+                        result.emplace_back(abis.binary_to_variant(tname.to_string(), itr2->value, fc::microseconds(1000 * 10)));
+                        ++count;
+                    }
+                    if (count < params.limit && sec_it != lower && --sec_it != lower) {
+                        more = true;
+                    }
+                };
+                if (params.reverse && *params.reverse) // reverse
                 {
-                    traver_reverse(sec_lower,sec_upper);
-                }else{        //  unreverse
-                   traver(sec_lower,sec_upper);
+                    traver_reverse(sec_lower, sec_upper);
+                } else { //  unreverse
+                    traver(sec_lower, sec_upper);
                 }
             }
         }
@@ -289,20 +285,21 @@ fc::variants get_table_objects_ex(bool &more, const database &db, const account_
     }
     FC_CAPTURE_AND_RETHROW((account_obj)(table)(params))
 }
-get_table_rows_result database_api_impl::get_table_rows_ex(string contract, string table, const get_table_rows_params& params) const
-{ try {
-	get_table_rows_result result;
+get_table_rows_result database_api_impl::get_table_rows_ex(string contract, string table, const get_table_rows_params &params) const
+{
+    try {
+        get_table_rows_result result;
 
-    const auto& accounts_idx = _db.get_index_type<account_index>().indices().get<by_name>();
-    const auto& account_itr = accounts_idx.find(contract);
-    if(account_itr == accounts_idx.end()) {
-    	return result;
-    }
+        const auto &accounts_idx = _db.get_index_type<account_index>().indices().get<by_name>();
+        const auto &account_itr = accounts_idx.find(contract);
+        if (account_itr == accounts_idx.end()) {
+            return result;
+        }
 
-    const account_object &account_obj = *account_itr;
+        const account_object &account_obj = *account_itr;
 
-    result.rows = ::graphene::app::get_table_objects_ex(result.more, _db, account_obj, name(table).value, params);
-    return result;
+        result.rows = ::graphene::app::get_table_objects_ex(result.more, _db, account_obj, name(table).value, params);
+        return result;
     }
     FC_CAPTURE_AND_RETHROW((contract)(table))
 }

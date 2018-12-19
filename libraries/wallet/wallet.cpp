@@ -946,22 +946,25 @@
        {
           _builder_transactions.erase(handle);
        }
-       get_table_rows_result get_table_rows_ex(string contract, string table, const get_table_rows_params& params)
-       { try {
-             FC_ASSERT(params.lower_bound >=0 && params.limit > 0, "lower_bound must >=0 and limit must > 0");
-             account_object contract_obj = get_account(contract);
+       get_table_rows_result get_table_rows_ex(string contract, string table, const get_table_rows_params &params)
+       {
+           try {
+               FC_ASSERT(params.lower_bound >= 0 && params.limit > 0, "lower_bound must >=0 and limit must > 0");
+               account_object contract_obj = get_account(contract);
 
-             const auto& tables = contract_obj.abi.tables;
-             auto iter = std::find_if(tables.begin(), tables.end(),
-                     [&](const table_def& t) { return t.name == table; });
+               const auto &tables = contract_obj.abi.tables;
+               auto iter = std::find_if(tables.begin(), tables.end(),
+                                        [&](const table_def &t) { return t.name == table; });
 
-             if (iter != tables.end()) {
-                 return _remote_db->get_table_rows_ex(contract, table,params);
-             } else {
-                 GRAPHENE_ASSERT(false, table_not_found_exception, "No table found for ${contract}", ("contract", contract));
-             }
-             return get_table_rows_result();
-       } FC_CAPTURE_AND_RETHROW((contract)(table)) }
+               if (iter != tables.end()) {
+                   return _remote_db->get_table_rows_ex(contract, table, params);
+               } else {
+                   FC_ASSERT(false, "No table found for ${contract}", ("contract", contract));
+               }
+               return get_table_rows_result();
+           }
+           FC_CAPTURE_AND_RETHROW((contract)(table))
+       }
 
        get_table_rows_result get_table_rows(string contract, string table, uint64_t start, uint64_t limit)
        { try {
@@ -4684,7 +4687,7 @@
     {
         return my->get_contract_tables(contract);
     }
-    get_table_rows_result wallet_api::get_table_rows_ex(string contract, string table,const get_table_rows_params& params) const
+    get_table_rows_result wallet_api::get_table_rows_ex(string contract, string table, const get_table_rows_params &params) const
     {
         return my->get_table_rows_ex(contract, table, params);
     }
