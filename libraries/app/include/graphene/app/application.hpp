@@ -45,6 +45,7 @@ namespace graphene { namespace app {
                                    boost::program_options::options_description& configuration_file_options )const;
          void initialize(const fc::path& data_dir, const boost::program_options::variables_map&options);
          void initialize_plugins( const boost::program_options::variables_map& options );
+         void truncate_block_db(const fc::path &data_dir, uint64_t block_num);
          void startup();
          void shutdown();
          void startup_plugins();
