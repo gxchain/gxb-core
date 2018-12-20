@@ -311,6 +311,11 @@ namespace detail {
             genesis.initial_witness_candidates[i].block_signing_key = init_pubkey;
       }
 
+      void truncate_block_db(const fc::path &data_dir, uint64_t block_num)
+      {
+    	  _chain_db->truncate_block_db(data_dir / "blockchain/database/block_num_to_block", block_num);
+      }
+
       void startup()
       { try {
          fc::create_directories(_data_dir / "blockchain");
@@ -949,6 +954,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("version,v", "Display version information")
          ("contracts-console", "print contract's output to console")
          ("rpc-mock-calc-fee", "rec-server mock caculate required fees, default fasle")
+		 ("truncate,x", bpo::value<string>()->composing(), "truncate db file by block_number")
          ;
    command_line_options.add(_cli_options);
    configuration_file_options.add(_cfg_options);
@@ -999,6 +1005,11 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
    {
       if (!it.empty()) enable_plugin(it);
    }
+}
+
+void application::truncate_block_db(const fc::path &data_dir, uint64_t block_num)
+{
+   my->truncate_block_db(data_dir, block_num);
 }
 
 void application::startup()

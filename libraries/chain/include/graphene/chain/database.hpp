@@ -97,6 +97,7 @@ namespace graphene { namespace chain {
              std::function<genesis_state_type()> genesis_loader,
              const std::string& db_version,
              bool fast_replay = false);
+          void truncate_block_db(const fc::path &db_path, uint64_t block_num);
 
          /**
           * @brief Rebuild object graph from block history and open detabase

@@ -25,6 +25,7 @@
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <fc/io/raw.hpp>
 #include <fc/smart_ref_impl.hpp>
+#include <unistd.h>
 
 namespace graphene { namespace chain {
 
@@ -114,6 +115,40 @@ void block_database::remove( const block_id_type& id )
       _block_num_to_pos.write( (char*)&e, sizeof(e) );
    }
 } FC_CAPTURE_AND_RETHROW( (id) ) }
+
+void block_database::truncate_block_db(const path &block_db_dir, uint64_t block_num)
+{ try {
+   open(block_db_dir);
+
+   uint64_t index_target_pos = sizeof(index_entry) * block_num;
+   _block_num_to_pos.seekp(0, _block_num_to_pos.end);
+   if (_block_num_to_pos.tellp() < index_target_pos) {
+	  elog("block number too big");
+      return;
+   }
+
+   _block_num_to_pos.seekp(0, _block_num_to_pos.beg);
+   _block_num_to_pos.seekp(index_target_pos - sizeof(index_entry));
+
+   index_entry e;
+   _block_num_to_pos.read((char*)&e, sizeof(e));
+
+   uint64_t block_target_pos = e.block_pos + e.block_size;
+
+   _blocks.seekp(0, _block_num_to_pos.end);
+   if ( _blocks.tellp() < block_target_pos ) {
+      elog("block number too big");
+      return;
+   }
+
+   close();
+
+   dlog("index_target_pos = ${i}, block_target_pos = ${b}", ("i", index_target_pos)("b", block_target_pos));
+   dlog("target_entry = ${e}", ("e", e));
+   truncate((block_db_dir / "index").generic_string().c_str(), index_target_pos);
+   truncate((block_db_dir / "blocks").generic_string().c_str(), block_target_pos);
+   dlog("truncate database file successful");
+} FC_CAPTURE_AND_RETHROW() }
 
 bool block_database::contains( const block_id_type& id )const
 {
