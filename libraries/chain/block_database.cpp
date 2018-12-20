@@ -123,7 +123,8 @@ void block_database::truncate_block_db(const path &block_db_dir, uint64_t block_
    uint64_t index_target_pos = sizeof(index_entry) * block_num;
    _block_num_to_pos.seekp(0, _block_num_to_pos.end);
    if (_block_num_to_pos.tellp() < index_target_pos) {
-	  elog("block number too big");
+      elog("block number too big");
+      close();
       return;
    }
 
@@ -138,6 +139,7 @@ void block_database::truncate_block_db(const path &block_db_dir, uint64_t block_
    _blocks.seekp(0, _block_num_to_pos.end);
    if ( _blocks.tellp() < block_target_pos ) {
       elog("block number too big");
+      close();
       return;
    }
 
