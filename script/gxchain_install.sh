@@ -10,7 +10,7 @@ if [ "$ARCH" == "Linux" ]; then
     fi
     OS_VERSION=$(lsb_release -a | grep "Release" | sed -e 's/Release:[\t]*//g')
     echo "Your OS Version: Ubuntu ${OS_VERSION}"
-    if [ "$OS_NAME" != "14.04" ]; then
+    if [ "$OS_NAME" = "14.04" ]; then
         curl -L 'http://gxb-package.oss-cn-hangzhou.aliyuncs.com/gxb-core/gxb_1.0.181212-ubuntu-14.04.tar.gz' -o gxb_1.0.181212-ubuntu-14.04.tar.gz
         tar zxvf gxb_1.0.181212-ubuntu-14.04.tar.gz
     else
