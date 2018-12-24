@@ -196,6 +196,10 @@ void database::open(
    FC_CAPTURE_LOG_AND_RETHROW( (data_dir) )
 }
 
+void database::truncate_block_db(const fc::path &path, uint64_t block_num) {
+   _block_id_to_block.truncate_block_db(path, block_num);
+}
+
 void database::close(bool rewind)
 {
    // TODO:  Save pending tx's on close()

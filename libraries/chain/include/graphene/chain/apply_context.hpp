@@ -544,8 +544,14 @@ class apply_context {
 
       template<typename T>
       void console_append(T val) {
-          if(contract_log_to_console)
+          if(contract_log_to_console) {
               _pending_console_output << val;
+			  auto console = _pending_console_output.str();
+			  if(console.find("\n") != string::npos) {
+				  dlog("${x}", ("x", console));
+				  reset_console();
+			  }
+          }
       }
 
       template <typename T, typename... Ts>
