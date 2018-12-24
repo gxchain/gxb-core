@@ -227,10 +227,21 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
 { try {
     database& d = db();
     if (op.amount.valid()) {
-        auto amnt = *op.amount;
-        // dlog("contract_call adjust balance, ${f} -> ${t}, asset ${a}", ("f", op.account)("t", op.contract_id)("a", amnt));
-        d.adjust_balance(op.account, -amnt);
-        d.adjust_balance(op.contract_id, amnt);
+       if (d.head_block_time() > HARDFORK_1014_TIME) {
+            transaction_evaluation_state op_context(&d);
+            op_context.skip_fee_schedule_check = true;
+            transfer_operation transfer_op;
+            transfer_op.amount = *op.amount;
+            transfer_op.from = op.account;
+            transfer_op.to = op.contract_id;
+            transfer_op.fee = asset{0, asset_id_type(1)};
+            d.apply_operation(op_context, transfer_op);
+        } else {
+            auto amnt = *op.amount;
+            // dlog("contract_call adjust balance, ${f} -> ${t}, asset ${a}", ("f", op.account)("t", op.contract_id)("a", amnt));
+            d.adjust_balance(op.account, -amnt);
+            d.adjust_balance(op.contract_id, amnt);
+    	}
     }
 
     contract_receipt receipt = contract_exec(d, op, billed_cpu_time_us);
