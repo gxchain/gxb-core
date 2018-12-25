@@ -77,11 +77,13 @@
 
 // call_contract fix fee calculation
 #ifndef HARDFORK_1013_TIME
+// should be updated before next release
 #define HARDFORK_1013_TIME (fc::time_point_sec( 1545034200 )) // for test, 2018-12-17T08:10:00(UTC)
 #endif
 
 // can transfer to contract account
 #ifndef HARDFORK_1014_TIME
+// should be updated before next release
 #define HARDFORK_1014_TIME (fc::time_point_sec( 1545436800 )) // for test, 2018-12-22T00:00:00(UTC)
 #endif
 
