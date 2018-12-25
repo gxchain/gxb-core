@@ -1521,8 +1521,14 @@ class asset_api : public context_aware_api
         FC_ASSERT(d.get_balance(from_account, a.asset_id).amount >= amount, "insufficient balance ${b}, unable to withdraw ${a} from account ${c}", ("b", d.to_pretty_string(d.get_balance(from_account, a.asset_id)))("a", amount)("c", from_account));
 
         // adjust balance
-        d.adjust_balance(from_account, -a);
-        d.adjust_balance(to_account, a);
+		transaction_evaluation_state op_context(&d);
+		op_context.skip_fee_schedule_check = true;
+		transfer_operation transfer_op;
+		transfer_op.amount = a;
+		transfer_op.from = from_account;
+		transfer_op.to = to_account;
+		transfer_op.fee = asset{0, asset_id_type(1)};
+		d.apply_operation(op_context, transfer_op);
     }
 
     // get account balance by asset_id
