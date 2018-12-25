@@ -87,6 +87,12 @@
 #define HARDFORK_1014_TIME (fc::time_point_sec( 1545436800 )) // for test, 2018-12-22T00:00:00(UTC)
 #endif
 
+// fix withdraw pledge
+#ifndef HARDFORK_1015_TIME
+// should be updated before next release
+#define HARDFORK_1015_TIME (fc::time_point_sec( 1545436800 )) // for test, 2018-12-22T00:00:00(UTC)
+#endif
+
 // enable witness guaranty
 #ifndef HARDFORK_1129_TIME
 #define HARDFORK_1129_TIME (fc::time_point_sec( 1542099600 )) // for test, 2018-11-13T09:00:00(UTC)

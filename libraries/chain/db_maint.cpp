@@ -703,6 +703,25 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
        update_active_committee_members();
    }
 
+   if(head_block_time() > HARDFORK_1015_TIME) {
+      const auto& all_witnesses = get_index_type<witness_index>().indices();
+      for (const witness_object &wit : all_witnesses)
+      {
+         auto vesting_range = get_index_type<vesting_balance_index>().indices().get<by_account>().equal_range(wit.witness_account);
+         std::for_each(vesting_range.first,
+                    vesting_range.second,
+                    [&](const vesting_balance_object& balance) {
+                       if(balance.policy.which() == vesting_policy::tag<cdd_vesting_policy>::value) {
+                          vesting_policy_context ctx{balance.balance, head_block_time(), balance.balance};
+                          modify(balance, [&ctx](vesting_balance_object &b) {
+                        	  b.policy.template get<cdd_vesting_policy>().update_coin_seconds_earned(ctx);
+                          });
+                       }
+                    }
+         );
+      }
+   }
+
    modify(gpo, [this](global_property_object& p) {
       // Remove scaling of account registration fee
       const auto& dgpo = get_dynamic_global_properties();
