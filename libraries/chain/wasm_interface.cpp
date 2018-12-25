@@ -166,14 +166,14 @@ class global_api : public context_aware_api
     }
 
     // get sender of trx
-    int64_t get_trx_sender()
+    uint64_t get_trx_sender()
     {
         // get op payer
         return context.trx_context.get_trx_origin();
     }
 
     // get origin of trx
-    int64_t get_trx_origin()
+    uint64_t get_trx_origin()
     {
         // get op payer
         return context.trx_context.get_trx_origin();

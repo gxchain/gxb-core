@@ -4,7 +4,7 @@ namespace graphene { namespace chain {
 
    class transaction_context {
       public:
-        transaction_context(database &d, int64_t origin, fc::microseconds max_trx_cpu_us);
+        transaction_context(database &d, uint64_t origin, fc::microseconds max_trx_cpu_us);
 
         void pause_billing_timer();
 
@@ -29,11 +29,11 @@ namespace graphene { namespace chain {
 
       public:
         database &db() const { assert(_db); return *_db; }
-        int64_t get_trx_origin() const { return trx_origin;  }
+        uint64_t get_trx_origin() const { return trx_origin;  }
 
       private:
         database                    *_db;
-        int64_t                     trx_origin;
+        uint64_t                     trx_origin;
         mutable fc::time_point      start;
         mutable fc::time_point      _deadline;
         mutable fc::time_point      pause_time;
