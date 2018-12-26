@@ -155,6 +155,9 @@ void_result contract_update_evaluator::do_evaluate(const contract_update_operati
     FC_ASSERT(d.head_block_time() > HARDFORK_1009_TIME, "contract can not update before hardfork 1009");
 
     const account_object& contract_obj = op.contract(d);
+    if(d.head_block_time() > HARDFORK_1015_TIME) {
+        FC_ASSERT(contract_obj.code.size() > 0, "account: ${a} is not contract account", ("a", op.contract));
+    }
     FC_ASSERT(op.owner == contract_obj.registrar, "only owner can update contract, current owner: ${o}", ("o", contract_obj.registrar));
 
     code_hash = fc::sha256::hash(op.code);
