@@ -200,6 +200,14 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     database& d = db();
     const account_object& contract_obj = op.contract_id(d);
     FC_ASSERT(contract_obj.code.size() > 0, "contract has no code, contract_id ${n}", ("n", op.contract_id));
+    if(d.head_block_time() > HARDFORK_1015_TIME) {
+        FC_ASSERT(contract_obj.active.key_auths.size() == 0 &&
+                  contract_obj.owner.key_auths.size() == 0 &&
+                  contract_obj.active.account_auths.size() == 0 &&
+                  contract_obj.owner.account_auths.size() == 0 &&
+                  contract_obj.active.address_auths.size() == 0 &&
+                  contract_obj.owner.address_auths.size() == 0, "contract can not have owner/active key");
+    }
 
     // check method_name
     const auto& actions = contract_obj.abi.actions;
