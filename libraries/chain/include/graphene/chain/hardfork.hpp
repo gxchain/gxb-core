@@ -88,6 +88,8 @@
 // enable witness guaranty
 #ifndef HARDFORK_1129_TIME
 #define HARDFORK_1129_TIME (fc::time_point_sec( 1543276800 )) // for testnet, 2018-11-27T00:00:00(UTC)
+#endif
+
 #ifndef HARDFORK_1015_TIME
 // disable udpate_contract for normal account
 #define HARDFORK_1015_TIME (fc::time_point_sec( 1546084800 )) // for testnet, 2018-12-29T12:00:00 UTC
