@@ -45,34 +45,33 @@
 // hardfork 1007
 // enable smart contract 2.0
 #ifndef HARDFORK_1007_TIME
-#define HARDFORK_1007_TIME (fc::time_point_sec( 1534759200 ))
+#define HARDFORK_1007_TIME (fc::time_point_sec( 1541433600 )) // for mainnet, 2018-11-06T00:00:00
 #endif
 
 // hardfork 1008
 // core asset hardfork
-// UTC 2018-11-06 00:00:00
 #ifndef HARDFORK_1008_TIME
-#define HARDFORK_1008_TIME (fc::time_point_sec( 1536681600 )) // for mainnet
+#define HARDFORK_1008_TIME (fc::time_point_sec( 1541433600 )) // for mainnet, 2018-11-06T00:00:00
 #endif
 
 // enable smart contract update
 #ifndef HARDFORK_1009_TIME
-#define HARDFORK_1009_TIME (fc::time_point_sec( 1541030400 )) // for test, 2018-11-01T00:00:00
+#define HARDFORK_1009_TIME (fc::time_point_sec( 1545796800 )) // for mainnet, 2018-12-26T04:00:00
 #endif
 
 // set min witness num 21
 #ifndef HARDFORK_1010_TIME
-#define HARDFORK_1010_TIME (fc::time_point_sec( 1543852800 )) // for test, 2018-12-04T00:00:00
+#define HARDFORK_1010_TIME (fc::time_point_sec( 1545796800 )) // for mainnet, 2018-12-26T04:00:00
 #endif
 
 // contract call fee
 #ifndef HARDFORK_1011_TIME
-#define HARDFORK_1011_TIME (fc::time_point_sec( 1544112000 )) // for test, 2018-12-07T00:00:00
+#define HARDFORK_1011_TIME (fc::time_point_sec( 1545796800 )) // for mainnet, 2018-12-26T04:00:00
 #endif
 
 // update active trustnodes
 #ifndef HARDFORK_1012_TIME
-#define HARDFORK_1012_TIME (fc::time_point_sec( 1544112000 )) // for test, 2018-12-10T00:00:00
+#define HARDFORK_1012_TIME (fc::time_point_sec( 1545796800 )) // for mainnet, 2018-12-26T04:00:00
 #endif
 
 // call_contract fix fee calculation
@@ -89,7 +88,18 @@
 
 // enable witness guaranty
 #ifndef HARDFORK_1129_TIME
-#define HARDFORK_1129_TIME (fc::time_point_sec( 1542099600 )) // for test, 2018-11-13T09:00:00(UTC)
+#define HARDFORK_1129_TIME (fc::time_point_sec( 1545796800 )) // for mainnet, 2018-12-26T04:00:00
+#endif
+
+// #1103 the time point before you can renaming asset symbol
+// UTC 2018-11-30 00:00:00
+#ifndef HARDFORK_1103_TIME
+#define HARDFORK_1103_TIME (fc::time_point_sec( 1543507200 ))
+#endif
+
+#ifndef HARDFORK_1015_TIME
+// disable udpate_contract for normal account
+#define HARDFORK_1015_TIME (fc::time_point_sec( 1546084800 )) // for mainnet, 2018-12-29T12:00:00 UTC
 #endif
 
 // #413 Add operation to claim asset fees
