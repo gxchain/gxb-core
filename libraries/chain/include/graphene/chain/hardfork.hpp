@@ -73,6 +73,7 @@
 // update active trustnodes
 #ifndef HARDFORK_1012_TIME
 #define HARDFORK_1012_TIME (fc::time_point_sec( 1544112000 )) // for test, 2018-12-10T00:00:00
+#endif
 
 // call_contract fix fee calculation
 #ifndef HARDFORK_1013_TIME
