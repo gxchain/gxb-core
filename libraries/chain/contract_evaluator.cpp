@@ -65,18 +65,20 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
 
     // calculate real fee, core_fee_paid and fee_from_account
     core_fee_paid = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
-    const auto &asset_obj = db.get<asset_object>(op.fee.asset_id);
+
+    asset_id_type core_asset = asset_id_type();
     if (db.head_block_time() > HARDFORK_1008_TIME) {
-        if (asset_obj.id == asset_id_type(1)) {
-            fee_from_account = asset(core_fee_paid, asset_id_type(1));
-        } else {
-            fee_from_account = asset(core_fee_paid / uint64_t(asset_obj.options.core_exchange_rate.to_real()), op.fee.asset_id);
-        }
+        core_asset = asset_id_type(1);
+    }
+
+    if(op.fee.asset_id == core_asset) {
+        fee_from_account = asset(core_fee_paid, op.fee.asset_id);
     } else {
-        if (asset_obj.id == asset_id_type()) {
-            fee_from_account = asset(core_fee_paid, asset_id_type());
+        const auto &pr = db.get<asset_object>(op.fee.asset_id).options.core_exchange_rate;
+        if(db.head_block_time() > HARDFORK_1013_TIME) {
+            fee_from_account = asset(core_fee_paid * pr.quote.amount / pr.base.amount, op.fee.asset_id);
         } else {
-            fee_from_account = asset(core_fee_paid / uint64_t(asset_obj.options.core_exchange_rate.to_real()), op.fee.asset_id);
+            fee_from_account = asset(core_fee_paid / uint64_t(pr.to_real()), op.fee.asset_id);
         }
     }
 
@@ -154,6 +156,9 @@ void_result contract_update_evaluator::do_evaluate(const contract_update_operati
 
     const account_object& contract_obj = op.contract(d);
     FC_ASSERT(op.owner == contract_obj.registrar, "only owner can update contract, current owner: ${o}", ("o", contract_obj.registrar));
+    if(d.head_block_time() > HARDFORK_1015_TIME) {
+        FC_ASSERT(contract_obj.code.size() > 0, "can not update a normal account: ${a}", ("a", op.contract));
+    }
 
     code_hash = fc::sha256::hash(op.code);
     FC_ASSERT(code_hash != contract_obj.code_version, "code not updated");
@@ -225,10 +230,21 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
 { try {
     database& d = db();
     if (op.amount.valid()) {
-        auto amnt = *op.amount;
-        // dlog("contract_call adjust balance, ${f} -> ${t}, asset ${a}", ("f", op.account)("t", op.contract_id)("a", amnt));
-        d.adjust_balance(op.account, -amnt);
-        d.adjust_balance(op.contract_id, amnt);
+       if (d.head_block_time() > HARDFORK_1014_TIME) {
+            transaction_evaluation_state op_context(&d);
+            op_context.skip_fee_schedule_check = true;
+            transfer_operation transfer_op;
+            transfer_op.amount = *op.amount;
+            transfer_op.from = op.account;
+            transfer_op.to = op.contract_id;
+            transfer_op.fee = asset{0, asset_id_type(1)};
+            d.apply_operation(op_context, transfer_op);
+        } else {
+            auto amnt = *op.amount;
+            // dlog("contract_call adjust balance, ${f} -> ${t}, asset ${a}", ("f", op.account)("t", op.contract_id)("a", amnt));
+            d.adjust_balance(op.account, -amnt);
+            d.adjust_balance(op.contract_id, amnt);
+    	}
     }
 
     contract_receipt receipt = contract_exec(d, op, billed_cpu_time_us);

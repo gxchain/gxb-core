@@ -946,6 +946,25 @@
        {
           _builder_transactions.erase(handle);
        }
+       get_table_rows_result get_table_rows_ex(string contract, string table, const get_table_rows_params &params)
+       {
+           try {
+               FC_ASSERT(params.lower_bound >= 0 && params.limit > 0, "lower_bound must >=0 and limit must > 0");
+               account_object contract_obj = get_account(contract);
+
+               const auto &tables = contract_obj.abi.tables;
+               auto iter = std::find_if(tables.begin(), tables.end(),
+                                        [&](const table_def &t) { return t.name == table; });
+
+               if (iter != tables.end()) {
+                   return _remote_db->get_table_rows_ex(contract, table, params);
+               } else {
+                   FC_ASSERT(false, "No table found for ${contract}", ("contract", contract));
+               }
+               return get_table_rows_result();
+           }
+           FC_CAPTURE_AND_RETHROW((contract)(table))
+       }
 
        get_table_rows_result get_table_rows(string contract, string table, uint64_t start, uint64_t limit)
        { try {
@@ -1132,10 +1151,17 @@
              auto action_type = abis.get_action_type(method);
              GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
              contract_call_op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+             contract_call_op.fee = asset{0, asset_id_type(1)};
 
              signed_transaction tx;
              tx.operations.push_back(contract_call_op);
-             set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+             vector<fc::variant> fees = _remote_db->get_required_fees(tx.operations, fee_asset_obj->id);
+             asset fee;
+             fc::from_variant(fees[0], fee, GRAPHENE_MAX_NESTED_OBJECTS);
+             contract_call_op.fee = fee;
+
+             tx.operations.clear();
+             tx.operations.push_back(contract_call_op);
              tx.validate();
 
              return sign_transaction(tx, broadcast);
@@ -4661,7 +4687,10 @@
     {
         return my->get_contract_tables(contract);
     }
-
+    get_table_rows_result wallet_api::get_table_rows_ex(string contract, string table, const get_table_rows_params &params) const
+    {
+        return my->get_table_rows_ex(contract, table, params);
+    }
     get_table_rows_result wallet_api::get_table_rows(string contract, string table, uint64_t start, uint64_t limit) const
     {
         return my->get_table_rows(contract, table, start, limit);
