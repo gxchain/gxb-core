@@ -52,7 +52,7 @@
 // core asset hardfork
 #ifndef HARDFORK_1008_TIME
 // #define HARDFORK_1008_TIME (fc::time_point_sec( 1541001600 ))
-#define HARDFORK_1008_TIME (fc::time_point_sec( 1936210000 )) // for private-net
+#define HARDFORK_1008_TIME (fc::time_point_sec( 1541030400 )) // for private-net
 #endif
 
 // enable smart contract update

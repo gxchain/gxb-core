@@ -336,10 +336,29 @@
       "name": "nathan",
       "owner_key": "GXC6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
       "active_key": "GXC6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
-      "is_lifetime_member": false
+      "is_lifetime_member": true
     }
   ],
-  "initial_assets": [],
+  "initial_assets": [{
+      "accumulated_fees": 0,
+      "collateral_records": [],
+      "description": "asset NULL",
+      "is_bitasset": false,
+      "issuer_name": "nathan",
+      "max_supply": 100000000000000,
+      "precision": 5,
+      "symbol": "NULL"
+  }, {
+  "accumulated_fees": 0,
+  "collateral_records": [],
+  "description": "asset GXC",
+  "is_bitasset": false,
+  "issuer_name": "nathan",
+  "max_supply": 100000000000000,
+  "precision": 5,
+  "symbol": "GXC"
+  }
+  ],
   "initial_balances": [{
       "owner": "GXCFAbAx7yuxt725qSZvfwWqkdCwp9ZnUama",
       "asset_symbol": "GXC",
