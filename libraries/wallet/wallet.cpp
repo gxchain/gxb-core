@@ -4664,7 +4664,7 @@
     }
     
     signed_transaction wallet_api::update_contract(string contract,
-                                                  string new_owner,
+                                                  optional<string> new_owner,
                                                   string contract_dir,
                                                   string fee_asset_symbol,
                                                   bool broadcast)

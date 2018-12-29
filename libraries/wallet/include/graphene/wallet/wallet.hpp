@@ -1061,14 +1061,14 @@ class wallet_api
      *
      * update contract
      * @param contract contract
-     * @param new_owner new_owner
+     * @param new_owner new_owner, can be null
      * @param contract_dir contract_dir
      * @param fee_asset_symbol fee_asset_symbol
      * @param broadcast broadcast
      * @returns signed_transaction
      */
     signed_transaction update_contract(string contract,
-                                     string new_owner,
+                                     optional<string> new_owner,
                                      string contract_dir,
                                      string fee_asset_symbol,
                                      bool broadcast = false);
