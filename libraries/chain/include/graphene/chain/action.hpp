@@ -7,7 +7,7 @@
 namespace graphene { namespace chain {
 
    struct action {
-      int64_t                  contract_id;
+      uint64_t                 contract_id;
       action_name              method_name;
       bytes                    data;
 
