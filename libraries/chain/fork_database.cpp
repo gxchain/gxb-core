@@ -185,7 +185,7 @@ item_ptr fork_database::fetch_block(const block_id_type& id)const
 
 vector<item_ptr> fork_database::fetch_block_by_number(uint32_t num)const
 {
-   dlog("fork_database fetch_block_by_number ${num}", ("num", num));
+   // dlog("fork_database fetch_block_by_number ${num}", ("num", num));
    vector<item_ptr> result;
    auto itr = _index.get<block_num>().find(num);
    while( itr != _index.get<block_num>().end() )
