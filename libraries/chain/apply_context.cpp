@@ -17,14 +17,14 @@ void apply_context::exec_one()
 {
     if(contract_log_to_console) {
         auto prefix = fc::format_string(
-                                        "\n[(${a},${n})->${r}] ",
+                                        "[(${a},${n})->${r}] ",
                                         fc::mutable_variant_object()
                                         ("a", act.contract_id)
                                         ("n", std::string(act.method_name))
                                         ("r", receiver)
                                         );
 
-        dlog(prefix + "CONSOLE OUTPUT BEGIN =====================\n");
+        dlog(prefix + "CONSOLE OUTPUT BEGIN =====================");
     }
 
     auto start = fc::time_point::now();
@@ -42,7 +42,7 @@ void apply_context::exec_one()
 
    if(contract_log_to_console) {
        auto prefix = fc::format_string(
-                                       "\n[(${a},${n})->${r}] ",
+                                       "[(${a},${n})->${r}] ",
                                        fc::mutable_variant_object()
                                        ("a", act.contract_id)
                                        ("n", std::string(act.method_name))

@@ -42,12 +42,6 @@
 #define HARDFORK_1006_TIME (fc::time_point_sec( 1534759200 ))
 #endif
 
-// hardfork 1007
-// enable smart contract 2.0
-#ifndef HARDFORK_1007_TIME
-#define HARDFORK_1007_TIME (fc::time_point_sec( 1533052800 )) // for testnet, 2018-08-01 00:00:00
-#endif
-
 // hardfork 1008
 // core asset hardfork
 // UTC "2018-09-13 00:00:00"
@@ -55,7 +49,7 @@
 #define HARDFORK_1008_TIME (fc::time_point_sec( 1536768000 )) // for testnet
 #endif
 
-// for contract update
+// for testnet contract_deploy hardfork
 #ifndef HARDFORK_1009_TIME
 #define HARDFORK_1009_TIME (fc::time_point_sec( 1543276800 )) // for testnet, 2018-11-27T00:00:00(UTC)
 #endif

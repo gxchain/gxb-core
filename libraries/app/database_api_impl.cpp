@@ -623,7 +623,7 @@ vector<optional<account_object>> database_api_impl::get_accounts(const vector<ac
 
 std::map<std::string, full_account> database_api_impl::get_full_accounts( const vector<std::string>& names_or_ids, bool subscribe)
 {
-   dlog("names_or_ids ${n}", ("n", names_or_ids));
+   // dlog("names_or_ids ${n}", ("n", names_or_ids));
    std::map<std::string, full_account> results;
 
    for (const std::string& account_name_or_id : names_or_ids)
@@ -1283,7 +1283,7 @@ set<public_key_type> database_api_impl::get_required_signatures( const signed_tr
 
 set<public_key_type> database_api_impl::get_potential_signatures( const signed_transaction& trx )const
 {
-   dlog("trx ${trx}", ("trx", trx));
+   // dlog("trx ${trx}", ("trx", trx));
    set<public_key_type> result;
    trx.get_required_signatures(
       _db.get_chain_id(),
