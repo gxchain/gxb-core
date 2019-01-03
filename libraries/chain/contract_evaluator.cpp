@@ -107,9 +107,6 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
 void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operation &op)
 { try {
     database &d = db();
-    if (d.head_block_time() <= HARDFORK_1007_TIME) {
-        FC_ASSERT(false, "contract is disabled before hardfork 1007");
-    }
 
     // check contract name
     auto &account_idx = d.get_index_type<account_index>();
@@ -153,8 +150,6 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
 void_result contract_update_evaluator::do_evaluate(const contract_update_operation &op)
 { try {
     database &d = db();
-
-    FC_ASSERT(d.head_block_time() > HARDFORK_1009_TIME, "contract can not update before hardfork 1009");
 
     const account_object& contract_obj = op.contract(d);
     FC_ASSERT(op.owner == contract_obj.registrar, "only owner can update contract, current owner: ${o}", ("o", contract_obj.registrar));

@@ -42,21 +42,10 @@
 #define HARDFORK_1006_TIME (fc::time_point_sec( 1534759200 ))
 #endif
 
-// hardfork 1007
-// enable smart contract 2.0
-#ifndef HARDFORK_1007_TIME
-#define HARDFORK_1007_TIME (fc::time_point_sec( 1541433600 )) // for mainnet, 2018-11-06T00:00:00
-#endif
-
 // hardfork 1008
 // core asset hardfork
 #ifndef HARDFORK_1008_TIME
 #define HARDFORK_1008_TIME (fc::time_point_sec( 1541433600 )) // for mainnet, 2018-11-06T00:00:00
-#endif
-
-// enable smart contract update
-#ifndef HARDFORK_1009_TIME
-#define HARDFORK_1009_TIME (fc::time_point_sec( 1545796800 )) // for mainnet, 2018-12-26T04:00:00
 #endif
 
 // set min witness num 21
