@@ -4,14 +4,8 @@
 GXB-Core is the GXChain implementation and command-line interface.
 Current binary version of the GXB-Core software for ubuntu 14.04 LTS, see [here](https://github.com/gxchain/gxb-core/releases).
 
-## API Document
-APIs are separated into two categories, namely
- * the Blockchain API which is used to query blockchain data (account, assets, trading history, etc.) and
- * the Wallet API which has your private keys loaded and is required when interacting with the blockchain with new transactions.
-
-1. [Wallet API](https://github.com/gxchain/gxb-core/wiki/wallet_api).
-
-2. [Blockchain API](https://github.com/gxchain/gxb-core/wiki/witness_node_api_json_rpc).
+## Document
+Technical document is available [here](https://docs.gxchain.org/)
 
 
 #### Document For Exchange

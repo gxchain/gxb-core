@@ -15,6 +15,18 @@ namespace graphene { namespace chain {
 
 void apply_context::exec_one()
 {
+    if(contract_log_to_console) {
+        auto prefix = fc::format_string(
+                                        "[(${a},${n})->${r}] ",
+                                        fc::mutable_variant_object()
+                                        ("a", act.contract_id)
+                                        ("n", std::string(act.method_name))
+                                        ("r", receiver)
+                                        );
+
+        dlog(prefix + "CONSOLE OUTPUT BEGIN =====================");
+    }
+
     auto start = fc::time_point::now();
     try {
         account_id_type contract_id = (account_id_type)(receiver & GRAPHENE_DB_MAX_INSTANCE_ID);
@@ -29,22 +41,19 @@ void apply_context::exec_one()
    } FC_CAPTURE_AND_RETHROW((_pending_console_output.str()));
 
    if(contract_log_to_console) {
-       auto console = _pending_console_output.str();
        auto prefix = fc::format_string(
-                                       "\n[(${a},${n})->${r}] ",
+                                       "[(${a},${n})->${r}] ",
                                        fc::mutable_variant_object()
                                        ("a", act.contract_id)
                                        ("n", std::string(act.method_name))
                                        ("r", receiver)
                                        );
 
-       dlog(prefix + "CONSOLE OUTPUT BEGIN =====================\n"
-               + console + "\n"
-               + prefix + "CONSOLE OUTPUT END =====================" );
+       dlog(prefix + "CONSOLE OUTPUT END =====================" );
    }
    reset_console();
    auto end = fc::time_point::now();
-   dlog("elapsed ${n}", ("n", end - start));
+   dlog("[(${a},${n})->${r}] elapsed ${n}", ("a", act.contract_id)("n", std::string(act.method_name))("r", receiver)("n", end - start));
 }
 
 void apply_context::exec()
