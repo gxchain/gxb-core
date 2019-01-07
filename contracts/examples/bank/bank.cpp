@@ -37,9 +37,9 @@ class bank : public contract
             uint16_t asset_index = std::distance(it->balances.begin(),
                                                  find_if(it->balances.begin(), it->balances.end(), [&](const auto &a) { return a.asset_id == asset_id; }));
             if (asset_index < it->balances.size()) {
-                accounts.modify(it, 0, [&](auto &o) { o.balances[asset_index] += amount; });
+                accounts.modify(it, owner, [&](auto &o) { o.balances[asset_index] += amount; });
             } else {
-                accounts.modify(it, 0, [&](auto &o) { o.balances.emplace_back(amount); });
+                accounts.modify(it, owner, [&](auto &o) { o.balances.emplace_back(amount); });
             }
         }
     }
@@ -60,14 +60,14 @@ class bank : public contract
             if ((amount.asset_id) == asset_it->asset_id) {
                 graphene_assert(asset_it->amount >= amount.amount, "balance not enough");
                 if (asset_it->amount == amount.amount) {
-                    accounts.modify(it, 0, [&](auto &o) {
+                    accounts.modify(it, owner, [&](auto &o) {
                         o.balances.erase(asset_it);
                     });
                     if (it->balances.size() == 0) {
                         accounts.erase(it);
                     }
                 } else {
-                    accounts.modify(it, 0, [&](auto &o) {
+                    accounts.modify(it, owner, [&](auto &o) {
                         o.balances[asset_index] -= amount;
                     });
                 }

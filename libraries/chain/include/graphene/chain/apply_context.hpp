@@ -224,7 +224,10 @@ class apply_context {
                    ++t.count;
                });
 
-               context.update_ram_usage(config::billable_size_v<ObjectType>);
+               if(context._db->head_block_time() <= HARDFORK_1015_TIME)
+                   context.update_ram_usage(config::billable_size_v<ObjectType>);
+               else
+            	   context.update_ram_usages(account_id_type(payer & GRAPHENE_DB_MAX_INSTANCE_ID), config::billable_size_v<ObjectType>);
 
                itr_cache.cache_table(tab);
                return itr_cache.add(obj);
@@ -233,7 +236,11 @@ class apply_context {
             void remove(int iterator)
             {
                 const auto &obj = itr_cache.get(iterator);
-                context.update_ram_usage(-(config::billable_size_v<ObjectType>));
+                if(context._db->head_block_time() <= HARDFORK_1015_TIME)
+                    context.update_ram_usage(-config::billable_size_v<ObjectType>);
+                else
+             	   context.update_ram_usages(account_id_type(obj.payer & GRAPHENE_DB_MAX_INSTANCE_ID), -config::billable_size_v<ObjectType>);
+
 
                 const auto &table_obj = itr_cache.get_table(obj.t_id);
                 FC_ASSERT(table_obj.code == context.receiver, "db access violation");
@@ -592,9 +599,27 @@ class apply_context {
           ram_usage += ram_delta;
       }
 
+      const std::map<account_id_type, int64_t>& get_ram_usages() const {
+          return ram_usages;
+      }
+
+      void update_ram_usages(account_id_type payer, int64_t ram_delta) {
+          if (ram_delta == 0) {
+              return;
+          }
+
+          auto item = ram_usages.find(payer);
+          if(item != ram_usages.end()) {
+        	  ram_usages[payer] += ram_delta;//TODO overflow check
+          } else {
+        	  ram_usages[payer] = ram_delta;
+          }
+      }
+
    private:
-     std::ostringstream _pending_console_output;
-     uint64_t           ram_usage = 0;
+     std::ostringstream                 _pending_console_output;
+     uint64_t                           ram_usage = 0;
+     std::map<account_id_type, int64_t> ram_usages;
 };
 
 } } // namespace graphene::chain

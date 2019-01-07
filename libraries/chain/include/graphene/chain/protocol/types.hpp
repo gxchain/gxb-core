@@ -291,6 +291,7 @@ namespace graphene { namespace chain {
       data_transaction_complain_object_type,//24
       lock_balance_object_type,//25
 	  trust_node_pledge_object_type,//26
+	  ram_fee_object_type,//27
 
       OBJECT_TYPE_COUNT /////< Sentry value which contains the number of different object types
 
@@ -565,6 +566,7 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (data_transaction_complain_object_type)
                  (lock_balance_object_type)
                  (trust_node_pledge_object_type)
+				 (ram_fee_object_type)
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,

@@ -104,7 +104,11 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, c
     });
 
     // update_db_usage
-    update_ram_usage((int64_t)(buffer_size + config::billable_size_v<key_value_object>));
+    if(_db->head_block_time() <= HARDFORK_1015_TIME)
+        update_ram_usage((int64_t)(buffer_size + config::billable_size_v<key_value_object>));
+    else
+        update_ram_usages(account_id_type(payer & GRAPHENE_DB_MAX_INSTANCE_ID), (int64_t)(buffer_size + config::billable_size_v<key_value_object>));
+
 
     keyval_cache.cache_table(tab);
     return keyval_cache.add(new_obj);
@@ -118,7 +122,11 @@ void apply_context::db_update_i64(int iterator, account_name payer, const char *
     const auto &table_obj = keyval_cache.get_table(obj.t_id);
     FC_ASSERT(table_obj.code == receiver, "db access violation");
 
-    update_ram_usage((int64_t)(buffer_size - obj.value.size()));
+    if(_db->head_block_time() <= HARDFORK_1015_TIME)
+        update_ram_usage((int64_t)(buffer_size - obj.value.size()));
+    else
+        update_ram_usages(account_id_type(payer & GRAPHENE_DB_MAX_INSTANCE_ID), (int64_t)(buffer_size - obj.value.size()));
+
     // dlog("db_update_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", (buffer_size - obj.value.size()))("n", ram_usage));
 
     _db->modify(obj, [&](key_value_object &o) {
@@ -135,7 +143,11 @@ void apply_context::db_remove_i64(int iterator)
     const auto &table_obj = keyval_cache.get_table(obj.t_id);
     FC_ASSERT(table_obj.code == receiver, "db access violation");
 
-    update_ram_usage(-(obj.value.size() + config::billable_size_v<key_value_object>));
+    if(_db->head_block_time() <= HARDFORK_1015_TIME)
+        update_ram_usage((int64_t)(-(obj.value.size() + config::billable_size_v<key_value_object>)));
+    else
+        update_ram_usages(account_id_type(obj.payer & GRAPHENE_DB_MAX_INSTANCE_ID), (int64_t)(-(obj.value.size() + config::billable_size_v<key_value_object>)));
+
     // dlog("db_remove_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", -(obj.value.size() + config::billable_size_v<key_value_object>))("n", ram_usage));
 
     _db->remove(obj);

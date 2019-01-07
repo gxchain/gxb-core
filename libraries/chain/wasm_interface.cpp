@@ -991,9 +991,21 @@ class database_api : public context_aware_api {
       using context_aware_api::context_aware_api;
 
       int db_store_i64( uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, array_ptr<const char> buffer, size_t buffer_size ) {
+         if(context._db->head_block_time() > HARDFORK_1015_TIME) {
+        	edump((payer));
+        	edump((context.receiver));
+        	edump((context.trx_context.get_trx_origin()));
+            FC_ASSERT(payer == context.receiver || payer == context.trx_context.get_trx_origin(), "payer invalid");
+         }
          return context.db_store_i64( scope, table, payer, id, buffer, buffer_size );
       }
       void db_update_i64( int itr, uint64_t payer, array_ptr<const char> buffer, size_t buffer_size ) {
+         if(context._db->head_block_time() > HARDFORK_1015_TIME) {
+         	edump((payer));
+         	edump((context.receiver));
+         	edump((context.trx_context.get_trx_origin()));
+            FC_ASSERT(payer == context.receiver || payer == context.trx_context.get_trx_origin(), "payer invalid");
+         }
          context.db_update_i64( itr, payer, buffer, buffer_size );
       }
       void db_remove_i64( int itr ) {

@@ -59,34 +59,18 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     }
 
     uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
-    uint32_t ram_usage_bs = ctx.get_ram_usage();
-    auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
     auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
 
     // calculate real fee, core_fee_paid and fee_from_account
-    core_fee_paid = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
-
-    asset_id_type core_asset = asset_id_type();
-    if (db.head_block_time() > HARDFORK_1008_TIME) {
-        core_asset = asset_id_type(1);
-    }
-
-    if(op.fee.asset_id == core_asset) {
-        fee_from_account = asset(core_fee_paid, op.fee.asset_id);
+    if(db.head_block_time() <= HARDFORK_1015_TIME) {
+        uint32_t ram_usage_bs = ctx.get_ram_usage();
+        auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
+    	core_fee_paid = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
     } else {
-        const auto &pr = db.get<asset_object>(op.fee.asset_id).options.core_exchange_rate;
-        if(db.head_block_time() > HARDFORK_1013_TIME) {
-            fee_from_account = asset(core_fee_paid * pr.quote.amount / pr.base.amount, op.fee.asset_id);
-        } else {
-            fee_from_account = asset(core_fee_paid / uint64_t(pr.to_real()), op.fee.asset_id);
-        }
+    	core_fee_paid = fee_param.fee + cpu_fee.to_uint64();
     }
 
-    /*
-    dlog("real_fee=${r}, ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
-            ("r", fee_from_account)("rf",ram_fee.to_uint64())("cf",cpu_fee.to_uint64())("ru",ctx.get_ram_usage())
-            ("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
-    */
+    fee_from_account = calculate_fee_from_account(db, op, core_fee_paid);
 
     if (db.head_block_time() > HARDFORK_1011_TIME) {
         // validation: trx.op.fee >= real charged fee
@@ -100,9 +84,57 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     generic_evaluator::convert_fee();
     generic_evaluator::pay_fee();
 
-    contract_receipt receipt{cpu_time_us, ram_usage_bs, fee_from_account};
+    if(db.head_block_time() > HARDFORK_1015_TIME) {
+    	const std::map<account_id_type, int64_t>& ram_uasges = ctx.get_ram_usages();
+    	for(auto &ram_uasge : ram_uasges) {
+    		dlog("account=${a}:ram=${r}", ("a", ram_uasge.first)("r", ram_uasge.second));
+            share_type ram_core_fee_paid = ram_uasge.second * (int64_t)fee_param.price_per_kbyte_ram / 1024;
+            asset ram_fee_from_account = calculate_fee_from_account(db, op, ram_core_fee_paid);
+            if(ram_core_fee_paid > 0) {
+                db.adjust_balance(ram_uasge.first, -ram_fee_from_account);
+                db.adjust_balance(account_id_type(508), asset{ram_core_fee_paid, asset_id_type(1)});//ram-account
+
+                if (ram_fee_from_account.asset_id != asset_id_type(1)) {
+                    db.modify(*fee_asset_dyn_data, [ram_fee_from_account,ram_core_fee_paid](asset_dynamic_data_object &d) {
+                        d.accumulated_fees += ram_fee_from_account.amount;
+                        d.fee_pool -= ram_core_fee_paid;
+                    });
+                }
+            } else if(ram_core_fee_paid < 0){
+            	asset surplus = db.get_balance(account_id_type(508), asset_id_type(1));
+            	ram_core_fee_paid = surplus.amount > (-ram_core_fee_paid) ? ram_core_fee_paid : -surplus.amount;
+                db.adjust_balance(ram_uasge.first, -asset{ram_core_fee_paid, asset_id_type(1)});
+                db.adjust_balance(account_id_type(508), asset{ram_core_fee_paid, asset_id_type(1)});//ram-account
+            } else {
+            }
+    	}
+    }
+
+    contract_receipt receipt{cpu_time_us, 0, fee_from_account};
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)(billed_cpu_time_us)) }
+
+asset contract_call_evaluator::calculate_fee_from_account(database& db, const contract_call_operation& op, const share_type &core_fee)
+{
+	asset actual_fee;
+    asset_id_type core_asset = asset_id_type();
+    if (db.head_block_time() > HARDFORK_1008_TIME) {
+        core_asset = asset_id_type(1);
+    }
+
+    if(op.fee.asset_id == core_asset) {
+    	actual_fee = asset(core_fee, op.fee.asset_id);
+    } else {
+        const auto &pr = db.get<asset_object>(op.fee.asset_id).options.core_exchange_rate;
+        if(db.head_block_time() > HARDFORK_1013_TIME) {
+        	actual_fee = asset(core_fee * pr.quote.amount / pr.base.amount, op.fee.asset_id);
+        } else {
+        	actual_fee = asset(core_fee / uint64_t(pr.to_real()), op.fee.asset_id);
+        }
+    }
+
+    return actual_fee;
+}
 
 void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operation &op)
 { try {

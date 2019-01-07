@@ -87,6 +87,12 @@
 #define HARDFORK_1014_TIME (fc::time_point_sec( 1545436800 )) // for test, 2018-12-22T00:00:00(UTC)
 #endif
 
+// can transfer to contract account
+#ifndef HARDFORK_1015_TIME
+// should be updated before next release
+#define HARDFORK_1015_TIME (fc::time_point_sec( 1546415400 )) // for test, 2019-01-02T07:50:00(UTC)
+#endif
+
 // enable witness guaranty
 #ifndef HARDFORK_1129_TIME
 #define HARDFORK_1129_TIME (fc::time_point_sec( 1543276800 )) // for testnet, 2018-11-27T00:00:00(UTC)

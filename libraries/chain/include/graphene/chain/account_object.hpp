@@ -152,6 +152,16 @@ namespace graphene { namespace chain {
           asset             amount;
     };
 
+    class ram_fee_object : public abstract_object<ram_fee_object>
+    {
+       public:
+          static const uint8_t space_id = protocol_ids;
+          static const uint8_t type_id  = ram_fee_object_type;
+
+          account_id_type   owner_account;
+          asset             amount;
+    };
+
    /**
     *
     * @account_merchant_object
@@ -486,6 +496,25 @@ namespace graphene { namespace chain {
   */
  typedef generic_index<trust_node_pledge_object, trust_node_pledge_object_multi_index_type> trust_node_pledge_index;
 
+
+ /**
+ * @ingroup object_index
+ */
+typedef multi_index_container<
+   ram_fee_object,
+   indexed_by<
+      ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+      ordered_unique< tag<by_account>, member< ram_fee_object, account_id_type, &ram_fee_object::owner_account> >
+    >
+ >ram_fee_object_multi_index_type;
+
+/**
+* @ingroup object_index
+*/
+typedef generic_index<ram_fee_object, ram_fee_object_multi_index_type> ram_fee_index;
+
+
+
    struct by_name{};
 
    /**
@@ -528,6 +557,10 @@ FC_REFLECT_DERIVED( graphene::chain::lock_balance_object,
                     (owner)(create_date_time)(lock_days)(program_id)(amount)(interest_rate)(memo) )
 
 FC_REFLECT_DERIVED( graphene::chain::trust_node_pledge_object,
+					(graphene::db::object),
+					(owner_account)(amount) )
+
+FC_REFLECT_DERIVED( graphene::chain::ram_fee_object,
 					(graphene::db::object),
 					(owner_account)(amount) )
 

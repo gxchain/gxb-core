@@ -328,7 +328,7 @@ void database::initialize_indexes()
    add_index< primary_index< table_id_multi_index> >();
    add_index< primary_index< key_value_index> >();
    add_index< primary_index< index64_index> >();
-
+   add_index< primary_index<ram_fee_index          > >();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)
