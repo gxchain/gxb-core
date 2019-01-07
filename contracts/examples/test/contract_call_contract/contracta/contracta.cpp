@@ -17,9 +17,14 @@ class contracta : public contract
     /// @abi action
     void hicontract(uint64_t act_id)
     {
-        print("hi contract:", act_id);
-        std::string s = "abc";
-        action a(act_id, N(hi), bytes(s.begin(), s.end()));
+        print("hi contract:", act_id, "\n");
+        struct p {
+            uint64_t a;
+            uint64_t b;
+        };
+
+        p p1{1, 2};
+        action a(act_id, N(hi), std::move(p1));
         a.send();
     }
 };

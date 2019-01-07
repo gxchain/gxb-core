@@ -1069,7 +1069,7 @@ class transaction_api : public context_aware_api {
          //TODO
 
          action act;
-         fc::raw::unpack<action>(data, data_len, act, 5);
+         fc::raw::unpack<action>(data, data_len, act, 20);
          idump((act));
          context.execute_inline(std::move(act));
       }

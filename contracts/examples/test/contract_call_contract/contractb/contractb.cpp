@@ -15,9 +15,10 @@ class contractb : public contract
     }
 
     /// @abi action
-    void hi()
+    void hi(uint64_t a, uint64_t b)
     {
-        printf("hi");
+        uint64_t c = a+b;
+        print("hi", c, "\n");
     }
 };
 
