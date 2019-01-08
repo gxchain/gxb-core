@@ -513,6 +513,14 @@ namespace graphene { namespace chain {
       friend bool operator == ( const extended_private_key_type& p1, const extended_private_key_type& p2);
       friend bool operator != ( const extended_private_key_type& p1, const extended_private_key_type& p2);
    };
+
+   struct state_snapshot_result
+   {
+        uint32_t            head_block_num;
+        block_id_type       head_block_id;
+        string              snapshot_dir;
+   };
+
 } }  // graphene::chain
 
 namespace fc
@@ -531,6 +539,8 @@ FC_REFLECT( graphene::chain::extended_public_key_type, (key_data) )
 FC_REFLECT( graphene::chain::extended_public_key_type::binary_key, (check)(data) )
 FC_REFLECT( graphene::chain::extended_private_key_type, (key_data) )
 FC_REFLECT( graphene::chain::extended_private_key_type::binary_key, (check)(data) )
+FC_REFLECT( graphene::chain::state_snapshot_result, (head_block_num)(head_block_id)(snapshot_dir) )
+
 
 FC_REFLECT_ENUM( graphene::chain::data_market_type_enum,
                  (free_data_market)

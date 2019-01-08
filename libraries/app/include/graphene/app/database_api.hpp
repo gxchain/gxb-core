@@ -206,6 +206,8 @@ class database_api
       */
      bool is_account_registered(string name) const;
 
+     state_snapshot_result create_snapshot() const;
+
       //////////////
       // Accounts //
       //////////////

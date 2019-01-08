@@ -606,6 +606,11 @@ bool database_api_impl::is_account_registered(string name) const
     return is_known;
 }
 
+state_snapshot_result database_api_impl::create_snapshot() const 
+{
+    ilog("create_snapshot");
+}
+
 vector<optional<account_object>> database_api_impl::get_accounts(const vector<account_id_type>& account_ids)const
 {
    vector<optional<account_object>> result; result.reserve(account_ids.size());

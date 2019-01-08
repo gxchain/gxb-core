@@ -116,6 +116,9 @@ namespace graphene { namespace chain {
          void wipe(const fc::path& data_dir, bool include_blocks);
          void close(bool rewind = true);
 
+         // flush snapshot object_database
+         void flush(const fc::string& data_dir, const fc::string& block_id);
+
          //////////////////// db_block.cpp ////////////////////
 
          /**

@@ -50,6 +50,7 @@ namespace graphene { namespace db {
           * Saves the complete state of the object_database to disk, this could take a while
           */
          void flush();
+         void flush(const fc::string& data_dir, const fc::string& block_id);
          void wipe(const fc::path& data_dir); // remove from disk
          void close();
 
