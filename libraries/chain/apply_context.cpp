@@ -53,7 +53,7 @@ void apply_context::exec_one()
    }
    reset_console();
    auto end = fc::time_point::now();
-   dlog("[(${a},${n})->${r}] elapsed ${n}", ("a", act.contract_id)("n", std::string(act.method_name))("r", receiver)("n", end - start));
+   dlog("[(${a},${n})->${r}] elapsed ${e}", ("a", act.contract_id)("n", std::string(act.method_name))("r", receiver)("e", end - start));
 }
 
 void apply_context::exec()
