@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.10)
 
 configure_file( gxx.in gxx @ONLY )
 install( FILES ${CMAKE_CURRENT_BINARY_DIR}/gxx DESTINATION ${CMAKE_INSTALL_PREFIX}/bin

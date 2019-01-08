@@ -26,6 +26,7 @@
 #include <graphene/witness/witness.hpp>
 #include <graphene/debug_witness/debug_witness.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>
+#include <graphene/mongo_db/mongo_db_plugin.hpp>
 #include <graphene/delayed_node/delayed_node_plugin.hpp>
 #include <graphene/data_transaction/data_transaction_plugin.hpp>
 #include <graphene/snapshot/snapshot.hpp>
@@ -85,6 +86,7 @@ int main(int argc, char** argv) {
       auto delayed_plug = node->register_plugin<delayed_node::delayed_node_plugin>();
       auto data_transaction_plug = node->register_plugin<data_transaction::data_transaction_plugin>();
       auto snapshot_plug = node->register_plugin<snapshot_plugin::snapshot_plugin>();
+      auto mongodb_plug = node->register_plugin<mongo_db::mongo_db_plugin>();
 
       try
       {

@@ -14,7 +14,10 @@ target_link_libraries( witness_node
                        PRIVATE graphene_app graphene_delayed_node
                        graphene_account_history
                        graphene_witness graphene_chain graphene_debug_witness
-                       graphene_data_transaction graphene_snapshot graphene_egenesis_full fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
+                       graphene_data_transaction graphene_snapshot graphene_egenesis_full fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS})
+if(BUILD_MONGO_DB_PLUGIN)
+  target_link_libraries( witness_node PRIVATE graphene_mongo_db )
+endif()
 
 install( TARGETS
    witness_node

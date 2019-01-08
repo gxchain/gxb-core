@@ -3,4 +3,6 @@ add_subdirectory( account_history )
 add_subdirectory( delayed_node )
 add_subdirectory( debug_witness )
 add_subdirectory( data_transaction )
+add_subdirectory( mongo_db )
 add_subdirectory( snapshot )
+

@@ -7,6 +7,11 @@ set( CMAKE_CXX_STANDARD 14 )
 set( CMAKE_CXX_EXTENSIONS ON )
 set( CXX_STANDARD_REQUIRED ON)
 
+set(LLVM_DIR /usr/local/Cellar/llvm@4/4.0.1/lib/cmake/llvm)
+set(WASM_ROOT ~/opt/wasm)
+set(OPENSSL_ROOT_DIR /usr/local/opt/openssl)
+set(OPENSSL_INCLUDE_DIR /usr/local/opt/openssl/include)
+set(OPENSSL_LIBRARIES /usr/local/opt/openssl/lib)
 
 set( CLI_CLIENT_EXECUTABLE_NAME graphene_client )
 set( GUI_CLIENT_EXECUTABLE_NAME gxb-core )
@@ -23,6 +28,9 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         message(FATAL_ERROR "Clang version must be at least 3.3!")
     endif()
 endif()
+
+# an choice on-off
+set(BUILD_MONGO_DB_PLUGIN TRUE CACHE BOOL "Build mongo database plugin")
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
 include( GNUInstallDirs )
