@@ -101,7 +101,7 @@ void database::reindex(fc::path data_dir, bool fast_replay)
       if( i == flush_point )
       {
          std::cerr << "Writing database to disk at block " << i << std::endl;
-         flush();
+         object_database::flush();
          std::cerr << "Done" << std::endl;
       }
       if( head_block_time() >= last_block->timestamp - gpo.parameters.maximum_time_until_expiration )
