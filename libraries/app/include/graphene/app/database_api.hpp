@@ -787,6 +787,8 @@ FC_API(graphene::app::database_api,
    (get_asset_count)
    (is_account_registered)
 
+   (create_snapshot)
+
    // statistic
    (get_data_transaction_product_costs)
    (get_data_transaction_total_count)
