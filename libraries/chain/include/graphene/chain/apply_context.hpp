@@ -8,6 +8,7 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/contract_table_objects.hpp>
+#include <graphene/chain/transaction_context.hpp>
 
 namespace graphene { namespace chain {
 
@@ -479,17 +480,22 @@ class apply_context {
             iterator_cache<ObjectType>  itr_cache;
       }; /// class gph_generic_index
 
-   /// Constructor
    public:
-     apply_context(database &d, transaction_context &trx_ctx, const action &a, optional<asset> amnt)
+     apply_context(database &d, transaction_context &trx_ctx, const action &a)
          : act(a)
          , trx_context(trx_ctx)
          , _db(&d)
-         , amount(amnt)
+         , sender(a.sender)
          , receiver(a.contract_id)
          , idx64(*this)
      {
+    	 if(a.amount.amount > 0 && a.amount.asset_id > 0)
+    		 amount = asset{a.amount.amount, asset_id_type(a.amount.asset_id)};
+
          contract_log_to_console = _db->get_contract_log_to_console();
+
+         trx_context.cross_contract_calling_count++;
+         FC_ASSERT(trx_context.cross_contract_calling_count <= 8, "max cross contract calling can not exceed 8");
          reset_console();
      }
 
@@ -497,38 +503,37 @@ class apply_context {
       database &db() const { assert(_db); return *_db; }
 
    public:
-      const action&                 act; ///< message being applied
-      transaction_context&          trx_context; ///< transaction context in which the action is running
-      database*                     _db;
-      optional<asset>               amount;
-      uint64_t                      receiver;
+      const action&                       act;
+      transaction_context&                trx_context;
+      database*                           _db;
+      optional<asset>                     amount;
+      uint64_t                            sender;
+      uint64_t                            receiver;
 
-      gph_generic_index<index64_object>                                  idx64;
+      gph_generic_index<index64_object>   idx64;
 
    private:
       iterator_cache<key_value_object>    keyval_cache;
-      vector<action>                      _inline_actions; ///< queued inline messages
+      vector<action>                      _inline_actions;
       bool                                contract_log_to_console;
 
-   /// Execution methods:
    public:
       void exec();
       void exec_one();
       void execute_inline(action &&a);
 
-      /// Database methods:
     public:
       void update_db_usage(const account_name &payer, int64_t delta);
-      int db_store_i64(uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size);
+      int  db_store_i64(uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size);
       void db_update_i64(int iterator, account_name payer, const char *buffer, size_t buffer_size);
       void db_remove_i64(int iterator);
-      int db_get_i64(int iterator, char *buffer, size_t buffer_size);
-      int db_next_i64(int iterator, uint64_t &primary);
-      int db_previous_i64(int iterator, uint64_t &primary);
-      int db_find_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
-      int db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
-      int db_upperbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
-      int db_end_i64(uint64_t code, uint64_t scope, uint64_t table);
+      int  db_get_i64(int iterator, char *buffer, size_t buffer_size);
+      int  db_next_i64(int iterator, uint64_t &primary);
+      int  db_previous_i64(int iterator, uint64_t &primary);
+      int  db_find_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
+      int  db_lowerbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
+      int  db_upperbound_i64(uint64_t code, uint64_t scope, uint64_t table, uint64_t id);
+      int  db_end_i64(uint64_t code, uint64_t scope, uint64_t table);
 
     private:
       const table_id_object* find_table(uint64_t code, name scope, name table);

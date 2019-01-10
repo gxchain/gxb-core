@@ -8,6 +8,7 @@ namespace graphene { namespace chain {
    transaction_context::transaction_context(database &d, uint64_t origin, fc::microseconds max_trx_cpu_us) :
         _db(&d),
         trx_origin(origin),
+		cross_contract_calling_count(0),
         start(fc::time_point::now()),
         _deadline(start + max_trx_cpu_us),
         transaction_cpu_usage_us(0)
@@ -49,7 +50,7 @@ namespace graphene { namespace chain {
 
    void transaction_context::dispatch_action(const action &a, uint64_t receiver)
    {
-       apply_context acontext(db(), *this, a, optional<asset>());
+       apply_context acontext(db(), *this, a);
        acontext.receiver = receiver;
 
        try {

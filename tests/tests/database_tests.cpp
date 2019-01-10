@@ -111,58 +111,58 @@ BOOST_AUTO_TEST_CASE(failed_modify_test)
     BOOST_CHECK_NE(db.find_object(obj_id), nullptr);
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( db_store_i64_undo )
-{
-   try {
-      database db;
-      auto ses = db._undo_db.start_undo_session();
-      auto cpu_param = vm_cpu_limit_t();
+//BOOST_AUTO_TEST_CASE( db_store_i64_undo )
+//{
+//   try {
+//      database db;
+//      auto ses = db._undo_db.start_undo_session();
+//      auto cpu_param = vm_cpu_limit_t();
+//
+//      const contract_call_operation op;
+//      transaction_context trx_context(db, account_id_type().instance, fc::microseconds(cpu_param.trx_cpu_limit));
+//      apply_context ctx{db, trx_context, {account_id_type(), N(hi)}};
+//      auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
+//
+//      ses.undo();
+//
+//      char *p = new char[10];
+//
+//      auto t = ctx.db_get_i64(i, p, 2);
+//
+//      BOOST_CHECK_EQUAL( t, 0 );
+//      delete []p;
+//   } catch ( const fc::exception& e )
+//   {
+//      edump( (e.to_detail_string()) );
+//      throw;
+//   }
+//}
 
-      const contract_call_operation op;
-      transaction_context trx_context(db, account_id_type().instance, fc::microseconds(cpu_param.trx_cpu_limit));
-      apply_context ctx{db, trx_context, {account_id_type(), N(hi), {}}, optional<asset>()};
-      auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
-
-      ses.undo();
-
-      char *p = new char[10];
-
-      auto t = ctx.db_get_i64(i, p, 2);
-
-      BOOST_CHECK_EQUAL( t, 0 );
-      delete []p;
-   } catch ( const fc::exception& e )
-   {
-      edump( (e.to_detail_string()) );
-      throw;
-   }
-}
-
-BOOST_AUTO_TEST_CASE( db_store_i64_commit )
-{
-   try {
-      database db;
-      auto ses = db._undo_db.start_undo_session();
-      auto cpu_param = vm_cpu_limit_t();
-
-      const contract_call_operation op;
-      transaction_context trx_context(db, account_id_type().instance, fc::microseconds(cpu_param.trx_cpu_limit));
-      apply_context ctx{db, trx_context, {account_id_type(), N(hi), {}}, optional<asset>()};
-      auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
-
-      ses.commit();
-
-      char *p = new char[10];
-
-      auto t = ctx.db_get_i64(i, p, 3);
-
-      BOOST_CHECK_EQUAL( t, 3 );
-      delete []p;
-   } catch ( const fc::exception& e )
-   {
-      edump( (e.to_detail_string()) );
-      throw;
-   }
-}
+//BOOST_AUTO_TEST_CASE( db_store_i64_commit )
+//{
+//   try {
+//      database db;
+//      auto ses = db._undo_db.start_undo_session();
+//      auto cpu_param = vm_cpu_limit_t();
+//
+//      const contract_call_operation op;
+//      transaction_context trx_context(db, account_id_type().instance, fc::microseconds(cpu_param.trx_cpu_limit));
+//      apply_context ctx{db, trx_context, {account_id_type(), N(hi), {}}, optional<asset>()};
+//      auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
+//
+//      ses.commit();
+//
+//      char *p = new char[10];
+//
+//      auto t = ctx.db_get_i64(i, p, 3);
+//
+//      BOOST_CHECK_EQUAL( t, 3 );
+//      delete []p;
+//   } catch ( const fc::exception& e )
+//   {
+//      edump( (e.to_detail_string()) );
+//      throw;
+//   }
+//}
 
 BOOST_AUTO_TEST_SUITE_END()

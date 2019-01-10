@@ -58,6 +58,13 @@ void apply_context::exec_one()
 
 void apply_context::exec()
 {
+    if (amount.valid()) {
+    	database& d = db();
+        auto amnt = *amount;
+        d.adjust_balance(account_id_type(act.sender), -amnt);
+        d.adjust_balance(account_id_type(act.contract_id), amnt);
+    }
+
     exec_one();
 
     for (const auto &inline_action : _inline_actions) {
@@ -80,6 +87,9 @@ void apply_context::execute_inline(action &&a)
 
     // TODO
     // authorization
+    //TODO process transfer to contract
+
+
     _inline_actions.emplace_back(move(a));
 }
 

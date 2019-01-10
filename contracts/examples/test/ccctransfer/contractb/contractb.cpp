@@ -14,19 +14,11 @@ class contractb : public contract
     {
     }
 
-    struct p {
-    	bool circlecall;
-    };
-
     // @abi action
     // @abi payable
-    void hi(uint64_t a, uint64_t b)
+    void hi()
     {
-        uint64_t c = a+b;
-        print("hi im contractb, the sum(a,b)=", c, "\n");
-        p p1{true};
-        action bb(528, N(hi), std::move(p1), _self, {100000, 1});//call contractc(function hi)
-        bb.send();
+        print("hi i'm contractb\n");
     }
 };
 

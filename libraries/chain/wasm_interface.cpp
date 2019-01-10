@@ -1071,6 +1071,8 @@ class transaction_api : public context_aware_api {
          action act;
          fc::raw::unpack<action>(data, data_len, act, 20);
          idump((act));
+         FC_ASSERT(act.sender == context.receiver,
+        		 "the sender must be current contract, actually act.sender=${s}, current receiver=${r}", ("s", act.sender)("r", context.receiver));
          context.execute_inline(std::move(act));
       }
 };

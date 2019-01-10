@@ -32,12 +32,15 @@ namespace graphene { namespace chain {
         uint64_t get_trx_origin() const { return trx_origin;  }
 
       private:
-        database                    *_db;
-        uint64_t                     trx_origin;
-        mutable fc::time_point      start;
-        mutable fc::time_point      _deadline;
-        mutable fc::time_point      pause_time;
-        mutable int64_t             pause_cpu_usage_us = 0;
-        mutable int64_t             transaction_cpu_usage_us = 0;
+        database*                           _db;
+        uint64_t                            trx_origin;
+        uint64_t                            cross_contract_calling_count = 0;
+        std::map<account_id_type, uint64_t> ram_usage_statistics;
+
+        mutable fc::time_point              start;
+        mutable fc::time_point              _deadline;
+        mutable fc::time_point              pause_time;
+        mutable int64_t                     pause_cpu_usage_us = 0;
+        mutable int64_t                     transaction_cpu_usage_us = 0;
    };
 } }

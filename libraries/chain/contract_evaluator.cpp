@@ -41,11 +41,15 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     int32_t witness_cpu_limit = db.get_max_trx_cpu_time();
     int32_t gpo_cpu_limit = db.get_cpu_limit().trx_cpu_limit;
     fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(std::min(witness_cpu_limit, gpo_cpu_limit)) : fc::days(1);
-    // dlog("max_trx_cpu_time ${a}, cpu_limit ${b}, real cpu limit ${c}", ("a", db.get_max_trx_cpu_time())("b", db.get_cpu_limit().trx_cpu_limit)("c", max_trx_cpu_us));
+
+    action act{op.account.instance, op.contract_id.instance, op.method_name, op.data};
+    if(op.amount && (int64_t)op.amount->amount.value > 0 && op.amount->asset_id.instance.value > 0) {//asset_id=0(NULL asset) can not be transfered
+    	act.amount.amount = op.amount->amount.value;
+    	act.amount.asset_id = op.amount->asset_id.instance;
+    }
 
     transaction_context trx_context(db, op.fee_payer().instance, max_trx_cpu_us);
-    action act{op.contract_id, op.method_name, op.data};
-    apply_context ctx{db, trx_context, act, op.amount};
+    apply_context ctx{db, trx_context, act};
     ctx.exec();
 
     auto fee_param = contract_call_operation::fee_parameters_type();
@@ -53,7 +57,6 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     for (auto& param : p.current_fees->parameters) {
         if (param.which() == operation::tag<contract_call_operation>::value) {
             fee_param = param.get<contract_call_operation::fee_parameters_type>();
-            // dlog("use gpo params, ${s}", ("s", fee_param));
             break;
         }
     }
@@ -225,26 +228,9 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 
 operation_result contract_call_evaluator::do_apply(const contract_call_operation &op, uint32_t billed_cpu_time_us)
 { try {
-    database& d = db();
-    if (op.amount.valid()) {
-       if (d.head_block_time() > HARDFORK_1014_TIME) {
-            transaction_evaluation_state op_context(&d);
-            op_context.skip_fee_schedule_check = true;
-            transfer_operation transfer_op;
-            transfer_op.amount = *op.amount;
-            transfer_op.from = op.account;
-            transfer_op.to = op.contract_id;
-            transfer_op.fee = asset{0, asset_id_type(1)};
-            d.apply_operation(op_context, transfer_op);
-        } else {
-            auto amnt = *op.amount;
-            // dlog("contract_call adjust balance, ${f} -> ${t}, asset ${a}", ("f", op.account)("t", op.contract_id)("a", amnt));
-            d.adjust_balance(op.account, -amnt);
-            d.adjust_balance(op.contract_id, amnt);
-    	}
-    }
 
-    contract_receipt receipt = contract_exec(d, op, billed_cpu_time_us);
+
+    contract_receipt receipt = contract_exec(db(), op, billed_cpu_time_us);
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)) }
 
