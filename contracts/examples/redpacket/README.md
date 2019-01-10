@@ -29,7 +29,7 @@ gxx -g contracts/examples/redpacket/redpacket.abi contracts/examples/redpacket/r
 ##### 部署合约
 ```
 // 这里使用nathan帐户部署合约，部署的合约名为redpacket
-unlocked >>> deploy_contract redpacket nathan 0 0 ./contracts/examples/redpacket GXS true
+unlocked >>> deploy_contract redpacket nathan 0 0 ./contracts/examples/redpacket GXC true
 
 
 ```
