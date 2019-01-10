@@ -608,17 +608,17 @@ bool database_api_impl::is_account_registered(string name) const
 
 state_snapshot_result database_api_impl::create_snapshot() const 
 {
-    ilog("create_snapshot");
+    ilog("create_snapshot ...");
     block_id_type block_id = _db.head_block_id();
     uint32_t  block_num = _db.head_block_num();
 
-    fc:string data_dir = "/tmp/snapshot-dir";
-    _db.flush(data_dir, block_id.str());
+    fc::string snapshot_dir = _db.get_snapshot_dir();
+    _db.flush(snapshot_dir, block_id.str());
 
     state_snapshot_result result;
     result.head_block_num = block_num;
     result.head_block_id = block_id;
-    result.snapshot_dir = data_dir;
+    result.snapshot_dir = snapshot_dir;
     return result;
 }
 

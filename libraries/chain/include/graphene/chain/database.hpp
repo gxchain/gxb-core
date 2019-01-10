@@ -492,6 +492,14 @@ namespace graphene { namespace chain {
          bool                              _opened = false;
          bool                              contract_log_to_console = false;
          bool                              rpc_mock_calc_fee = false;
+
+         // for state snapshot
+        public:
+           void           set_snapshot_dir(const fc::string& data_dir) { snapshot_dir = data_dir; }
+           fc::string     get_snapshot_dir() const { return snapshot_dir; }
+
+        private:
+           fc::string                        snapshot_dir;
    };
 
    namespace detail
