@@ -38,6 +38,7 @@ namespace graphene { namespace chain {
 
          void store( const block_id_type& id, const signed_block& b );
          void remove( const block_id_type& id );
+         void truncate_block_db(const path &block_db_dir, uint64_t block_num);
 
          bool                   contains( const block_id_type& id )const;
          block_id_type          fetch_block_id( uint32_t block_num )const;
