@@ -169,7 +169,7 @@ class global_api : public context_aware_api
     uint64_t get_trx_sender()
     {
         // get op payer
-        return context.trx_context.get_trx_origin();
+        return context.sender;
     }
 
     // get origin of trx
