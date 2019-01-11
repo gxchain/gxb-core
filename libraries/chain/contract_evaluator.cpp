@@ -245,6 +245,22 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     }
 
     contract_receipt receipt = contract_exec(d, op, billed_cpu_time_us);
+    auto trx = d.get_cur_trx();
+    std::string testid(trx->id());
+    ilog(testid.c_str());
+
+    transaction_trace tra;
+    tra.trx_id =trx->id();
+    
+    tra.block_num = d.head_block_num()+1; //current block num
+    auto& act_tra = tra.traces;
+    act_tra.sender = op.account;
+    act_tra.reciver = op.contract_id;
+    act_tra.act.contract_id = op.contract_id.instance.value;
+    act_tra.act.data = op.data;
+    act_tra.act.method_name = op.method_name;
+    d.applied_tra(tra);
+
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)) }
 

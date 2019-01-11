@@ -116,6 +116,51 @@ namespace graphene { namespace chain {
    };
 
    /**
+    *  @brief singal trace for mongodb 
+    */
+   struct base_action_trace {
+      //base_action_trace( const action_receipt& r ):receipt(r){}
+      base_action_trace(){}
+
+      //action_receipt       receipt;
+      account_id_type         sender;
+      account_id_type         reciver;
+      action                  act;
+      // bool                 context_free = false;
+      // fc::microseconds     elapsed;
+      // string               console;
+
+      // transaction_id_type  trx_id; ///< the transaction that generated this action
+      // uint32_t             block_num = 0;
+      // block_timestamp_type block_time;
+      // fc::optional<block_id_type>     producer_block_id;
+      // flat_set<account_delta>         account_ram_deltas;
+      // fc::optional<fc::exception>     except;
+   };
+
+   struct action_trace : public base_action_trace {
+      using base_action_trace::base_action_trace;
+
+      vector<action_trace> inline_traces;
+   };
+
+   struct transaction_trace {
+      transaction_id_type                        trx_id;
+      uint32_t                                   block_num = 0;
+      // block_timestamp_type                       block_time;
+      // fc::optional<block_id_type>                producer_block_id;
+      // fc::optional<transaction_receipt_header>   receipt;
+      // fc::microseconds                           elapsed;
+      // uint64_t                                   net_usage = 0;
+      // bool                                       scheduled = false;
+      action_trace                               traces; ///< disposable
+
+      // transaction_trace_ptr                      failed_dtrx_trace;
+      // fc::optional<fc::exception>                except;
+      // std::exception_ptr                         except_ptr;
+   };
+
+   /**
     *  @brief adds a signature to a transaction
     */
    struct signed_transaction : public transaction
@@ -227,6 +272,9 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT( graphene::chain::transaction, (ref_block_num)(ref_block_prefix)(expiration)(operations)(extensions) )
+FC_REFLECT( graphene::chain::base_action_trace,(sender)(reciver)(act))
+FC_REFLECT_DERIVED( graphene::chain::action_trace, (graphene::chain::base_action_trace),(inline_traces))
+FC_REFLECT( graphene::chain::transaction_trace,(trx_id)(block_num)(traces))
 // Note: not reflecting signees field for backward compatibility; in addition, it should not be in p2p messages
 FC_REFLECT_DERIVED( graphene::chain::signed_transaction, (graphene::chain::transaction), (signatures) )
 FC_REFLECT_DERIVED( graphene::chain::processed_transaction, (graphene::chain::signed_transaction), (operation_results) )

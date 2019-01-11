@@ -191,7 +191,8 @@ namespace graphene { namespace chain {
           *  released.
           */
          fc::signal<void(const signed_block&)>           applied_block;
-         fc::signal<void(const signed_transaction&)>     applied_transaction;
+         fc::signal<void(const transaction_trace&)>      applied_tra;
+
 
          /**
           * This signal is emitted any time a new transaction is added to the pending
