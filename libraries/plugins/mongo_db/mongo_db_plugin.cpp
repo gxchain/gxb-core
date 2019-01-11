@@ -53,9 +53,12 @@ namespace detail {
         }
 
         void update_action_histories( const transaction_trace& tra );
+        void update_contract_account( const contract_account& con_acc);
+
         void init();
         void consume_blocks();                      // consume data(actions、inline_actions)
         void process_action_trace(const transaction_trace& tra);
+        void process_contract_info(const contract_account& con_acc);
 
         template<typename T> fc::variant to_variant_with_abi( const T& obj );
         template<typename Queue, typename Entry> void queue(Queue& queue, const Entry& e);
@@ -82,6 +85,9 @@ namespace detail {
         // deque(cache by production and consumption)
         std::deque<transaction_trace> actions_trace_queue;            // production
         std::deque<transaction_trace> actions_trace_process_queue;    // consumption
+
+        std::deque<contract_account> contract_info_queue;             // production
+        std::deque<contract_account> contract_info_process_queue;     // consumption
 
         static const std::string contract_accounts_col;
         static const std::string action_traces_col;
@@ -125,17 +131,34 @@ namespace detail {
             queue( actions_trace_queue, tra );
         }FC_LOG_AND_RETHROW()
     }
+    void mongo_db_plugin_impl::update_contract_account( const contract_account& con_acc){
+        ilog("chu fa deploy contract plugin");
+        try{
+            queue( contract_info_queue, con_acc);
+        }FC_LOG_AND_RETHROW()
+    }
 
     void mongo_db_plugin_impl::process_action_trace(const transaction_trace& tra){
         using namespace bsoncxx::types;
         using bsoncxx::builder::basic::kvp;
-        auto trans_test_doc = bsoncxx::builder::basic::document{};
+        auto actions_trans_doc = bsoncxx::builder::basic::document{};
         
         auto json_str = fc::json::to_string(tra);
         const auto& value = bsoncxx::from_json(json_str);
-        trans_test_doc.append( kvp("action",value));
+        actions_trans_doc.append( kvp("action",value));
         
-        _action_traces.insert_one( trans_test_doc.view() ) ;
+        _action_traces.insert_one( actions_trans_doc.view() ) ;
+    }
+    void mongo_db_plugin_impl::process_contract_info(const contract_account& con_acc){
+        using namespace bsoncxx::types;
+        using bsoncxx::builder::basic::kvp;
+        auto contract_info_doc = bsoncxx::builder::basic::document{};
+
+        auto json_str = fc::json::to_string(con_acc);
+        const auto& value = bsoncxx::from_json(json_str);
+        contract_info_doc.append( kvp("account",value));
+        
+        _contract_accounts.insert_one( contract_info_doc.view() ) ;
     }
     void mongo_db_plugin_impl::consume_blocks(){
         try{
@@ -147,7 +170,7 @@ namespace detail {
 
             while(true){
                 boost::mutex::scoped_lock lock(mtx);
-                while (actions_trace_queue.empty() && !done){
+                while (actions_trace_queue.empty() &&contract_info_queue.empty() && !done){
                     condition.wait(lock);
                 }
 
@@ -157,8 +180,14 @@ namespace detail {
                     actions_trace_process_queue = std::move(actions_trace_queue);
                     actions_trace_queue.clear();
                 }
+                size_t contract_info_size = contract_info_queue.size();
+                if( contract_info_size > 0 ){
+                    contract_info_process_queue = std::move(contract_info_queue);
+                    contract_info_queue.clear();
+                }
                 lock.unlock();
                 
+                // process actions
                 auto start_time = fc::time_point::now();
                 auto size = actions_trace_process_queue.size();
                 
@@ -172,7 +201,21 @@ namespace detail {
                 if( time > fc::microseconds(500000) ) // reduce logging, .5 secs
                     ilog( "process_applied_transaction,  time per: ${p}, size: ${s}, time: ${t}", ("s", size)("t", time)("p", per) );
                 
-                if( actions_trace_size == 0 && done)
+                // process contract info
+                start_time = fc::time_point::now();
+                size = contract_info_process_queue.size();
+                
+                while(!contract_info_process_queue.empty()){
+                    auto& con_acc = contract_info_process_queue.front();
+                    process_contract_info(con_acc);
+                    contract_info_process_queue.pop_front();
+                }
+                time = fc::time_point::now() - start_time;
+                per = size > 0 ? time.count()/size : 0;
+                if( time > fc::microseconds(500000) ) // reduce logging, .5 secs
+                    ilog( "process_contract_info,  time per: ${p}, size: ${s}, time: ${t}", ("s", size)("t", time)("p", per) );
+                
+                if( actions_trace_size == 0 && contract_info_size == 0 && done)
                     break;
             }
             ilog("77777");
@@ -228,7 +271,7 @@ void mongo_db_plugin::plugin_initialize(const boost::program_options::variables_
         my->mongo_pool = std::make_shared<mongocxx::pool>(uri);
         // 2 绑定信号量
         database().applied_tra.connect( [&]( const transaction_trace& tra){ my->update_action_histories(tra); } );
-        
+        database().applied_contract_account.connect([&]( const contract_account& con_acc){ my->update_contract_account(con_acc); } );
         // 3 处理接收到的信号
         my->init();     
     } FC_LOG_AND_RETHROW()

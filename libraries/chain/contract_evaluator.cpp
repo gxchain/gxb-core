@@ -144,6 +144,11 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
             obj.statistics = db().create<account_statistics_object>([&](account_statistics_object& s){s.owner = obj.id;}).id;
             });
 
+    contract_account con_acc;
+    con_acc.owner = op.account;
+    con_acc.account_id = new_acnt_object.id;
+    con_acc.def =op.abi;
+    d.applied_contract_account(con_acc);
     return new_acnt_object.id;
 } FC_CAPTURE_AND_RETHROW((op.name)(op.account)(op.fee)(op.vm_type)(op.vm_version)(op.abi)) }
 

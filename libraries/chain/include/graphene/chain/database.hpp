@@ -192,6 +192,7 @@ namespace graphene { namespace chain {
           */
          fc::signal<void(const signed_block&)>           applied_block;
          fc::signal<void(const transaction_trace&)>      applied_tra;
+         fc::signal<void(const contract_account&)>       applied_contract_account;
 
 
          /**
