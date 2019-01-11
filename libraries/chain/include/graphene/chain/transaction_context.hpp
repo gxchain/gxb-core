@@ -17,6 +17,16 @@ namespace graphene { namespace chain {
             return transaction_cpu_usage_us;
         }
 
+        void update_ram_statistics(uint64_t account_id, int64_t ram_delta)
+        {
+        	ram_statistics[account_id] += ram_delta; //TODO payer maybe is 0,how to feedback the ram fee to which count?the ram-account
+        }
+
+        const std::map<uint64_t, int64_t>& get_ram_statistics() const
+        {
+            return ram_statistics;
+        }
+
       private:
         void dispatch_action(const action &a, uint64_t receiver);
         inline void dispatch_action(const action &a)
@@ -35,7 +45,7 @@ namespace graphene { namespace chain {
         database*                           _db;
         uint64_t                            trx_origin;
         uint64_t                            cross_contract_calling_count = 0;
-        std::map<account_id_type, uint64_t> ram_usage_statistics;
+        std::map<uint64_t, int64_t>         ram_statistics;
 
         mutable fc::time_point              start;
         mutable fc::time_point              _deadline;

@@ -63,6 +63,11 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
 
     uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
     uint32_t ram_usage_bs = ctx.get_ram_usage();
+    edump((ram_usage_bs));
+    const auto &statistics = ctx.trx_context.get_ram_statistics();
+    for(auto &i : statistics) {
+    	dlog("ram_usage[${f}:${s}]", ("f", i.first)("s", i.second));
+    }
     auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
     auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
 

@@ -93,13 +93,20 @@ void apply_context::execute_inline(action &&a)
     _inline_actions.emplace_back(move(a));
 }
 
-int apply_context::db_store_i64(uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size)
+int apply_context::db_store_i64(uint64_t scope, uint64_t table, account_name payer, uint64_t id, const char *buffer, size_t buffer_size)
 {
-    return db_store_i64(receiver, scope, table, payer, id, buffer, buffer_size);
+	if(_db->head_block_time() > HARDFORK_1015_TIME) {//can be removed after the chain upgraded
+		FC_ASSERT(payer == 0 || payer == sender, "payer must be 0 or current contract account");
+		if(payer == 0)
+			payer = receiver;
+	    return db_store_i64(receiver, scope, table, payer, id, buffer, buffer_size);
+	}
+	return db_store_i64(receiver, scope, table, payer, id, buffer, buffer_size);
 }
 
-int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, const account_name &payer, uint64_t id, const char *buffer, size_t buffer_size)
+int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, account_name payer, uint64_t id, const char *buffer, size_t buffer_size)
 {
+	edump((code)(scope)(table)(payer));
     const auto &tab = find_or_create_table(code, scope, table, payer);
     auto tableid = tab.id;
 
@@ -114,7 +121,12 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, c
     });
 
     // update_db_usage
-    update_ram_usage((int64_t)(buffer_size + config::billable_size_v<key_value_object>));
+    int64_t ram_delta = (int64_t)(buffer_size + config::billable_size_v<key_value_object>);
+    if(_db->head_block_time() > HARDFORK_1015_TIME) {//can not be removed after the chain upgraded
+        trx_context.update_ram_statistics(payer, ram_delta);
+    } else {
+        update_ram_usage(ram_delta);
+    }
 
     keyval_cache.cache_table(tab);
     return keyval_cache.add(new_obj);
@@ -122,14 +134,24 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, c
 
 void apply_context::db_update_i64(int iterator, account_name payer, const char *buffer, size_t buffer_size)
 {
+    if(_db->head_block_time() > HARDFORK_1015_TIME) {//can not be removed after the chain upgraded
+    	FC_ASSERT(payer == 0 || payer == sender, "payer must be sender or current contract account");
+    	if(payer == 0)
+    		payer = receiver;
+    }
+
     const key_value_object &obj = keyval_cache.get(iterator);
 
     // validate
     const auto &table_obj = keyval_cache.get_table(obj.t_id);
     FC_ASSERT(table_obj.code == receiver, "db access violation");
 
-    update_ram_usage((int64_t)(buffer_size - obj.value.size()));
-    // dlog("db_update_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", (buffer_size - obj.value.size()))("n", ram_usage));
+    int64_t ram_delta = (int64_t)(buffer_size - obj.value.size());
+    if(_db->head_block_time() > HARDFORK_1015_TIME) {//can not be removed after the chain upgraded
+        trx_context.update_ram_statistics(payer, ram_delta);
+    } else {
+        update_ram_usage(ram_delta);
+    }
 
     _db->modify(obj, [&](key_value_object &o) {
         o.value.resize(buffer_size);
@@ -145,8 +167,12 @@ void apply_context::db_remove_i64(int iterator)
     const auto &table_obj = keyval_cache.get_table(obj.t_id);
     FC_ASSERT(table_obj.code == receiver, "db access violation");
 
-    update_ram_usage(-(obj.value.size() + config::billable_size_v<key_value_object>));
-    // dlog("db_remove_i64 ram_usage delta=${d}, current ram_usage=${n}", ("d", -(obj.value.size() + config::billable_size_v<key_value_object>))("n", ram_usage));
+    int64_t ram_delta = -(int64_t)(obj.value.size() + config::billable_size_v<key_value_object>);
+    if(_db->head_block_time() > HARDFORK_1015_TIME) {//can not be removed after the chain upgraded
+        trx_context.update_ram_statistics(obj.payer, ram_delta);
+    } else {
+        update_ram_usage(ram_delta);
+    }
 
     _db->remove(obj);
     keyval_cache.remove(iterator);
@@ -277,7 +303,7 @@ const table_id_object* apply_context::find_table(uint64_t code, name scope, name
     return nullptr;
 }
 
-const table_id_object &apply_context::find_or_create_table(uint64_t code, name scope, name table, const account_name &payer)
+const table_id_object &apply_context::find_or_create_table(uint64_t code, name scope, name table, account_name payer)
 {
     const auto& table_idx = _db->get_index_type<table_id_multi_index>().indices().get<by_code_scope_table>();
     auto existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
@@ -285,7 +311,7 @@ const table_id_object &apply_context::find_or_create_table(uint64_t code, name s
         return *existing_tid;
    }
 
-   return _db->create<table_id_object>([&](table_id_object &t_id){
+   return _db->create<table_id_object>([&](table_id_object &t_id){//FIXME charge the table object ram fee
       t_id.code = code;
       t_id.scope = scope;
       t_id.table = table;
