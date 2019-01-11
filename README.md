@@ -2,10 +2,28 @@
 
 GXB-Core is the GXChain implementation and command-line interface.
 Current binary version of the GXB-Core software for ubuntu 14.04 LTS, see [here](https://github.com/gxchain/gxb-core/releases).
-
-<a href="https://github.com/gxchain/gxips">
-   <img width="400px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-gxips.png'/>
-</a>
+<p>
+   <a href="https://github.com/gxchain/gxips">
+      <img width="200px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-gxips.png'/>
+   </a>
+   <a href="https://github.com/gxchain/gxclient-node">
+      <img width="200px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-gxclient.png'/>
+   </a>
+   <a href="https://github.com/gxchain/gxchain-wallet">
+      <img width="200px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-mwallet.png'/>
+   </a>
+</p>
+<p>
+   <a href="https://github.com/gxchain/gxchain-light">
+      <img width="200px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-wallet.png'/>
+   </a>
+   <a href="https://github.com/gxchain/docs">
+      <img width="200px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-docs.png'/>
+   </a>
+   <a href="https://github.com/gxchain/gxc-smart-contract-ide">
+      <img width="200px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-ide.png'/>
+   </a>
+</p>
 
 ## Docs
 Technical document is available [here](https://docs.gxchain.org/)
