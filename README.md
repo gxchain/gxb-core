@@ -107,12 +107,12 @@ gxx -g helloworld/helloworld.abi helloworld/helloworld.cpp
 You can deploy and call contract with cli_wallet.
 
 ```
-unlocked >>> deploy_contract helloworld nathan 0 0 ./helloworld GXS true
+unlocked >>> deploy_contract helloworld nathan 0 0 ./helloworld GXC true
 ```
 
 #### Call Contract
 ```
-unlocked >>> call_contract nathan helloworld null hi "{\"user\":\"albert\"}" GXS true
+unlocked >>> call_contract nathan helloworld null hi "{\"user\":\"albert\"}" GXC true
 
 ```
 
