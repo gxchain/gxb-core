@@ -1,8 +1,9 @@
 # GXB-Core
----------------
 
 GXB-Core is the GXChain implementation and command-line interface.
 Current binary version of the GXB-Core software for ubuntu 14.04 LTS, see [here](https://github.com/gxchain/gxb-core/releases).
+
+<img width="400px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-gxips.png'/>
 
 ## Docs
 Technical document is available [here](https://docs.gxchain.org/)
@@ -15,7 +16,6 @@ Technical document is available [here](https://docs.gxchain.org/)
 
 
 ## Getting Started
----------------
 
 #### Building
 
