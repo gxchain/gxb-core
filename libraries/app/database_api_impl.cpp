@@ -614,11 +614,12 @@ state_snapshot_result database_api_impl::create_snapshot() const
 
     fc::string snapshot_dir = _db.get_snapshot_dir();
     _db.flush(snapshot_dir, block_id.str());
+    fc::string snapshot_filename = "object_database-" + block_id.str();
 
     state_snapshot_result result;
     result.head_block_num = block_num;
     result.head_block_id = block_id;
-    result.snapshot_dir = snapshot_dir;
+    result.snapshot_dir = snapshot_dir + "/" + snapshot_filename;
     return result;
 }
 
