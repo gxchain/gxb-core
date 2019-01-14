@@ -1,17 +1,32 @@
 # GXB-Core
----------------
 
 GXB-Core is the GXChain implementation and command-line interface.
 Current binary version of the GXB-Core software for ubuntu 14.04 LTS, see [here](https://github.com/gxchain/gxb-core/releases).
+<p>
+   <a href="https://github.com/gxchain/gxips">
+      <img width="200px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-gxips.png'/>
+   </a>
+   <a href="https://github.com/gxchain/gxclient-node">
+      <img width="200px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-gxclient.png'/>
+   </a>
+   <a href="https://github.com/gxchain/gxchain-wallet">
+      <img width="200px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-mwallet.png'/>
+   </a>
+</p>
+<p>
+   <a href="https://github.com/gxchain/gxchain-light">
+      <img width="200px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-wallet.png'/>
+   </a>
+   <a href="https://github.com/gxchain/docs">
+      <img width="200px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-docs.png'/>
+   </a>
+   <a href="https://github.com/gxchain/gxc-smart-contract-ide">
+      <img width="200px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-ide.png'/>
+   </a>
+</p>
 
-## API Document
-APIs are separated into two categories, namely
- * the Blockchain API which is used to query blockchain data (account, assets, trading history, etc.) and
- * the Wallet API which has your private keys loaded and is required when interacting with the blockchain with new transactions.
-
-1. [Wallet API](https://github.com/gxchain/gxb-core/wiki/wallet_api).
-
-2. [Blockchain API](https://github.com/gxchain/gxb-core/wiki/witness_node_api_json_rpc).
+## Docs
+Technical document is available [here](https://docs.gxchain.org/)
 
 
 #### Document For Exchange
@@ -21,7 +36,6 @@ APIs are separated into two categories, namely
 
 
 ## Getting Started
----------------
 
 #### Building
 
@@ -93,12 +107,12 @@ gxx -g helloworld/helloworld.abi helloworld/helloworld.cpp
 You can deploy and call contract with cli_wallet.
 
 ```
-unlocked >>> deploy_contract helloworld nathan 0 0 ./helloworld GXS true
+unlocked >>> deploy_contract helloworld nathan 0 0 ./helloworld GXC true
 ```
 
 #### Call Contract
 ```
-unlocked >>> call_contract nathan helloworld null hi "{\"user\":\"albert\"}" GXS true
+unlocked >>> call_contract nathan helloworld null hi "{\"user\":\"albert\"}" GXC true
 
 ```
 

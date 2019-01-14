@@ -199,6 +199,13 @@ int main(int argc, char** argv) {
       node->initialize(data_dir, options);
       node->initialize_plugins( options );
 
+      if(options.count("truncate"))  {
+    	  std::string block_num = options["truncate"].as<std::string>();
+    	  dlog("block_num = ${b}", ("b", block_num));
+    	  node->truncate_block_db(data_dir, (uint64_t)atoll(block_num.c_str()));
+    	  return 0;
+      }
+
       node->startup();
       node->startup_plugins();
 
