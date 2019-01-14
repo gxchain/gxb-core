@@ -606,6 +606,22 @@ bool database_api_impl::is_account_registered(string name) const
     return is_known;
 }
 
+state_snapshot_result database_api_impl::create_snapshot() const 
+{
+    ilog("create_snapshot ...");
+    block_id_type block_id = _db.head_block_id();
+    uint32_t  block_num = _db.head_block_num();
+
+    fc::string snapshot_dir = _db.get_snapshot_dir();
+    _db.flush(snapshot_dir, block_id.str());
+
+    state_snapshot_result result;
+    result.head_block_num = block_num;
+    result.head_block_id = block_id;
+    result.snapshot_dir = snapshot_dir;
+    return result;
+}
+
 vector<optional<account_object>> database_api_impl::get_accounts(const vector<account_id_type>& account_ids)const
 {
    vector<optional<account_object>> result; result.reserve(account_ids.size());
