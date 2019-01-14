@@ -958,7 +958,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("version,v", "Display version information")
          ("contracts-console", "print contract's output to console")
          ("rpc-mock-calc-fee", "rec-server mock caculate required fees, default fasle")
-         ("state-snapshots-dir", "the location of the state snapshots directory")
+         ("state-snapshots-dir", bpo::value<string>(), "the location of the state snapshots directory")
 		 ("truncate,x", bpo::value<string>()->composing(), "truncate db file by block_number")
          ;
    command_line_options.add(_cli_options);
