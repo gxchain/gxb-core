@@ -225,7 +225,7 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
                   ("balance", d.to_pretty_string(d.get_balance(op.account(d), asset_type))));
     }
 
-    if (d.head_block_time() > HARDFORK_1011_TIME) {
+    if (d.head_block_time() > HARDFORK_1011_TIME) {//TODO if cpu_fee charged, this check may fail for cpu time may different for the same opertion
         if (op.fee.amount > 0) {
             FC_ASSERT(op.fee >= fee_from_account, "insufficient fee paid in trx, ${a} needed", ("a", d.to_pretty_string(fee_from_account)));
         }
