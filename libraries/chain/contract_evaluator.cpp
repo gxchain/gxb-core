@@ -43,7 +43,7 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(std::min(witness_cpu_limit, gpo_cpu_limit)) : fc::days(1);
 
     action act{op.account.instance, op.contract_id.instance, op.method_name, op.data};
-    if(op.amount && (int64_t)op.amount->amount.value > 0 && op.amount->asset_id.instance.value > 0) {//asset_id=0(NULL asset) can not be transfered
+    if(op.amount && (int64_t)op.amount->amount.value > 0 && op.amount->asset_id.instance.value >= 0) {//asset_id=0(NULL asset) can be transfered because this type of transfer had existed
     	act.amount.amount = op.amount->amount.value;
     	act.amount.asset_id = op.amount->asset_id.instance;
     }
@@ -52,63 +52,60 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     apply_context ctx{db, trx_context, act};
     ctx.exec();
 
-    auto fee_param = contract_call_operation::fee_parameters_type();
-    const auto& p = db.get_global_properties().parameters;
-    for (auto& param : p.current_fees->parameters) {
-        if (param.which() == operation::tag<contract_call_operation>::value) {
-            fee_param = param.get<contract_call_operation::fee_parameters_type>();
-            break;
-        }
-    }
-
+    const auto &fee_param = get_contract_call_fee_parameter(db);
     uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
     uint32_t ram_usage_bs = ctx.get_ram_usage();
-    edump((ram_usage_bs));
-    const auto &statistics = ctx.trx_context.get_ram_statistics();
-    for(auto &i : statistics) {
-    	dlog("ram_usage[${f}:${s}]", ("f", i.first)("s", i.second));
-    }
     auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
     auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
-
-    // calculate real fee, core_fee_paid and fee_from_account
     core_fee_paid = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
+    fee_from_account = from_core_asset(db, asset{core_fee_paid, asset_id_type(1)}, op.fee.asset_id);
 
-    asset_id_type core_asset = asset_id_type();
-    if (db.head_block_time() > HARDFORK_1008_TIME) {
-        core_asset = asset_id_type(1);
-    }
-
-    if(op.fee.asset_id == core_asset) {
-        fee_from_account = asset(core_fee_paid, op.fee.asset_id);
-    } else {
-        const auto &pr = db.get<asset_object>(op.fee.asset_id).options.core_exchange_rate;
-        if(db.head_block_time() > HARDFORK_1013_TIME) {
-            fee_from_account = asset(core_fee_paid * pr.quote.amount / pr.base.amount, op.fee.asset_id);
-        } else {
-            fee_from_account = asset(core_fee_paid / uint64_t(pr.to_real()), op.fee.asset_id);
-        }
-    }
-
-    /*
-    dlog("real_fee=${r}, ram_fee=${rf}, cpu_fee=${cf}, ram_usage=${ru}, cpu_usage=${cu}, ram_price=${rp}, cpu_price=${cp}",
-            ("r", fee_from_account)("rf",ram_fee.to_uint64())("cf",cpu_fee.to_uint64())("ru",ctx.get_ram_usage())
-            ("cu",trx_context.get_cpu_usage())("rp",fee_param.price_per_kbyte_ram)("cp",fee_param.price_per_ms_cpu));
-    */
-
-    if (db.head_block_time() > HARDFORK_1011_TIME) {
-        // validation: trx.op.fee >= real charged fee
-        if (op.fee.amount > 0) {
-            FC_ASSERT(op.fee >= fee_from_account, "insufficient fee paid in trx, ${a} needed", ("a", db.to_pretty_string(fee_from_account)));
-        }
-    }
-
-    // pay fee, core_fee_paid
     generic_evaluator::prepare_fee(op.fee_payer(), fee_from_account, op);
     generic_evaluator::convert_fee();
     generic_evaluator::pay_fee();
 
     contract_receipt receipt{cpu_time_us, ram_usage_bs, fee_from_account};
+    return receipt;
+} FC_CAPTURE_AND_RETHROW((op)(billed_cpu_time_us)) }
+
+contract_receipt1 contract_call_evaluator::contract_exec1(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
+{ try {
+    int32_t witness_cpu_limit = db.get_max_trx_cpu_time();
+    int32_t gpo_cpu_limit = db.get_cpu_limit().trx_cpu_limit;
+    fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(std::min(witness_cpu_limit, gpo_cpu_limit)) : fc::days(1);
+
+    action act{op.account.instance, op.contract_id.instance, op.method_name, op.data};
+    if(op.amount && (int64_t)op.amount->amount.value > 0 && op.amount->asset_id.instance.value > 0) {//asset_id=0(NULL asset) can not be transfered
+        act.amount.amount = op.amount->amount.value;
+        act.amount.asset_id = op.amount->asset_id.instance;
+    }
+    transaction_context trx_context(db, op.fee_payer().instance, max_trx_cpu_us);
+    apply_context ctx{db, trx_context, act};
+    ctx.exec();
+
+    const auto &fee_param = get_contract_call_fee_parameter(db);
+    uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
+    auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
+    core_fee_paid = fee_param.fee + cpu_fee.to_uint64();
+    fee_from_account = from_core_asset(db, asset{core_fee_paid, asset_id_type(1)}, op.fee.asset_id);
+
+    //TODO realize fee free contract-calling, the (base_fee + cpu_fee) can restore after 1 day, and ram_fee will be restored when ram released
+    generic_evaluator::prepare_fee(op.fee_payer(), fee_from_account, op);
+    generic_evaluator::convert_fee();
+    generic_evaluator::pay_fee();
+
+    contract_receipt1 receipt;
+    receipt.billed_cpu_time_us = cpu_time_us;
+    receipt.fee = fee_from_account;
+    auto ram_fees = trx_context.get_ram_statistics();
+    account_receipt r;
+    for(const auto &ram_fee : ram_fees) {
+        r.account = account_id_type(ram_fee.first);
+        r.ram_bytes = ram_fee.second;
+        r.ram_fee = asset{0, asset_id_type(1)};
+        receipt.ram_receipts.push_back(r);
+    }
+
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)(billed_cpu_time_us)) }
 
@@ -228,15 +225,21 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
                   ("balance", d.to_pretty_string(d.get_balance(op.account(d), asset_type))));
     }
 
+    if (d.head_block_time() > HARDFORK_1011_TIME) {
+        if (op.fee.amount > 0) {
+            FC_ASSERT(op.fee >= fee_from_account, "insufficient fee paid in trx, ${a} needed", ("a", d.to_pretty_string(fee_from_account)));
+        }
+    }
+
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
 operation_result contract_call_evaluator::do_apply(const contract_call_operation &op, uint32_t billed_cpu_time_us)
 { try {
-
-
-    contract_receipt receipt = contract_exec(db(), op, billed_cpu_time_us);
-    return receipt;
+    auto &d = db();
+    if(d.head_block_time() > HARDFORK_1015_TIME)
+        return contract_exec1(d, op, billed_cpu_time_us);
+    return contract_exec(d, op, billed_cpu_time_us);
 } FC_CAPTURE_AND_RETHROW((op)) }
 
 void contract_call_evaluator::convert_fee()
@@ -247,6 +250,63 @@ void contract_call_evaluator::convert_fee()
 
 void contract_call_evaluator::pay_fee()
 {
+}
+
+asset_id_type contract_call_evaluator::current_core_asset_id(const database &db)
+{
+    asset_id_type core_asset_id = asset_id_type();
+    if (db.head_block_time() > HARDFORK_1008_TIME)
+    {
+        core_asset_id = asset_id_type(1);
+    }
+    return core_asset_id;
+}
+
+asset contract_call_evaluator::to_core_asset(const database &db, const asset &a)
+{
+    asset_id_type core_asset_id = current_core_asset_id(db);
+    if (a.asset_id == core_asset_id)
+    {
+        return a;
+    }
+    else
+    {
+        const auto &pr = db.get<asset_object>(a.asset_id).options.core_exchange_rate;
+        return asset(a.amount * pr.base.amount / pr.quote.amount, core_asset_id);
+    }
+}
+
+asset contract_call_evaluator::from_core_asset(const database &db, const asset &a, const asset_id_type &id)
+{
+    asset_id_type core_asset_id = current_core_asset_id(db);
+    FC_ASSERT(a.asset_id == core_asset_id, "asset is not core_asset");
+
+    if(id == core_asset_id) {
+        return a;
+    }
+
+    const auto &pr = db.get<asset_object>(id).options.core_exchange_rate;
+    if (db.head_block_time() > HARDFORK_1013_TIME)
+    {
+        return asset(a.amount * pr.quote.amount / pr.base.amount, a.asset_id);
+    }
+    else
+    {
+        return asset(a.amount / uint64_t(pr.to_real()), a.asset_id);
+    }
+}
+
+contract_call_operation::fee_parameters_type contract_call_evaluator::get_contract_call_fee_parameter(const database &db)
+{
+    auto fee_param = contract_call_operation::fee_parameters_type();
+    const auto& p = db.get_global_properties().parameters;
+    for (auto& param : p.current_fees->parameters) {
+        if (param.which() == operation::tag<contract_call_operation>::value) {
+            fee_param = param.get<contract_call_operation::fee_parameters_type>();
+            break;
+        }
+    }
+    return fee_param;
 }
 
 } } // graphene::chain

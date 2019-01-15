@@ -102,6 +102,7 @@
        std::string operator()(const object_id_type& oid);
        std::string operator()(const asset& a);
        std::string operator()(const contract_receipt& r);
+       std::string operator()(const contract_receipt1& r);
     };
 
     // BLOCK  TRX  OP  VOP
@@ -3895,6 +3896,11 @@
     }
 
     std::string operation_result_printer::operator()(const contract_receipt& r)
+    {
+       return std::string(r);
+    }
+
+    std::string operation_result_printer::operator()(const contract_receipt1& r)
     {
        return std::string(r);
     }

@@ -373,6 +373,8 @@ signed_block database::_generate_block(
            for (const auto op_result : ptx.operation_results) {
                if (op_result.which() == operation_result::tag<contract_receipt>::value) {
                    new_block_cpu += op_result.get<contract_receipt>().billed_cpu_time_us;
+               } else if (op_result.which() == operation_result::tag<contract_receipt1>::value) {
+                   new_block_cpu += op_result.get<contract_receipt1>().billed_cpu_time_us;
                }
            }
            if (new_block_cpu >= block_cpu_limit) {
@@ -532,6 +534,8 @@ void database::_apply_block( const signed_block& next_block )
        for (const auto op_result : trx.operation_results) {
            if (op_result.which() == operation_result::tag<contract_receipt>::value) {
                block_cpu_time_us += op_result.get<contract_receipt>().billed_cpu_time_us;
+           } else if (op_result.which() == operation_result::tag<contract_receipt1>::value) {
+               block_cpu_time_us += op_result.get<contract_receipt1>().billed_cpu_time_us;
            }
        }
    }
@@ -645,7 +649,8 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
            // get billed_cpu_time_us
            if (op_result.which() == operation_result::tag<contract_receipt>::value) {
                billed_cpu_time_us = op_result.get<contract_receipt>().billed_cpu_time_us;
-               // dlog("billed_cpu_time_us ${b}", ("b", billed_cpu_time_us));
+           } else if (op_result.which() == operation_result::tag<contract_receipt1>::value) {
+               billed_cpu_time_us = op_result.get<contract_receipt1>().billed_cpu_time_us;
            }
        }
 

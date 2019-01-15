@@ -96,7 +96,7 @@ void apply_context::execute_inline(action &&a)
 int apply_context::db_store_i64(uint64_t scope, uint64_t table, account_name payer, uint64_t id, const char *buffer, size_t buffer_size)
 {
 	if(_db->head_block_time() > HARDFORK_1015_TIME) {//can be removed after the chain upgraded
-		FC_ASSERT(payer == 0 || payer == sender, "payer must be 0 or current contract account");
+		FC_ASSERT(payer == 0 || payer == sender, "payer must be 0 or current contract account, actual payer:${p}", ("p", payer));
 		if(payer == 0)
 			payer = receiver;
 	    return db_store_i64(receiver, scope, table, payer, id, buffer, buffer_size);

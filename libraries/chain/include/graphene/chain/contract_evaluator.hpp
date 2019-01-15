@@ -50,8 +50,16 @@ class contract_call_evaluator : public evaluator<contract_call_evaluator>
     operation_result do_apply(const contract_call_operation &op, uint32_t billed_cpu_time_us = 0);
 
     contract_receipt contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us);
+    contract_receipt1 contract_exec1(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us);
 
     virtual void convert_fee() override;
     virtual void pay_fee() override;
+
+  private:
+    asset_id_type current_core_asset_id(const database &db);
+    asset to_core_asset(const database &db, const asset &a);
+    asset from_core_asset(const database &db, const asset &a, const asset_id_type &id);
+    contract_call_operation::fee_parameters_type get_contract_call_fee_parameter(const database &db);
 };
+
 } }

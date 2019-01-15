@@ -65,7 +65,7 @@
 
 // call_contract fix fee calculation
 #ifndef HARDFORK_1013_TIME
-// should be updated before next release
+// should be updated before next release, should be removed after next release
 #define HARDFORK_1013_TIME (fc::time_point_sec( 1545034200 )) // for test, 2018-12-17T08:10:00(UTC)
 #endif
 
@@ -88,7 +88,7 @@
 
 #ifndef HARDFORK_1015_TIME
 // disable udpate_contract for normal account
-#define HARDFORK_1015_TIME (fc::time_point_sec( 1546084800 )) // for mainnet, 2018-12-29T12:00:00 UTC
+#define HARDFORK_1015_TIME (fc::time_point_sec( 1547536200 )) // for mainnet, 2018-12-29T12:00:00 UTC
 #endif
 
 // #413 Add operation to claim asset fees
