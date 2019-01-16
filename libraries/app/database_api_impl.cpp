@@ -469,7 +469,7 @@ std::map<std::string, full_account> database_api_impl::get_full_accounts( const 
 
       if( subscribe )
       {
-         FC_ASSERT(_subscribed_accounts.size() <= 100);
+         FC_ASSERT(_subscribed_accounts.size() <= 1000);
          _subscribed_accounts.insert( account->get_id() );
          subscribe_to_item( account->id );
       }
