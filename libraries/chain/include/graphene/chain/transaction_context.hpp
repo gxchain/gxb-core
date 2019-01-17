@@ -19,6 +19,8 @@ namespace graphene { namespace chain {
 
         void update_ram_statistics(uint64_t account_id, int64_t ram_delta)
         {
+            if(0 == account_id)//ignore the feeback
+                return;
         	ram_statistics[account_id] += ram_delta; //TODO payer maybe is 0,how to feedback the ram fee to which count?the ram-account
         }
 
