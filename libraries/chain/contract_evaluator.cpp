@@ -68,7 +68,7 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)(billed_cpu_time_us)) }
 
-contract_receipt1 contract_call_evaluator::contract_exec1(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
+contract_receipt1 contract_call_evaluator::new_contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
 { try {
     int32_t witness_cpu_limit = db.get_max_trx_cpu_time();
     int32_t gpo_cpu_limit = db.get_cpu_limit().trx_cpu_limit;
@@ -254,7 +254,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
 { try {
     auto &d = db();
     if(d.head_block_time() > HARDFORK_1015_TIME)
-        return contract_exec1(d, op, billed_cpu_time_us);
+        return new_contract_exec(d, op, billed_cpu_time_us);
     return contract_exec(d, op, billed_cpu_time_us);
 } FC_CAPTURE_AND_RETHROW((op)) }
 
