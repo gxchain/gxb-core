@@ -38,9 +38,8 @@ namespace graphene { namespace chain {
 
 contract_receipt contract_call_evaluator::contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
 { try {
-    int32_t witness_cpu_limit = db.get_max_trx_cpu_time();
-    int32_t gpo_cpu_limit = db.get_cpu_limit().trx_cpu_limit;
-    fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(std::min(witness_cpu_limit, gpo_cpu_limit)) : fc::days(1);
+    int32_t cpu_limit = std::min(db.get_max_trx_cpu_time(), db.get_max_trx_cpu_time());
+    fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(cpu_limit) : fc::days(1);
 
     action act{op.account.instance, op.contract_id.instance, op.method_name, op.data};
     if (op.amount.valid()) {
@@ -70,9 +69,8 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
 
 contract_receipt1 contract_call_evaluator::new_contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
 { try {
-    int32_t witness_cpu_limit = db.get_max_trx_cpu_time();
-    int32_t gpo_cpu_limit = db.get_cpu_limit().trx_cpu_limit;
-    fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(std::min(witness_cpu_limit, gpo_cpu_limit)) : fc::days(1);
+    int32_t cpu_limit = std::min(db.get_max_trx_cpu_time(), db.get_max_trx_cpu_time());
+    fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(cpu_limit) : fc::days(1);
 
     action act{op.account.instance, op.contract_id.instance, op.method_name, op.data};
     if (op.amount.valid()) {
