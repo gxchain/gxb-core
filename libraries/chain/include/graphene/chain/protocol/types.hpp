@@ -516,7 +516,7 @@ namespace graphene { namespace chain {
 
    struct state_snapshot_result
    {
-        uint32_t            head_block_num;
+        uint32_t            head_block_num = 0;
         block_id_type       head_block_id;
         string              snapshot_dir;
    };
