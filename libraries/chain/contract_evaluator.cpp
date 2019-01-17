@@ -38,19 +38,23 @@ namespace graphene { namespace chain {
 
 contract_receipt contract_call_evaluator::contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
 { try {
+    // get cpu limit
     int32_t cpu_limit = std::min(db.get_max_trx_cpu_time(), db.get_max_trx_cpu_time());
     fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(cpu_limit) : fc::days(1);
 
+    // construct action
     action act{op.account.instance, op.contract_id.instance, op.method_name, op.data};
     if (op.amount.valid()) {
         act.amount.amount = op.amount->amount.value;
     	act.amount.asset_id = op.amount->asset_id.instance;
     }
 
+    // run contract
     transaction_context trx_context(db, op.fee_payer().instance, max_trx_cpu_us);
     apply_context ctx{db, trx_context, act};
     ctx.exec();
 
+    // calculate fee
     const auto &fee_param = get_contract_call_fee_parameter(db);
     uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
     uint32_t ram_usage_bs = ctx.get_ram_usage();
