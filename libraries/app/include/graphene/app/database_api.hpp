@@ -206,6 +206,8 @@ class database_api
       */
      bool is_account_registered(string name) const;
 
+     state_snapshot_result create_snapshot() const;
+
       //////////////
       // Accounts //
       //////////////
@@ -784,6 +786,8 @@ FC_API(graphene::app::database_api,
    (get_account_count)
    (get_asset_count)
    (is_account_registered)
+
+   (create_snapshot)
 
    // statistic
    (get_data_transaction_product_costs)

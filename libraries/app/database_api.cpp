@@ -224,6 +224,12 @@ bool database_api::is_account_registered(string name) const
     return my->is_account_registered(name);
 }
 
+// dump snapshot object_database
+state_snapshot_result database_api::create_snapshot() const
+{
+    return my->create_snapshot();
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Accounts                                                         //

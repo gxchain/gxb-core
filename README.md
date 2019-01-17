@@ -4,7 +4,7 @@
 GXB-Core is the GXChain implementation and command-line interface.
 Current binary version of the GXB-Core software for ubuntu 14.04 LTS, see [here](https://github.com/gxchain/gxb-core/releases).
 
-## Document
+## Docs
 Technical document is available [here](https://docs.gxchain.org/)
 
 
