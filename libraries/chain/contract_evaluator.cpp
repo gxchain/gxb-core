@@ -36,19 +36,8 @@
 
 namespace graphene { namespace chain {
 
-contract_receipt_old contract_call_evaluator::contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
+contract_receipt_old contract_call_evaluator::contract_exec_old(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
 { try {
-    // get cpu limit
-    int32_t cpu_limit = std::min(db.get_max_trx_cpu_time(), db.get_max_trx_cpu_time());
-    fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(cpu_limit) : fc::days(1);
-
-    // construct action
-    action act{op.account.instance, op.contract_id.instance, op.method_name, op.data};
-    if (op.amount.valid()) {
-        act.amount.amount = op.amount->amount.value;
-    	act.amount.asset_id = op.amount->asset_id.instance;
-    }
-
     // run contract
     transaction_context trx_context(db, op.fee_payer().instance, max_trx_cpu_us);
     apply_context ctx{db, trx_context, act};
@@ -71,16 +60,8 @@ contract_receipt_old contract_call_evaluator::contract_exec(database& db, const 
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)(billed_cpu_time_us)) }
 
-contract_receipt contract_call_evaluator::new_contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
+contract_receipt contract_call_evaluator::contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
 { try {
-    int32_t cpu_limit = std::min(db.get_max_trx_cpu_time(), db.get_max_trx_cpu_time());
-    fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(cpu_limit) : fc::days(1);
-
-    action act{op.account.instance, op.contract_id.instance, op.method_name, op.data};
-    if (op.amount.valid()) {
-        act.amount.amount = op.amount->amount.value;
-    	act.amount.asset_id = op.amount->asset_id.instance;
-    }
     transaction_context trx_context(db, op.fee_payer().instance, max_trx_cpu_us);
     apply_context ctx{db, trx_context, act};
     ctx.exec();
@@ -92,16 +73,16 @@ contract_receipt contract_call_evaluator::new_contract_exec(database& db, const 
     fee_from_account = db.from_core_asset(asset{core_fee_paid, asset_id_type(1)}, op.fee.asset_id);
 
     generic_evaluator::prepare_fee(op.fee_payer(), fee_from_account, op);
-    generic_evaluator::convert_fee();//change core asset from fee pool if fee type is not core asset
-    db.deposit_cashback(op.fee_payer()(db), core_fee_paid, true);//TODO check if is one day
+    generic_evaluator::convert_fee();
+    db.deposit_cashback(op.fee_payer()(db), core_fee_paid, true);
     db.adjust_balance(op.fee_payer(), -fee_from_account);
-//    generic_evaluator::pay_fee();//TODO check if need called
 
     contract_receipt receipt;
     receipt.billed_cpu_time_us = cpu_time_us;
     receipt.fee = fee_from_account;
-    auto ram_fees = trx_context.get_ram_statistics();
+
     account_receipt r;
+    auto ram_fees = trx_context.get_ram_statistics();
     for(const auto &ram_fee : ram_fees) {
         r.account = account_id_type(ram_fee.first);
         r.ram_bytes = ram_fee.second;
@@ -176,7 +157,7 @@ void_result contract_update_evaluator::do_evaluate(const contract_update_operati
 
     const account_object& contract_obj = op.contract(d);
     FC_ASSERT(op.owner == contract_obj.registrar, "only owner can update contract, current owner: ${o}", ("o", contract_obj.registrar));
-    if(d.head_block_time() > HARDFORK_1015_TIME) {
+    if(d.head_block_time() > HARDFORK_1016_TIME) {
         FC_ASSERT(contract_obj.code.size() > 0, "can not update a normal account: ${a}", ("a", op.contract));
     }
 
@@ -255,9 +236,22 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 operation_result contract_call_evaluator::do_apply(const contract_call_operation &op, uint32_t billed_cpu_time_us)
 { try {
     auto &d = db();
-    if(d.head_block_time() > HARDFORK_1015_TIME)
-        return new_contract_exec(d, op, billed_cpu_time_us);
-    return contract_exec(d, op, billed_cpu_time_us);
+
+    if(0 == billed_cpu_time_us)
+        max_trx_cpu_us = fc::microseconds(std::min(d.get_cpu_limit().trx_cpu_limit, d.get_max_trx_cpu_time()));
+
+    act.sender = op.account.instance;
+    act.contract_id = op.contract_id.instance;
+    act.method_name = op.method_name;
+    act.data = op.data;
+    if (op.amount.valid()) {
+        act.amount.amount = op.amount->amount.value;
+        act.amount.asset_id = op.amount->asset_id.instance;
+    }
+
+    if(d.head_block_time() > HARDFORK_1016_TIME)
+        return contract_exec(d, op, billed_cpu_time_us);
+    return contract_exec_old(d, op, billed_cpu_time_us);
 } FC_CAPTURE_AND_RETHROW((op)) }
 
 void contract_call_evaluator::convert_fee()

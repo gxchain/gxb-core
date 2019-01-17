@@ -18,6 +18,7 @@
  */
 #pragma once
 #include <graphene/chain/protocol/operations.hpp>
+#include <graphene/chain/protocol/contract_receipt.hpp>
 #include <graphene/chain/evaluator.hpp>
 
 namespace graphene { namespace chain {
@@ -49,14 +50,18 @@ class contract_call_evaluator : public evaluator<contract_call_evaluator>
     void_result do_evaluate(const contract_call_operation &op);
     operation_result do_apply(const contract_call_operation &op, uint32_t billed_cpu_time_us = 0);
 
-    contract_receipt_old contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us);
-    contract_receipt new_contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us);
+    contract_receipt_old contract_exec_old(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us);
+    contract_receipt     contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us);
 
     virtual void convert_fee() override;
     virtual void pay_fee() override;
 
   private:
     contract_call_operation::fee_parameters_type get_contract_call_fee_parameter(const database &db);
+
+  private:
+    fc::microseconds max_trx_cpu_us = fc::days(1);
+    action act;
 };
 
 } }
