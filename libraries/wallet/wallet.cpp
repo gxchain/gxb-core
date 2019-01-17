@@ -2367,7 +2367,6 @@
           asset_object fee_asset_obj = get_asset(fee_asset_symbol);
           witness_object witness = get_witness(witness_name);
           account_object witness_account = get_account( witness.witness_account );
-          fc::ecc::private_key active_private_key = get_private_key_for_account(witness_account);
 
           witness_update_operation witness_update_op;
           witness_update_op.witness = witness.id;
