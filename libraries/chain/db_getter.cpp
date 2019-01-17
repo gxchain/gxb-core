@@ -137,5 +137,35 @@ uint32_t database::last_non_undoable_block_num() const
    return head_block_num() - (_undo_db.size() - _undo_db.active_sessions());
 }
 
+asset_id_type database::current_core_asset_id()
+{
+    asset_id_type core_asset_id = asset_id_type();
+    if (head_block_time() > HARDFORK_1008_TIME)
+    {
+        core_asset_id = asset_id_type(1);
+    }
+    return core_asset_id;
+}
+
+asset database::from_core_asset(const asset &a, const asset_id_type &id)
+{
+    asset_id_type core_asset_id = current_core_asset_id();
+    FC_ASSERT(a.asset_id == core_asset_id, "asset is not core_asset");
+
+    if(id == core_asset_id) {
+        return a;
+    }
+
+    const auto &pr = get<asset_object>(id).options.core_exchange_rate;
+    if (head_block_time() > HARDFORK_1013_TIME)
+    {
+        return asset(a.amount * pr.quote.amount / pr.base.amount, id);
+    }
+    else
+    {
+        return asset(a.amount / uint64_t(pr.to_real()), id);
+    }
+}
+
 
 } }

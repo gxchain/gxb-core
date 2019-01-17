@@ -58,7 +58,7 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
     auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
     core_fee_paid = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
-    fee_from_account = from_core_asset(db, asset{core_fee_paid, asset_id_type(1)}, op.fee.asset_id);
+    fee_from_account = db.from_core_asset(asset{core_fee_paid, asset_id_type(1)}, op.fee.asset_id);
 
     generic_evaluator::prepare_fee(op.fee_payer(), fee_from_account, op);
     generic_evaluator::convert_fee();
@@ -87,12 +87,13 @@ contract_receipt1 contract_call_evaluator::contract_exec1(database& db, const co
     uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
     auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
     core_fee_paid = fee_param.fee + cpu_fee.to_uint64();
-    fee_from_account = from_core_asset(db, asset{core_fee_paid, asset_id_type(1)}, op.fee.asset_id);
+    fee_from_account = db.from_core_asset(asset{core_fee_paid, asset_id_type(1)}, op.fee.asset_id);
 
-    //TODO realize fee free contract-calling, the (base_fee + cpu_fee) can restore after 1 day, and ram_fee will be restored when ram released
     generic_evaluator::prepare_fee(op.fee_payer(), fee_from_account, op);
-    generic_evaluator::convert_fee();
-    generic_evaluator::pay_fee();
+    generic_evaluator::convert_fee();//change core asset from fee pool if fee type is not core asset
+    db.deposit_cashback(op.fee_payer()(db), core_fee_paid, true);//TODO check if is one day
+    db.adjust_balance(op.fee_payer(), -fee_from_account);
+//    generic_evaluator::pay_fee();//TODO check if need called
 
     contract_receipt1 receipt;
     receipt.billed_cpu_time_us = cpu_time_us;
@@ -102,9 +103,24 @@ contract_receipt1 contract_call_evaluator::contract_exec1(database& db, const co
     for(const auto &ram_fee : ram_fees) {
         r.account = account_id_type(ram_fee.first);
         r.ram_bytes = ram_fee.second;
-        r.ram_fee = asset{0, asset_id_type(1)};
+
+        if(ram_fee.first == op.fee_payer().instance.value) {//the origin may be use no GXC as ram_fee
+            asset ram_fee_core_asset = asset{r.ram_bytes * (int64_t)fee_param.price_per_kbyte_ram / 1024, asset_id_type(1)};
+            asset ram_fee_from_account = db.from_core_asset(ram_fee_core_asset, op.fee.asset_id);
+            r.ram_fee = ram_fee_from_account;
+            generic_evaluator::prepare_fee(op.fee_payer(), ram_fee_from_account, op);
+            generic_evaluator::convert_fee();
+            db.adjust_balance(op.fee_payer(), -ram_fee_from_account);
+            db.adjust_balance(account_id_type(508), ram_fee_from_account);//TODO 508 is the ram-account instance id
+        } else {//other must use GXC as ram_fee
+            r.ram_fee = asset{r.ram_bytes * (int64_t)fee_param.price_per_kbyte_ram / 1024, asset_id_type(1)};
+            db.adjust_balance(account_id_type(ram_fee.first), -r.ram_fee);
+            db.adjust_balance(account_id_type(508), r.ram_fee);//TODO 508 is the ram-account instance id
+        }
+
         receipt.ram_receipts.push_back(r);
     }
+    convert_fee();
 
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)(billed_cpu_time_us)) }
@@ -250,50 +266,6 @@ void contract_call_evaluator::convert_fee()
 
 void contract_call_evaluator::pay_fee()
 {
-}
-
-asset_id_type contract_call_evaluator::current_core_asset_id(const database &db)
-{
-    asset_id_type core_asset_id = asset_id_type();
-    if (db.head_block_time() > HARDFORK_1008_TIME)
-    {
-        core_asset_id = asset_id_type(1);
-    }
-    return core_asset_id;
-}
-
-asset contract_call_evaluator::to_core_asset(const database &db, const asset &a)
-{
-    asset_id_type core_asset_id = current_core_asset_id(db);
-    if (a.asset_id == core_asset_id)
-    {
-        return a;
-    }
-    else
-    {
-        const auto &pr = db.get<asset_object>(a.asset_id).options.core_exchange_rate;
-        return asset(a.amount * pr.base.amount / pr.quote.amount, core_asset_id);
-    }
-}
-
-asset contract_call_evaluator::from_core_asset(const database &db, const asset &a, const asset_id_type &id)
-{
-    asset_id_type core_asset_id = current_core_asset_id(db);
-    FC_ASSERT(a.asset_id == core_asset_id, "asset is not core_asset");
-
-    if(id == core_asset_id) {
-        return a;
-    }
-
-    const auto &pr = db.get<asset_object>(id).options.core_exchange_rate;
-    if (db.head_block_time() > HARDFORK_1013_TIME)
-    {
-        return asset(a.amount * pr.quote.amount / pr.base.amount, a.asset_id);
-    }
-    else
-    {
-        return asset(a.amount / uint64_t(pr.to_real()), a.asset_id);
-    }
 }
 
 contract_call_operation::fee_parameters_type contract_call_evaluator::get_contract_call_fee_parameter(const database &db)

@@ -288,6 +288,9 @@ namespace graphene { namespace chain {
 
 
          uint32_t last_non_undoable_block_num() const;
+
+         asset_id_type current_core_asset_id();
+         asset from_core_asset(const asset &a, const asset_id_type &id);
          //////////////////// db_init.cpp ////////////////////
 
          void initialize_evaluators();

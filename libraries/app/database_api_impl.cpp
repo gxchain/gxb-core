@@ -1482,18 +1482,22 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
 
            if(_db.head_block_time() > HARDFORK_1015_TIME) {
 			   auto receipt = ptx.operation_results.back().get<contract_receipt1>();
+			   if(id != asset_id_type(1))
+			       receipt.fee = _db.from_core_asset(receipt.fee, id);
 			   fc::variant r;
 			   fc::to_variant(receipt.fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
 			   result.push_back(r);
            } else {
 			   auto receipt = ptx.operation_results.back().get<contract_receipt>();
+	           if(id != asset_id_type(1))
+	               receipt.fee = _db.from_core_asset(receipt.fee, id);
 			   fc::variant r;
 			   fc::to_variant(receipt.fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
 			   result.push_back(r);
            }
        } else {
            result.push_back(helper.set_op_fees(op));
-      }
+       }
    }
 
    return result;
