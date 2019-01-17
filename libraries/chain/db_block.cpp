@@ -30,6 +30,7 @@
 #include <graphene/chain/block_summary_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
+#include <graphene/chain/action_history_object.hpp>
 
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
@@ -475,6 +476,20 @@ const vector<optional< operation_history_object > >& database::get_applied_opera
 {
    return _applied_ops;
 }
+const vector<optional< account_action_history_object > >& database::get_applied_actions() const
+{
+   return _applied_acts;
+}
+bool database::is_current_action(account_action_history_object& actobj)
+{
+   bool Retvalue = false;
+   if(actobj.block_num    == _current_block_num &&
+      actobj.trx_in_block == _current_trx_in_block &&
+      actobj.op_in_trx    == _current_op_in_trx){
+         Retvalue = true;
+   }
+   return Retvalue;
+}
 
 //////////////////// private methods ////////////////////
 
@@ -503,7 +518,7 @@ void database::_apply_block( const signed_block& next_block )
    uint32_t next_block_num = next_block.block_num();
    uint32_t skip = get_node_properties().skip_flags;
    _applied_ops.clear();
-
+   _applied_acts.clear();
    FC_ASSERT( (skip & skip_merkle_check) || next_block.transaction_merkle_root == next_block.calculate_merkle_root(), "", ("next_block.transaction_merkle_root",next_block.transaction_merkle_root)("calc",next_block.calculate_merkle_root())("next_block",next_block)("id",next_block.id()) );
 
    const witness_object& signing_witness = validate_block_header(skip, next_block);
@@ -564,6 +579,7 @@ void database::_apply_block( const signed_block& next_block )
    // notify observers that the block has been applied
    applied_block( next_block ); //emit
    _applied_ops.clear();
+   _applied_acts.clear();
 
    notify_changed_objects();
 } FC_CAPTURE_AND_RETHROW( (next_block.block_num()) )  }
@@ -672,6 +688,14 @@ operation_result database::apply_operation(transaction_evaluation_state& eval_st
    unique_ptr<op_evaluator>& eval = _operation_evaluators[ u_which ];
    FC_ASSERT( eval, "No registered evaluator for operation ${op}", ("op",op) );
    auto op_id = push_applied_operation( op );
+
+   if(u_which == operation::tag< contract_call_operation >::value){
+      account_action_history_object actobj;
+      actobj.block_num    = _current_block_num;
+      actobj.trx_in_block = _current_trx_in_block;
+      actobj.op_in_trx    = _current_op_in_trx;
+      _applied_acts.emplace_back(actobj);
+   }
    auto result = eval->evaluate(eval_state, op, true, billed_cpu_time_us);
    set_applied_operation_result( op_id, result );
    return result;

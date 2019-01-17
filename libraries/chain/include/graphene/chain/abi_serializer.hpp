@@ -97,6 +97,7 @@ private:
    map<name,type_name>        tables;
    map<uint64_t, string>      error_messages;
 
+
    static map<type_name, pair<unpack_function, pack_function>> built_in_types;
    static void configure_built_in_types();
 
@@ -130,9 +131,11 @@ namespace impl {
    constexpr bool single_type_requires_abi_v() {
       return std::is_base_of<transaction, T>::value ||
 //             std::is_same<T, packed_transaction>::value ||
-//             std::is_same<T, transaction_trace>::value ||
+             std::is_same<T, transaction_trace>::value ||
+             std::is_same<T, action_trace>::value ||
 //             std::is_same<T, transaction_receipt>::value ||
 //             std::is_same<T, action_trace>::value ||
+             std::is_same<T, base_action_trace>::value ||
              std::is_same<T, signed_transaction>::value ||
              std::is_same<T, signed_block>::value ||
              std::is_same<T, action>::value;
@@ -185,7 +188,7 @@ namespace impl {
       {
          FC_ASSERT( ++recursion_depth < abi_serializer::max_recursion_depth, "recursive definition, max_recursion_depth ${r} ", ("r", abi_serializer::max_recursion_depth) );
          FC_ASSERT( fc::time_point::now() < deadline, "serialization time limit ${t}us exceeded", ("t", max_serialization_time) );
-         mvo(name,v);
+         mvo(name,v,20);
       }
 
       /**
@@ -260,7 +263,7 @@ namespace impl {
          mutable_variant_object obj_mvo;
          add_static_variant<Resolver> adder(obj_mvo, resolver, recursion_depth, deadline, max_serialization_time);
          v.visit(adder);
-         mvo(name, std::move(obj_mvo["_"]));
+         mvo(name, std::move(obj_mvo["_"]),20);
       }
 
       /**
@@ -389,7 +392,8 @@ namespace impl {
          fc::microseconds _max_serialization_time;
    };
 
-   struct abi_from_variant {
+   struct abi_from_variant 
+   {
       /**
        * template which overloads extract for types which are not relvant to ABI information
        * and can be degraded to the normal ::from_variant(...) processing

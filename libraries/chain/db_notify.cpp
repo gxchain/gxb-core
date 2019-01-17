@@ -1,5 +1,6 @@
 #include <fc/container/flat.hpp>
 
+#include <graphene/chain/action_history_object.hpp>
 #include <graphene/chain/protocol/authority.hpp>
 #include <graphene/chain/protocol/operations.hpp>
 #include <graphene/chain/protocol/transaction.hpp>
@@ -388,7 +389,7 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
             break;
         } case trust_node_pledge_object_type: {
             break;
-        }
+        } 
       }
    }
    else if( obj->id.space() == implementation_ids )
@@ -457,6 +458,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
               break;
              case impl_key_value_object_type:
               break;
+             case impl_account_action_history_object_type:
+              break;
              case index64_object_type:
               break;
              case index128_object_type:
@@ -466,7 +469,7 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
              case index_double_object_type:
               break;
              case index_long_double_object_type:
-              break;
+              break;  
       }
 
    }

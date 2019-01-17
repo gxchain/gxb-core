@@ -290,7 +290,7 @@ namespace graphene { namespace chain {
       second_hand_data_object_type,//23
       data_transaction_complain_object_type,//24
       lock_balance_object_type,//25
-	  trust_node_pledge_object_type,//26
+	  trust_node_pledge_object_type, //26
 
       OBJECT_TYPE_COUNT /////< Sentry value which contains the number of different object types
 
@@ -324,11 +324,13 @@ namespace graphene { namespace chain {
       impl_signature_object_type, //22
       impl_table_id_object_type, //23
       impl_key_value_object_type, //24
+      impl_account_action_history_object_type, //25
       index64_object_type,
       index128_object_type,
       index256_object_type,
       index_double_object_type,
       index_long_double_object_type
+      
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -387,6 +389,7 @@ namespace graphene { namespace chain {
    typedef object_id< protocol_ids, data_transaction_complain_object_type, data_transaction_complain_object> data_transaction_complain_id_type;
    typedef object_id< protocol_ids, lock_balance_object_type, lock_balance_object>       lock_balance_id_type;
    typedef object_id< protocol_ids, trust_node_pledge_object_type, trust_node_pledge_object>       trust_node_pledge_id_type;
+   //typedef object_id< protocol_ids, action_history_object_type,  action_history_object>           action_history_id_type;
 
    // implementation types
    class global_property_object;
@@ -411,6 +414,7 @@ namespace graphene { namespace chain {
    class signature_object;
    class table_id_object;
    class key_value_object;
+   class account_action_history_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -437,7 +441,7 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_signature_object_type, signature_object>      signature_id_type;
    typedef object_id< implementation_ids, impl_table_id_object_type, table_id_object>        table_id_object_id_type;
    typedef object_id< implementation_ids, impl_key_value_object_type, key_value_object>      key_value_object_id_type;
-
+   typedef object_id< implementation_ids, impl_account_action_history_object_type,  account_action_history_object>           account_action_history_id_type;
 
    //typedef object_id< implementation_ids, impl_search_results_object_type,search_results_object<DerivedClass>>          search_results_id_type;
 
@@ -593,6 +597,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_signature_object_type)
                  (impl_table_id_object_type)
                  (impl_key_value_object_type)
+                 (impl_account_action_history_object_type)
                  (index64_object_type)
                  (index128_object_type)
                  (index256_object_type)

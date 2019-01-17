@@ -156,6 +156,7 @@ void database::update_last_irreversible_block()
          _dpo.last_irreversible_block_num = new_last_irreversible_block_num;
       } );
    }
+   applied_irr_num(new_last_irreversible_block_num);
 }
 
 void database::clear_expired_signature_objs()

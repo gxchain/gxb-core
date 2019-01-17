@@ -19,6 +19,7 @@
 
 #include <fc/smart_ref_impl.hpp>
 
+#include <graphene/chain/action_history_object.hpp>
 #include <graphene/chain/contract_evaluator.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/protocol/operations.hpp>
@@ -143,12 +144,6 @@ object_id_type contract_deploy_evaluator::do_apply(const contract_deploy_operati
             obj.abi = op.abi;
             obj.statistics = db().create<account_statistics_object>([&](account_statistics_object& s){s.owner = obj.id;}).id;
             });
-
-    contract_account con_acc;
-    con_acc.owner = op.account;
-    con_acc.account_id = new_acnt_object.id;
-    con_acc.def =op.abi;
-    d.applied_contract_account(con_acc);
     return new_acnt_object.id;
 } FC_CAPTURE_AND_RETHROW((op.name)(op.account)(op.fee)(op.vm_type)(op.vm_version)(op.abi)) }
 
@@ -250,6 +245,18 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     }
 
     contract_receipt receipt = contract_exec(d, op, billed_cpu_time_us);
+
+    auto& applied_acts_list = d.get_applied_actions();
+    account_action_history_object& actobj = *(applied_acts_list.back());
+    if(d.is_current_action(actobj)){
+          actobj.act.contract_id = op.contract_id.instance.value;
+          actobj.act.data = op.data;
+          actobj.act.method_name = op.method_name;
+          actobj.sender = op.account;
+          actobj.receiver = op.contract_id;
+          actobj.result = receipt;
+    }
+    /*
     auto trx = d.get_cur_trx();
     std::string testid(trx->id());
     ilog(testid.c_str());
@@ -264,7 +271,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     act_tra.act.contract_id = op.contract_id.instance.value;
     act_tra.act.data = op.data;
     act_tra.act.method_name = op.method_name;
-    d.applied_tra(tra);
+    d.applied_tra(tra);*/
 
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)) }

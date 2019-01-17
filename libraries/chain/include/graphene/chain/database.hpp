@@ -179,6 +179,9 @@ namespace graphene { namespace chain {
          uint32_t  push_applied_operation( const operation& op );
          void      set_applied_operation_result( uint32_t op_id, const operation_result& r );
          const vector<optional< operation_history_object > >& get_applied_operations()const;
+         const vector<optional< account_action_history_object> >& get_applied_actions()const;
+         vector<optional< account_action_history_object> >& get_applied_actions(){return _applied_acts;}
+         bool is_current_action(account_action_history_object& actobj);
 
          string to_pretty_string( const asset& a )const;
 
@@ -192,7 +195,7 @@ namespace graphene { namespace chain {
           */
          fc::signal<void(const signed_block&)>           applied_block;
          fc::signal<void(const transaction_trace&)>      applied_tra;
-         fc::signal<void(const contract_account&)>       applied_contract_account;
+         fc::signal<void(uint32_t irr_num)>              applied_irr_num;
 
 
          /**
@@ -463,6 +466,7 @@ namespace graphene { namespace chain {
           * emited.
           */
          vector<optional<operation_history_object> >  _applied_ops;
+         vector<optional<account_action_history_object> > _applied_acts;
 
          uint32_t                          _current_block_num    = 0;
          uint16_t                          _current_trx_in_block = 0;

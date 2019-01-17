@@ -122,7 +122,7 @@ namespace graphene { namespace chain {
       base_action_trace(){}
 
       account_id_type         sender;
-      account_id_type         reciver;
+      account_id_type         receiver;
       action                  act;
    };
 
@@ -133,18 +133,14 @@ namespace graphene { namespace chain {
    };
 
    struct transaction_trace {
-      transaction_id_type                        trx_id;
+      
       uint32_t                                   block_num = 0;
       action_trace                               traces; ///< disposable
+      contract_receipt                           result;
    };
-
-   /**
-    *  @brief signal contract abi for mongodb
-    */ 
-   struct contract_account {
-      account_id_type owner;
-      account_id_type account_id;
-      abi_def         def;
+   struct transaction_id_trace {
+      std::string                                _id;
+      transaction_trace                          trx_trace;
    };
 
    /**
@@ -259,10 +255,10 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT( graphene::chain::transaction, (ref_block_num)(ref_block_prefix)(expiration)(operations)(extensions) )
-FC_REFLECT( graphene::chain::base_action_trace,(sender)(reciver)(act))
+FC_REFLECT( graphene::chain::base_action_trace,(sender)(receiver)(act))
 FC_REFLECT_DERIVED( graphene::chain::action_trace, (graphene::chain::base_action_trace),(inline_traces))
-FC_REFLECT( graphene::chain::transaction_trace,(trx_id)(block_num)(traces))
+FC_REFLECT( graphene::chain::transaction_trace,(block_num)(traces)(result))
+FC_REFLECT( graphene::chain::transaction_id_trace,(_id)(trx_trace))
 // Note: not reflecting signees field for backward compatibility; in addition, it should not be in p2p messages
 FC_REFLECT_DERIVED( graphene::chain::signed_transaction, (graphene::chain::transaction), (signatures) )
 FC_REFLECT_DERIVED( graphene::chain::processed_transaction, (graphene::chain::signed_transaction), (operation_results) )
-FC_REFLECT( graphene::chain::contract_account,(owner)(account_id)(def))
