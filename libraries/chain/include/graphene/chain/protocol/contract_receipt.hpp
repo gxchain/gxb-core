@@ -22,7 +22,7 @@
 
 namespace graphene { namespace chain {
 
-   struct contract_receipt {
+   struct contract_receipt_old {
        uint32_t         billed_cpu_time_us = 0;
        uint32_t         ram_usage_bs = 0;
        asset            fee;
@@ -50,7 +50,7 @@ namespace graphene { namespace chain {
        }
    };
 
-   struct contract_receipt1 {
+   struct contract_receipt {
        uint32_t                billed_cpu_time_us = 0;
        asset                   fee;
        vector<account_receipt> ram_receipts;
@@ -70,7 +70,7 @@ namespace graphene { namespace chain {
 
 } }  // graphene::chain
 
-FC_REFLECT(graphene::chain::contract_receipt,
+FC_REFLECT(graphene::chain::contract_receipt_old,
                             (billed_cpu_time_us)
                             (ram_usage_bs)
                             (fee))
@@ -80,7 +80,7 @@ FC_REFLECT(graphene::chain::account_receipt,
                             (ram_bytes)
                             (ram_fee))
 
-FC_REFLECT(graphene::chain::contract_receipt1,
+FC_REFLECT(graphene::chain::contract_receipt,
                             (billed_cpu_time_us)
 							(fee)
 							(ram_receipts))

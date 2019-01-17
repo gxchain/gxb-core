@@ -101,8 +101,8 @@
        std::string operator()(const void_result& x) const;
        std::string operator()(const object_id_type& oid);
        std::string operator()(const asset& a);
+       std::string operator()(const contract_receipt_old& r);
        std::string operator()(const contract_receipt& r);
-       std::string operator()(const contract_receipt1& r);
     };
 
     // BLOCK  TRX  OP  VOP
@@ -3895,12 +3895,12 @@
        return _wallet.get_asset(a.asset_id).amount_to_pretty_string(a);
     }
 
-    std::string operation_result_printer::operator()(const contract_receipt& r)
+    std::string operation_result_printer::operator()(const contract_receipt_old& r)
     {
        return std::string(r);
     }
 
-    std::string operation_result_printer::operator()(const contract_receipt1& r)
+    std::string operation_result_printer::operator()(const contract_receipt& r)
     {
        return std::string(r);
     }

@@ -36,7 +36,7 @@
 
 namespace graphene { namespace chain {
 
-contract_receipt contract_call_evaluator::contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
+contract_receipt_old contract_call_evaluator::contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
 { try {
     // get cpu limit
     int32_t cpu_limit = std::min(db.get_max_trx_cpu_time(), db.get_max_trx_cpu_time());
@@ -67,11 +67,11 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
     generic_evaluator::convert_fee();
     generic_evaluator::pay_fee();
 
-    contract_receipt receipt{cpu_time_us, ram_usage_bs, fee_from_account};
+    contract_receipt_old receipt{cpu_time_us, ram_usage_bs, fee_from_account};
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)(billed_cpu_time_us)) }
 
-contract_receipt1 contract_call_evaluator::new_contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
+contract_receipt contract_call_evaluator::new_contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
 { try {
     int32_t cpu_limit = std::min(db.get_max_trx_cpu_time(), db.get_max_trx_cpu_time());
     fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(cpu_limit) : fc::days(1);
@@ -97,7 +97,7 @@ contract_receipt1 contract_call_evaluator::new_contract_exec(database& db, const
     db.adjust_balance(op.fee_payer(), -fee_from_account);
 //    generic_evaluator::pay_fee();//TODO check if need called
 
-    contract_receipt1 receipt;
+    contract_receipt receipt;
     receipt.billed_cpu_time_us = cpu_time_us;
     receipt.fee = fee_from_account;
     auto ram_fees = trx_context.get_ram_statistics();

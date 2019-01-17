@@ -371,10 +371,10 @@ signed_block database::_generate_block(
            processed_transaction ptx = _apply_transaction(tx);
            // check block cpu limit
            for (const auto op_result : ptx.operation_results) {
-               if (op_result.which() == operation_result::tag<contract_receipt>::value) {
+               if (op_result.which() == operation_result::tag<contract_receipt_old>::value) {
+                   new_block_cpu += op_result.get<contract_receipt_old>().billed_cpu_time_us;
+               } else if (op_result.which() == operation_result::tag<contract_receipt>::value) {
                    new_block_cpu += op_result.get<contract_receipt>().billed_cpu_time_us;
-               } else if (op_result.which() == operation_result::tag<contract_receipt1>::value) {
-                   new_block_cpu += op_result.get<contract_receipt1>().billed_cpu_time_us;
                }
            }
            if (new_block_cpu >= block_cpu_limit) {
@@ -532,10 +532,10 @@ void database::_apply_block( const signed_block& next_block )
    uint64_t block_cpu_time_us = 0;
    for (const auto &trx : next_block.transactions) {
        for (const auto op_result : trx.operation_results) {
-           if (op_result.which() == operation_result::tag<contract_receipt>::value) {
+           if (op_result.which() == operation_result::tag<contract_receipt_old>::value) {
+               block_cpu_time_us += op_result.get<contract_receipt_old>().billed_cpu_time_us;
+           } else if (op_result.which() == operation_result::tag<contract_receipt>::value) {
                block_cpu_time_us += op_result.get<contract_receipt>().billed_cpu_time_us;
-           } else if (op_result.which() == operation_result::tag<contract_receipt1>::value) {
-               block_cpu_time_us += op_result.get<contract_receipt1>().billed_cpu_time_us;
            }
        }
    }
@@ -647,10 +647,10 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
        if (i < operation_results.size()) {
            const auto &op_result = operation_results.at(i);
            // get billed_cpu_time_us
-           if (op_result.which() == operation_result::tag<contract_receipt>::value) {
+           if (op_result.which() == operation_result::tag<contract_receipt_old>::value) {
+               billed_cpu_time_us = op_result.get<contract_receipt_old>().billed_cpu_time_us;
+           } else if (op_result.which() == operation_result::tag<contract_receipt>::value) {
                billed_cpu_time_us = op_result.get<contract_receipt>().billed_cpu_time_us;
-           } else if (op_result.which() == operation_result::tag<contract_receipt1>::value) {
-               billed_cpu_time_us = op_result.get<contract_receipt1>().billed_cpu_time_us;
            }
        }
 

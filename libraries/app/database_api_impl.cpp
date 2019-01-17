@@ -1481,14 +1481,14 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
            processed_transaction ptx = _db.push_transaction(tx, ~0);
 
            if(_db.head_block_time() > HARDFORK_1015_TIME) {
-			   auto receipt = ptx.operation_results.back().get<contract_receipt1>();
+			   auto receipt = ptx.operation_results.back().get<contract_receipt>();
 			   if(id != asset_id_type(1))
 			       receipt.fee = _db.from_core_asset(receipt.fee, id);
 			   fc::variant r;
 			   fc::to_variant(receipt.fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
 			   result.push_back(r);
            } else {
-			   auto receipt = ptx.operation_results.back().get<contract_receipt>();
+			   auto receipt = ptx.operation_results.back().get<contract_receipt_old>();
 	           if(id != asset_id_type(1))
 	               receipt.fee = _db.from_core_asset(receipt.fee, id);
 			   fc::variant r;
