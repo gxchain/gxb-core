@@ -75,9 +75,9 @@ contract_receipt1 contract_call_evaluator::new_contract_exec(database& db, const
     fc::microseconds max_trx_cpu_us = (billed_cpu_time_us == 0) ? fc::microseconds(std::min(witness_cpu_limit, gpo_cpu_limit)) : fc::days(1);
 
     action act{op.account.instance, op.contract_id.instance, op.method_name, op.data};
-    if(op.amount && (int64_t)op.amount->amount.value > 0 && op.amount->asset_id.instance.value > 0) {//asset_id=0(NULL asset) can not be transfered
+    if (op.amount.valid()) {
         act.amount.amount = op.amount->amount.value;
-        act.amount.asset_id = op.amount->asset_id.instance;
+    	act.amount.asset_id = op.amount->asset_id.instance;
     }
     transaction_context trx_context(db, op.fee_payer().instance, max_trx_cpu_us);
     apply_context ctx{db, trx_context, act};
