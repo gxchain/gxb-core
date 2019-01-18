@@ -37,6 +37,7 @@
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/protocol/operations.hpp>
 
+
 #include <fc/crypto/hex.hpp>
 #include <fc/smart_ref_impl.hpp>
 
@@ -91,6 +92,10 @@ namespace graphene { namespace app {
        else if( api_name == "history_api" )
        {
           _history_api = std::make_shared< history_api >( _app );
+       }
+       else if( api_name == "action_history_api")
+       {
+          _action_history_api = std::make_shared< action_history_api>( _app);
        }
        else if( api_name == "network_node_api" )
        {
@@ -193,6 +198,11 @@ namespace graphene { namespace app {
     {
        FC_ASSERT(_history_api);
        return *_history_api;
+    }
+    fc::api<action_history_api> login_api::action_history()const
+    {
+       FC_ASSERT(_action_history_api);
+       return *_action_history_api;
     }
 
     fc::api<crypto_api> login_api::crypto() const
@@ -336,6 +346,32 @@ namespace graphene { namespace app {
             while ( itr != itr_stop && result.size() < limit );
         }
         return result;
+    }
+    std::vector<account_action_history_object> action_history_api::get_action_history( account_id_type account,
+                                                                                       uint64_t limit) const
+    {
+       FC_ASSERT( _app.chain_database());
+       const auto& db = *_app.chain_database();
+       FC_ASSERT(limit <=100 );
+       vector<account_action_history_object> result;
+
+       const auto& hist_idx = db.get_index_type<action_history_index>();
+       const auto& by_sender_idx = hist_idx.indices().get<by_sender>();
+       ilog("un_irr action_num: ${num}",("num",by_sender_idx.size()));
+       // 倒序返回未确认的action
+       const account_id_type& large_acc = account_id_type(((uint64_t)(-1))>>16);
+       auto itor = by_sender_idx.upper_bound(large_acc);
+       if( by_sender_idx.size()>0 ){
+         do{
+             itor --;
+            result.push_back(*itor);
+
+            if(itor == by_sender_idx.begin())
+               break;
+         }while(true);
+       }
+       
+       return result;
     }
 
     crypto_api::crypto_api(){};

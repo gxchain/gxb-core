@@ -48,6 +48,8 @@ namespace graphene { namespace chain {
    };
 
    struct by_id;
+   struct by_sender;
+   struct by_receiver;
    struct by_blocknum;
 
    typedef multi_index_container<
@@ -55,6 +57,8 @@ namespace graphene { namespace chain {
       indexed_by<
          ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
 
+         ordered_non_unique< tag<by_sender>,member< account_action_history_object, account_id_type, &account_action_history_object::sender>>,
+         ordered_non_unique< tag<by_receiver>,member< account_action_history_object, account_id_type, &account_action_history_object::receiver>>,
          ordered_non_unique< tag<by_blocknum>,member< account_action_history_object, uint32_t, &account_action_history_object::block_num>>
       >
    > action_history_multi_index_type;

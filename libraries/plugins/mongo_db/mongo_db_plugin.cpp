@@ -60,6 +60,7 @@ namespace detail {
         void init();
         void consume_blocks();                      // consume data(actions、inline_actions)
         void process_action_trace(const transaction_id_trace& tra);
+        std::vector<account_action_history_object> get_action_history_mongodb();
 
         fc::optional<abi_serializer> get_abi_serializer( uint64_t accid );
         template<typename T> fc::variant to_variant_with_abi( const T& obj );
@@ -94,6 +95,13 @@ namespace detail {
 
     };
     const std::string mongo_db_plugin_impl::action_traces_col = "action_traces";
+    std::vector<account_action_history_object> mongo_db_plugin_impl::get_action_history_mongodb()
+    {
+        std::vector<account_action_history_object> result;
+        //mongocxx::cursor cursor = _action_traces.find().sort({"_id":-1}).limit(5);
+        //result.push_back
+        return result;
+    }
 
     fc::optional<abi_serializer> mongo_db_plugin_impl::get_abi_serializer( uint64_t accid ) {
         using bsoncxx::builder::basic::kvp;

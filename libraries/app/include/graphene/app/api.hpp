@@ -25,6 +25,7 @@
 
 #include <graphene/app/database_api.hpp>
 #include <graphene/app/network_broadcast_api.hpp>
+#include <graphene/chain/action_history_object.hpp>
 
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/confidential.hpp>
@@ -156,6 +157,21 @@ namespace graphene { namespace app {
                                                                         uint32_t start = 0) const;
       private:
            application& _app;
+   };
+
+   /**
+    * 
+    * 
+    */
+   class action_history_api
+   {
+   public:
+      action_history_api(application& app):_app(app){}
+
+      std::vector<account_action_history_object> get_action_history( account_id_type account,
+                                                                     uint64_t limit) const;
+   private:
+      application& _app;
    };
 
    /**
@@ -296,6 +312,8 @@ namespace graphene { namespace app {
          fc::api<database_api> database()const;
          /// @brief Retrieve the history API
          fc::api<history_api> history()const;
+         /// @brief Retrieve the action history API
+         fc::api<action_history_api> action_history()const;
          /// @brief Retrieve the network node API
          fc::api<network_node_api> network_node()const;
          /// @brief Retrieve the cryptography API
@@ -315,6 +333,7 @@ namespace graphene { namespace app {
          optional< fc::api<network_broadcast_api> > _network_broadcast_api;
          optional< fc::api<network_node_api> > _network_node_api;
          optional< fc::api<history_api> >  _history_api;
+         optional< fc::api<action_history_api> > _action_history_api;
          optional< fc::api<crypto_api> > _crypto_api;
          optional< fc::api<asset_api> > _asset_api;
          optional< fc::api<graphene::debug_witness::debug_api> > _debug_api;
@@ -340,6 +359,9 @@ FC_API(graphene::app::history_api,
        (get_account_history_operations)
        (get_relative_account_history)
      )
+FC_API(graphene::app::action_history_api,
+       (get_action_history)
+      )
 FC_API(graphene::app::block_api,
        (get_blocks)
      )
@@ -362,7 +384,7 @@ FC_API(graphene::app::crypto_api,
      )
 FC_API(graphene::app::asset_api,
        (get_asset_holders)
-	   (get_asset_holders_count)
+	    (get_asset_holders_count)
        (get_all_asset_holders)
      )
 FC_API(graphene::app::login_api,
@@ -371,6 +393,7 @@ FC_API(graphene::app::login_api,
        (network_broadcast)
        (database)
        (history)
+       (action_history)
        (network_node)
        (crypto)
        (asset)
