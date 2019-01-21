@@ -220,6 +220,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
 
             charge_ram_fee_by_account(r, d, op);
 
+            //for the case that ram-account have 0 GXC
             if(0 == r.ram_fee.amount.value)
                 continue;
 
@@ -278,32 +279,34 @@ void contract_call_evaluator::charge_ram_fee_by_account(account_receipt &r, data
         ram_fee_core = floor(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
     }
 
+    //make sure ram-account have enough GXC to refund
     if(ram_fee_core < 0) {
         asset ram_account_core_asset = db.get_balance(ram_account_id, asset_id_type(1));
         if(ram_account_core_asset.amount.value <= 0 || ram_account_core_asset.amount < -ram_fee_core)
             ram_fee_core = -ram_account_core_asset.amount.value;
     }
 
+    //ram-account balance maybe 0, so no GXC will be refund
     if(0 == ram_fee_core) {
         r.ram_fee.amount.value = 0;
         return;
     }
 
-    if(r.account == op.fee_payer()) {
+    if(r.account == op.fee_payer()) {//op.fee_payer can use non-GXC as fee
         asset ram_fee_core_asset = asset{ram_fee_core, asset_id_type(1)};
         asset ram_fee_from_account = db.from_core_asset(ram_fee_core_asset, op.fee.asset_id);
         r.ram_fee = ram_fee_from_account;
 
-        if(ram_fee_core < 0) {
+        if(ram_fee_core < 0) {//can only use GXC for refund
             db.adjust_balance(op.fee_payer(), -ram_fee_core_asset);
             db.adjust_balance(ram_account_id, ram_fee_core_asset);
-        } else {
+        } else {//can use non-GXC as fee, so need to change the GXC from the asset fee pool
             generic_evaluator::prepare_fee(op.fee_payer(), ram_fee_from_account, op);
             generic_evaluator::convert_fee();
             db.adjust_balance(op.fee_payer(), -ram_fee_from_account);
             db.adjust_balance(ram_account_id, asset{core_fee_paid, asset_id_type(1)});
         }
-    } else {
+    } else {//contract fee payer can only use GXC as fee
         r.ram_fee = asset{ram_fee_core, asset_id_type(1)};
         db.adjust_balance(r.account, -r.ram_fee);
         db.adjust_balance(ram_account_id, r.ram_fee);
