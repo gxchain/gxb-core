@@ -92,31 +92,27 @@ void apply_context::execute_inline(action &&a)
     _inline_actions.emplace_back(move(a));
 }
 
-void apply_context::check_payer(account_name& payer)
+void apply_context::check_payer_permission(account_name& payer)
 {
-    FC_ASSERT(0 == payer || payer == sender || payer == trx_context.get_trx_origin() || payer == receiver,
-              "db access violation, apayer ${p} not in {0, sender ${s}, origin ${o}, receiver ${r}}",
-              ("p", payer)("s", sender)("o", trx_context.get_trx_origin())("r", receiver));
-    if (payer == 0) {
-        payer = receiver;
+    if (_db->head_block_time() > HARDFORK_1016_TIME) {
+        FC_ASSERT(0 == payer || payer == sender || payer == trx_context.get_trx_origin() || payer == receiver,
+                  "db access violation, apayer ${p} not in {0, sender ${s}, origin ${o}, receiver ${r}}",
+                  ("p", payer)("s", sender)("o", trx_context.get_trx_origin())("r", receiver));
+        if (payer == 0) {
+            payer = receiver;
+        }
     }
 }
 
 int apply_context::db_store_i64(uint64_t scope, uint64_t table, account_name payer, uint64_t id, const char *buffer, size_t buffer_size)
 {
-    // check payer
-    if(_db->head_block_time() > HARDFORK_1016_TIME) {
-        check_payer(payer);
-	}
+    check_payer_permission(payer);
 	return db_store_i64(receiver, scope, table, payer, id, buffer, buffer_size);
 }
 
 int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, account_name payer, uint64_t id, const char *buffer, size_t buffer_size)
 {
-    // check payer
-    if(_db->head_block_time() > HARDFORK_1016_TIME) {
-        check_payer(payer);
-	}
+    check_payer_permission(payer);
 
     const auto &tab = find_or_create_table(code, scope, table, payer);
     auto tableid = tab.id;
@@ -143,11 +139,7 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, a
 
 void apply_context::db_update_i64(int iterator, account_name payer, const char *buffer, size_t buffer_size)
 {
-    if(_db->head_block_time() > HARDFORK_1016_TIME) {
-    	FC_ASSERT(payer == 0 || payer == sender, "payer must be sender or current contract account");
-    	if(payer == 0)
-    		payer = receiver;
-    }
+    check_payer_permission(payer);
 
     const key_value_object &obj = keyval_cache.get(iterator);
 

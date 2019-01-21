@@ -543,7 +543,7 @@ class apply_context {
       void execute_inline(action &&a);
 
    public:
-      void check_payer(account_name& payer);
+      void check_payer_permission(account_name& payer);
 
     public:
       void update_db_usage(account_name payer, int64_t delta);
