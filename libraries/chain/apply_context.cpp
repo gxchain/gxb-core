@@ -88,35 +88,31 @@ void apply_context::execute_inline(action &&a)
     FC_ASSERT(contract_obj.code.size() > 0, "inline action's code account ${account} does not exist", ("account", a.contract_id));
 
     // check action amount, should always >= 0
-    FC_ASSERT(a.amount.amount >= 0, "action amount ${m}, should always >= 0", ("m", a.mount.mount));
+    FC_ASSERT(a.amount.amount >= 0, "action amount ${m}, should always >= 0", ("m", a.amount.amount));
     _inline_actions.emplace_back(move(a));
 }
 
-void apply_context::check_payer(account_name& payer)
+void apply_context::check_payer_permission(account_name& payer)
 {
-    FC_ASSERT(0 == payer || payer == sender || payer == trx_context.get_trx_origin() || payer == receiver,
-              "db access violation, apayer ${p} not in {0, sender ${s}, origin ${o}, receiver ${r}}",
-              ("p", payer)("s", sender)("o", trx_context.get_trx_origin())("r", receiver));
-    if (payer == 0) {
-        payer = receiver;
+    if (_db->head_block_time() > HARDFORK_1016_TIME) {
+        FC_ASSERT(0 == payer || payer == sender || payer == trx_context.get_trx_origin() || payer == receiver,
+                  "db access violation, apayer ${p} not in {0, sender ${s}, origin ${o}, receiver ${r}}",
+                  ("p", payer)("s", sender)("o", trx_context.get_trx_origin())("r", receiver));
+        if (payer == 0) {
+            payer = receiver;
+        }
     }
 }
 
 int apply_context::db_store_i64(uint64_t scope, uint64_t table, account_name payer, uint64_t id, const char *buffer, size_t buffer_size)
 {
-    // check payer
-    if(_db->head_block_time() > HARDFORK_1016_TIME) {
-        check_payer(payer);
-	}
+    check_payer_permission(payer);
 	return db_store_i64(receiver, scope, table, payer, id, buffer, buffer_size);
 }
 
 int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, account_name payer, uint64_t id, const char *buffer, size_t buffer_size)
 {
-    // check payer
-    if(_db->head_block_time() > HARDFORK_1016_TIME) {
-        check_payer(payer);
-	}
+    check_payer_permission(payer);
 
     const auto &tab = find_or_create_table(code, scope, table, payer);
     auto tableid = tab.id;
@@ -143,11 +139,7 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, a
 
 void apply_context::db_update_i64(int iterator, account_name payer, const char *buffer, size_t buffer_size)
 {
-    if(_db->head_block_time() > HARDFORK_1016_TIME) {
-    	FC_ASSERT(payer == 0 || payer == sender, "payer must be sender or current contract account");
-    	if(payer == 0)
-    		payer = receiver;
-    }
+    check_payer_permission(payer);
 
     const key_value_object &obj = keyval_cache.get(iterator);
 
@@ -155,10 +147,22 @@ void apply_context::db_update_i64(int iterator, account_name payer, const char *
     const auto &table_obj = keyval_cache.get_table(obj.t_id);
     FC_ASSERT(table_obj.code == receiver, "db access violation");
 
-    int64_t ram_delta = (int64_t)(buffer_size - obj.value.size());
+    // update db usage
+    const int64_t overhead = config::billable_size_v<key_value_object>;
+    int64_t old_size = (int64_t)(obj.value.size() + overhead);
+    int64_t new_size = (int64_t)(buffer_size + overhead);
     if(_db->head_block_time() > HARDFORK_1016_TIME) {
-        trx_context.update_ram_statistics(payer, ram_delta);
+        if (obj.payer != payer) {
+            // refund the existing payer
+            trx_context.update_ram_statistics((obj.payer,  -(old_size));
+            // charge the new payer
+            trx_context.update_ram_statistics(payer, ram_delta);
+        } else if (old_size != new_size) {
+            // charge/refund the existing payer the difference
+            trx_context.update_ram_statistics(obj.payer, new_size - old_size);
+        }
     } else {
+        int64_t ram_delta = (int64_t)(buffer_size - obj.value.size());
         update_ram_usage(ram_delta);
     }
 
@@ -318,14 +322,19 @@ const table_id_object &apply_context::find_or_create_table(uint64_t code, name s
     auto existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
     if (existing_tid != table_idx.end()) {
         return *existing_tid;
-   }
+    }
 
-   return _db->create<table_id_object>([&](table_id_object &t_id){//FIXME charge the table object ram fee
-      t_id.code = code;
-      t_id.scope = scope;
-      t_id.table = table;
-      t_id.payer = payer;
-   });
+    // update db usage
+    if (_db->head_block_time() > HARDFORK_1016_TIME) {
+        trx_context.update_ram_statistics(payer, config::billable_size_v<table_id_object>);
+    }
+
+    return _db->create<table_id_object>([&](table_id_object &t_id){
+            t_id.code = code;
+            t_id.scope = scope;
+            t_id.table = table;
+            t_id.payer = payer;
+            });
 }
 
 void apply_context::remove_table(const table_id_object &tid)
