@@ -58,7 +58,12 @@ class contract_call_evaluator : public evaluator<contract_call_evaluator>
 
   private:
     contract_call_operation::fee_parameters_type get_contract_call_fee_parameter(const database &db);
+    void charge_base_fee(database &db, const contract_call_operation &op, uint32_t cpu_time_us);
+    void charge_ram_fee_by_account(account_receipt &r, database &db, const contract_call_operation &op);
+
+  private:
     account_id_type ram_account_id;
+    contract_call_operation::fee_parameters_type fee_param;
 };
 
 } }
