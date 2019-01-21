@@ -58,11 +58,12 @@ void apply_context::exec_one()
 
 void apply_context::exec()
 {
+    // adjust balance
     if (amount.valid()) {
-    	database& d = db();
+        // amount always > 0
         auto amnt = *amount;
-        d.adjust_balance(account_id_type(act.sender), -amnt);//TODO check amnt > 0
-        d.adjust_balance(account_id_type(act.contract_id), amnt);
+        db().adjust_balance(account_id_type(act.sender), -amnt);
+        db().adjust_balance(account_id_type(act.contract_id), amnt);
     }
 
     exec_one();

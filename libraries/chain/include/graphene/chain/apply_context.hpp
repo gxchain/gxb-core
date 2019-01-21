@@ -507,8 +507,11 @@ class apply_context {
          , receiver(a.contract_id)
          , idx64(*this)
      {
-    	 if(a.amount.amount > 0 && a.amount.asset_id > 0)
-    		 amount = asset{a.amount.amount, asset_id_type(a.amount.asset_id)};
+         // check action amount, should always >= 0
+         FC_ASSERT(a.amount.amount >= 0, "action amount ${m}, should always >= 0", ("m", a.mount.mount));
+         if(a.amount.amount > 0) {
+             amount = asset{a.amount.amount, asset_id_type(a.amount.asset_id)};
+         }
 
          contract_log_to_console = _db->get_contract_log_to_console();
 
