@@ -58,6 +58,7 @@ class contract_call_evaluator : public evaluator<contract_call_evaluator>
 
   private:
     contract_call_operation::fee_parameters_type get_contract_call_fee_parameter(const database &db);
+    account_id_type ram_account_id;
 };
 
 } }

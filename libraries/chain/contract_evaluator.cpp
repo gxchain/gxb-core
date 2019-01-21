@@ -158,6 +158,11 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
         }
     }
 
+    const auto &accounts_idx = d.get_index_type<account_index>().indices().get<by_name>();
+    const auto &account_itr = accounts_idx.find("ram-account");
+    FC_ASSERT(account_itr != accounts_idx.end(), "ram-account not exist");
+    ram_account_id = account_itr->id;
+
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
 
@@ -182,7 +187,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
     const auto &fee_param = get_contract_call_fee_parameter(d);
 
-    if(d.head_block_time() > HARDFORK_1016_TIME) {
+    if(d.head_block_time() <= HARDFORK_1016_TIME) {
         uint32_t ram_usage_bs = ctx.get_ram_usage();
         auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
         auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
@@ -224,7 +229,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
                 ram_fee_core = floor(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
 
             if(ram_fee_core < 0) {
-                asset ram_account_core_asset = d.get_balance(account_id_type(508), asset_id_type(1));
+                asset ram_account_core_asset = d.get_balance(ram_account_id, asset_id_type(1));
                 if(ram_account_core_asset.amount < -ram_fee_core)
                     ram_fee_core = -ram_account_core_asset.amount.value;
                 if(0 == ram_fee_core)
@@ -238,11 +243,11 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
                 generic_evaluator::prepare_fee(op.fee_payer(), ram_fee_from_account, op);
                 generic_evaluator::convert_fee();
                 d.adjust_balance(op.fee_payer(), -ram_fee_from_account);
-                d.adjust_balance(account_id_type(508), ram_fee_from_account);
+                d.adjust_balance(ram_account_id, asset{core_fee_paid, asset_id_type(1)});
             } else {
                 r.ram_fee = asset{ram_fee_core, asset_id_type(1)};
                 d.adjust_balance(account_id_type(ram_fee.first), -r.ram_fee);
-                d.adjust_balance(account_id_type(508), r.ram_fee);
+                d.adjust_balance(ram_account_id, r.ram_fee);
             }
 
             receipt.ram_receipts.push_back(r);

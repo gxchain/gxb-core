@@ -154,9 +154,9 @@ void apply_context::db_update_i64(int iterator, account_name payer, const char *
     if(_db->head_block_time() > HARDFORK_1016_TIME) {
         if (obj.payer != payer) {
             // refund the existing payer
-            trx_context.update_ram_statistics((obj.payer,  -(old_size));
+            trx_context.update_ram_statistics(obj.payer,  -(old_size));
             // charge the new payer
-            trx_context.update_ram_statistics(payer, ram_delta);
+            trx_context.update_ram_statistics(payer, new_size);
         } else if (old_size != new_size) {
             // charge/refund the existing payer the difference
             trx_context.update_ram_statistics(obj.payer, new_size - old_size);
