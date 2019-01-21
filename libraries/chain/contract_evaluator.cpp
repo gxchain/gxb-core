@@ -159,9 +159,10 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
         }
     }
 
-    const auto &accounts_idx = d.get_index_type<account_index>().indices().get<by_name>();
-    const auto &account_itr = accounts_idx.find("ram-account");
-    FC_ASSERT(account_itr != accounts_idx.end(), "ram-account not exist");
+    // ram-account must exists
+    const auto &account_idx = d.get_index_type<account_index>().indices().get<by_name>();
+    const auto &account_itr = account_idx.find("ram-account");
+    FC_ASSERT(account_itr != account_idx.end(), "ram-account not exist");
     ram_account_id = account_itr->id;
 
     return void_result();
@@ -269,10 +270,13 @@ void contract_call_evaluator::charge_base_fee(database &db, const contract_call_
 void contract_call_evaluator::charge_ram_fee_by_account(account_receipt &r, database &db, const contract_call_operation &op)
 {
     int64_t ram_fee_core = 0;
-    if(r.ram_bytes > 0)
+    if(r.ram_bytes > 0) {
+        // charge ram fee
         ram_fee_core = ceil(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
-    else
+    } else {
+        // refund ram fee
         ram_fee_core = floor(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
+    }
 
     if(ram_fee_core < 0) {
         asset ram_account_core_asset = db.get_balance(ram_account_id, asset_id_type(1));
