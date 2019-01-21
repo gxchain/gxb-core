@@ -16,12 +16,12 @@ namespace graphene { namespace chain {
 
       action() {}
 
-      action(uint64_t tsender, uint64_t tcontract_id, action_name name, const bytes& d, const contract_asset &amt = contract_asset{0, 0})
-            : sender(tsender)
-            , contract_id(tcontract_id)
+      action(uint64_t sender, uint64_t contract_id, action_name name, const bytes& data, const contract_asset &amt = contract_asset{0, 0})
+            : sender(sender)
+            , contract_id(contract_id)
             , amount(amt)
             , method_name(name)
-            , data(d)
+            , data(data)
       {
       }
    };

@@ -87,18 +87,35 @@ contract_receipt contract_call_evaluator::contract_exec(database& db, const cont
         r.account = account_id_type(ram_fee.first);
         r.ram_bytes = ram_fee.second;
 
-        if(ram_fee.first == op.fee_payer().instance.value) {//the origin may be use no GXC as ram_fee
-            asset ram_fee_core_asset = asset{r.ram_bytes * (int64_t)fee_param.price_per_kbyte_ram / 1024, asset_id_type(1)};
+        if(0 == r.ram_bytes)
+            continue;
+
+        int64_t ram_fee_core = 0;
+        if(r.ram_bytes > 0)
+            ram_fee_core = ceil(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
+        else
+            ram_fee_core = floor(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
+
+        if(ram_fee_core < 0) {
+            asset ram_account_core_asset = db.get_balance(account_id_type(508), asset_id_type(1));
+            if(ram_account_core_asset.amount < -ram_fee_core)
+                ram_fee_core = -ram_account_core_asset.amount.value;
+            if(0 == ram_fee_core)
+                continue;
+        }
+
+        if(ram_fee.first == op.fee_payer().instance.value) {
+            asset ram_fee_core_asset = asset{ram_fee_core, asset_id_type(1)};
             asset ram_fee_from_account = db.from_core_asset(ram_fee_core_asset, op.fee.asset_id);
             r.ram_fee = ram_fee_from_account;
             generic_evaluator::prepare_fee(op.fee_payer(), ram_fee_from_account, op);
             generic_evaluator::convert_fee();
             db.adjust_balance(op.fee_payer(), -ram_fee_from_account);
-            db.adjust_balance(account_id_type(508), ram_fee_from_account);//TODO 508 is the ram-account instance id
-        } else {//other must use GXC as ram_fee
-            r.ram_fee = asset{r.ram_bytes * (int64_t)fee_param.price_per_kbyte_ram / 1024, asset_id_type(1)};
+            db.adjust_balance(account_id_type(508), ram_fee_from_account);
+        } else {
+            r.ram_fee = asset{ram_fee_core, asset_id_type(1)};
             db.adjust_balance(account_id_type(ram_fee.first), -r.ram_fee);
-            db.adjust_balance(account_id_type(508), r.ram_fee);//TODO 508 is the ram-account instance id
+            db.adjust_balance(account_id_type(508), r.ram_fee);
         }
 
         receipt.ram_receipts.push_back(r);
