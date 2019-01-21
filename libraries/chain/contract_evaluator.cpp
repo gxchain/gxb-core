@@ -152,8 +152,9 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
                   ("balance", d.to_pretty_string(d.get_balance(op.account(d), asset_type))));
     }
 
-    if (d.head_block_time() > HARDFORK_1011_TIME) {//TODO if cpu_fee charged, this check may fail for cpu time may different for the same opertion
+    if (d.head_block_time() > HARDFORK_1011_TIME) {
         if (op.fee.amount > 0) {
+            //if cpu_fee charged, this check may fail for cpu time may different for the same opertion
             FC_ASSERT(op.fee >= fee_from_account, "insufficient fee paid in trx, ${a} needed", ("a", d.to_pretty_string(fee_from_account)));
         }
     }
@@ -180,6 +181,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
         act.amount.asset_id = op.amount->asset_id.instance;
     }
 
+    // run contract code
     transaction_context trx_context(d, op.fee_payer().instance, max_trx_cpu_us);
     apply_context ctx{d, trx_context, act};
     ctx.exec();
