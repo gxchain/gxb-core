@@ -124,23 +124,13 @@ namespace graphene { namespace chain {
       account_id_type         sender;
       account_id_type         receiver;
       action                  act;
+      contract_receipt        result;
    };
 
    struct action_trace : public base_action_trace {
       using base_action_trace::base_action_trace;
 
       vector<action_trace> inline_traces;
-   };
-
-   struct transaction_trace {
-      
-      uint32_t                                   block_num = 0;
-      action_trace                               traces; ///< disposable
-      contract_receipt                           result;
-   };
-   struct transaction_id_trace {
-      std::string                                _id;
-      transaction_trace                          trx_trace;
    };
 
    /**
@@ -255,10 +245,8 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT( graphene::chain::transaction, (ref_block_num)(ref_block_prefix)(expiration)(operations)(extensions) )
-FC_REFLECT( graphene::chain::base_action_trace,(sender)(receiver)(act))
+FC_REFLECT( graphene::chain::base_action_trace,(sender)(receiver)(act)(result))
 FC_REFLECT_DERIVED( graphene::chain::action_trace, (graphene::chain::base_action_trace),(inline_traces))
-FC_REFLECT( graphene::chain::transaction_trace,(block_num)(traces)(result))
-FC_REFLECT( graphene::chain::transaction_id_trace,(_id)(trx_trace))
 // Note: not reflecting signees field for backward compatibility; in addition, it should not be in p2p messages
 FC_REFLECT_DERIVED( graphene::chain::signed_transaction, (graphene::chain::transaction), (signatures) )
 FC_REFLECT_DERIVED( graphene::chain::processed_transaction, (graphene::chain::signed_transaction), (operation_results) )

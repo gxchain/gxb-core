@@ -194,7 +194,6 @@ namespace graphene { namespace chain {
           *  released.
           */
          fc::signal<void(const signed_block&)>           applied_block;
-         fc::signal<void(const transaction_trace&)>      applied_tra;
          fc::signal<void(uint32_t irr_num)>              applied_irr_num;
 
 

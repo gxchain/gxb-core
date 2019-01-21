@@ -43,8 +43,12 @@ namespace graphene { namespace chain {
          uint32_t          block_num = 0;
          uint16_t          trx_in_block = 0;
          uint16_t          op_in_trx = 0;
-         account_action_history_id_type  next;
 
+   };
+   class actiondbdoc{
+      public:
+         std::string _id;
+         account_action_history_object action_his;
    };
 
    struct by_id;
@@ -69,5 +73,6 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT_DERIVED( graphene::chain::account_action_history_object, (graphene::chain::object),
-                    (sender)(receiver)(act)(inline_actions)(result)(block_num)(trx_in_block)(op_in_trx)(next) )
+                    (sender)(receiver)(act)(inline_actions)(result)(block_num)(trx_in_block)(op_in_trx) )
+FC_REFLECT(graphene::chain::actiondbdoc, (_id)(action_his))
 

@@ -59,11 +59,12 @@ namespace detail {
 
         void init();
         void consume_blocks();                      // consume data(actions、inline_actions)
-        void process_action_trace(const transaction_id_trace& tra);
+        void process_action_trace(const account_action_history_object& act);
         std::vector<account_action_history_object> get_action_history_mongodb();
 
         fc::optional<abi_serializer> get_abi_serializer( uint64_t accid );
         template<typename T> fc::variant to_variant_with_abi( const T& obj );
+        template<typename T> void from_variant_with_abi( const T& obj, fc::variant& pretty );
         template<typename Queue, typename Entry> void queue(Queue& queue, const Entry e);
         // link to mongo_server
         std::string db_name;
@@ -85,8 +86,8 @@ namespace detail {
         std::atomic_bool done{false};
 
         // deque(cache by production and consumption)
-        std::deque<transaction_id_trace> actions_trace_queue;            // production
-        std::deque<transaction_id_trace> actions_trace_process_queue;    // consumption
+        std::deque<account_action_history_object> actions_trace_queue;            // production
+        std::deque<account_action_history_object> actions_trace_process_queue;    // consumption
 
         static const std::string action_traces_col;
 
@@ -97,9 +98,39 @@ namespace detail {
     const std::string mongo_db_plugin_impl::action_traces_col = "action_traces";
     std::vector<account_action_history_object> mongo_db_plugin_impl::get_action_history_mongodb()
     {
+        using namespace bsoncxx::types;
+        using bsoncxx::builder::basic::kvp;
+        using bsoncxx::builder::basic::make_document;
+
         std::vector<account_action_history_object> result;
-        //mongocxx::cursor cursor = _action_traces.find().sort({"_id":-1}).limit(5);
-        //result.push_back
+
+        const account_id_type& accid = account_id_type(426);
+        fc::variant acc_id_var;
+        fc::to_variant(accid,acc_id_var);
+        mongocxx::options::find opts{};
+        opts.projection(make_document(kvp("_id",0),kvp("action.act.data",0)));     
+        auto cursor = _action_traces.find(make_document(kvp("action.sender",acc_id_var.as_string())),opts);
+        
+        for( auto doc : cursor){
+            //auto docview = doc.view();
+            auto subdoc = doc["action"];
+            auto json_doc = bsoncxx::to_json(subdoc.get_document().view());
+            FC_ASSERT(json_doc.find("\"account\"") != std::string::npos &&
+                json_doc.find("\"name\"") != std::string::npos , "mongdb document type error !");
+
+            json_doc=json_doc.replace(json_doc.find("\"account\""),9,"\"contract_id\"");
+            json_doc=json_doc.replace(json_doc.find("\"name\""),6,"\"method_name\"");
+
+            if(json_doc.find("\"hex_data\"") != std::string::npos)
+                json_doc=json_doc.replace(json_doc.find("\"hex_data\""),10,"\"data\"");
+
+            auto var_doc = fc::json::from_string(json_doc);
+            
+            account_action_history_object obj;
+            fc::from_variant(var_doc,obj,20);
+            ilog("sender_test: ${sender_name}",("sender_name",obj.act.method_name));
+        }
+        
         return result;
     }
 
@@ -116,6 +147,18 @@ namespace detail {
             return abis;
         }FC_LOG_AND_RETHROW() 
         
+    }
+
+    template<typename T>
+    void mongo_db_plugin_impl::from_variant_with_abi( const T& obj, fc::variant& pretty ) {
+
+        fc::microseconds abi_serializer_max_time = fc::microseconds(1000*1500);
+        
+        abi_serializer::from_variant( pretty, obj,
+                                    [&]( uint64_t accid ) { return get_abi_serializer( accid ); },
+                                    abi_serializer_max_time );
+        
+        return;
     }
 
     template<typename T>
@@ -158,19 +201,9 @@ namespace detail {
 
             if(by_blocknum_idx.size() > 0 &&
                 by_blocknum_idx.begin()->block_num < num){
-
                 auto itor = by_blocknum_idx.begin();
                 for(;itor->block_num < num;){
-                    transaction_id_trace trx_id_trace_obj;
-                    transaction_trace &tractobj = trx_id_trace_obj.trx_trace;
-                    tractobj.block_num = itor->block_num;
-                    tractobj.traces.receiver = itor->receiver;
-                    tractobj.traces.sender = itor->sender;
-                    tractobj.traces.act = itor->act;
-                    tractobj.result = itor->result;
-                    trx_id_trace_obj._id=std::to_string(itor->block_num)+"_"+std::to_string(itor->trx_in_block)+"_"+std::to_string(itor->op_in_trx);
-                    //tractobj.traces.inline_traces = itor->inline_actions;
-                    queue( actions_trace_queue, trx_id_trace_obj);
+                    queue( actions_trace_queue, *itor);
                     ilog("first_num: ${num}, irr_block_num: ${irr_num}, count: ${count}",("num",by_blocknum_idx.begin()->block_num)("irr_num",num)("count",by_blocknum_idx.size()));
                     db.remove(*itor);
                     if(by_blocknum_idx.size() == 0)
@@ -178,6 +211,7 @@ namespace detail {
                     itor = by_blocknum_idx.begin();
                 }
             }
+            get_action_history_mongodb();
         }FC_LOG_AND_RETHROW()
     }
 
@@ -190,39 +224,39 @@ namespace detail {
                 if(o_act.valid()){
                     db.create<account_action_history_object>( [&]( account_action_history_object& h )
                     {
-                        h.block_num    = o_act->block_num;
-                        h.trx_in_block = o_act->trx_in_block;
-                        h.op_in_trx    = o_act->op_in_trx;
-                        h.sender       = o_act->sender;
-                        h.receiver     = o_act->receiver;
-                        h.act          = o_act->act;
+                        h.block_num      = o_act->block_num;
+                        h.trx_in_block   = o_act->trx_in_block;
+                        h.op_in_trx      = o_act->op_in_trx;
+                        h.sender         = o_act->sender;
+                        h.receiver       = o_act->receiver;
+                        h.act            = o_act->act;
                         h.inline_actions = o_act->inline_actions;
-                        h.result = o_act->result;
+                        h.result         = o_act->result;
                     });
                 }
             }
         }FC_LOG_AND_RETHROW()
     }
 
-    void mongo_db_plugin_impl::process_action_trace(const transaction_id_trace& tra){
+    void mongo_db_plugin_impl::process_action_trace(const account_action_history_object& act){
         try{
             using namespace bsoncxx::types;
             using bsoncxx::builder::basic::kvp;
             using bsoncxx::builder::basic::make_document;
             auto actions_trans_doc = bsoncxx::builder::basic::document{};
             
-            //const base_action_trace& bact = tra.traces;
-            auto abi_json_str = to_variant_with_abi(tra.trx_trace);
+            auto abi_json_str = to_variant_with_abi(act);
             auto json_str = fc::json::to_string(abi_json_str);
             const auto& value = bsoncxx::from_json(json_str);
 
-            actions_trans_doc.append( kvp("_id",tra._id));
+            std::string primary_key = std::to_string(act.block_num)+"-"+std::to_string(act.trx_in_block)+"-"+std::to_string(act.op_in_trx);
+
+            actions_trans_doc.append( kvp("_id",primary_key));
+
             actions_trans_doc.append( kvp("action",value));
-            for( auto i=0;i<2;i++){
-                auto doc = _action_traces.find_one( make_document( kvp("_id", tra._id)) );
-                if(!doc)
-                    _action_traces.insert_one(actions_trans_doc.view() ) ;
-            }                
+            auto doc = _action_traces.find_one( make_document( kvp("_id", primary_key)) );
+            if(!doc)
+                _action_traces.insert_one(actions_trans_doc.view() ) ;               
         }FC_LOG_AND_RETHROW()
     }
 
@@ -312,7 +346,6 @@ void mongo_db_plugin::plugin_initialize(const boost::program_options::variables_
 
         database().add_index< primary_index< action_history_index > >();
         // 2 绑定信号量
-        //database().applied_tra.connect( [&]( const transaction_trace& tra){ my->update_action_histories(tra); } );
         database().applied_block.connect( [&]( const signed_block& tra){ my->update_action_histories(tra); } );
         
         database().applied_irr_num.connect( [&]( uint32_t num){ my->remove_action_histories(num); } );

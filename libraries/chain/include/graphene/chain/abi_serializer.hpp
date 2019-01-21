@@ -3,6 +3,7 @@
 #include <graphene/chain/action.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <fc/variant_object.hpp>
+#include <graphene/chain/action_history_object.hpp>
 
 namespace graphene { namespace chain {
 
@@ -131,8 +132,9 @@ namespace impl {
    constexpr bool single_type_requires_abi_v() {
       return std::is_base_of<transaction, T>::value ||
 //             std::is_same<T, packed_transaction>::value ||
-             std::is_same<T, transaction_trace>::value ||
+             std::is_same<T, account_action_history_object>::value ||
              std::is_same<T, action_trace>::value ||
+             std::is_same<T, actiondbdoc>::value ||
 //             std::is_same<T, transaction_receipt>::value ||
 //             std::is_same<T, action_trace>::value ||
              std::is_same<T, base_action_trace>::value ||
