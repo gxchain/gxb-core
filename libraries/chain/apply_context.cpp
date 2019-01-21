@@ -147,10 +147,22 @@ void apply_context::db_update_i64(int iterator, account_name payer, const char *
     const auto &table_obj = keyval_cache.get_table(obj.t_id);
     FC_ASSERT(table_obj.code == receiver, "db access violation");
 
-    int64_t ram_delta = (int64_t)(buffer_size - obj.value.size());
+    // update db usage
+    const int64_t overhead = config::billable_size_v<key_value_object>;
+    int64_t old_size = (int64_t)(obj.value.size() + overhead);
+    int64_t new_size = (int64_t)(buffer_size + overhead);
     if(_db->head_block_time() > HARDFORK_1016_TIME) {
-        trx_context.update_ram_statistics(payer, ram_delta);
+        if (obj.payer != payer) {
+            // refund the existing payer
+            trx_context.update_ram_statistics((obj.payer,  -(old_size));
+            // charge the new payer
+            trx_context.update_ram_statistics(payer, ram_delta);
+        } else if (old_size != new_size) {
+            // charge/refund the existing payer the difference
+            trx_context.update_ram_statistics(obj.payer, new_size - old_size);
+        }
     } else {
+        int64_t ram_delta = (int64_t)(buffer_size - obj.value.size());
         update_ram_usage(ram_delta);
     }
 
