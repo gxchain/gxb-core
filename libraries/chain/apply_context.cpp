@@ -310,14 +310,19 @@ const table_id_object &apply_context::find_or_create_table(uint64_t code, name s
     auto existing_tid = table_idx.find(boost::make_tuple(code, scope, table));
     if (existing_tid != table_idx.end()) {
         return *existing_tid;
-   }
+    }
 
-   return _db->create<table_id_object>([&](table_id_object &t_id){//FIXME charge the table object ram fee
-      t_id.code = code;
-      t_id.scope = scope;
-      t_id.table = table;
-      t_id.payer = payer;
-   });
+    // update db usage
+    if (_db->head_block_time() > HARDFORK_1016_TIME) {
+        trx_context.update_ram_statistics(payer, config::billable_size_v<table_id_object>);
+    }
+
+    return _db->create<table_id_object>([&](table_id_object &t_id){
+            t_id.code = code;
+            t_id.scope = scope;
+            t_id.table = table;
+            t_id.payer = payer;
+            });
 }
 
 void apply_context::remove_table(const table_id_object &tid)
