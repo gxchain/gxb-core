@@ -88,7 +88,7 @@ void apply_context::execute_inline(action &&a)
     FC_ASSERT(contract_obj.code.size() > 0, "inline action's code account ${account} does not exist", ("account", a.contract_id));
 
     // check action amount, should always >= 0
-    FC_ASSERT(a.amount.amount >= 0, "action amount ${m}, should always >= 0", ("m", a.mount.mount));
+    FC_ASSERT(a.amount.amount >= 0, "action amount ${m}, should always >= 0", ("m", a.amount.amount));
     _inline_actions.emplace_back(move(a));
 }
 
