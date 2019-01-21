@@ -186,8 +186,8 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
         uint32_t ram_usage_bs = ctx.get_ram_usage();
         auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
         auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
-        core_fee_paid = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
-        fee_from_account = d.from_core_asset(asset{core_fee_paid, asset_id_type(1)}, op.fee.asset_id);
+        share_type core_fee_amount = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
+        asset fee_from_account = d.from_core_asset(asset{core_fee_amount, asset_id_type(1)}, op.fee.asset_id);
 
         generic_evaluator::prepare_fee(op.fee_payer(), fee_from_account, op);
         generic_evaluator::convert_fee();
@@ -196,13 +196,13 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
         return contract_receipt_old{cpu_time_us, ram_usage_bs, fee_from_account};
     } else {
         auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
-        core_fee_paid = fee_param.fee + cpu_fee.to_uint64();
-        fee_from_account = d.from_core_asset(asset{core_fee_paid, asset_id_type(1)}, op.fee.asset_id);
+        share_type base_fee = fee_param.fee + cpu_fee.to_uint64();
+        asset base_fee_from_account = d.from_core_asset(asset{base_fee, asset_id_type(1)}, op.fee.asset_id);
 
-        generic_evaluator::prepare_fee(op.fee_payer(), fee_from_account, op);
+        generic_evaluator::prepare_fee(op.fee_payer(), base_fee_from_account, op);
         generic_evaluator::convert_fee();
-        d.deposit_cashback(op.fee_payer()(d), core_fee_paid, true);
-        d.adjust_balance(op.fee_payer(), -fee_from_account);
+        d.deposit_cashback(op.fee_payer()(d), base_fee, true);
+        d.adjust_balance(op.fee_payer(), -base_fee_from_account);
 
         contract_receipt receipt;
         receipt.billed_cpu_time_us = cpu_time_us;
