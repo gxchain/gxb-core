@@ -542,6 +542,9 @@ class apply_context {
       void exec_one();
       void execute_inline(action &&a);
 
+   public:
+      void check_payer(account_name& payer);
+
     public:
       void update_db_usage(account_name payer, int64_t delta);
       int  db_store_i64(uint64_t scope, uint64_t table, account_name payer, uint64_t id, const char *buffer, size_t buffer_size);
