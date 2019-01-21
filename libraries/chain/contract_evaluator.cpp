@@ -276,18 +276,29 @@ void contract_call_evaluator::charge_ram_fee_by_account(account_receipt &r, data
 
     if(ram_fee_core < 0) {
         asset ram_account_core_asset = db.get_balance(ram_account_id, asset_id_type(1));
-        if(ram_account_core_asset.amount < -ram_fee_core)
+        if(ram_account_core_asset.amount.value <= 0 || ram_account_core_asset.amount < -ram_fee_core)
             ram_fee_core = -ram_account_core_asset.amount.value;
+    }
+
+    if(0 == ram_fee_core) {
+        r.ram_fee.amount.value = 0;
+        return;
     }
 
     if(r.account == op.fee_payer()) {
         asset ram_fee_core_asset = asset{ram_fee_core, asset_id_type(1)};
         asset ram_fee_from_account = db.from_core_asset(ram_fee_core_asset, op.fee.asset_id);
         r.ram_fee = ram_fee_from_account;
-        generic_evaluator::prepare_fee(op.fee_payer(), ram_fee_from_account, op);
-        generic_evaluator::convert_fee();
-        db.adjust_balance(op.fee_payer(), -ram_fee_from_account);
-        db.adjust_balance(ram_account_id, asset{core_fee_paid, asset_id_type(1)});
+
+        if(ram_fee_core < 0) {
+            db.adjust_balance(op.fee_payer(), -ram_fee_core_asset);
+            db.adjust_balance(ram_account_id, ram_fee_core_asset);
+        } else {
+            generic_evaluator::prepare_fee(op.fee_payer(), ram_fee_from_account, op);
+            generic_evaluator::convert_fee();
+            db.adjust_balance(op.fee_payer(), -ram_fee_from_account);
+            db.adjust_balance(ram_account_id, asset{core_fee_paid, asset_id_type(1)});
+        }
     } else {
         r.ram_fee = asset{ram_fee_core, asset_id_type(1)};
         db.adjust_balance(r.account, -r.ram_fee);
