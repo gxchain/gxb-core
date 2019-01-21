@@ -5,7 +5,7 @@
 
 namespace graphene { namespace chain {
 
-   transaction_context::transaction_context(database &d, int64_t origin, fc::microseconds max_trx_cpu_us) :
+   transaction_context::transaction_context(database &d, uint64_t origin, fc::microseconds max_trx_cpu_us) :
         _db(&d),
         trx_origin(origin),
         start(fc::time_point::now()),

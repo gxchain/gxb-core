@@ -97,6 +97,7 @@ namespace graphene { namespace chain {
              std::function<genesis_state_type()> genesis_loader,
              const std::string& db_version,
              bool fast_replay = false);
+          void truncate_block_db(const fc::path &db_path, uint64_t block_num);
 
          /**
           * @brief Rebuild object graph from block history and open detabase
@@ -114,6 +115,9 @@ namespace graphene { namespace chain {
           */
          void wipe(const fc::path& data_dir, bool include_blocks);
          void close(bool rewind = true);
+
+         // flush snapshot object_database
+         void flush(const fc::string& data_dir, const fc::string& block_id);
 
          //////////////////// db_block.cpp ////////////////////
 
@@ -488,6 +492,14 @@ namespace graphene { namespace chain {
          bool                              _opened = false;
          bool                              contract_log_to_console = false;
          bool                              rpc_mock_calc_fee = false;
+
+         // for state snapshot
+        public:
+           void           set_snapshot_dir(const fc::string& data_dir) { snapshot_dir = data_dir; }
+           fc::string     get_snapshot_dir() const { return snapshot_dir; }
+
+        private:
+           fc::string                        snapshot_dir;
    };
 
    namespace detail

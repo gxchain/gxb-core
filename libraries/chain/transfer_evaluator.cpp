@@ -38,6 +38,7 @@ void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
    const asset_object&   asset_type      = op.amount.asset_id(d);
 
    try {
+	  if (d.head_block_time() <= HARDFORK_1014_TIME)
       GRAPHENE_ASSERT(
          to_account.code.size() == 0,
          transfer_restricted_transfer_to_contract,

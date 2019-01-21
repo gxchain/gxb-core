@@ -231,9 +231,11 @@ namespace detail {
          auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c, GRAPHENE_NET_MAX_NESTED_OBJECTS);
          auto login = std::make_shared<graphene::app::login_api>( std::ref(*_self) );
          login->enable_api("database_api");
+         login->enable_api("network_broadcast_api");
 
          wsc->register_api(login->database());
          wsc->register_api(fc::api<graphene::app::login_api>(login));
+         wsc->register_api(login->network_broadcast());
          c->set_session_data( wsc );
 
          std::string username = "*";
@@ -307,6 +309,11 @@ namespace detail {
          public_key_type init_pubkey( init_key );
          for( uint64_t i=0; i<genesis.initial_active_witnesses; i++ )
             genesis.initial_witness_candidates[i].block_signing_key = init_pubkey;
+      }
+
+      void truncate_block_db(const fc::path &data_dir, uint64_t block_num)
+      {
+    	  _chain_db->truncate_block_db(data_dir / "blockchain/database/block_num_to_block", block_num);
       }
 
       void startup()
@@ -403,6 +410,10 @@ namespace detail {
 
          if (_options->count("rpc-mock-calc-fee")) {
              _chain_db->set_rpc_mock_calc_fee(true);
+         }
+
+         if (_options->count("state-snapshots-dir")) {
+             _chain_db->set_snapshot_dir(_options->at("state-snapshots-dir").as<string>());
          }
 
          if (_options->count("api-access")) {
@@ -947,6 +958,8 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("version,v", "Display version information")
          ("contracts-console", "print contract's output to console")
          ("rpc-mock-calc-fee", "rec-server mock caculate required fees, default fasle")
+         ("state-snapshots-dir", bpo::value<string>(), "the location of the state snapshots directory")
+		 ("truncate,x", bpo::value<string>()->composing(), "truncate db file by block_number")
          ;
    command_line_options.add(_cli_options);
    configuration_file_options.add(_cfg_options);
@@ -997,6 +1010,11 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
    {
       if (!it.empty()) enable_plugin(it);
    }
+}
+
+void application::truncate_block_db(const fc::path &data_dir, uint64_t block_num)
+{
+   my->truncate_block_db(data_dir, block_num);
 }
 
 void application::startup()

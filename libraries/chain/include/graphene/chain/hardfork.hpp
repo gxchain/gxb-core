@@ -42,21 +42,10 @@
 #define HARDFORK_1006_TIME (fc::time_point_sec( 1534759200 ))
 #endif
 
-// hardfork 1007
-// enable smart contract 2.0
-#ifndef HARDFORK_1007_TIME
-#define HARDFORK_1007_TIME (fc::time_point_sec( 1541433600 )) // for mainnet, 2018-11-06T00:00:00
-#endif
-
 // hardfork 1008
 // core asset hardfork
 #ifndef HARDFORK_1008_TIME
 #define HARDFORK_1008_TIME (fc::time_point_sec( 1541433600 )) // for mainnet, 2018-11-06T00:00:00
-#endif
-
-// enable smart contract update
-#ifndef HARDFORK_1009_TIME
-#define HARDFORK_1009_TIME (fc::time_point_sec( 1545796800 )) // for mainnet, 2018-12-26T04:00:00
 #endif
 
 // set min witness num 21
@@ -72,6 +61,18 @@
 // update active trustnodes
 #ifndef HARDFORK_1012_TIME
 #define HARDFORK_1012_TIME (fc::time_point_sec( 1545796800 )) // for mainnet, 2018-12-26T04:00:00
+#endif
+
+// call_contract fix fee calculation
+#ifndef HARDFORK_1013_TIME
+// should be updated before next release
+#define HARDFORK_1013_TIME (fc::time_point_sec( 1945034200 )) // for test, 2018-12-17T08:10:00(UTC)
+#endif
+
+// can transfer to contract account
+#ifndef HARDFORK_1014_TIME
+// should be updated before next release
+#define HARDFORK_1014_TIME (fc::time_point_sec( 1945436800 )) // for test, 2018-12-22T00:00:00(UTC)
 #endif
 
 // enable witness guaranty
