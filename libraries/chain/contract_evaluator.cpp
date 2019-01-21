@@ -255,6 +255,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
           actobj.sender = op.account;
           actobj.receiver = op.contract_id;
           actobj.result = receipt;
+          actobj.txid = d.get_cur_trx()->id();
     }
 
     return receipt;

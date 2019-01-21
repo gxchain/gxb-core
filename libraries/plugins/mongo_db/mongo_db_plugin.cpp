@@ -37,70 +37,79 @@ namespace graphene { namespace mongo_db {
 
 using namespace chain;
 namespace detail {
-    class mongo_db_plugin_impl {
-    public:
-        mongo_db_plugin_impl(mongo_db_plugin& plugin):_self(plugin){}
-        virtual ~mongo_db_plugin_impl(){
-            try {
-                ilog( "mongo_db_plugin shutdown in process please be patient this can take a few minutes" );
-                done = true;
-                condition.notify_one();
+    class mongo_db_plugin_impl{
+        public:
+            mongo_db_plugin_impl(mongo_db_plugin& plugin):_self(plugin){}
+            virtual ~mongo_db_plugin_impl(){
+                try {
+                    ilog( "mongo_db_plugin shutdown in process please be patient this can take a few minutes" );
+                    done = true;
+                    condition.notify_one();
 
-                consume_thread.join();
+                    consume_thread.join();
 
-                mongo_pool.reset();
-            } catch( std::exception& e ) {
-                elog( "Exception on mongo_db_plugin shutdown of consume thread: ${e}", ("e", e.what()));
+                    mongo_pool.reset();
+                } catch( std::exception& e ) {
+                    elog( "Exception on mongo_db_plugin shutdown of consume thread: ${e}", ("e", e.what()));
+                }
             }
-        }
 
-        void update_action_histories( const signed_block& b );
-        void remove_action_histories( uint32_t num);
+            void update_action_histories( const signed_block& b );
+            void remove_action_histories( uint32_t num);
 
-        void init();
-        void consume_blocks();                      // consume data(actions、inline_actions)
-        void process_action_trace(const account_action_history_object& act);
-        std::vector<account_action_history_object> get_action_history_mongodb();
+            void init();
+            void consume_blocks();                      // consume data(actions、inline_actions)
+            void process_action_trace(account_action_history_object& act);
+            static std::vector<account_action_history_object> get_action_history_mongodb();
 
-        fc::optional<abi_serializer> get_abi_serializer( uint64_t accid );
-        template<typename T> fc::variant to_variant_with_abi( const T& obj );
-        template<typename T> void from_variant_with_abi( const T& obj, fc::variant& pretty );
-        template<typename Queue, typename Entry> void queue(Queue& queue, const Entry e);
-        // link to mongo_server
-        std::string db_name;
-        mongocxx::instance instance;
-        std::shared_ptr<mongocxx::pool> mongo_pool;
-        //mongocxx::pool mongo_pool;
+            fc::optional<abi_serializer> get_abi_serializer( uint64_t accid );
+            template<typename T> fc::variant to_variant_with_abi( const T& obj );
+            template<typename Queue, typename Entry> void queue(Queue& queue, const Entry e);
 
-        // collections consum thread
-        mongocxx::collection _action_traces;        // actions(account、action、inline_action)
+            // link to mongo_server
+            static std::string db_name;
+            mongocxx::instance instance;
+            static std::shared_ptr<mongocxx::pool> mongo_pool;
 
-        // consume thread 
-        boost::thread consume_thread;
-        boost::mutex mtx;
-        boost::condition_variable condition;
+            // collections consum thread
+            mongocxx::collection _action_traces;        // actions(account、action、inline_action)
 
-        // production queue
-        size_t max_queue_size = 0;
-        int queue_sleep_time = 0;
-        std::atomic_bool done{false};
+            // consume thread 
+            boost::thread consume_thread;
+            boost::mutex mtx;
+            boost::condition_variable condition;
 
-        // deque(cache by production and consumption)
-        std::deque<account_action_history_object> actions_trace_queue;            // production
-        std::deque<account_action_history_object> actions_trace_process_queue;    // consumption
+            // production queue
+            size_t max_queue_size = 0;
+            int queue_sleep_time = 0;
+            std::atomic_bool done{false};
 
-        static const std::string action_traces_col;
+            // deque(cache by production and consumption)
+            std::deque<account_action_history_object> actions_trace_queue;            // production
+            std::deque<account_action_history_object> actions_trace_process_queue;    // consumption
 
-        // access db
-        mongo_db_plugin& _self;
+            static const std::string action_traces_col;
 
-    };
+            // access db
+            mongo_db_plugin& _self;
+
+        };
     const std::string mongo_db_plugin_impl::action_traces_col = "action_traces";
+
+    std::shared_ptr<mongocxx::pool> mongo_db_plugin_impl::mongo_pool = nullptr;
+    std::string mongo_db_plugin_impl::db_name = "";
+
+
     std::vector<account_action_history_object> mongo_db_plugin_impl::get_action_history_mongodb()
     {
         using namespace bsoncxx::types;
         using bsoncxx::builder::basic::kvp;
         using bsoncxx::builder::basic::make_document;
+
+        auto mongo_client = mongo_pool->acquire();
+        auto& mongo_conn = *mongo_client;
+
+        auto _action_traces = mongo_conn[db_name][action_traces_col];
 
         std::vector<account_action_history_object> result;
 
@@ -108,11 +117,11 @@ namespace detail {
         fc::variant acc_id_var;
         fc::to_variant(accid,acc_id_var);
         mongocxx::options::find opts{};
+        opts.sort(make_document(kvp("_id",-1)));
         opts.projection(make_document(kvp("_id",0),kvp("action.act.data",0)));     
         auto cursor = _action_traces.find(make_document(kvp("action.sender",acc_id_var.as_string())),opts);
         
         for( auto doc : cursor){
-            //auto docview = doc.view();
             auto subdoc = doc["action"];
             auto json_doc = bsoncxx::to_json(subdoc.get_document().view());
             FC_ASSERT(json_doc.find("\"account\"") != std::string::npos &&
@@ -128,7 +137,7 @@ namespace detail {
             
             account_action_history_object obj;
             fc::from_variant(var_doc,obj,20);
-            ilog("sender_test: ${sender_name}",("sender_name",obj.act.method_name));
+            result.push_back(obj);
         }
         
         return result;
@@ -147,18 +156,6 @@ namespace detail {
             return abis;
         }FC_LOG_AND_RETHROW() 
         
-    }
-
-    template<typename T>
-    void mongo_db_plugin_impl::from_variant_with_abi( const T& obj, fc::variant& pretty ) {
-
-        fc::microseconds abi_serializer_max_time = fc::microseconds(1000*1500);
-        
-        abi_serializer::from_variant( pretty, obj,
-                                    [&]( uint64_t accid ) { return get_abi_serializer( accid ); },
-                                    abi_serializer_max_time );
-        
-        return;
     }
 
     template<typename T>
@@ -211,7 +208,6 @@ namespace detail {
                     itor = by_blocknum_idx.begin();
                 }
             }
-            get_action_history_mongodb();
         }FC_LOG_AND_RETHROW()
     }
 
@@ -232,19 +228,22 @@ namespace detail {
                         h.act            = o_act->act;
                         h.inline_actions = o_act->inline_actions;
                         h.result         = o_act->result;
+                        h.txid           = o_act->txid;
+                        h.irreversible_state = false;
                     });
                 }
             }
         }FC_LOG_AND_RETHROW()
     }
 
-    void mongo_db_plugin_impl::process_action_trace(const account_action_history_object& act){
+    void mongo_db_plugin_impl::process_action_trace( account_action_history_object& act){
         try{
             using namespace bsoncxx::types;
             using bsoncxx::builder::basic::kvp;
             using bsoncxx::builder::basic::make_document;
             auto actions_trans_doc = bsoncxx::builder::basic::document{};
             
+            act.irreversible_state = true;
             auto abi_json_str = to_variant_with_abi(act);
             auto json_str = fc::json::to_string(abi_json_str);
             const auto& value = bsoncxx::from_json(json_str);
@@ -330,8 +329,16 @@ namespace detail {
     }
 }
 
-mongo_db_plugin::mongo_db_plugin():my( new detail::mongo_db_plugin_impl(*this)){}
+mongo_db_plugin::mongo_db_plugin():my(new detail::mongo_db_plugin_impl(*this)){
+
+    //my.reset (new detail::mongo_db_plugin_impl(*this));
+}
 mongo_db_plugin::~mongo_db_plugin(){}
+
+std::vector<account_action_history_object> mongo_db_plugin::get_action_history_mongodb()
+{
+    return detail::mongo_db_plugin_impl::get_action_history_mongodb();
+}
 void mongo_db_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
     try{
@@ -342,7 +349,7 @@ void mongo_db_plugin::plugin_initialize(const boost::program_options::variables_
         my->db_name = uri.database();
         if( my->db_name.empty())
             my->db_name = "gxchain";
-        my->mongo_pool = std::make_shared<mongocxx::pool>(uri);
+        detail::mongo_db_plugin_impl::mongo_pool = std::make_shared<mongocxx::pool>(uri);
 
         database().add_index< primary_index< action_history_index > >();
         // 2 绑定信号量

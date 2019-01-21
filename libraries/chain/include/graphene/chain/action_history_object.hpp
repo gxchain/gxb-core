@@ -39,6 +39,8 @@ namespace graphene { namespace chain {
          action                  act;
          std::vector<action>     inline_actions;
          contract_receipt        result;
+         transaction_id_type     txid;
+         bool                    irreversible_state;
          
          uint32_t          block_num = 0;
          uint16_t          trx_in_block = 0;
@@ -73,6 +75,6 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT_DERIVED( graphene::chain::account_action_history_object, (graphene::chain::object),
-                    (sender)(receiver)(act)(inline_actions)(result)(block_num)(trx_in_block)(op_in_trx) )
+                    (sender)(receiver)(act)(inline_actions)(result)(txid)(irreversible_state)(block_num)(trx_in_block)(op_in_trx) )
 FC_REFLECT(graphene::chain::actiondbdoc, (_id)(action_his))
 

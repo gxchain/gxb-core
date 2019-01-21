@@ -36,7 +36,7 @@
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/protocol/operations.hpp>
-
+#include <graphene/mongo_db/mongo_db_plugin.hpp>
 
 #include <fc/crypto/hex.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -363,14 +363,17 @@ namespace graphene { namespace app {
        auto itor = by_sender_idx.upper_bound(large_acc);
        if( by_sender_idx.size()>0 ){
          do{
-             itor --;
+            itor --;
             result.push_back(*itor);
 
             if(itor == by_sender_idx.begin())
                break;
          }while(true);
        }
+       // 返回mongodb中的数据
+       auto res = mongo_db::mongo_db_plugin::get_action_history_mongodb();
        
+       result.insert(result.end(),res.begin(),res.end());
        return result;
     }
 
