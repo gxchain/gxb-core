@@ -58,10 +58,6 @@ class contract_call_evaluator : public evaluator<contract_call_evaluator>
 
   private:
     contract_call_operation::fee_parameters_type get_contract_call_fee_parameter(const database &db);
-
-  private:
-    fc::microseconds max_trx_cpu_us = fc::days(1);
-    action act;
 };
 
 } }

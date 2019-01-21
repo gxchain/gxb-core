@@ -36,95 +36,6 @@
 
 namespace graphene { namespace chain {
 
-contract_receipt_old contract_call_evaluator::contract_exec_old(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
-{ try {
-    // run contract
-    transaction_context trx_context(db, op.fee_payer().instance, max_trx_cpu_us);
-    apply_context ctx{db, trx_context, act};
-    ctx.exec();
-
-    // calculate fee
-    const auto &fee_param = get_contract_call_fee_parameter(db);
-    uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
-    uint32_t ram_usage_bs = ctx.get_ram_usage();
-    auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
-    auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
-    core_fee_paid = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
-    fee_from_account = db.from_core_asset(asset{core_fee_paid, asset_id_type(1)}, op.fee.asset_id);
-
-    generic_evaluator::prepare_fee(op.fee_payer(), fee_from_account, op);
-    generic_evaluator::convert_fee();
-    generic_evaluator::pay_fee();
-
-    contract_receipt_old receipt{cpu_time_us, ram_usage_bs, fee_from_account};
-    return receipt;
-} FC_CAPTURE_AND_RETHROW((op)(billed_cpu_time_us)) }
-
-contract_receipt contract_call_evaluator::contract_exec(database& db, const contract_call_operation& op, uint32_t billed_cpu_time_us)
-{ try {
-    transaction_context trx_context(db, op.fee_payer().instance, max_trx_cpu_us);
-    apply_context ctx{db, trx_context, act};
-    ctx.exec();
-
-    const auto &fee_param = get_contract_call_fee_parameter(db);
-    uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
-    auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
-    core_fee_paid = fee_param.fee + cpu_fee.to_uint64();
-    fee_from_account = db.from_core_asset(asset{core_fee_paid, asset_id_type(1)}, op.fee.asset_id);
-
-    generic_evaluator::prepare_fee(op.fee_payer(), fee_from_account, op);
-    generic_evaluator::convert_fee();
-    db.deposit_cashback(op.fee_payer()(db), core_fee_paid, true);
-    db.adjust_balance(op.fee_payer(), -fee_from_account);
-
-    contract_receipt receipt;
-    receipt.billed_cpu_time_us = cpu_time_us;
-    receipt.fee = fee_from_account;
-
-    account_receipt r;
-    auto ram_fees = trx_context.get_ram_statistics();
-    for(const auto &ram_fee : ram_fees) {
-        r.account = account_id_type(ram_fee.first);
-        r.ram_bytes = ram_fee.second;
-
-        if(0 == r.ram_bytes)
-            continue;
-
-        int64_t ram_fee_core = 0;
-        if(r.ram_bytes > 0)
-            ram_fee_core = ceil(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
-        else
-            ram_fee_core = floor(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
-
-        if(ram_fee_core < 0) {
-            asset ram_account_core_asset = db.get_balance(account_id_type(508), asset_id_type(1));
-            if(ram_account_core_asset.amount < -ram_fee_core)
-                ram_fee_core = -ram_account_core_asset.amount.value;
-            if(0 == ram_fee_core)
-                continue;
-        }
-
-        if(ram_fee.first == op.fee_payer().instance.value) {
-            asset ram_fee_core_asset = asset{ram_fee_core, asset_id_type(1)};
-            asset ram_fee_from_account = db.from_core_asset(ram_fee_core_asset, op.fee.asset_id);
-            r.ram_fee = ram_fee_from_account;
-            generic_evaluator::prepare_fee(op.fee_payer(), ram_fee_from_account, op);
-            generic_evaluator::convert_fee();
-            db.adjust_balance(op.fee_payer(), -ram_fee_from_account);
-            db.adjust_balance(account_id_type(508), ram_fee_from_account);
-        } else {
-            r.ram_fee = asset{ram_fee_core, asset_id_type(1)};
-            db.adjust_balance(account_id_type(ram_fee.first), -r.ram_fee);
-            db.adjust_balance(account_id_type(508), r.ram_fee);
-        }
-
-        receipt.ram_receipts.push_back(r);
-    }
-    convert_fee();
-
-    return receipt;
-} FC_CAPTURE_AND_RETHROW((op)(billed_cpu_time_us)) }
-
 void_result contract_deploy_evaluator::do_evaluate(const contract_deploy_operation &op)
 { try {
     database &d = db();
@@ -254,21 +165,92 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
 { try {
     auto &d = db();
 
+    fc::microseconds max_trx_cpu_us = fc::days(1);
     if(0 == billed_cpu_time_us)
         max_trx_cpu_us = fc::microseconds(std::min(d.get_cpu_limit().trx_cpu_limit, d.get_max_trx_cpu_time()));
 
-    act.sender = op.account.instance;
-    act.contract_id = op.contract_id.instance;
-    act.method_name = op.method_name;
-    act.data = op.data;
+    action act{op.account.instance, op.contract_id.instance, op.method_name, op.data};
     if (op.amount.valid()) {
         act.amount.amount = op.amount->amount.value;
         act.amount.asset_id = op.amount->asset_id.instance;
     }
 
-    if(d.head_block_time() > HARDFORK_1016_TIME)
-        return contract_exec(d, op, billed_cpu_time_us);
-    return contract_exec_old(d, op, billed_cpu_time_us);
+    transaction_context trx_context(d, op.fee_payer().instance, max_trx_cpu_us);
+    apply_context ctx{d, trx_context, act};
+    ctx.exec();
+
+    uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
+    const auto &fee_param = get_contract_call_fee_parameter(d);
+
+    if(d.head_block_time() > HARDFORK_1016_TIME) {
+        uint32_t ram_usage_bs = ctx.get_ram_usage();
+        auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
+        auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
+        core_fee_paid = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
+        fee_from_account = d.from_core_asset(asset{core_fee_paid, asset_id_type(1)}, op.fee.asset_id);
+
+        generic_evaluator::prepare_fee(op.fee_payer(), fee_from_account, op);
+        generic_evaluator::convert_fee();
+        generic_evaluator::pay_fee();
+
+        return contract_receipt_old{cpu_time_us, ram_usage_bs, fee_from_account};
+    } else {
+        auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
+        core_fee_paid = fee_param.fee + cpu_fee.to_uint64();
+        fee_from_account = d.from_core_asset(asset{core_fee_paid, asset_id_type(1)}, op.fee.asset_id);
+
+        generic_evaluator::prepare_fee(op.fee_payer(), fee_from_account, op);
+        generic_evaluator::convert_fee();
+        d.deposit_cashback(op.fee_payer()(d), core_fee_paid, true);
+        d.adjust_balance(op.fee_payer(), -fee_from_account);
+
+        contract_receipt receipt;
+        receipt.billed_cpu_time_us = cpu_time_us;
+        receipt.fee = fee_from_account;
+
+        account_receipt r;
+        auto ram_fees = trx_context.get_ram_statistics();
+        for(const auto &ram_fee : ram_fees) {
+            r.account = account_id_type(ram_fee.first);
+            r.ram_bytes = ram_fee.second;
+
+            if(0 == r.ram_bytes)
+                continue;
+
+            int64_t ram_fee_core = 0;
+            if(r.ram_bytes > 0)
+                ram_fee_core = ceil(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
+            else
+                ram_fee_core = floor(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
+
+            if(ram_fee_core < 0) {
+                asset ram_account_core_asset = d.get_balance(account_id_type(508), asset_id_type(1));
+                if(ram_account_core_asset.amount < -ram_fee_core)
+                    ram_fee_core = -ram_account_core_asset.amount.value;
+                if(0 == ram_fee_core)
+                    continue;
+            }
+
+            if(ram_fee.first == op.fee_payer().instance.value) {
+                asset ram_fee_core_asset = asset{ram_fee_core, asset_id_type(1)};
+                asset ram_fee_from_account = d.from_core_asset(ram_fee_core_asset, op.fee.asset_id);
+                r.ram_fee = ram_fee_from_account;
+                generic_evaluator::prepare_fee(op.fee_payer(), ram_fee_from_account, op);
+                generic_evaluator::convert_fee();
+                d.adjust_balance(op.fee_payer(), -ram_fee_from_account);
+                d.adjust_balance(account_id_type(508), ram_fee_from_account);
+            } else {
+                r.ram_fee = asset{ram_fee_core, asset_id_type(1)};
+                d.adjust_balance(account_id_type(ram_fee.first), -r.ram_fee);
+                d.adjust_balance(account_id_type(508), r.ram_fee);
+            }
+
+            receipt.ram_receipts.push_back(r);
+        }
+        convert_fee();
+
+        return receipt;
+    }
 } FC_CAPTURE_AND_RETHROW((op)) }
 
 void contract_call_evaluator::convert_fee()
