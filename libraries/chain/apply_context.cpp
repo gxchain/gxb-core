@@ -58,11 +58,12 @@ void apply_context::exec_one()
 
 void apply_context::exec()
 {
+    // adjust balance
     if (amount.valid()) {
-    	database& d = db();
+        // amount always > 0
         auto amnt = *amount;
-        d.adjust_balance(account_id_type(act.sender), -amnt);//TODO check amnt > 0
-        d.adjust_balance(account_id_type(act.contract_id), amnt);
+        db().adjust_balance(account_id_type(act.sender), -amnt);
+        db().adjust_balance(account_id_type(act.contract_id), amnt);
     }
 
     exec_one();
@@ -82,30 +83,43 @@ void apply_context::reset_console()
 
 void apply_context::execute_inline(action &&a)
 {
+    // check action contract code
     const account_object& contract_obj = account_id_type(a.contract_id)(db());
     FC_ASSERT(contract_obj.code.size() > 0, "inline action's code account ${account} does not exist", ("account", a.contract_id));
+
+    // check action amount, should always >= 0
+    FC_ASSERT(a.amount.amount >= 0, "action amount ${m}, should always >= 0", ("m", a.mount.mount));
     _inline_actions.emplace_back(move(a));
+}
+
+void apply_context::check_payer(account_name& payer)
+{
+    FC_ASSERT(0 == payer || payer == sender || payer == trx_context.get_trx_origin() || payer == receiver,
+              "db access violation, apayer ${p} not in {0, sender ${s}, origin ${o}, receiver ${r}}",
+              ("p", payer)("s", sender)("o", trx_context.get_trx_origin())("r", receiver));
+    if (payer == 0) {
+        payer = receiver;
+    }
 }
 
 int apply_context::db_store_i64(uint64_t scope, uint64_t table, account_name payer, uint64_t id, const char *buffer, size_t buffer_size)
 {
-	if(_db->head_block_time() > HARDFORK_1016_TIME) {//can be removed after the chain upgraded
-		FC_ASSERT(0 == payer || payer == sender || payer == trx_context.get_trx_origin() || payer == receiver,
-		        "payer must be 0 or current contract account or origin, actual payer:${p}", ("p", payer));
-		if(payer == 0)
-			payer = receiver;
-	    return db_store_i64(receiver, scope, table, payer, id, buffer, buffer_size);
+    // check payer
+    if(_db->head_block_time() > HARDFORK_1016_TIME) {
+        check_payer(payer);
 	}
 	return db_store_i64(receiver, scope, table, payer, id, buffer, buffer_size);
 }
 
 int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, account_name payer, uint64_t id, const char *buffer, size_t buffer_size)
 {
-	edump((code)(scope)(table)(payer));
+    // check payer
+    if(_db->head_block_time() > HARDFORK_1016_TIME) {
+        check_payer(payer);
+	}
+
     const auto &tab = find_or_create_table(code, scope, table, payer);
     auto tableid = tab.id;
-
-    // TODO: assert payer
 
     const auto& new_obj = _db->create<key_value_object>([&](key_value_object& o) {
         o.t_id = tableid;
@@ -117,7 +131,7 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, a
 
     // update_db_usage
     int64_t ram_delta = (int64_t)(buffer_size + config::billable_size_v<key_value_object>);
-    if(_db->head_block_time() > HARDFORK_1016_TIME) {//can not be removed after the chain upgraded
+    if(_db->head_block_time() > HARDFORK_1016_TIME) {
         trx_context.update_ram_statistics(payer, ram_delta);
     } else {
         update_ram_usage(ram_delta);
@@ -129,7 +143,7 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, a
 
 void apply_context::db_update_i64(int iterator, account_name payer, const char *buffer, size_t buffer_size)
 {
-    if(_db->head_block_time() > HARDFORK_1016_TIME) {//can not be removed after the chain upgraded
+    if(_db->head_block_time() > HARDFORK_1016_TIME) {
     	FC_ASSERT(payer == 0 || payer == sender, "payer must be sender or current contract account");
     	if(payer == 0)
     		payer = receiver;
@@ -142,7 +156,7 @@ void apply_context::db_update_i64(int iterator, account_name payer, const char *
     FC_ASSERT(table_obj.code == receiver, "db access violation");
 
     int64_t ram_delta = (int64_t)(buffer_size - obj.value.size());
-    if(_db->head_block_time() > HARDFORK_1016_TIME) {//can not be removed after the chain upgraded
+    if(_db->head_block_time() > HARDFORK_1016_TIME) {
         trx_context.update_ram_statistics(payer, ram_delta);
     } else {
         update_ram_usage(ram_delta);
@@ -163,7 +177,7 @@ void apply_context::db_remove_i64(int iterator)
     FC_ASSERT(table_obj.code == receiver, "db access violation");
 
     int64_t ram_delta = -(int64_t)(obj.value.size() + config::billable_size_v<key_value_object>);
-    if(_db->head_block_time() > HARDFORK_1016_TIME) {//can not be removed after the chain upgraded
+    if(_db->head_block_time() > HARDFORK_1016_TIME) {
         trx_context.update_ram_statistics(obj.payer, ram_delta);
     } else {
         update_ram_usage(ram_delta);

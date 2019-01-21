@@ -507,11 +507,13 @@ class apply_context {
          , receiver(a.contract_id)
          , idx64(*this)
      {
-    	 if(a.amount.amount > 0 && a.amount.asset_id > 0)
-    		 amount = asset{a.amount.amount, asset_id_type(a.amount.asset_id)};
+         if(a.amount.amount > 0) {
+             amount = asset{a.amount.amount, asset_id_type(a.amount.asset_id)};
+         }
 
          contract_log_to_console = _db->get_contract_log_to_console();
 
+         // check max_inter_contract_depth
          trx_context.cross_contract_calling_count++;
          FC_ASSERT(trx_context.cross_contract_calling_count <= 8, "max cross contract calling can not exceed 8");
          reset_console();
@@ -539,6 +541,9 @@ class apply_context {
       void exec();
       void exec_one();
       void execute_inline(action &&a);
+
+   public:
+      void check_payer(account_name& payer);
 
     public:
       void update_db_usage(account_name payer, int64_t delta);
