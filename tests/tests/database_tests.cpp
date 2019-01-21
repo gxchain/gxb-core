@@ -115,7 +115,6 @@ BOOST_AUTO_TEST_CASE( db_store_i64_undo )
 {
    try {
       ACTOR(wit1);
-//      database db;
       auto ses = db._undo_db.start_undo_session();
       auto cpu_param = vm_cpu_limit_t();
 
@@ -144,7 +143,7 @@ BOOST_AUTO_TEST_CASE( db_store_i64_undo )
 BOOST_AUTO_TEST_CASE( db_store_i64_commit )
 {
    try {
-      database db;
+      ACTOR(wit1);
       auto ses = db._undo_db.start_undo_session();
       auto cpu_param = vm_cpu_limit_t();
 
