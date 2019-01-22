@@ -219,11 +219,6 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
                 continue;
 
             charge_ram_fee_by_account(r, d, op);
-
-            //for the case that ram-account have 0 GXC
-            if(0 == r.ram_fee.amount.value)
-                continue;
-
             receipt.ram_receipts.push_back(r);
         }
         convert_fee();
