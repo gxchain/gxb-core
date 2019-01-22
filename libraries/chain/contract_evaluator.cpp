@@ -154,7 +154,9 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 
     if (d.head_block_time() > HARDFORK_1011_TIME) {
         if (op.fee.amount > 0) {
-            //if cpu_fee charged, this check may fail for cpu time may different for the same opertion
+            // fee_from_account is calculated by evaluator::evaluate()
+            // prepare_fee --> do_evaluate -> convert_fee -> pay_fee -> do_apply
+            // if cpu_fee charged, this check may fail for cpu time may different for the same opertion
             FC_ASSERT(op.fee >= fee_from_account, "insufficient fee paid in trx, ${a} needed", ("a", d.to_pretty_string(fee_from_account)));
         }
     }
@@ -170,6 +172,19 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
 
 operation_result contract_call_evaluator::do_apply(const contract_call_operation &op, uint32_t billed_cpu_time_us)
 { try {
+    // do apply:
+    //  1. run contract code
+    //  2. charge base fee
+    //  3. charge ram fee by account
+
+    // charge base fee:
+    // 1. calculate base_fee (basic fee + cpu fee)
+    // 2. convert base_fee to core asset
+    //      2.1 call prepare_fee to calculate fee_from_account and core_fee_paid
+    //      2.2 call convert_fee to adjust UIA fee_pool
+    // 3. deposit cashback
+    // 4. adjust fee_payer's balance
+
     auto &d = db();
 
     fc::microseconds max_trx_cpu_us = fc::days(1);
@@ -229,6 +244,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
 
 void contract_call_evaluator::convert_fee()
 {
+    // reset member variable of evaluator: fee_from_account and core_fee_paid
     fee_from_account = asset(0);
     core_fee_paid = 0;
 }
@@ -252,13 +268,19 @@ contract_call_operation::fee_parameters_type contract_call_evaluator::get_contra
 
 void contract_call_evaluator::charge_base_fee(database &db, const contract_call_operation &op, uint32_t cpu_time_us, uint32_t vesting_time_sec)
 {
+    // calculate base_fee
     const auto &fee_param = get_contract_call_fee_parameter(db);
     auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
     share_type base_fee = fee_param.fee + cpu_fee.to_uint64();
+
+    // convert base_fee to UIA
     asset base_fee_from_account = db.from_core_asset(asset{base_fee, asset_id_type(1)}, op.fee.asset_id);
 
+    // adjust UIA fee_pool
     generic_evaluator::prepare_fee(op.fee_payer(), base_fee_from_account, op);
     generic_evaluator::convert_fee();
+
+    // adjust balance
     db.deposit_cashback(op.fee_payer()(db), base_fee, true, vesting_time_sec);
     db.adjust_balance(op.fee_payer(), -base_fee_from_account);
 }
