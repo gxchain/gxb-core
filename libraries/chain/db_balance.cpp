@@ -151,7 +151,7 @@ optional< vesting_balance_id_type > database::deposit_lazy_vesting(
    return vbo.id;
 }
 
-void database::deposit_cashback(const account_object& acct, share_type amount, bool require_vesting)
+void database::deposit_cashback(const account_object& acct, share_type amount, bool require_vesting, optional<uint32_t> vesting_time)
 {
    // If we don't have a VBO, or if it has the wrong maturity
    // due to a policy change, cut it loose.
@@ -177,10 +177,14 @@ void database::deposit_cashback(const account_object& acct, share_type amount, b
        return;
    }
 
+   uint32_t req_vesting_seconds = get_global_properties().parameters.cashback_vesting_period_seconds;
+   if(vesting_time.valid()) {
+       req_vesting_seconds = *vesting_time;
+   }
    optional<vesting_balance_id_type> new_vbid = deposit_lazy_vesting(
        acct.cashback_vb,
        amount,
-       get_global_properties().parameters.cashback_vesting_period_seconds,
+       req_vesting_seconds,
        acct.id,
        require_vesting);
 

@@ -268,6 +268,7 @@ namespace graphene { namespace chain {
          const data_transaction_commission_percent_t          get_commission_percent() const;
          const vm_cpu_limit_t                   get_cpu_limit() const;
          const trust_node_pledge_t              get_trust_node_pledge() const;
+         const cross_contract_calling_params_t& get_cross_contract_calling_params() const;
 
          const bool                             get_contract_log_to_console() const { return contract_log_to_console; }
          void                                   set_contract_log_to_console(bool log_switch) { contract_log_to_console = log_switch; }
@@ -345,7 +346,7 @@ namespace graphene { namespace chain {
             bool require_vesting );
 
          // helper to handle cashback rewards
-         void deposit_cashback(const account_object& acct, share_type amount, bool require_vesting = true);
+         void deposit_cashback(const account_object& acct, share_type amount, bool require_vesting = true, optional<uint32_t> vesting_time = optional<uint32_t>());
          // helper to handle witness pay
          void deposit_witness_pay(const witness_object& wit, share_type amount);
 

@@ -513,9 +513,7 @@ class apply_context {
 
          contract_log_to_console = _db->get_contract_log_to_console();
 
-         // check max_inter_contract_depth
-         trx_context.cross_contract_calling_count++;
-         FC_ASSERT(trx_context.cross_contract_calling_count <= 8, "max cross contract calling can not exceed 8");
+         trx_context.check_cross_contract_depth();
          reset_console();
      }
 

@@ -115,7 +115,8 @@ namespace graphene { namespace chain {
        lock_balance_params_t, // 6
        vm_cpu_limit_t, // 7
        asset_symbol_t,
-	   trust_node_pledge_t
+	   trust_node_pledge_t,
+	   cross_contract_calling_params_t
        > future_extensions;
 
    /**

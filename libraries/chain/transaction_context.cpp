@@ -11,7 +11,8 @@ namespace graphene { namespace chain {
 		cross_contract_calling_count(0),
         start(fc::time_point::now()),
         _deadline(start + max_trx_cpu_us),
-        transaction_cpu_usage_us(0)
+        transaction_cpu_usage_us(0),
+        cross_contract_calling_params(d.get_cross_contract_calling_params())
    {
    }
 
