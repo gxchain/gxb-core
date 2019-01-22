@@ -220,6 +220,7 @@ namespace detail {
                 if(o_act.valid()){
                     db.create<account_action_history_object>( [&]( account_action_history_object& h )
                     {
+                        h.mongodb_id     = o_act->mongodb_id;
                         h.block_num      = o_act->block_num;
                         h.trx_in_block   = o_act->trx_in_block;
                         h.op_in_trx      = o_act->op_in_trx;
@@ -241,6 +242,7 @@ namespace detail {
             using namespace bsoncxx::types;
             using bsoncxx::builder::basic::kvp;
             using bsoncxx::builder::basic::make_document;
+            using namespace bsoncxx::v_noabi::types;
             auto actions_trans_doc = bsoncxx::builder::basic::document{};
             
             act.irreversible_state = true;
@@ -248,12 +250,10 @@ namespace detail {
             auto json_str = fc::json::to_string(abi_json_str);
             const auto& value = bsoncxx::from_json(json_str);
 
-            std::string primary_key = std::to_string(act.block_num)+"-"+std::to_string(act.trx_in_block)+"-"+std::to_string(act.op_in_trx);
-
-            actions_trans_doc.append( kvp("_id",primary_key));
+            actions_trans_doc.append( kvp("_id",b_int64{static_cast<int64_t>(act.mongodb_id)}));
 
             actions_trans_doc.append( kvp("action",value));
-            auto doc = _action_traces.find_one( make_document( kvp("_id", primary_key)) );
+            auto doc = _action_traces.find_one( make_document( kvp("_id", b_int64{static_cast<int64_t>(act.mongodb_id)})) );
             if(!doc)
                 _action_traces.insert_one(actions_trans_doc.view() ) ;               
         }FC_LOG_AND_RETHROW()

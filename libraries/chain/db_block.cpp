@@ -691,6 +691,9 @@ operation_result database::apply_operation(transaction_evaluation_state& eval_st
 
    if(u_which == operation::tag< contract_call_operation >::value){
       account_action_history_object actobj;
+      uint64_t pri_key = _current_block_num;
+      pri_key = pri_key << 30 | _current_trx_in_block << 14 | _current_op_in_trx ; //uint64 ==> int64 , prevent overflow
+      actobj.mongodb_id   = pri_key;
       actobj.block_num    = _current_block_num;
       actobj.trx_in_block = _current_trx_in_block;
       actobj.op_in_trx    = _current_op_in_trx;

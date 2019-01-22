@@ -134,7 +134,6 @@ namespace impl {
 //             std::is_same<T, packed_transaction>::value ||
              std::is_same<T, account_action_history_object>::value ||
              std::is_same<T, action_trace>::value ||
-             std::is_same<T, actiondbdoc>::value ||
 //             std::is_same<T, transaction_receipt>::value ||
 //             std::is_same<T, action_trace>::value ||
              std::is_same<T, base_action_trace>::value ||

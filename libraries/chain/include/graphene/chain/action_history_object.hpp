@@ -34,6 +34,7 @@ namespace graphene { namespace chain {
          static const uint8_t space_id = implementation_ids;
          static const uint8_t type_id  = impl_account_action_history_object_type;
          
+         uint64_t                mongodb_id;
          account_id_type         sender;
          account_id_type         receiver;
          action                  act;
@@ -47,13 +48,9 @@ namespace graphene { namespace chain {
          uint16_t          op_in_trx = 0;
 
    };
-   class actiondbdoc{
-      public:
-         std::string _id;
-         account_action_history_object action_his;
-   };
 
    struct by_id;
+   struct by_mongodb_id;
    struct by_sender;
    struct by_receiver;
    struct by_blocknum;
@@ -62,7 +59,7 @@ namespace graphene { namespace chain {
       account_action_history_object,
       indexed_by<
          ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
-
+         ordered_unique< tag<by_mongodb_id>, member< account_action_history_object,uint64_t,&account_action_history_object::mongodb_id >>,
          ordered_non_unique< tag<by_sender>,member< account_action_history_object, account_id_type, &account_action_history_object::sender>>,
          ordered_non_unique< tag<by_receiver>,member< account_action_history_object, account_id_type, &account_action_history_object::receiver>>,
          ordered_non_unique< tag<by_blocknum>,member< account_action_history_object, uint32_t, &account_action_history_object::block_num>>
@@ -75,6 +72,5 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT_DERIVED( graphene::chain::account_action_history_object, (graphene::chain::object),
-                    (sender)(receiver)(act)(inline_actions)(result)(txid)(irreversible_state)(block_num)(trx_in_block)(op_in_trx) )
-FC_REFLECT(graphene::chain::actiondbdoc, (_id)(action_his))
+                    (mongodb_id)(sender)(receiver)(act)(inline_actions)(result)(txid)(irreversible_state)(block_num)(trx_in_block)(op_in_trx) )
 

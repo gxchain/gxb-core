@@ -45,10 +45,19 @@ struct get_table_rows_params {
     std::string index_position = "1"; // 1 - primary (first), 2 - secondary index (in order defined by multi_index), 3 - third index, etc
     optional<bool> reverse = false;
 };
+struct get_action_history_params {
+   uint64_t lower_id = 0;
+   uint64_t upper_id = 0xFFFFFFFFFFFFFFFF >> 2;
+   uint32_t limit = 100;
+   optional<uint64_t> sender_id;
+   optional<uint64_t> receiver_id;
+   bool  reverse = true;
+};
 }} //
 
 FC_REFLECT( graphene::app::order, (price)(quote)(base) );
 FC_REFLECT( graphene::app::get_table_rows_result, (rows)(more) );
 FC_REFLECT( graphene::app::get_table_rows_params, (lower_bound)(upper_bound)(limit)(index_position)(reverse));
+FC_REFLECT( graphene::app::get_action_history_params, (lower_id)(upper_id)(limit)(sender_id)(receiver_id)(reverse));
 
 
