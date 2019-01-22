@@ -60,7 +60,7 @@ namespace detail {
             void init();
             void consume_blocks();                      // consume data(actions、inline_actions)
             void process_action_trace(account_action_history_object& act);
-            static std::vector<account_action_history_object> get_action_history_mongodb();
+            static std::vector<account_action_history_object> get_action_history_mongodb(app::get_action_history_params params);
 
             fc::optional<abi_serializer> get_abi_serializer( uint64_t accid );
             template<typename T> fc::variant to_variant_with_abi( const T& obj );
@@ -100,7 +100,7 @@ namespace detail {
     std::string mongo_db_plugin_impl::db_name = "";
 
 
-    std::vector<account_action_history_object> mongo_db_plugin_impl::get_action_history_mongodb()
+    std::vector<account_action_history_object> mongo_db_plugin_impl::get_action_history_mongodb(app::get_action_history_params params)
     {
         using namespace bsoncxx::types;
         using bsoncxx::builder::basic::kvp;
@@ -117,6 +117,7 @@ namespace detail {
         fc::variant acc_id_var;
         fc::to_variant(accid,acc_id_var);
         mongocxx::options::find opts{};
+        opts.limit(params.limit);
         opts.sort(make_document(kvp("_id",-1)));
         opts.projection(make_document(kvp("_id",0),kvp("action.act.data",0)));     
         auto cursor = _action_traces.find(make_document(kvp("action.sender",acc_id_var.as_string())),opts);
@@ -149,7 +150,6 @@ namespace detail {
         try {
             fc::microseconds abi_serializer_max_time = fc::microseconds(1000*1500);
             auto& db =_self.database();
-            auto accidx = db.get_index_type<account_index>().indices();
             const account_object& accobj = account_id_type(accid)(db);
             abi_serializer abis;
             abis.set_abi(accobj.abi,abi_serializer_max_time);
@@ -171,6 +171,7 @@ namespace detail {
     }
     template<typename Queue, typename Entry>
     void mongo_db_plugin_impl::queue( Queue& queue, const Entry e ) {
+        try{
         boost::mutex::scoped_lock lock( mtx );
         auto queue_size = queue.size();
         if( queue_size > max_queue_size ) {
@@ -188,6 +189,7 @@ namespace detail {
         queue.emplace_back( e );
         lock.unlock();
         condition.notify_one();
+        }FC_LOG_AND_RETHROW() 
     }
 
     void mongo_db_plugin_impl::remove_action_histories( uint32_t num){
@@ -248,14 +250,20 @@ namespace detail {
             act.irreversible_state = true;
             auto abi_json_str = to_variant_with_abi(act);
             auto json_str = fc::json::to_string(abi_json_str);
-            const auto& value = bsoncxx::from_json(json_str);
-
-            actions_trans_doc.append( kvp("_id",b_int64{static_cast<int64_t>(act.mongodb_id)}));
-
-            actions_trans_doc.append( kvp("action",value));
+            try{
+                const auto& value = bsoncxx::from_json(json_str);
+                actions_trans_doc.append( kvp("_id",b_int64{static_cast<int64_t>(act.mongodb_id)}));
+                actions_trans_doc.append( kvp("action",value));
+                  
+            } catch (...) {
+                ilog( "Unable to parse json ,txid: ${txid}", ( "txid", act.txid ));
+                actions_trans_doc.append( kvp("_id",b_int64{static_cast<int64_t>(act.mongodb_id)}));
+            }
             auto doc = _action_traces.find_one( make_document( kvp("_id", b_int64{static_cast<int64_t>(act.mongodb_id)})) );
             if(!doc)
-                _action_traces.insert_one(actions_trans_doc.view() ) ;               
+                _action_traces.insert_one(actions_trans_doc.view() ) ; 
+
+                        
         }FC_LOG_AND_RETHROW()
     }
 
@@ -330,14 +338,12 @@ namespace detail {
 }
 
 mongo_db_plugin::mongo_db_plugin():my(new detail::mongo_db_plugin_impl(*this)){
-
-    //my.reset (new detail::mongo_db_plugin_impl(*this));
 }
 mongo_db_plugin::~mongo_db_plugin(){}
 
-std::vector<account_action_history_object> mongo_db_plugin::get_action_history_mongodb()
+std::vector<account_action_history_object> mongo_db_plugin::get_action_history_mongodb(app::get_action_history_params params)
 {
-    return detail::mongo_db_plugin_impl::get_action_history_mongodb();
+    return detail::mongo_db_plugin_impl::get_action_history_mongodb(params);
 }
 void mongo_db_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {

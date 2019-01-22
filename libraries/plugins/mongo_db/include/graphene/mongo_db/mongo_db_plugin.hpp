@@ -1,6 +1,7 @@
 #pragma once
 #include <graphene/app/plugin.hpp>
 #include <graphene/chain/database.hpp>
+#include <graphene/app/api.hpp>
 
 namespace graphene { namespace mongo_db{
 
@@ -22,11 +23,12 @@ namespace graphene { namespace mongo_db{
 
             std::string plugin_name()const override { return "mongo_db"; }
 
-            static std::vector<chain::account_action_history_object> get_action_history_mongodb();
+            static std::vector<chain::account_action_history_object> get_action_history_mongodb(app::get_action_history_params params);
             
         private:
             friend class detail::mongo_db_plugin_impl;
             std::unique_ptr<detail::mongo_db_plugin_impl> my;
+
     };
 }
 }

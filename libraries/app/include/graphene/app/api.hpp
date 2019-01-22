@@ -168,8 +168,7 @@ namespace graphene { namespace app {
    public:
       action_history_api(application& app):_app(app){}
 
-      std::vector<account_action_history_object> get_action_history( account_id_type account,
-                                                                     uint64_t limit) const;
+      std::vector<account_action_history_object> get_action_history( get_action_history_params params) const;
    private:
       application& _app;
    };

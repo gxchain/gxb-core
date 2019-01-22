@@ -53,16 +53,27 @@ namespace graphene { namespace chain {
    struct by_mongodb_id;
    struct by_sender;
    struct by_receiver;
+   struct by_txid;
    struct by_blocknum;
 
    typedef multi_index_container<
       account_action_history_object,
       indexed_by<
          ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
-         ordered_unique< tag<by_mongodb_id>, member< account_action_history_object,uint64_t,&account_action_history_object::mongodb_id >>,
-         ordered_non_unique< tag<by_sender>,member< account_action_history_object, account_id_type, &account_action_history_object::sender>>,
-         ordered_non_unique< tag<by_receiver>,member< account_action_history_object, account_id_type, &account_action_history_object::receiver>>,
-         ordered_non_unique< tag<by_blocknum>,member< account_action_history_object, uint32_t, &account_action_history_object::block_num>>
+
+         ordered_unique< tag<by_mongodb_id>,  member< account_action_history_object, uint64_t,              &account_action_history_object::mongodb_id >>,
+
+         ordered_unique< tag<by_sender>,
+                        composite_key< account_action_history_object,
+                                              member< account_action_history_object, account_id_type,       &account_action_history_object::sender>,
+                                              member< account_action_history_object, uint64_t,              &account_action_history_object::mongodb_id>>>,
+         ordered_unique< tag<by_receiver>,
+                        composite_key< account_action_history_object,
+                                              member< account_action_history_object, account_id_type,       &account_action_history_object::receiver>,
+                                              member< account_action_history_object, uint64_t,              &account_action_history_object::mongodb_id>>>,
+
+         ordered_non_unique< tag<by_txid>,    member< account_action_history_object, transaction_id_type,   &account_action_history_object::txid>>,
+         ordered_non_unique< tag<by_blocknum>,member< account_action_history_object, uint32_t,              &account_action_history_object::block_num>>
       >
    > action_history_multi_index_type;
 

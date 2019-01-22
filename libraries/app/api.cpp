@@ -347,19 +347,51 @@ namespace graphene { namespace app {
         }
         return result;
     }
-    std::vector<account_action_history_object> action_history_api::get_action_history( account_id_type account,
-                                                                                       uint64_t limit) const
+    std::vector<account_action_history_object> action_history_api::get_action_history( get_action_history_params params) const
     {
        FC_ASSERT( _app.chain_database());
        const auto& db = *_app.chain_database();
-       FC_ASSERT(limit <=100 );
+       FC_ASSERT(params.limit <= 500 );
+
        vector<account_action_history_object> result;
 
+      // 根据txid反查
+
+      // 正向查询（by sender、by receiver）(lower_id、uppper_id、limit)
+
+      // 倒序查询 (by sender、by receiver) (lower_id、upper_id、limit)
+
+      if(params.sender_id && *params.sender_id){
+         const auto& act_his_idx = db.get_index_type<action_history_index>();
+         const auto& by_sender_idx = act_his_idx.indices().get<by_sender>();
+
+         uint64_t& sender_id = *params.sender_id;
+         const account_id_type& senderid = account_id_type(sender_id);
+         auto itr_upper = by_sender_idx.upper_bound(boost::make_tuple( senderid, params.upper_id ));
+         auto itr_lower = by_sender_idx.lower_bound(boost::make_tuple( senderid, params.lower_id ));
+         if(itr_upper != itr_lower){
+            do{
+               itr_upper --;
+               result.push_back(*itr_upper);
+               if(itr_upper == itr_lower || result.size()>= params.limit ) break;
+            }while(true);
+            if( result.size() < params.limit ){
+               auto mongo_res = mongo_db::mongo_db_plugin::get_action_history_mongodb(params);
+            }
+         }
+      }
+      return result;
+      /*
        const auto& hist_idx = db.get_index_type<action_history_index>();
        const auto& by_sender_idx = hist_idx.indices().get<by_sender>();
        ilog("un_irr action_num: ${num}",("num",by_sender_idx.size()));
+
+       //const account_id_type& lower_acc = account_id_type(((uint64_t)(params.upper_id))>>16);
+       //const account_id_type& large_acc = account_id_type(((uint64_t)(params.upper_id))>>16);
+       
+       const account_id_type& large_acc = account_id_type(((uint64_t)(params.sender))>>16);
+
        // 倒序返回未确认的action
-       const account_id_type& large_acc = account_id_type(((uint64_t)(-1))>>16);
        auto itor = by_sender_idx.upper_bound(large_acc);
        if( by_sender_idx.size()>0 ){
          do{
@@ -374,7 +406,7 @@ namespace graphene { namespace app {
        auto res = mongo_db::mongo_db_plugin::get_action_history_mongodb();
        
        result.insert(result.end(),res.begin(),res.end());
-       return result;
+       return result;*/
     }
 
     crypto_api::crypto_api(){};
