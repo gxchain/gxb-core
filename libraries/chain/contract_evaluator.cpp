@@ -227,6 +227,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
         account_receipt r;
         auto ram_fees = trx_context.get_ram_statistics();
         for(const auto &ram_fee : ram_fees) {
+            // map<account, ram_bytes>
             r.account = account_id_type(ram_fee.first);
             r.ram_bytes = ram_fee.second;
 
@@ -236,6 +237,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
             charge_ram_fee_by_account(r, d, op);
             receipt.ram_receipts.push_back(r);
         }
+        // reset
         convert_fee();
 
         return receipt;
