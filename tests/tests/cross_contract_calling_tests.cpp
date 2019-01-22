@@ -56,14 +56,12 @@ BOOST_AUTO_TEST_CASE( cross_contract_call )
     transfer(account_id_type(), alice_id, asset(1000000));
     generate_block();
 
-    // deploy [contracta, contractb, contractc]
-    BOOST_TEST_MESSAGE("contract deploy test");
     contract_deploy_operation deploy_op;
     deploy_op.account = alice_id;
     deploy_op.name = "contracta";
     deploy_op.vm_type = "0";
     deploy_op.vm_version = "0";
-    auto wasm = graphene::chain::wast_to_wasm(contracta);
+    auto wasm = graphene::chain::wast_to_wasm(contracta_wast_code);
     deploy_op.code = bytes(wasm.begin(), wasm.end());
     deploy_op.abi = fc::json::from_string(contracta_abi).as<abi_def>(GRAPHENE_MAX_NESTED_OBJECTS);
     deploy_op.fee = asset(2000);

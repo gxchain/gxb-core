@@ -218,7 +218,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
 
         return contract_receipt_old{cpu_time_us, ram_usage_bs, fee_from_account};
     } else {
-        charge_base_fee(d, op, cpu_time_us, trx_context.get_cross_contract_calling_params().contract_basic_fee_vesting_period_seconds);
+        charge_base_fee(d, op, cpu_time_us);
 
         contract_receipt receipt;
         receipt.billed_cpu_time_us = cpu_time_us;
@@ -266,7 +266,7 @@ contract_call_operation::fee_parameters_type contract_call_evaluator::get_contra
     return fee_param;
 }
 
-void contract_call_evaluator::charge_base_fee(database &db, const contract_call_operation &op, uint32_t cpu_time_us, uint32_t vesting_time_sec)
+void contract_call_evaluator::charge_base_fee(database &db, const contract_call_operation &op, uint32_t cpu_time_us)
 {
     // calculate base_fee
     const auto &fee_param = get_contract_call_fee_parameter(db);
@@ -281,7 +281,7 @@ void contract_call_evaluator::charge_base_fee(database &db, const contract_call_
     generic_evaluator::convert_fee();
 
     // adjust balance
-    db.deposit_cashback(op.fee_payer()(db), base_fee, true, vesting_time_sec);
+    db.deposit_contract_call_cashback(op.fee_payer()(db), base_fee);
     db.adjust_balance(op.fee_payer(), -base_fee_from_account);
 }
 

@@ -346,7 +346,9 @@ namespace graphene { namespace chain {
             bool require_vesting );
 
          // helper to handle cashback rewards
-         void deposit_cashback(const account_object& acct, share_type amount, bool require_vesting = true, optional<uint32_t> vesting_time = optional<uint32_t>());
+         void deposit_cashback(const account_object& acct, share_type amount, bool require_vesting = true);
+         // to handle contract calling fees
+         void deposit_contract_call_cashback(const account_object& acct, share_type amount);
          // helper to handle witness pay
          void deposit_witness_pay(const witness_object& wit, share_type amount);
 
