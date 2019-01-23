@@ -28246,3 +28246,21 @@ static const char contract_abi [] = R"=====(
   "abi_extensions": []
 }
 )=====";
+
+static const char contracta_wast_code[] = R"=====(
+)=====";
+
+static const char contracta_abi[] = R"=====(
+)=====";
+
+static const char contractb_wast_code[] = R"=====(
+)=====";
+
+static const char contractb_abi[] = R"=====(
+)=====";
+
+static const char contractc_wast_code[] = R"=====(
+)=====";
+
+static const char contractc_abi[] = R"=====(
+)=====";

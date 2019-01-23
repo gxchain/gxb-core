@@ -169,7 +169,7 @@ class global_api : public context_aware_api
     uint64_t get_trx_sender()
     {
         // get op payer
-        return context.trx_context.get_trx_origin();
+        return context.sender;
     }
 
     // get origin of trx
@@ -1065,12 +1065,16 @@ class transaction_api : public context_aware_api {
    public:
       using context_aware_api::context_aware_api;
 
-      void send_inline( array_ptr<char> data, size_t data_len ) {
-         //TODO
-
+      void send_inline(array_ptr<char> data, size_t data_len) {
+         FC_ASSERT(context._db->head_block_time() > HARDFORK_1016_TIME,
+                 "cross-contract calling can not serve before timestamp:${t}", ("t", HARDFORK_1016_TIME));//TODO can be removed when release after time HARDFORK_1016_TIME
          action act;
-         fc::raw::unpack<action>(data, data_len, act, 5);
-         idump((act));
+         fc::raw::unpack<action>(data, data_len, act, 20);
+
+         FC_ASSERT(act.sender == context.receiver,
+                 "the sender must be current contract, actually act.sender=${s}, current receiver=${r}", ("s", act.sender)("r", context.receiver));
+         FC_ASSERT(act.amount.amount >=0, "action amount must >= 0, actual amount: ${a}", ("a", act.amount.amount));
+
          context.execute_inline(std::move(act));
       }
 };

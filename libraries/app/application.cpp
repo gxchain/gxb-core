@@ -384,7 +384,7 @@ namespace detail {
          _chain_db->add_checkpoints( loaded_checkpoints );
 
          if (_options->count("max-transaction-time")) {
-             _chain_db->set_max_trx_cpu_time(_options->at("max-transaction-time").as<int32_t>());
+             _chain_db->set_max_trx_cpu_time(_options->at("max-transaction-time").as<uint32_t>());
          }
 
          if( _options->count("replay-blockchain") )

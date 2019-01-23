@@ -9,11 +9,12 @@
 
 using namespace graphene;
 
-class contractb : public contract
+class contractc : public contract
 {
   public:
-    contractb(uint64_t uname)
+    contractc(uint64_t uname)
         : contract(uname)
+        ,tcs(_self, _self)
     {
     }
 
@@ -32,10 +33,26 @@ class contractb : public contract
         print("origin=", origin, "\n");
         print("current_contract=", me, "\n");
 
-        p p1{ca_id, cb_id, cc_id, pk, payer};
-        action b(cc_id, N(hi), std::move(p1), _self, {100000, 1});
-        b.send();
+//        p p1{ca_id, cb_id, cc_id, pk, payer};
+//        action b(ca_id, N(hi), std::move(p1), _self);
+//        b.send();
+
+        tcs.emplace(sender, [&pk](auto &o) {
+        	o.owner = pk+1;
+        });
     }
+
+  private:
+    //@abi table tc i64
+    struct tc {
+        uint64_t owner;
+        uint64_t primary_key() const { return owner; }
+        GRAPHENE_SERIALIZE(tc, (owner))
+    };
+
+    typedef graphene::multi_index<N(tc), tc> tc_index;
+
+    tc_index tcs;
 };
 
-GRAPHENE_ABI(contractb, (hi))
+GRAPHENE_ABI(contractc, (hi))
