@@ -297,7 +297,7 @@ void contract_call_evaluator::charge_ram_fee_by_account(account_receipt &r, data
     //make sure ram-account have enough GXC to refund
     if (ram_fee_core < 0) {
         asset ram_account_balance = db.get_balance(ram_account_id, asset_id_type(1));
-        ram_fee_core = std::min(ram_account_balance.amount.value, -ram_fee_core);
+        ram_fee_core = -std::min(ram_account_balance.amount.value, -ram_fee_core);
     }
 
     if (r.account == op.fee_payer()) { // op.fee_payer can pay fee with any UIA
