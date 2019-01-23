@@ -1564,6 +1564,7 @@ class asset_api : public context_aware_api
         op.to = to_account;
         op.memo = memo;
         op.fee = asset{0, asset_id_type(1)};
+        op.validate();
         d.apply_operation(op_context, op);
     }
 
