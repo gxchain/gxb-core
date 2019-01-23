@@ -1536,6 +1536,37 @@ class asset_api : public context_aware_api
         }
     }
 
+    void inline_transfer(int64_t from, int64_t to, int64_t asset_id, int64_t amount, array_ptr<char> data, size_t datalen)
+    {
+        if (d.head_block_time() <= HARDFORK_1017_TIME) {
+            // should remove hardfork, after HARDFORK_1017_TIME
+            FC_ASSERT(false, "inline_transfer not enabled");
+        }
+
+        FC_ASSERT(from == context.receiver, "can only transfer from contract ${c}", ("c", context.receiver));
+        FC_ASSERT(from >= 0, "account id ${a} from must  > 0", ("a", from));
+        FC_ASSERT(to >= 0, "account id ${a} to must > 0", ("a", to));
+        FC_ASSERT(asset_id >= 0, "asset id ${a} must > 0", ("a", asset_id));
+
+        auto &d = context.db();
+        asset a{amount, asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID)};
+        account_id_type from_account = account_id_type(from & GRAPHENE_DB_MAX_INSTANCE_ID);
+        account_id_type to_account = account_id_type(to & GRAPHENE_DB_MAX_INSTANCE_ID);
+
+        std::string memo(data, datalen);
+
+        // apply operation
+        transaction_evaluation_state op_context(&d);
+        op_context.skip_fee_schedule_check = true;
+        inline_transfer_operation op;
+        op.amount = a;
+        op.from = from_account;
+        op.to = to_account;
+        op.memo = memo;
+        op.fee = asset{0, asset_id_type(1)};
+        d.apply_operation(op_context, op);
+    }
+
     // get account balance by asset_id
     int64_t get_balance(int64_t account, int64_t asset_id)
     {
@@ -1630,6 +1661,7 @@ REGISTER_INTRINSICS(action_api,
 
 REGISTER_INTRINSICS(asset_api,
 (withdraw_asset,                 void(int64_t, int64_t, int64_t, int64_t))
+(inline_transfer,                void(int64_t, int64_t, int64_t, int64_t, int64_t, int64_t))
 (get_balance,                    int64_t(int64_t, int64_t))
 );
 

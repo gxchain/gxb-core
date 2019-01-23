@@ -75,6 +75,12 @@
 #define HARDFORK_1014_TIME (fc::time_point_sec( 1545436800 )) // for test, 2018-12-22T00:00:00(UTC)
 #endif
 
+// add inline_transfer api for contract
+#ifndef HARDFORK_1017_TIME
+// should be updated before next release
+#define HARDFORK_1017_TIME (fc::time_point_sec( 1545436800 )) // for test, 2018-12-22T00:00:00(UTC)
+#endif
+
 // enable witness guaranty
 #ifndef HARDFORK_1129_TIME
 #define HARDFORK_1129_TIME (fc::time_point_sec( 1545796800 )) // for mainnet, 2018-12-26T04:00:00
