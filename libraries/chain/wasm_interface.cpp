@@ -1538,6 +1538,7 @@ class asset_api : public context_aware_api
 
     void inline_transfer(int64_t from, int64_t to, int64_t asset_id, int64_t amount, array_ptr<char> data, size_t datalen)
     {
+        auto &d = context.db();
         if (d.head_block_time() <= HARDFORK_1017_TIME) {
             // should remove hardfork, after HARDFORK_1017_TIME
             FC_ASSERT(false, "inline_transfer not enabled");
@@ -1548,7 +1549,6 @@ class asset_api : public context_aware_api
         FC_ASSERT(to >= 0, "account id ${a} to must > 0", ("a", to));
         FC_ASSERT(asset_id >= 0, "asset id ${a} must > 0", ("a", asset_id));
 
-        auto &d = context.db();
         asset a{amount, asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID)};
         account_id_type from_account = account_id_type(from & GRAPHENE_DB_MAX_INSTANCE_ID);
         account_id_type to_account = account_id_type(to & GRAPHENE_DB_MAX_INSTANCE_ID);
@@ -1662,7 +1662,7 @@ REGISTER_INTRINSICS(action_api,
 
 REGISTER_INTRINSICS(asset_api,
 (withdraw_asset,                 void(int64_t, int64_t, int64_t, int64_t))
-(inline_transfer,                void(int64_t, int64_t, int64_t, int64_t, int64_t, int64_t))
+(inline_transfer,                void(int64_t, int64_t, int64_t, int64_t, int, int))
 (get_balance,                    int64_t(int64_t, int64_t))
 );
 
