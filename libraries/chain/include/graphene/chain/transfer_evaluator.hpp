@@ -51,7 +51,7 @@ namespace graphene { namespace chain {
       public:
          typedef inline_transfer_operation operation_type;
 
-         void_result do_evaluate(const transfer_operation &o);
+         void_result do_evaluate(const inline_transfer_operation &o);
          void_result do_apply(const inline_transfer_operation& o, int32_t billed_cpu_time_us = 0);
    };
 
