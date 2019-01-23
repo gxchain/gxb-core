@@ -311,7 +311,7 @@ void contract_call_evaluator::charge_ram_fee_by_account(account_receipt &r, data
             db.adjust_balance(op.fee_payer(), -fee_core);
             db.adjust_balance(ram_account_id, fee_core);
         } else {
-            // can use non-GXC as fee, so need to change the GXC from the asset fee pool
+            // can use any UIA as fee, so need to convert UIA to core asset
             generic_evaluator::prepare_fee(op.fee_payer(), fee_uia, op);
             generic_evaluator::convert_fee();
             db.adjust_balance(op.fee_payer(), -fee_uia);
