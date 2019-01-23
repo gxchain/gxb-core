@@ -285,6 +285,7 @@ fc::variants get_table_objects_ex(bool &more, const database &db, const account_
     }
     FC_CAPTURE_AND_RETHROW((account_obj)(table)(params))
 }
+
 get_table_rows_result database_api_impl::get_table_rows_ex(string contract, string table, const get_table_rows_params &params) const
 {
     try {
@@ -297,8 +298,7 @@ get_table_rows_result database_api_impl::get_table_rows_ex(string contract, stri
         }
 
         const account_object &account_obj = *account_itr;
-
-        result.rows = ::graphene::app::get_table_objects_ex(result.more, _db, account_obj, name(table).value, params);
+        result.rows = graphene::app::get_table_objects_ex(result.more, _db, account_obj, name(table).value, params);
         return result;
     }
     FC_CAPTURE_AND_RETHROW((contract)(table))
@@ -349,22 +349,21 @@ get_table_rows_result database_api_impl::get_table_rows(string contract, string 
 
     const account_object &account_obj = *account_itr;
 
-    result.rows = ::graphene::app::get_table_objects(result.more, _db, account_obj, name(table).value, start, start + limit, limit);
+    result.rows = graphene::app::get_table_objects(result.more, _db, account_obj, name(table).value, start, start + limit, limit);
     return result;
     }
     FC_CAPTURE_AND_RETHROW((contract)(table))
 }
 
-fc::variants database_api_impl::get_table_objects(uint64_t code, uint64_t scope, uint64_t table, uint64_t lower_id, uint64_t uppper_id, uint64_t limit) const
+get_table_rows_result database_api_impl::get_table_objects(uint64_t code, uint64_t scope, uint64_t table, uint64_t lower_id, uint64_t uppper_id, uint64_t limit) const
 { try {
-    fc::variants result;
+        get_table_rows_result result;
 
-    const auto &account_obj = get_account_by_contract_code(code);
-    if(!account_obj.valid())
-        return result;
+        const auto &account_obj = get_account_by_contract_code(code);
+        if (!account_obj.valid())
+            return result;
 
-    bool more = false;
-    return ::graphene::app::get_table_objects(more, _db, *account_obj, table, lower_id, uppper_id, limit);
+        result.rows = graphene::app::get_table_objects(result.more, _db, *account_obj, table, lower_id, uppper_id, limit);
     }
     FC_CAPTURE_AND_RETHROW((code)(scope)(table))
 }
