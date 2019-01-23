@@ -205,19 +205,8 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
     fee_param = get_contract_call_fee_parameter(d);
 
-    if(d.head_block_time() <= HARDFORK_1016_TIME) {
-        uint32_t ram_usage_bs = ctx.get_ram_usage();
-        auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
-        auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
-        share_type core_fee_amount = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
-        asset fee_from_account = d.from_core_asset(asset{core_fee_amount, asset_id_type(1)}, op.fee.asset_id);
-
-        generic_evaluator::prepare_fee(op.fee_payer(), fee_from_account, op);
-        generic_evaluator::convert_fee();
-        generic_evaluator::pay_fee();
-
-        return contract_receipt_old{cpu_time_us, ram_usage_bs, fee_from_account};
-    } else {
+    if(d.head_block_time() > HARDFORK_1016_TIME) {
+        // adjust balance and deposit cashback
         charge_base_fee(d, op, cpu_time_us);
 
         contract_receipt receipt;
@@ -225,22 +214,35 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
         receipt.fee = fee_from_account;
 
         account_receipt r;
-        auto ram_fees = trx_context.get_ram_statistics();
-        for(const auto &ram_fee : ram_fees) {
+        auto ram_statistics = trx_context.get_ram_statistics();
+        for(const auto &ram : ram_statistics) {
             // map<account, ram_bytes>
-            r.account = account_id_type(ram_fee.first);
-            r.ram_bytes = ram_fee.second;
+            r.account = account_id_type(ram.first);
+            r.ram_bytes = ram.second;
 
             if(0 == r.ram_bytes)
                 continue;
 
+            // charge and set ram_fee
             charge_ram_fee_by_account(r, d, op);
             receipt.ram_receipts.push_back(r);
         }
-        // reset
-        convert_fee();
 
         return receipt;
+    } else {
+        uint32_t ram_usage_bs = ctx.get_ram_usage();
+        auto ram_fee = fc::uint128(ram_usage_bs * fee_param.price_per_kbyte_ram) / 1024;
+        auto cpu_fee = fc::uint128(cpu_time_us * fee_param.price_per_ms_cpu);
+        share_type fee_core = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
+
+        // convert fee_core to fee_uia
+        asset fee_uia = d.from_core_asset(asset{fee_core, asset_id_type(1)}, op.fee.asset_id);
+
+        generic_evaluator::prepare_fee(op.fee_payer(), fee_uia, op);
+        generic_evaluator::convert_fee();
+        generic_evaluator::pay_fee();
+
+        return contract_receipt_old{cpu_time_us, ram_usage_bs, fee_ui};
     }
 } FC_CAPTURE_AND_RETHROW((op)(billed_cpu_time_us)) }
 
@@ -281,6 +283,8 @@ void contract_call_evaluator::charge_base_fee(database &db, const contract_call_
     // adjust UIA fee_pool
     generic_evaluator::prepare_fee(op.fee_payer(), base_fee_from_account, op);
     generic_evaluator::convert_fee();
+    // reset fee_from_account and core_fee_paid
+    convert_fee();
 
     // adjust balance
     db.deposit_contract_call_cashback(op.fee_payer()(db), base_fee);
@@ -289,43 +293,33 @@ void contract_call_evaluator::charge_base_fee(database &db, const contract_call_
 
 void contract_call_evaluator::charge_ram_fee_by_account(account_receipt &r, database &db, const contract_call_operation &op)
 {
-    int64_t ram_fee_core = 0;
-    if(r.ram_bytes > 0) {
-        // charge ram fee
-        ram_fee_core = ceil(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
-    } else {
-        // refund ram fee
-        ram_fee_core = floor(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
-    }
-
+    int64_t ram_fee_core = ceil(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
     //make sure ram-account have enough GXC to refund
     if(ram_fee_core < 0) {
-        asset ram_account_core_asset = db.get_balance(ram_account_id, asset_id_type(1));
-        if(ram_account_core_asset.amount.value <= 0 || ram_account_core_asset.amount < -ram_fee_core)
-            ram_fee_core = -ram_account_core_asset.amount.value;
+        asset ram_account_balance = db.get_balance(ram_account_id, asset_id_type(1));
+        ram_fee_core = std::min(ram_account_balance.amount.value, -ram_fee_core);
     }
 
-    //ram-account balance maybe 0, so no GXC will be refund
-    if(0 == ram_fee_core) {
-        r.ram_fee.amount.value = 0;
-        return;
-    }
+    if(r.account == op.fee_payer()) { // op.fee_payer can pay fee with any UIA
+        asset ram_fee_core = asset{ram_fee_core, asset_id_type(1)};
+        // convert ram_fee_core to UIA
+        asset ram_fee_uia = db.from_core_asset(ram_fee_core, op.fee.asset_id);
+        r.ram_fee = ram_fee_uia;
 
-    if(r.account == op.fee_payer()) {//op.fee_payer can use non-GXC as fee
-        asset ram_fee_core_asset = asset{ram_fee_core, asset_id_type(1)};
-        asset ram_fee_from_account = db.from_core_asset(ram_fee_core_asset, op.fee.asset_id);
-        r.ram_fee = ram_fee_from_account;
-
-        if(ram_fee_core < 0) {//can only use GXC for refund
-            db.adjust_balance(op.fee_payer(), -ram_fee_core_asset);
-            db.adjust_balance(ram_account_id, ram_fee_core_asset);
-        } else {//can use non-GXC as fee, so need to change the GXC from the asset fee pool
-            generic_evaluator::prepare_fee(op.fee_payer(), ram_fee_from_account, op);
+        if(ram_fee_core < 0) {
+            // refund core asset
+            db.adjust_balance(op.fee_payer(), -ram_fee_core);
+            db.adjust_balance(ram_account_id, ram_fee_core);
+        } else {
+            // can use non-GXC as fee, so need to change the GXC from the asset fee pool
+            generic_evaluator::prepare_fee(op.fee_payer(), ram_fee_uia, op);
             generic_evaluator::convert_fee();
-            db.adjust_balance(op.fee_payer(), -ram_fee_from_account);
+            db.adjust_balance(op.fee_payer(), -ram_fee_uia);
             db.adjust_balance(ram_account_id, asset{core_fee_paid, asset_id_type(1)});
+            // reset fee_from_account and core_fee_paid
+            convert_fee();
         }
-    } else {//contract fee payer can only use GXC as fee
+    } else { // contract as fee payer can only pay fee with core asset
         r.ram_fee = asset{ram_fee_core, asset_id_type(1)};
         db.adjust_balance(r.account, -r.ram_fee);
         db.adjust_balance(ram_account_id, r.ram_fee);
