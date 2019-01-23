@@ -228,6 +228,9 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
             receipt.ram_receipts.push_back(r);
         }
 
+        // reset fee_from_account and core_fee_paid
+        convert_fee();
+
         return receipt;
     } else {
         uint32_t ram_usage_bs = ctx.get_ram_usage();
@@ -283,8 +286,6 @@ void contract_call_evaluator::charge_base_fee(database &db, const contract_call_
     // adjust UIA fee_pool
     generic_evaluator::prepare_fee(op.fee_payer(), base_fee_from_account, op);
     generic_evaluator::convert_fee();
-    // reset fee_from_account and core_fee_paid
-    convert_fee();
 
     // adjust balance
     db.deposit_contract_call_cashback(op.fee_payer()(db), base_fee);
@@ -316,8 +317,6 @@ void contract_call_evaluator::charge_ram_fee_by_account(account_receipt &r, data
             generic_evaluator::convert_fee();
             db.adjust_balance(op.fee_payer(), -fee_uia);
             db.adjust_balance(ram_account_id, asset{core_fee_paid, asset_id_type(1)});
-            // reset fee_from_account and core_fee_paid
-            convert_fee();
         }
     } else { // contract as fee payer can only pay fee with core asset
         r.ram_fee = asset{ram_fee_core, asset_id_type(1)};
