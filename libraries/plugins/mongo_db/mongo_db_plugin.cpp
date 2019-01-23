@@ -161,6 +161,8 @@ namespace detail {
         for( auto doc : cursor){
             auto subdoc = doc["action"];
             auto json_doc = bsoncxx::to_json(subdoc.get_document().view());
+
+            // also can modify abi_serializer.hpp  293 line to solved
             FC_ASSERT(json_doc.find("\"account\"") != std::string::npos &&
                 json_doc.find("\"name\"") != std::string::npos , "mongdb document type error !");
 
@@ -384,22 +386,26 @@ std::vector<account_action_history_object> mongo_db_plugin::get_action_history_m
 void mongo_db_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
     try{
-        ilog("mongodb test");
-        // 1 连接到mongodb
-        std::string uri_str = "mongodb://localhost:27017/gxchain";
-        mongocxx::uri uri = mongocxx::uri{uri_str};
-        my->db_name = uri.database();
-        if( my->db_name.empty())
-            my->db_name = "gxchain";
-        detail::mongo_db_plugin_impl::mongo_pool = std::make_shared<mongocxx::pool>(uri);
+        //if( options.count("mongodb-uri")){
+            std::string uri_str = "mongodb://localhost:27017/gxchain";
+            
+            mongocxx::uri uri = mongocxx::uri{uri_str};
+            my->db_name = uri.database();
+            if( my->db_name.empty())
+                my->db_name = "gxchain";
+            detail::mongo_db_plugin_impl::mongo_pool = std::make_shared<mongocxx::pool>(uri);
 
-        database().add_index< primary_index< action_history_index > >();
-        // 2 绑定信号量
-        database().applied_block.connect( [&]( const signed_block& tra){ my->update_action_histories(tra); } );
-        
-        database().applied_irr_num.connect( [&]( uint32_t num){ my->remove_action_histories(num); } );
-        // 3 处理接收到的信号
-        my->init();     
+            database().add_index< primary_index< action_history_index > >();
+            // 2 绑定信号量
+            database().applied_block.connect( [&]( const signed_block& tra){ my->update_action_histories(tra); } );
+            
+            database().applied_irr_num.connect( [&]( uint32_t num){ my->remove_action_histories(num); } );
+            // 3 处理接收到的信号
+            my->init();   
+       // }  
+        //else{
+
+       // }
     } FC_LOG_AND_RETHROW()
 }
 void mongo_db_plugin::plugin_startup(){
@@ -407,6 +413,11 @@ void mongo_db_plugin::plugin_startup(){
 }
 void mongo_db_plugin::plugin_set_program_options(boost::program_options::options_description&,
                                 boost::program_options::options_description& cfg){
+    /*cli.add_options()
+         ("mongodb-uri",   boost::program_options::value<std::string>(),"MongoDB URI connection string")
+         ("track-account", boost::program_options::value<std::vector<std::string>>()->composing()->multitoken(), "Account ID to track history for (may specify multiple times)")
+         ;
+    cfg.add(cli);   */                              
 
 }
 }}

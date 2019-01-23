@@ -178,10 +178,11 @@ namespace graphene { namespace chain {
           */
          uint32_t  push_applied_operation( const operation& op );
          void      set_applied_operation_result( uint32_t op_id, const operation_result& r );
+         uint32_t  push_applied_action( const operation& op );
+         void      set_applied_action_result( uint32_t act_id, const operation_result& r );
          const vector<optional< operation_history_object > >& get_applied_operations()const;
          const vector<optional< account_action_history_object> >& get_applied_actions()const;
          vector<optional< account_action_history_object> >& get_applied_actions(){return _applied_acts;}
-         bool is_current_action(account_action_history_object& actobj);
 
          string to_pretty_string( const asset& a )const;
 

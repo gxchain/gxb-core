@@ -461,6 +461,24 @@ uint32_t database::push_applied_operation( const operation& op )
    oh.virtual_op   = _current_virtual_op++;
    return _applied_ops.size() - 1;
 }
+uint32_t database::push_applied_action( const operation& op )
+{
+   account_action_history_object actobj;
+   uint64_t pri_key = _current_block_num;
+   pri_key = pri_key << 30 | _current_trx_in_block << 14 | _current_op_in_trx ; //uint64 ==> int64 , prevent overflow
+   actobj.mongodb_id      = pri_key;
+   actobj.block_num       = _current_block_num;
+   actobj.trx_in_block    = _current_trx_in_block;
+   actobj.op_in_trx       = _current_op_in_trx;
+   actobj.act.contract_id = op.get<contract_call_operation>().contract_id.instance.value;
+   actobj.act.data        = op.get<contract_call_operation>().data;
+   actobj.act.method_name = op.get<contract_call_operation>().method_name;
+   actobj.sender          = op.get<contract_call_operation>().account;
+   actobj.receiver        = op.get<contract_call_operation>().contract_id;
+   actobj.txid            = get_cur_trx()->id();
+   _applied_acts.emplace_back(actobj);
+   return _applied_acts.size() - 1;
+}
 void database::set_applied_operation_result( uint32_t op_id, const operation_result& result )
 {
    assert( op_id < _applied_ops.size() );
@@ -471,7 +489,16 @@ void database::set_applied_operation_result( uint32_t op_id, const operation_res
       elog( "Could not set operation result (head_block_num=${b})", ("b", head_block_num()) );
    }
 }
-
+void database::set_applied_action_result( uint32_t act_id, const operation_result& result )
+{
+   assert( act_id < _applied_acts.size() );
+   if( _applied_acts[act_id] )
+      _applied_acts[act_id]->result = result.get<contract_receipt>();
+   else
+   {
+      elog( "Could not set action result (head_block_num=${b})", ("b", head_block_num()) );
+   }
+}
 const vector<optional< operation_history_object > >& database::get_applied_operations() const
 {
    return _applied_ops;
@@ -479,16 +506,6 @@ const vector<optional< operation_history_object > >& database::get_applied_opera
 const vector<optional< account_action_history_object > >& database::get_applied_actions() const
 {
    return _applied_acts;
-}
-bool database::is_current_action(account_action_history_object& actobj)
-{
-   bool Retvalue = false;
-   if(actobj.block_num    == _current_block_num &&
-      actobj.trx_in_block == _current_trx_in_block &&
-      actobj.op_in_trx    == _current_op_in_trx){
-         Retvalue = true;
-   }
-   return Retvalue;
 }
 
 //////////////////// private methods ////////////////////
@@ -688,19 +705,16 @@ operation_result database::apply_operation(transaction_evaluation_state& eval_st
    unique_ptr<op_evaluator>& eval = _operation_evaluators[ u_which ];
    FC_ASSERT( eval, "No registered evaluator for operation ${op}", ("op",op) );
    auto op_id = push_applied_operation( op );
-
+   uint64_t act_id;
    if(u_which == operation::tag< contract_call_operation >::value){
-      account_action_history_object actobj;
-      uint64_t pri_key = _current_block_num;
-      pri_key = pri_key << 30 | _current_trx_in_block << 14 | _current_op_in_trx ; //uint64 ==> int64 , prevent overflow
-      actobj.mongodb_id   = pri_key;
-      actobj.block_num    = _current_block_num;
-      actobj.trx_in_block = _current_trx_in_block;
-      actobj.op_in_trx    = _current_op_in_trx;
-      _applied_acts.emplace_back(actobj);
+      act_id = push_applied_action (op ); 
    }
    auto result = eval->evaluate(eval_state, op, true, billed_cpu_time_us);
    set_applied_operation_result( op_id, result );
+   
+   if(u_which == operation::tag< contract_call_operation >::value){
+      set_applied_action_result (act_id,result ); 
+   }
    return result;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 

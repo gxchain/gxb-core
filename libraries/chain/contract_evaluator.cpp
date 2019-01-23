@@ -245,19 +245,6 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     }
 
     contract_receipt receipt = contract_exec(d, op, billed_cpu_time_us);
-
-    auto& applied_acts_list = d.get_applied_actions();
-    account_action_history_object& actobj = *(applied_acts_list.back());
-    if(d.is_current_action(actobj)){
-          actobj.act.contract_id = op.contract_id.instance.value;
-          actobj.act.data = op.data;
-          actobj.act.method_name = op.method_name;
-          actobj.sender = op.account;
-          actobj.receiver = op.contract_id;
-          actobj.result = receipt;
-          actobj.txid = d.get_cur_trx()->id();
-    }
-
     return receipt;
 } FC_CAPTURE_AND_RETHROW((op)) }
 
