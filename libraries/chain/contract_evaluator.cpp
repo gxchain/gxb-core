@@ -188,7 +188,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     auto &d = db();
 
     fc::microseconds max_trx_cpu_us = fc::days(1);
-    if(0 == billed_cpu_time_us)
+    if (0 == billed_cpu_time_us)
         max_trx_cpu_us = fc::microseconds(std::min(d.get_cpu_limit().trx_cpu_limit, d.get_max_trx_cpu_time()));
 
     action act{op.account.instance, op.contract_id.instance, op.method_name, op.data};
@@ -205,7 +205,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     uint32_t cpu_time_us = billed_cpu_time_us > 0 ? billed_cpu_time_us : trx_context.get_cpu_usage();
     fee_param = get_contract_call_fee_parameter(d);
 
-    if(d.head_block_time() > HARDFORK_1016_TIME) {
+    if (d.head_block_time() > HARDFORK_1016_TIME) {
         // adjust balance and deposit cashback
         charge_base_fee(d, op, cpu_time_us);
 
@@ -215,7 +215,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
 
         account_receipt r;
         auto ram_statistics = trx_context.get_ram_statistics();
-        for(const auto &ram : ram_statistics) {
+        for (const auto &ram : ram_statistics) {
             // map<account, ram_bytes>
             r.account = account_id_type(ram.first);
             r.ram_bytes = ram.second;
@@ -295,18 +295,18 @@ void contract_call_evaluator::charge_ram_fee_by_account(account_receipt &r, data
 {
     int64_t ram_fee_core = ceil(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
     //make sure ram-account have enough GXC to refund
-    if(ram_fee_core < 0) {
+    if (ram_fee_core < 0) {
         asset ram_account_balance = db.get_balance(ram_account_id, asset_id_type(1));
         ram_fee_core = std::min(ram_account_balance.amount.value, -ram_fee_core);
     }
 
-    if(r.account == op.fee_payer()) { // op.fee_payer can pay fee with any UIA
+    if (r.account == op.fee_payer()) { // op.fee_payer can pay fee with any UIA
         asset fee_core = asset{ram_fee_core, asset_id_type(1)};
         // convert fee_core to UIA
         asset fee_uia = db.from_core_asset(fee_core, op.fee.asset_id);
         r.ram_fee = fee_uia;
 
-        if(ram_fee_core < 0) {
+        if (ram_fee_core < 0) {
             // refund core asset
             db.adjust_balance(op.fee_payer(), -fee_core);
             db.adjust_balance(ram_account_id, fee_core);
