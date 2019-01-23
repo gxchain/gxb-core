@@ -105,22 +105,58 @@ namespace detail {
         using namespace bsoncxx::types;
         using bsoncxx::builder::basic::kvp;
         using bsoncxx::builder::basic::make_document;
+        using bsoncxx::builder::basic::sub_document;
+        using bsoncxx::builder::basic::sub_array;
 
         auto mongo_client = mongo_pool->acquire();
         auto& mongo_conn = *mongo_client;
-
         auto _action_traces = mongo_conn[db_name][action_traces_col];
 
         std::vector<account_action_history_object> result;
+        auto filterdoc = bsoncxx::builder::basic::document{};
 
-        const account_id_type& accid = account_id_type(426);
-        fc::variant acc_id_var;
-        fc::to_variant(accid,acc_id_var);
         mongocxx::options::find opts{};
         opts.limit(params.limit);
-        opts.sort(make_document(kvp("_id",-1)));
-        opts.projection(make_document(kvp("_id",0),kvp("action.act.data",0)));     
-        auto cursor = _action_traces.find(make_document(kvp("action.sender",acc_id_var.as_string())),opts);
+        opts.projection(make_document(kvp("_id",0),kvp("action.act.data",0)));
+
+        if(params.reverse) opts.sort(make_document(kvp("_id",-1)));
+        else opts.sort(make_document(kvp("_id",1)));
+        fc::variant senderid_var;
+        fc::variant receiverid_var;
+        if(params.sender_id && *params.sender_id && params.receiver_id && *params.receiver_id){
+            uint64_t& sender_id = *params.sender_id;
+            const account_id_type& senderid = account_id_type(sender_id);
+            fc::to_variant(senderid,senderid_var);
+            uint64_t& receiver_id = *params.receiver_id;
+            const account_id_type& receiverid = account_id_type(receiver_id);
+            fc::to_variant(receiverid,receiverid_var);
+            filterdoc.append(kvp("$or",[&](sub_array subarr) {
+                subarr.append(  
+                    make_document(kvp("action.sender",  senderid_var.as_string())),
+                    make_document(kvp("action.receiver",receiverid_var.as_string()))
+                );
+            }));
+        }
+        else if(params.sender_id && *params.sender_id){
+            uint64_t& sender_id = *params.sender_id;
+            const account_id_type& senderid = account_id_type(sender_id);
+            fc::to_variant(senderid,senderid_var);
+            filterdoc.append(kvp("action.sender",senderid_var.as_string()));
+        }
+        else if(params.receiver_id && *params.receiver_id){
+            uint64_t& receiver_id = *params.receiver_id;
+            const account_id_type& receiverid = account_id_type(receiver_id);
+            fc::to_variant(receiverid,receiverid_var);
+            filterdoc.append(kvp("action.receiver",receiverid_var.as_string()));
+        }
+        else{
+            if(params.txid){
+                std::string txid_str(*params.txid);
+                filterdoc.append(kvp("action.txid",txid_str));
+            }
+        }
+
+        auto cursor = _action_traces.find(filterdoc.view(),opts);
         
         for( auto doc : cursor){
             auto subdoc = doc["action"];
