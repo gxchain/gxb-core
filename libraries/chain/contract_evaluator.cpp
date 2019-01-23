@@ -242,7 +242,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
         generic_evaluator::convert_fee();
         generic_evaluator::pay_fee();
 
-        return contract_receipt_old{cpu_time_us, ram_usage_bs, fee_ui};
+        return contract_receipt_old{cpu_time_us, ram_usage_bs, fee_uia};
     }
 } FC_CAPTURE_AND_RETHROW((op)(billed_cpu_time_us)) }
 
@@ -301,20 +301,20 @@ void contract_call_evaluator::charge_ram_fee_by_account(account_receipt &r, data
     }
 
     if(r.account == op.fee_payer()) { // op.fee_payer can pay fee with any UIA
-        asset ram_fee_core = asset{ram_fee_core, asset_id_type(1)};
-        // convert ram_fee_core to UIA
-        asset ram_fee_uia = db.from_core_asset(ram_fee_core, op.fee.asset_id);
-        r.ram_fee = ram_fee_uia;
+        asset fee_core = asset{ram_fee_core, asset_id_type(1)};
+        // convert fee_core to UIA
+        asset fee_uia = db.from_core_asset(fee_core, op.fee.asset_id);
+        r.ram_fee = fee_uia;
 
         if(ram_fee_core < 0) {
             // refund core asset
-            db.adjust_balance(op.fee_payer(), -ram_fee_core);
-            db.adjust_balance(ram_account_id, ram_fee_core);
+            db.adjust_balance(op.fee_payer(), -fee_core);
+            db.adjust_balance(ram_account_id, fee_core);
         } else {
             // can use non-GXC as fee, so need to change the GXC from the asset fee pool
-            generic_evaluator::prepare_fee(op.fee_payer(), ram_fee_uia, op);
+            generic_evaluator::prepare_fee(op.fee_payer(), fee_uia, op);
             generic_evaluator::convert_fee();
-            db.adjust_balance(op.fee_payer(), -ram_fee_uia);
+            db.adjust_balance(op.fee_payer(), -fee_uia);
             db.adjust_balance(ram_account_id, asset{core_fee_paid, asset_id_type(1)});
             // reset fee_from_account and core_fee_paid
             convert_fee();
