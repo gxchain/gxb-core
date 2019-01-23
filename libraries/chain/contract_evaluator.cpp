@@ -181,7 +181,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
     // 1. calculate base_fee (basic fee + cpu fee)
     // 2. convert base_fee to core asset
     //      2.1 call prepare_fee to calculate fee_from_account and core_fee_paid
-    //      2.2 call convert_fee to adjust UIA fee_pool
+    //      2.2 call convert_fee to adjust UIA fee_pool (UIA: user-issued assets)
     // 3. deposit cashback
     // 4. adjust fee_payer's balance
 
