@@ -38,6 +38,7 @@
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/wast_to_wasm.hpp>
+#include <graphene/chain/abi_serializer.hpp>
 #include <graphene/utilities/tempdir.hpp>
 #include <fc/io/json.hpp>
 
@@ -107,7 +108,6 @@ BOOST_AUTO_TEST_CASE( cross_contract_call )
     generate_blocks(HARDFORK_1016_TIME, true, ~0);
     generate_block();
 
-    //const std::string &ccca, const std::string &cccb, const std::string &cccc, uint64_t cnt
     contract_call_operation op;
     op.account = alice_id;
     op.contract_id = contracta.id;
@@ -119,6 +119,103 @@ BOOST_AUTO_TEST_CASE( cross_contract_call )
     sign(trx, alice_private_key);
     PUSH_TX(db, trx);
     trx.clear();
+    generate_block();
+
+    //callself testcase
+    BOOST_TEST_MESSAGE("++++++++ callself testcase ++++++++");
+    op.method_name = N(callself);
+    fc::variant action_args_var = fc::json::from_string("{\"ccca\":\"a\", \"cnt\":0}");
+    graphene::chain::abi_serializer abis(contracta.abi, fc::milliseconds(1000000));
+    auto action_type = abis.get_action_type("callself");
+    op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+    trx.operations.push_back(op);
+    set_expiration(db, trx);
+    sign(trx, alice_private_key);
+    BOOST_REQUIRE_THROW(db.push_transaction(trx, ~0), assert_exception);
+    trx.clear();
+    BOOST_TEST_MESSAGE("-------- callself testcase --------");
+
+    //circle testcase
+    BOOST_TEST_MESSAGE("++++++++ circle testcase ++++++++");
+    op.method_name = N(circle);
+    action_args_var = fc::json::from_string("{\"ccca\":\"a\", \"cccb\":\"b\", \"cccc\":\"c\"}");
+    action_type = abis.get_action_type("circle");
+    op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+    trx.operations.push_back(op);
+    set_expiration(db, trx);
+    sign(trx, alice_private_key);
+    BOOST_REQUIRE_THROW(db.push_transaction(trx, ~0), assert_exception);
+    trx.clear();
+    BOOST_TEST_MESSAGE("-------- circle testcase --------");
+
+    //senderpass testcase
+    BOOST_TEST_MESSAGE("++++++++ senderpass testcase ++++++++");
+    op.method_name = N(senderpass);
+    action_args_var = fc::json::from_string("{\"ccca\":\"a\", \"cccb\":\"b\", \"cccc\":\"c\", \"cnt\":0}");
+    action_type = abis.get_action_type("senderpass");
+    op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+    trx.operations.push_back(op);
+    set_expiration(db, trx);
+    sign(trx, alice_private_key);
+    PUSH_TX(db, trx);
+    trx.clear();
+    generate_block();
+    BOOST_TEST_MESSAGE("-------- senderpass testcase --------");
+
+    //senderfail testcase
+    BOOST_TEST_MESSAGE("++++++++ senderfail testcase ++++++++");
+    op.method_name = N(senderfail);
+    action_args_var = fc::json::from_string("{\"ccca\":\"a\", \"cccb\":\"b\", \"cccc\":\"c\", \"cnt\":0}");
+    action_type = abis.get_action_type("senderfail");
+    op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+    trx.operations.push_back(op);
+    set_expiration(db, trx);
+    sign(trx, alice_private_key);
+    BOOST_REQUIRE_THROW(db.push_transaction(trx, ~0), assert_exception);
+    trx.clear();
+    BOOST_TEST_MESSAGE("-------- senderfail testcase --------");
+
+    //receiverpass testcase
+    BOOST_TEST_MESSAGE("++++++++ receiverpass testcase ++++++++");
+    op.method_name = N(receiverpass);
+    action_args_var = fc::json::from_string("{\"ccca\":\"a\", \"cccb\":\"b\", \"cccc\":\"c\", \"cnt\":0}");
+    action_type = abis.get_action_type("receiverpass");
+    op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+    trx.operations.push_back(op);
+    set_expiration(db, trx);
+    sign(trx, alice_private_key);
+    PUSH_TX(db, trx);
+    trx.clear();
+    generate_block();
+    BOOST_TEST_MESSAGE("-------- receiverpass testcase --------");
+
+    //originpass testcase
+    BOOST_TEST_MESSAGE("++++++++ originpass testcase ++++++++");
+    op.method_name = N(originpass);
+    action_args_var = fc::json::from_string("{\"originacc\":\"alice\",\"ccca\":\"a\", \"cccb\":\"b\", \"cccc\":\"c\", \"cnt\":0}");
+    action_type = abis.get_action_type("originpass");
+    op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+    trx.operations.push_back(op);
+    set_expiration(db, trx);
+    sign(trx, alice_private_key);
+    PUSH_TX(db, trx);
+    trx.clear();
+    generate_block();
+    BOOST_TEST_MESSAGE("-------- originpass testcase --------");
+
+    //minustrans testcase
+    BOOST_TEST_MESSAGE("++++++++ minustrans testcase ++++++++");
+    op.method_name = N(minustrans);
+    action_args_var = fc::json::from_string("{\"cccb\":\"b\"}");
+    action_type = abis.get_action_type("minustrans");
+    op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+    trx.operations.push_back(op);
+    set_expiration(db, trx);
+    sign(trx, alice_private_key);
+    BOOST_REQUIRE_THROW(db.push_transaction(trx, ~0), assert_exception);
+    trx.clear();
+    BOOST_TEST_MESSAGE("-------- minustrans testcase --------");
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()
