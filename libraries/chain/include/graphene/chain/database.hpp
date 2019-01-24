@@ -481,7 +481,7 @@ namespace graphene { namespace chain {
          flat_map<uint32_t,block_id_type>  _checkpoints;
 
          // max transaction cpu time, configured by config.ini
-         uint32_t                          _max_trx_cpu_time;
+         uint32_t                          _max_trx_cpu_time = 10000;
 
          node_property_object              _node_property_object;
 
