@@ -83,6 +83,36 @@ class contractc : public contract
         act.send();
     }
 
+    // @abi action
+    // @abi payable
+    void ramadd(const std::string &ccca, const std::string &cccb, const std::string &cccc, bool aadd, bool badd, bool cadd)
+    {
+        if(cadd)
+            tcs.emplace(0, [this](auto &o) {
+                o.owner = tcs.available_primary_key();
+            });
+    }
+
+    // @abi action
+    // @abi payable
+    void ramdel(const std::string &ccca, const std::string &cccb, const std::string &cccc, bool adel, bool bdel, bool cdel, uint64_t pk)
+    {
+        if(cdel) {
+            const auto &i =tcs.find(pk);
+            if(i != tcs.end())
+                tcs.erase(*i);
+        }
+    }
+
+    // @abi action
+    // @abi payable
+    void ramdelall()
+    {
+        for(auto itor = tcs.begin(); itor!=tcs.end();){
+            itor = tcs.erase(itor);
+        }
+    }
+
   private:
     //@abi table tc i64
     struct tc {
@@ -96,4 +126,4 @@ class contractc : public contract
     tc_index tcs;
 };
 
-GRAPHENE_ABI(contractc, (common)(circle)(senderpass)(receiverpass)(originpass))
+GRAPHENE_ABI(contractc, (common)(circle)(senderpass)(receiverpass)(originpass)(ramadd)(ramdel)(ramdelall))

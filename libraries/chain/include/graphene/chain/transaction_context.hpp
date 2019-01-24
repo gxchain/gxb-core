@@ -32,9 +32,9 @@ namespace graphene { namespace chain {
         void check_cross_contract_depth()
         {
             // check max_inter_contract_depth
-            cross_contract_calling_count++;
             FC_ASSERT(cross_contract_calling_count <= cross_contract_calling_params.max_inter_contract_depth,
                     "max cross contract calling can not exceed ${m}", ("m", cross_contract_calling_params.max_inter_contract_depth));
+            cross_contract_calling_count++;
         }
 
         const cross_contract_calling_params_t get_cross_contract_calling_params() const {

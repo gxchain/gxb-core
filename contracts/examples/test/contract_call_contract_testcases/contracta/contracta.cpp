@@ -41,6 +41,7 @@ class contracta : public contract
 
         struct p {
             std::string ccca;
+            uint64_t cnt;
         };
 
         p p1{ccca, cnt+1};
@@ -80,6 +81,7 @@ class contracta : public contract
     void senderfail(const std::string &ccca, const std::string &cccb, const std::string &cccc, uint64_t cnt) {
         sender_params_t params{ccca, cccb, cccc, 0};
         action act(cccb, N(senderfail), std::move(params), 100);
+        act.send();
     }
 
     // @abi action
@@ -113,20 +115,44 @@ class contracta : public contract
 
     // @abi action
     // @abi payable
-    void ramadd()
+    void ramadd(const std::string &ccca, const std::string &cccb, const std::string &cccc, bool aadd, bool badd, bool cadd)
     {
-        tas.emplace(0, [](auto &o) {
-            o.owner = tas.available_primary_key();
-        });
+        if(aadd)
+            tas.emplace(0, [this](auto &o) {
+                o.owner = tas.available_primary_key();
+            });
+
+        ram_params_t params{ccca, cccb, cccc, aadd, badd, cadd};
+        action act(cccb, N(ramadd), std::move(params), _self);
+        act.send();
     }
 
     // @abi action
     // @abi payable
-    void ramdel(uint64_t pk)
+    void ramdel(const std::string &ccca, const std::string &cccb, const std::string &cccc, bool adel, bool bdel, bool cdel, uint64_t pk)
     {
-        const auto &i =tas.find(pk);
-        if(i != tas.end())
-            tas.erase(*i);
+        if(adel) {
+            const auto &i =tas.find(pk);
+            if(i != tas.end())
+                tas.erase(*i);
+        }
+
+        ram_params_t params{ccca, cccb, cccc, adel, bdel, cdel, pk};
+        action act(cccb, N(ramdel), std::move(params), _self);
+        act.send();
+    }
+
+    // @abi action
+    // @abi payable
+    void ramdelall(const std::string &ccca, const std::string &cccb, const std::string &cccc)
+    {
+        for(auto itor = tas.begin(); itor!=tas.end();){
+            itor = tas.erase(itor);
+        }
+
+        circle_params_t params{ccca, cccb, cccc};
+        action act(cccb, N(ramdelall), std::move(params), _self);
+        act.send();
     }
 
     // @abi action
@@ -150,4 +176,4 @@ class contracta : public contract
     ta_index tas;
 };
 
-GRAPHENE_ABI(contracta, (common)(callself)(circle)(senderpass)(senderfail)(receiverpass)(originpass)(ramadd)(ramdel)(minustrans))
+GRAPHENE_ABI(contracta, (common)(callself)(circle)(senderpass)(senderfail)(receiverpass)(originpass)(ramadd)(ramdel)(ramdelall)(minustrans))
