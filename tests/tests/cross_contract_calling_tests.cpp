@@ -216,6 +216,34 @@ BOOST_AUTO_TEST_CASE( cross_contract_call )
     trx.clear();
     BOOST_TEST_MESSAGE("-------- minustrans testcase --------");
 
+    //fee testcase1
+    //ramadd(const std::string &ccca, const std::string &cccb, const std::string &cccc, bool aadd, bool badd, bool cadd)
+    //ramdel(const std::string &ccca, const std::string &cccb, const std::string &cccc, bool adel, bool bdel, bool cdel, uint64_t pk)
+    //ramdelall(const std::string &ccca, const std::string &cccb, const std::string &cccc)
+    const auto &balancea = get_balance(contracta, asset_id_type(1)(db));
+    const auto &balanceb = get_balance(contractb, asset_id_type(1)(db));
+    const auto &balancec = get_balance(contractc, asset_id_type(1)(db));
+
+    op.method_name = N(ramadd);
+    action_args_var = fc::json::from_string("{\"ccca\":\"a\", \"cccb\":\"b\", \"cccc\":\"c\", \"aadd\":true, \"badd\":true, \"cadd\":true}");
+    action_type = abis.get_action_type("ramadd");
+    op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+    trx.operations.push_back(op);
+
+    set_expiration(db, trx);
+    sign(trx, alice_private_key);
+    PUSH_TX(db, trx);
+    trx.clear();
+    generate_block();
+
+    const auto &balancea1 = get_balance(contracta, asset_id_type(1)(db));
+    const auto &balanceb1 = get_balance(contractb, asset_id_type(1)(db));
+    const auto &balancec1 = get_balance(contractc, asset_id_type(1)(db));
+
+    BOOST_REQUIRE_EQUAL(balancea - 500 - 6797, balancea1);
+    BOOST_REQUIRE_EQUAL(balanceb - 500 - 6797, balanceb1);
+    BOOST_REQUIRE_EQUAL(balancec - 500 - 6797, balancec1);
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()
