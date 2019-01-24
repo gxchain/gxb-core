@@ -220,9 +220,6 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
             r.account = account_id_type(ram.first);
             r.ram_bytes = ram.second;
 
-            if(0 == r.ram_bytes)
-                continue;
-
             // charge and set ram_fee
             charge_ram_fee_by_account(r, d, op);
             receipt.ram_receipts.push_back(r);
@@ -294,6 +291,11 @@ void contract_call_evaluator::charge_base_fee(database &db, const contract_call_
 
 void contract_call_evaluator::charge_ram_fee_by_account(account_receipt &r, database &db, const contract_call_operation &op)
 {
+    if(0 == r.ram_bytes) {
+        r.ram_fee = asset{0, op.fee.asset_id};
+        return;
+    }
+
     int64_t ram_fee_core = ceil(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
     //make sure ram-account have enough GXC to refund
     if (ram_fee_core < 0) {
