@@ -25,6 +25,7 @@
 #include <graphene/db/object.hpp>
 #include <boost/multi_index/composite_key.hpp>
 #include <graphene/chain/protocol/operations.hpp>
+#include <graphene/chain/protocol/transaction.hpp>
 
 namespace graphene { namespace chain {
 
@@ -34,18 +35,18 @@ namespace graphene { namespace chain {
          static const uint8_t space_id = implementation_ids;
          static const uint8_t type_id  = impl_account_action_history_object_type;
          
-         uint64_t                mongodb_id;
-         account_id_type         sender;
-         account_id_type         receiver;
-         action                  act;
-         std::vector<action>     inline_actions;
-         contract_receipt        result;
-         transaction_id_type     txid;
-         bool                    irreversible_state;
+         uint64_t                      mongodb_id;
+         account_id_type               sender;
+         account_id_type               receiver;
+         action                        act;
+         std::vector<action_trace>     inline_actions;
+         contract_receipt              result;
+         transaction_id_type           txid;
+         bool                          irreversible_state;
          
-         uint32_t          block_num = 0;
-         uint16_t          trx_in_block = 0;
-         uint16_t          op_in_trx = 0;
+         uint32_t                      block_num = 0;
+         uint16_t                      trx_in_block = 0;
+         uint16_t                      op_in_trx = 0;
 
    };
 

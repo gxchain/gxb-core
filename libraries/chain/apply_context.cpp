@@ -6,6 +6,7 @@
 #include <graphene/chain/wasm_interface.hpp>
 #include <graphene/chain/wast_to_wasm.hpp>
 #include <graphene/chain/contract_table_objects.hpp>
+#include <graphene/chain/action_history_object.hpp>
 
 #include <boost/container/flat_set.hpp>
 
@@ -68,7 +69,16 @@ void apply_context::exec()
 
     exec_one();
 
+    auto& cur_inline_trace = _db->get_applied_trace();
+    auto backup_inline_trace = cur_inline_trace;
+
     for (const auto &inline_action : _inline_actions) {
+        action_trace trace;
+        trace.sender = account_id_type(inline_action.sender);
+        trace.receiver = account_id_type(inline_action.contract_id);
+        trace.act = inline_action;
+        backup_inline_trace->push_back(trace); 
+        cur_inline_trace.reset(&(backup_inline_trace->back().inline_traces)); // modify current inline_actions
         trx_context.dispatch_action(inline_action, inline_action.contract_id);
     }
 }

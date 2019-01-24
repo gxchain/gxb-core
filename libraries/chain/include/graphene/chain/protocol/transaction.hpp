@@ -124,7 +124,6 @@ namespace graphene { namespace chain {
       account_id_type         sender;
       account_id_type         receiver;
       action                  act;
-      contract_receipt        result;
    };
 
    struct action_trace : public base_action_trace {
@@ -245,7 +244,7 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT( graphene::chain::transaction, (ref_block_num)(ref_block_prefix)(expiration)(operations)(extensions) )
-FC_REFLECT( graphene::chain::base_action_trace,(sender)(receiver)(act)(result))
+FC_REFLECT( graphene::chain::base_action_trace,(sender)(receiver)(act))
 FC_REFLECT_DERIVED( graphene::chain::action_trace, (graphene::chain::base_action_trace),(inline_traces))
 // Note: not reflecting signees field for backward compatibility; in addition, it should not be in p2p messages
 FC_REFLECT_DERIVED( graphene::chain::signed_transaction, (graphene::chain::transaction), (signatures) )

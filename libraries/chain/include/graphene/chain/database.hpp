@@ -183,6 +183,7 @@ namespace graphene { namespace chain {
          const vector<optional< operation_history_object > >& get_applied_operations()const;
          const vector<optional< account_action_history_object> >& get_applied_actions()const;
          vector<optional< account_action_history_object> >& get_applied_actions(){return _applied_acts;}
+         std::shared_ptr<std::vector<action_trace>>& get_applied_trace(){return _action_trace;}
 
          string to_pretty_string( const asset& a )const;
 
@@ -473,6 +474,7 @@ namespace graphene { namespace chain {
           */
          vector<optional<operation_history_object> >  _applied_ops;
          vector<optional<account_action_history_object> > _applied_acts;
+         std::shared_ptr<std::vector<action_trace>>    _action_trace;
 
          uint32_t                          _current_block_num    = 0;
          uint16_t                          _current_trx_in_block = 0;
