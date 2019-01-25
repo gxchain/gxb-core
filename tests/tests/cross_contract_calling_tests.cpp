@@ -108,6 +108,7 @@ BOOST_AUTO_TEST_CASE( cross_contract_call )
     generate_blocks(HARDFORK_1016_TIME, true, ~0);
     generate_block();
 
+    db.set_contract_log_to_console(true);
     contract_call_operation op;
     op.account = alice_id;
     op.contract_id = contracta.id;
@@ -239,10 +240,11 @@ BOOST_AUTO_TEST_CASE( cross_contract_call )
     const auto &balancea1 = get_balance(contracta, asset_id_type(1)(db));
     const auto &balanceb1 = get_balance(contractb, asset_id_type(1)(db));
     const auto &balancec1 = get_balance(contractc, asset_id_type(1)(db));
+    idump((db.fetch_block_by_number(14)));
 
-    BOOST_REQUIRE_EQUAL(balancea - 500 - 6797, balancea1);
-    BOOST_REQUIRE_EQUAL(balanceb - 500 - 6797, balanceb1);
-    BOOST_REQUIRE_EQUAL(balancec - 500 - 6797, balancec1);
+    BOOST_REQUIRE_EQUAL(balancea - 11329, balancea1);
+    BOOST_REQUIRE_EQUAL(balanceb - 11329, balanceb1);
+    BOOST_REQUIRE_EQUAL(balancec - 11329, balancec1);
 
 } FC_LOG_AND_RETHROW() }
 
