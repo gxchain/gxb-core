@@ -163,6 +163,24 @@ class contracta : public contract
         act.send();
     }
 
+    // @abi action
+    // @abi payable
+    void transfer(const std::string &ccca, const std::string &cccb, const std::string &cccc)
+    {
+        circle_params_t params{ccca, cccb, cccc};
+        action act(cccb, N(transfer), std::move(params), _self, {100000, 1});
+        act.send();
+    }
+
+    // @abi action
+    // @abi payable
+    void actioncheck(const std::string &cccb)
+    {
+        circle_params_t params{"", cccb, ""};
+        action act(cccb, N(actioncheck), std::move(params), _self);
+        act.send();
+    }
+
   private:
     //@abi table ta i64
     struct ta {
@@ -176,4 +194,4 @@ class contracta : public contract
     ta_index tas;
 };
 
-GRAPHENE_ABI(contracta, (common)(callself)(circle)(senderpass)(senderfail)(receiverpass)(originpass)(ramadd)(ramdel)(ramdelall)(minustrans))
+GRAPHENE_ABI(contracta, (common)(callself)(circle)(senderpass)(senderfail)(receiverpass)(originpass)(ramadd)(ramdel)(ramdelall)(minustrans)(transfer)(actioncheck))

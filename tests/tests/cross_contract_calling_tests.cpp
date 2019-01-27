@@ -217,10 +217,33 @@ BOOST_AUTO_TEST_CASE( inter_contract_call )
     trx.clear();
     BOOST_TEST_MESSAGE("-------- minustrans testcase --------");
 
+    //transfer testcase, check contract method must be payable
+    BOOST_TEST_MESSAGE("++++++++ transfer testcase ++++++++");
+    op.method_name = N(transfer);
+    action_args_var = fc::json::from_string("{\"ccca\":\"a\", \"cccb\":\"b\", \"cccc\":\"c\"}");
+    action_type = abis.get_action_type("transfer");
+    op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+    trx.operations.push_back(op);
+    set_expiration(db, trx);
+    sign(trx, alice_private_key);
+    BOOST_REQUIRE_THROW(db.push_transaction(trx, ~0), assert_exception);
+    trx.clear();
+    BOOST_TEST_MESSAGE("-------- transfer testcase --------");
+
+    //actioncheck testcase, check contract must have actioncheck method
+    BOOST_TEST_MESSAGE("++++++++ actioncheck testcase ++++++++");
+    op.method_name = N(actioncheck);
+    action_args_var = fc::json::from_string("{\"cccb\":\"b\"}");
+    action_type = abis.get_action_type("actioncheck");
+    op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+    trx.operations.push_back(op);
+    set_expiration(db, trx);
+    sign(trx, alice_private_key);
+    BOOST_REQUIRE_THROW(db.push_transaction(trx, ~0), assert_exception);
+    trx.clear();
+    BOOST_TEST_MESSAGE("-------- actioncheck testcase --------");
+
     //fee testcase1
-    //ramadd(const std::string &ccca, const std::string &cccb, const std::string &cccc, bool aadd, bool badd, bool cadd)
-    //ramdel(const std::string &ccca, const std::string &cccb, const std::string &cccc, bool adel, bool bdel, bool cdel, uint64_t pk)
-    //ramdelall(const std::string &ccca, const std::string &cccb, const std::string &cccc)
     const auto &balancea = get_balance(contracta, asset_id_type(1)(db));
     const auto &balanceb = get_balance(contractb, asset_id_type(1)(db));
     const auto &balancec = get_balance(contractc, asset_id_type(1)(db));
@@ -228,6 +251,24 @@ BOOST_AUTO_TEST_CASE( inter_contract_call )
     op.method_name = N(ramadd);
     action_args_var = fc::json::from_string("{\"ccca\":\"a\", \"cccb\":\"b\", \"cccc\":\"c\", \"aadd\":true, \"badd\":true, \"cadd\":true}");
     action_type = abis.get_action_type("ramadd");
+    op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+    trx.operations.push_back(op);
+
+    op.method_name = N(ramadd);
+    action_args_var = fc::json::from_string("{\"ccca\":\"a\", \"cccb\":\"b\", \"cccc\":\"c\", \"aadd\":true, \"badd\":true, \"cadd\":false}");
+    action_type = abis.get_action_type("ramadd");
+    op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+    trx.operations.push_back(op);
+
+    op.method_name = N(ramdel);
+    action_args_var = fc::json::from_string("{\"ccca\":\"a\", \"cccb\":\"b\", \"cccc\":\"c\", \"adel\":false, \"bdel\":true, \"cdel\":true, \"pk\":0}");
+    action_type = abis.get_action_type("ramdel");
+    op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+    trx.operations.push_back(op);
+
+    op.method_name = N(ramdel);
+    action_args_var = fc::json::from_string("{\"ccca\":\"a\", \"cccb\":\"b\", \"cccc\":\"c\", \"adel\":false, \"bdel\":true, \"cdel\":false, \"pk\":1}");
+    action_type = abis.get_action_type("ramdel");
     op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
     trx.operations.push_back(op);
 
@@ -242,9 +283,9 @@ BOOST_AUTO_TEST_CASE( inter_contract_call )
     const auto &balancec1 = get_balance(contractc, asset_id_type(1)(db));
     idump((db.fetch_block_by_number(14)));
 
-    BOOST_REQUIRE_EQUAL(balancea - 11329, balancea1);
-    BOOST_REQUIRE_EQUAL(balanceb - 11329, balanceb1);
-    BOOST_REQUIRE_EQUAL(balancec - 11329, balancec1);
+    BOOST_REQUIRE_EQUAL(balancea - 11329 - 5860, balancea1);
+    BOOST_REQUIRE_EQUAL(balanceb - 11329 - 5860 + 5859 + 11328, balanceb1);
+    BOOST_REQUIRE_EQUAL(balancec - 11329 + 11328, balancec1);
 
 } FC_LOG_AND_RETHROW() }
 

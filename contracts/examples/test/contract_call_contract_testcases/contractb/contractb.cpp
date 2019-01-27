@@ -44,7 +44,6 @@ class contractb : public contract
     }
 
     // @abi action
-    // @abi payable
     void senderpass(const std::string &ccca, const std::string &cccb, const std::string &cccc, uint64_t cnt) {
         uint64_t sender = get_trx_sender();
         int64_t accountc_id = get_account_id(ccca.c_str(), ccca.length());
@@ -131,6 +130,11 @@ class contractb : public contract
         act.send();
     }
 
+    // @abi action
+    void transfer(const std::string &ccca, const std::string &cccb, const std::string &cccc)
+    {
+    }
+
   private:
     //@abi table tb i64
     struct tb {
@@ -144,4 +148,4 @@ class contractb : public contract
     tb_index tbs;
 };
 
-GRAPHENE_ABI(contractb, (common)(circle)(senderpass)(senderfail)(receiverpass)(originpass)(minustrans)(ramadd)(ramdel)(ramdelall))
+GRAPHENE_ABI(contractb, (common)(circle)(senderpass)(senderfail)(receiverpass)(originpass)(minustrans)(ramadd)(ramdel)(ramdelall)(transfer))
