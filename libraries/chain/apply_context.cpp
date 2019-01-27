@@ -129,6 +129,9 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, a
     int64_t ram_delta = (int64_t)(buffer_size + config::billable_size_v<key_value_object>);
     if(_db->head_block_time() > HARDFORK_1016_TIME) {
         trx_context.update_ram_statistics(payer, ram_delta);
+        _db->modify(tab, [&](table_id_object& t) {
+          ++t.count;
+        });
     } else {
         update_ram_usage(ram_delta);
     }
@@ -183,6 +186,13 @@ void apply_context::db_remove_i64(int iterator)
     int64_t ram_delta = -(int64_t)(obj.value.size() + config::billable_size_v<key_value_object>);
     if(_db->head_block_time() > HARDFORK_1016_TIME) {
         trx_context.update_ram_statistics(obj.payer, ram_delta);
+
+        _db->modify(table_obj, [&](table_id_object& t) {
+           --t.count;
+        });
+        if (table_obj.count == 0) {
+           remove_table(table_obj);
+        }
     } else {
         update_ram_usage(ram_delta);
     }
@@ -339,6 +349,7 @@ const table_id_object &apply_context::find_or_create_table(uint64_t code, name s
 
 void apply_context::remove_table(const table_id_object &tid)
 {
+    trx_context.update_ram_statistics(tid.payer, -config::billable_size_v<table_id_object>);
     _db->remove(tid);
 }
 
