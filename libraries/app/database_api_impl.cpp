@@ -1480,21 +1480,15 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
            tx.set_expiration(_db.get_dynamic_global_properties().time + fc::seconds(30));
            processed_transaction ptx = _db.push_transaction(tx, ~0);
 
-           if(_db.head_block_time() > HARDFORK_1016_TIME) {
-			   auto receipt = ptx.operation_results.back().get<contract_receipt>();
-			   if(id != asset_id_type(1))
-			       receipt.fee = _db.from_core_asset(receipt.fee, id);
-			   fc::variant r;
-			   fc::to_variant(receipt.fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
-			   result.push_back(r);
-           } else {
-			   auto receipt = ptx.operation_results.back().get<contract_receipt_old>();
-	           if(id != asset_id_type(1))
-	               receipt.fee = _db.from_core_asset(receipt.fee, id);
-			   fc::variant r;
-			   fc::to_variant(receipt.fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
-			   result.push_back(r);
+           auto receipt = _db.head_block_time() > HARDFORK_1016_TIME ? ptx.operation_results.back().get<contract_receipt>() :
+               ptx.operation_results.back().get<contract_receipt_old>();
+
+           if (id != asset_id_type(1)) {
+               receipt.fee = _db.from_core_asset(receipt.fee, id);
            }
+           fc::variant r;
+           fc::to_variant(receipt.fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
+           result.push_back(r);
        } else {
            result.push_back(helper.set_op_fees(op));
        }
