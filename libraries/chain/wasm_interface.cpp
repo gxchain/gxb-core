@@ -1072,6 +1072,8 @@ class transaction_api : public context_aware_api {
          uint32_t max_inline_action_size = context.trx_context.get_inter_contract_calling_params().max_inline_action_size;
          FC_ASSERT(data_len <= max_inline_action_size, "inline action too big, max size=${s} bytes", ("s", max_inline_action_size));
 
+         context.trx_context.check_inter_contract_depth();
+
          action act;
          fc::raw::unpack<action>(data, data_len, act, 20);
 
@@ -1082,8 +1084,8 @@ class transaction_api : public context_aware_api {
          FC_ASSERT(act.amount.amount >=0, "action amount must >= 0, actual amount: ${a}", ("a", act.amount.amount));
 
          // check action contract code
-         const account_object& contract_obj = account_id_type(act.contract_id)(context._db);
-         FC_ASSERT(contract_obj.code.size() > 0, "inline action's code account ${account} does not exist", ("account", a.contract_id));
+         const account_object& contract_obj = account_id_type(act.contract_id)(*context._db);
+         FC_ASSERT(contract_obj.code.size() > 0, "inline action's code account ${account} does not exist", ("account", act.contract_id));
 
          // check method_name, must be payable
          const auto &actions = contract_obj.abi.actions;
