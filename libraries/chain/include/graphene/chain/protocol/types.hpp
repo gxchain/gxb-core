@@ -134,6 +134,7 @@ namespace graphene { namespace chain {
    struct inter_contract_calling_params_t {
        uint8_t max_inter_contract_depth = 3;
        uint32_t contract_basic_fee_vesting_period_seconds = 259200;
+       uint32_t max_inline_action_size = 1024*64;
    };
 
    struct operation_ext_copyright_hash_t {
@@ -665,7 +666,7 @@ FC_REFLECT(graphene::chain::lock_balance_params_t, (params))
 FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
 FC_REFLECT(graphene::chain::asset_symbol_t, (symbol))
 FC_REFLECT(graphene::chain::trust_node_pledge_t, (amount))
-FC_REFLECT(graphene::chain::inter_contract_calling_params_t, (max_inter_contract_depth)(contract_basic_fee_vesting_period_seconds))
+FC_REFLECT(graphene::chain::inter_contract_calling_params_t, (max_inter_contract_depth)(contract_basic_fee_vesting_period_seconds)(max_inline_action_size))
 
 
 FC_REFLECT_ENUM(graphene::chain::asset_issuer_permission_flags,

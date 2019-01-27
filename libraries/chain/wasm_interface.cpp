@@ -1068,6 +1068,10 @@ class transaction_api : public context_aware_api {
       void send_inline(array_ptr<char> data, size_t data_len) {
          FC_ASSERT(context._db->head_block_time() > HARDFORK_1016_TIME,
                  "cross-contract calling can not serve before timestamp:${t}", ("t", HARDFORK_1016_TIME));//TODO can be removed when release after time HARDFORK_1016_TIME
+
+         uint32_t max_inline_action_size = context.trx_context.get_inter_contract_calling_params().max_inline_action_size;
+         FC_ASSERT(data_len <= max_inline_action_size, "inline action too big, max size=${s} bytes", ("s", max_inline_action_size));
+
          action act;
          fc::raw::unpack<action>(data, data_len, act, 20);
 
