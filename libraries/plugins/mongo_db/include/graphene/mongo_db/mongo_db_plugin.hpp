@@ -18,7 +18,7 @@ namespace graphene { namespace mongo_db{
             virtual void plugin_initialize(const boost::program_options::variables_map& options) override;
             virtual void plugin_startup() override;
 
-            virtual void plugin_set_program_options(boost::program_options::options_description&,
+            virtual void plugin_set_program_options(boost::program_options::options_description& cli,
                                                 boost::program_options::options_description& cfg) override;
 
             std::string plugin_name()const override { return "mongo_db"; }

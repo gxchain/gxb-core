@@ -355,17 +355,22 @@ namespace graphene { namespace app {
 
        vector<account_action_history_object> result;
        get_action_history_params params_iml = params;
-
-       auto lower2upper = [&](auto itr_lower,auto itr_upper,bool find_mongodb){
+       
+       auto lower2upper = [&](auto itr_lower,auto itr_upper){
           if(result.size() < params.limit ){
-            if(find_mongodb){
-               params_iml.limit = params.limit - result.size();
-               auto mongo_res = mongo_db::mongo_db_plugin::get_action_history_mongodb(params_iml);
-               result.insert(result.end(),mongo_res.begin(),mongo_res.end());
-            }
+            params_iml.limit = params.limit - result.size();
+            auto mongo_res = mongo_db::mongo_db_plugin::get_action_history_mongodb(params_iml);
+            result.insert(result.end(),mongo_res.begin(),mongo_res.end());
             if(result.size() < params.limit && itr_lower != itr_upper){
                do{
-                  result.push_back(*itr_lower);
+                  if(params.account_instance_id && *params.account_instance_id){
+                     uint64_t& acc_instance_id = *params.account_instance_id;
+                     const account_id_type& accid = account_id_type(acc_instance_id);
+                     if(std::find(itr_lower->link_accounts.begin(),itr_lower->link_accounts.end(),accid)!=itr_lower->link_accounts.end())
+                        result.push_back(*itr_lower);
+                  }else{
+                     result.push_back(*itr_lower);
+                  }
                   itr_lower++;
                   if(itr_lower == itr_upper || result.size() >= params.limit ) break;
                }while(true); 
@@ -373,16 +378,23 @@ namespace graphene { namespace app {
           }
        };
 
-       auto upper2lower = [&](auto itr_lower,auto itr_upper,bool find_mongodb){
+       auto upper2lower = [&](auto itr_lower,auto itr_upper){
           if(result.size() < params.limit){
              if(itr_lower != itr_upper){
                do{
                   itr_upper --;
-                  result.push_back(*itr_upper);
+                  if(params.account_instance_id && *params.account_instance_id){
+                     uint64_t& acc_instance_id = *params.account_instance_id;
+                     const account_id_type& accid = account_id_type(acc_instance_id);
+                     if(std::find(itr_lower->link_accounts.begin(),itr_lower->link_accounts.end(),accid)!=itr_lower->link_accounts.end())
+                        result.push_back(*itr_upper);
+                  }else{
+                     result.push_back(*itr_upper);
+                  }     
                   if(itr_upper == itr_lower || result.size()>= params.limit ) break;
                }while(true);
              }
-             if( result.size() < params.limit && find_mongodb){
+             if( result.size() < params.limit ){
                 params_iml.limit = params.limit - result.size();
                 auto mongo_res = mongo_db::mongo_db_plugin::get_action_history_mongodb(params_iml);
                 result.insert(result.end(),mongo_res.begin(),mongo_res.end());
@@ -390,61 +402,11 @@ namespace graphene { namespace app {
           }
        };
 
-      const auto& act_his_idx     = db.get_index_type<action_history_index>();
-      const auto& by_sender_idx   = act_his_idx.indices().get<by_sender>();
-      const auto& by_receiver_idx = act_his_idx.indices().get<by_receiver>();
-      const auto& by_txid_idx     = act_his_idx.indices().get<by_txid>();
-      const auto& by_mongodb_idx  = act_his_idx.indices().get<by_mongodb_id>();
+       const auto& act_his_idx     = db.get_index_type<action_history_index>();
+       const auto& by_txid_idx     = act_his_idx.indices().get<by_txid>();
+       const auto& by_mongodb_idx  = act_his_idx.indices().get<by_mongodb_id>();
 
-      if(params.sender_id && *params.sender_id && params.receiver_id && *params.receiver_id){
-         uint64_t& sender_id = *params.sender_id;
-         uint64_t& receiver_id = *params.receiver_id;
-         const account_id_type& senderid = account_id_type(sender_id);
-         const account_id_type& receiverid = account_id_type(receiver_id);
-         auto itr_upper_sender = by_sender_idx.upper_bound(boost::make_tuple( senderid, params.upper_id ));
-         auto itr_lower_sender = by_sender_idx.lower_bound(boost::make_tuple( senderid, params.lower_id ));
-         auto itr_upper_receiver = by_receiver_idx.upper_bound(boost::make_tuple( receiverid, params.upper_id ));
-         auto itr_lower_receiver = by_receiver_idx.lower_bound(boost::make_tuple( receiverid, params.lower_id ));
-
-         if(params.reverse){
-            upper2lower(itr_lower_sender,itr_upper_sender,false);
-            upper2lower(itr_lower_receiver,itr_upper_receiver,false);
-            if( result.size() < params.limit ){
-                params_iml.limit = params.limit - result.size();
-                auto mongo_res = mongo_db::mongo_db_plugin::get_action_history_mongodb(params_iml);
-                result.insert(result.end(),mongo_res.begin(),mongo_res.end());
-             }
-         }else{
-            if( result.size() < params.limit ){
-                params_iml.limit = params.limit - result.size();
-                auto mongo_res = mongo_db::mongo_db_plugin::get_action_history_mongodb(params_iml);
-                result.insert(result.end(),mongo_res.begin(),mongo_res.end());
-            }
-            if( result.size() < params.limit ){
-                lower2upper(itr_lower_sender,itr_upper_sender,false);
-                lower2upper(itr_lower_receiver,itr_upper_receiver,false);
-            }
-         }
-      }
-      else if(params.sender_id && *params.sender_id){
-         uint64_t& sender_id = *params.sender_id;
-         const account_id_type& senderid = account_id_type(sender_id);
-         auto itr_upper = by_sender_idx.upper_bound(boost::make_tuple( senderid, params.upper_id ));
-         auto itr_lower = by_sender_idx.lower_bound(boost::make_tuple( senderid, params.lower_id ));
-
-         if(params.reverse) upper2lower(itr_lower,itr_upper,true); 
-         else lower2upper(itr_lower,itr_upper,true);
-      }
-      else if(params.receiver_id && *params.receiver_id){
-         uint64_t& receiver_id = *params.receiver_id;
-         const account_id_type& receiverid = account_id_type(receiver_id);
-         auto itr_upper = by_receiver_idx.upper_bound(boost::make_tuple( receiverid, params.upper_id ));
-         auto itr_lower = by_receiver_idx.lower_bound(boost::make_tuple( receiverid, params.lower_id ));
-
-         if(params.reverse) upper2lower(itr_lower,itr_upper,true); 
-         else lower2upper(itr_lower,itr_upper,true);
-      }else{
-         if(params.txid){
+       if(params.txid){             // query by txid
             transaction_id_type& txid = *params.txid;
             auto itor = by_txid_idx.lower_bound(txid);
             if(itor != by_txid_idx.end()){
@@ -456,14 +418,14 @@ namespace graphene { namespace app {
             }
             auto mongo_res = mongo_db::mongo_db_plugin::get_action_history_mongodb(params_iml);
             result.insert(result.end(),mongo_res.begin(),mongo_res.end());
-         }else{
+       }
+       else{         // common query
             auto itr_upper = by_mongodb_idx.upper_bound(params.upper_id);
             auto itr_lower = by_mongodb_idx.lower_bound(params.lower_id);
 
-            if(params.reverse) upper2lower(itr_lower,itr_upper,true); 
-            else lower2upper(itr_lower,itr_upper,true);
-         }
-      }
+            if(params.reverse) upper2lower(itr_lower,itr_upper); 
+            else lower2upper(itr_lower,itr_upper);
+       } 
       return result;
     }
 

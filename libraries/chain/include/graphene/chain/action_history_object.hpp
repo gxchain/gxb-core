@@ -39,10 +39,11 @@ namespace graphene { namespace chain {
          account_id_type               sender;
          account_id_type               receiver;
          action                        act;
-         std::vector<action_trace>     inline_actions;
+         std::vector<action_trace>     inline_traces;
          contract_receipt              result;
          transaction_id_type           txid;
          bool                          irreversible_state;
+         std::vector<account_id_type>  link_accounts;
          
          uint32_t                      block_num = 0;
          uint16_t                      trx_in_block = 0;
@@ -57,6 +58,7 @@ namespace graphene { namespace chain {
    struct by_txid;
    struct by_blocknum;
 
+         
    typedef multi_index_container<
       account_action_history_object,
       indexed_by<
@@ -84,5 +86,5 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT_DERIVED( graphene::chain::account_action_history_object, (graphene::chain::object),
-                    (mongodb_id)(sender)(receiver)(act)(inline_actions)(result)(txid)(irreversible_state)(block_num)(trx_in_block)(op_in_trx) )
+                    (mongodb_id)(sender)(receiver)(act)(inline_traces)(result)(txid)(irreversible_state)(link_accounts)(block_num)(trx_in_block)(op_in_trx) )
 

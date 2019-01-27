@@ -49,8 +49,7 @@ struct get_action_history_params {
    uint64_t lower_id = 0;
    uint64_t upper_id = 0xFFFFFFFFFFFFFFFF >> 2;
    uint32_t limit = 100;
-   optional<uint64_t> sender_id;
-   optional<uint64_t> receiver_id;
+   optional<uint64_t> account_instance_id;
    optional<transaction_id_type> txid;
    bool  reverse = true;
 };
@@ -59,6 +58,6 @@ struct get_action_history_params {
 FC_REFLECT( graphene::app::order, (price)(quote)(base) );
 FC_REFLECT( graphene::app::get_table_rows_result, (rows)(more) );
 FC_REFLECT( graphene::app::get_table_rows_params, (lower_bound)(upper_bound)(limit)(index_position)(reverse));
-FC_REFLECT( graphene::app::get_action_history_params, (lower_id)(upper_id)(limit)(sender_id)(receiver_id)(txid)(reverse));
+FC_REFLECT( graphene::app::get_action_history_params, (lower_id)(upper_id)(limit)(account_instance_id)(txid)(reverse));
 
 

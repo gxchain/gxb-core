@@ -58,8 +58,9 @@ namespace detail {
             void remove_action_histories( uint32_t num);
 
             void init();
-            void consume_blocks();                      // consume data(actions、inline_actions)
+            void consume_blocks();                      // consume data(actions、inline_traces)
             void process_action_trace(account_action_history_object& act);
+            void wipe_database();
             static std::vector<account_action_history_object> get_action_history_mongodb(app::get_action_history_params params);
 
             fc::optional<abi_serializer> get_abi_serializer( uint64_t accid );
@@ -72,7 +73,7 @@ namespace detail {
             static std::shared_ptr<mongocxx::pool> mongo_pool;
 
             // collections consum thread
-            mongocxx::collection _action_traces;        // actions(account、action、inline_action)
+            mongocxx::collection _action_traces;        // actions(account、action、inline_traces)
 
             // consume thread 
             boost::thread consume_thread;
@@ -90,8 +91,14 @@ namespace detail {
 
             static const std::string action_traces_col;
 
+            // _track_accounts
+            flat_set<account_id_type> _tracked_accounts;
+
             // access db
             mongo_db_plugin& _self;
+        private:
+            void collect_inline_action_account(const std::vector<action_trace>& inline_traces,std::vector<account_id_type>& collect_accs);
+            bool check_trackacc(const account_action_history_object& act_obj);
 
         };
     const std::string mongo_db_plugin_impl::action_traces_col = "action_traces";
@@ -99,7 +106,36 @@ namespace detail {
     std::shared_ptr<mongocxx::pool> mongo_db_plugin_impl::mongo_pool = nullptr;
     std::string mongo_db_plugin_impl::db_name = "";
 
-
+    
+    bool mongo_db_plugin_impl::check_trackacc(const account_action_history_object& act_obj)
+    {
+        bool ret_value = false;
+        std::vector<account_id_type> collect_accs;
+        collect_accs.push_back(act_obj.sender);
+        collect_accs.push_back(act_obj.receiver);
+        collect_inline_action_account(act_obj.inline_traces,collect_accs);
+        for(auto &itor:collect_accs){
+            if(std::find(_tracked_accounts.begin(),_tracked_accounts.end(),itor)!=_tracked_accounts.end())
+                ret_value = true;
+        }
+        return ret_value;
+    }
+    
+    void mongo_db_plugin_impl::collect_inline_action_account(const std::vector<action_trace>& inline_traces,std::vector<account_id_type>& collect_accs)
+    {
+        if(inline_traces.size()==0)
+            return;
+        else{
+            for(auto & act_tra: inline_traces){
+                if(std::find(collect_accs.begin(),collect_accs.end(),act_tra.sender)!=collect_accs.end())
+                    collect_accs.push_back(act_tra.sender);
+                if(std::find(collect_accs.begin(),collect_accs.end(),act_tra.receiver)!=collect_accs.end())
+                    collect_accs.push_back(act_tra.receiver);
+                collect_inline_action_account(act_tra.inline_traces,collect_accs);
+            }
+        }
+    }
+    
     std::vector<account_action_history_object> mongo_db_plugin_impl::get_action_history_mongodb(app::get_action_history_params params)
     {
         using namespace bsoncxx::types;
@@ -121,39 +157,17 @@ namespace detail {
 
         if(params.reverse) opts.sort(make_document(kvp("_id",-1)));
         else opts.sort(make_document(kvp("_id",1)));
-        fc::variant senderid_var;
-        fc::variant receiverid_var;
-        if(params.sender_id && *params.sender_id && params.receiver_id && *params.receiver_id){
-            uint64_t& sender_id = *params.sender_id;
-            const account_id_type& senderid = account_id_type(sender_id);
-            fc::to_variant(senderid,senderid_var);
-            uint64_t& receiver_id = *params.receiver_id;
-            const account_id_type& receiverid = account_id_type(receiver_id);
-            fc::to_variant(receiverid,receiverid_var);
-            filterdoc.append(kvp("$or",[&](sub_array subarr) {
-                subarr.append(  
-                    make_document(kvp("action.sender",  senderid_var.as_string())),
-                    make_document(kvp("action.receiver",receiverid_var.as_string()))
-                );
-            }));
+
+        if(params.txid){
+            std::string txid_str(*params.txid);
+            filterdoc.append(kvp("action.txid",txid_str));
         }
-        else if(params.sender_id && *params.sender_id){
-            uint64_t& sender_id = *params.sender_id;
-            const account_id_type& senderid = account_id_type(sender_id);
-            fc::to_variant(senderid,senderid_var);
-            filterdoc.append(kvp("action.sender",senderid_var.as_string()));
-        }
-        else if(params.receiver_id && *params.receiver_id){
-            uint64_t& receiver_id = *params.receiver_id;
-            const account_id_type& receiverid = account_id_type(receiver_id);
-            fc::to_variant(receiverid,receiverid_var);
-            filterdoc.append(kvp("action.receiver",receiverid_var.as_string()));
-        }
-        else{
-            if(params.txid){
-                std::string txid_str(*params.txid);
-                filterdoc.append(kvp("action.txid",txid_str));
-            }
+        else if(params.account_instance_id && *params.account_instance_id){
+            fc::variant accid_var;
+            uint64_t& acc_instance_id = *params.account_instance_id;
+            const account_id_type& acc_id = account_id_type(acc_instance_id);
+            fc::to_variant(acc_id,accid_var);
+            filterdoc.append(kvp("action.link_accounts",accid_var.as_string()));
         }
 
         auto cursor = _action_traces.find(filterdoc.view(),opts);
@@ -258,20 +272,28 @@ namespace detail {
             for( const optional< account_action_history_object >& o_act : hist ){
                 ilog("block_num: ${num} , senderid: ${sender},method: ${method_name}",("num",o_act->block_num)("sender",o_act->sender)("method_name",o_act->act.method_name));
                 if(o_act.valid()){
-                    db.create<account_action_history_object>( [&]( account_action_history_object& h )
+                    if(_tracked_accounts.size() == 0 || check_trackacc(*o_act))
                     {
-                        h.mongodb_id     = o_act->mongodb_id;
-                        h.block_num      = o_act->block_num;
-                        h.trx_in_block   = o_act->trx_in_block;
-                        h.op_in_trx      = o_act->op_in_trx;
-                        h.sender         = o_act->sender;
-                        h.receiver       = o_act->receiver;
-                        h.act            = o_act->act;
-                        h.inline_actions = o_act->inline_actions;
-                        h.result         = o_act->result;
-                        h.txid           = o_act->txid;
-                        h.irreversible_state = false;
-                    });
+                        db.create<account_action_history_object>( [&]( account_action_history_object& h )
+                        {
+                            h.mongodb_id     = o_act->mongodb_id;
+                            h.block_num      = o_act->block_num;
+                            h.trx_in_block   = o_act->trx_in_block;
+                            h.op_in_trx      = o_act->op_in_trx;
+                            h.sender         = o_act->sender;
+                            h.receiver       = o_act->receiver;
+                            h.act            = o_act->act;
+                            h.inline_traces  = o_act->inline_traces;
+                            h.result         = o_act->result;
+                            h.txid           = o_act->txid;
+                            h.irreversible_state = false;
+                            std::vector<account_id_type> collect_accs;
+                            collect_accs.push_back(o_act->sender);
+                            collect_accs.push_back(o_act->receiver);
+                            collect_inline_action_account(o_act->inline_traces,collect_accs);
+                            h.link_accounts  = collect_accs;        // related account list
+                        });
+                    }
                 }
             }
         }FC_LOG_AND_RETHROW()
@@ -304,7 +326,18 @@ namespace detail {
                         
         }FC_LOG_AND_RETHROW()
     }
+    void mongo_db_plugin_impl::wipe_database()
+    {
+        ilog("mongo db wipe_database");
 
+        auto client = mongo_pool->acquire();
+        auto& mongo_conn = *client;
+
+        auto action_traces = mongo_conn[db_name][action_traces_col];
+        action_traces.drop();
+
+        ilog("done wipe_database");
+    }
     void mongo_db_plugin_impl::consume_blocks(){
         try{
             auto mongo_client = mongo_pool->acquire();
@@ -360,8 +393,8 @@ namespace detail {
             // action_traces collection and create indexes
             auto action_traces = mongo_conn[db_name][action_traces_col];
 
-            action_traces.create_index( bsoncxx::from_json( R"xxx({ "trx_id" : 1 })xxx" ));
-            action_traces.create_index( bsoncxx::from_json( R"xxx({ "reciver" : 1 })xxx" ));
+            action_traces.create_index( bsoncxx::from_json( R"xxx({ "txid" : 1 })xxx" ));
+            action_traces.create_index( bsoncxx::from_json( R"xxx({ "receiver" : 1 })xxx" ));
             action_traces.create_index( bsoncxx::from_json( R"xxx({ "sender" : 1 })xxx" ));
 
 
@@ -386,38 +419,45 @@ std::vector<account_action_history_object> mongo_db_plugin::get_action_history_m
 void mongo_db_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
     try{
-        //if( options.count("mongodb-uri")){
-            std::string uri_str = "mongodb://localhost:27017/gxchain";
+        if( options.count("mongodb-uri") && options.count("track-action-account")){
+
+            LOAD_VALUE_SET(options, "track-action-account", my->_tracked_accounts, graphene::chain::account_id_type);
+            std::string uri_str = options.at( "mongodb-uri" ).as<std::string>();
+            ilog( "connecting to ${u}", ("u", uri_str));
             
             mongocxx::uri uri = mongocxx::uri{uri_str};
             my->db_name = uri.database();
+
             if( my->db_name.empty())
                 my->db_name = "gxchain";
             detail::mongo_db_plugin_impl::mongo_pool = std::make_shared<mongocxx::pool>(uri);
 
             database().add_index< primary_index< action_history_index > >();
-            // 2 绑定信号量
             database().applied_block.connect( [&]( const signed_block& tra){ my->update_action_histories(tra); } );
-            
             database().applied_irr_num.connect( [&]( uint32_t num){ my->remove_action_histories(num); } );
-            // 3 处理接收到的信号
-            my->init();   
-       // }  
-        //else{
 
-       // }
+            if( options.count( "replay-blockchain" ) || options.count( "resync-blockchain" ) ) {
+                ilog( "Wiping mongo database on startup" );
+                my->wipe_database();
+            }
+            
+            my->init();   
+        }  
+        else{
+            ilog( "mongo_db_plugin disabled." );
+        }
     } FC_LOG_AND_RETHROW()
 }
 void mongo_db_plugin::plugin_startup(){
 
 }
-void mongo_db_plugin::plugin_set_program_options(boost::program_options::options_description&,
+void mongo_db_plugin::plugin_set_program_options(boost::program_options::options_description& cli,
                                 boost::program_options::options_description& cfg){
-    /*cli.add_options()
+    cli.add_options()
          ("mongodb-uri",   boost::program_options::value<std::string>(),"MongoDB URI connection string")
-         ("track-account", boost::program_options::value<std::vector<std::string>>()->composing()->multitoken(), "Account ID to track history for (may specify multiple times)")
+         ("track-action-account", boost::program_options::value<std::vector<std::string>>()->composing()->multitoken(), "Account ID to track history for (may specify multiple times)")
          ;
-    cfg.add(cli);   */                              
+    cfg.add(cli);                              
 
 }
 }}
