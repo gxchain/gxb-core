@@ -513,7 +513,7 @@ class apply_context {
 
          contract_log_to_console = _db->get_contract_log_to_console();
 
-         trx_context.check_cross_contract_depth();
+         trx_context.check_inter_contract_depth();
          reset_console();
      }
 

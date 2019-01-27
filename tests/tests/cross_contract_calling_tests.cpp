@@ -48,9 +48,9 @@
 using namespace graphene::chain;
 using namespace graphene::chain::test;
 
-BOOST_FIXTURE_TEST_SUITE( cross_contract_calling_tests, database_fixture )
+BOOST_FIXTURE_TEST_SUITE( inter_contract_calling_tests, database_fixture )
 
-BOOST_AUTO_TEST_CASE( cross_contract_call )
+BOOST_AUTO_TEST_CASE( inter_contract_call )
 { try {
     ACTOR(alice);
     create_account("ram-account", alice_public_key);

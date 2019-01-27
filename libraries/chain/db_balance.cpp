@@ -201,7 +201,7 @@ void database::deposit_contract_call_cashback(const account_object& acct, share_
    optional<vesting_balance_id_type> new_vbid = deposit_lazy_vesting(
        acct.cashback_vb,
        amount,
-       get_cross_contract_calling_params().contract_basic_fee_vesting_period_seconds,
+       get_inter_contract_calling_params().contract_basic_fee_vesting_period_seconds,
        acct.id,
        true);
 
