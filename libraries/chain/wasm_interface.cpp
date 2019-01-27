@@ -1075,9 +1075,24 @@ class transaction_api : public context_aware_api {
          action act;
          fc::raw::unpack<action>(data, data_len, act, 20);
 
+         // check action sender
          FC_ASSERT(act.sender == context.receiver,
                  "the sender must be current contract, actually act.sender=${s}, current receiver=${r}", ("s", act.sender)("r", context.receiver));
+         // check amount
          FC_ASSERT(act.amount.amount >=0, "action amount must >= 0, actual amount: ${a}", ("a", act.amount.amount));
+
+         // check action contract code
+         const account_object& contract_obj = account_id_type(act.contract_id)(context._db);
+         FC_ASSERT(contract_obj.code.size() > 0, "inline action's code account ${account} does not exist", ("account", a.contract_id));
+
+         // check method_name, must be payable
+         const auto &actions = contract_obj.abi.actions;
+         auto iter = std::find_if(actions.begin(), actions.end(),
+                 [&](const action_def &act_def) { return act_def.name == act.method_name; });
+         FC_ASSERT(iter != actions.end(), "method_name ${m} not found in abi", ("m", act.method_name));
+         if (act.amount.amount > 0) {
+             FC_ASSERT(iter->payable, "method_name ${m} not payable", ("m", act.method_name));
+         }
 
          context.execute_inline(std::move(act));
       }
