@@ -138,11 +138,10 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     if (op.amount.valid()) {
         // check method_name, must be payable
         FC_ASSERT(iter->payable, "method_name ${m} not payable", ("m", op.method_name));
-    }
 
-    // check balance
-    if (op.amount.valid()) {
+        // amount must > 0
         FC_ASSERT(op.amount->amount > 0, "amount must > 0");
+
         // check balance
         const asset_object &asset_type = op.amount->asset_id(d);
         bool sufficient_balance = d.get_balance(op.account(d), asset_type).amount >= op.amount->amount;

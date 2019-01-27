@@ -60,7 +60,7 @@ void apply_context::exec()
 {
     // adjust balance
     if (amount.valid()) {
-        // amount always > 0
+        // amount always >= 0
         auto amnt = *amount;
         db().adjust_balance(account_id_type(act.sender), -amnt);
         db().adjust_balance(account_id_type(act.contract_id), amnt);
@@ -86,6 +86,13 @@ void apply_context::execute_inline(action &&a)
     // check action contract code
     const account_object& contract_obj = account_id_type(a.contract_id)(db());
     FC_ASSERT(contract_obj.code.size() > 0, "inline action's code account ${account} does not exist", ("account", a.contract_id));
+
+    // check method_name, must be payable
+    const auto &actions = contract_obj.abi.actions;
+    auto iter = std::find_if(actions.begin(), actions.end(),
+            [&](const action_def &act_def) { return act_def.name == a.method_name; });
+    FC_ASSERT(iter != actions.end(), "method_name ${m} not found in abi", ("m", a.method_name));
+    FC_ASSERT(iter->payable, "method_name ${m} not payable", ("m", a.method_name));
 
     // check action amount, should always >= 0
     FC_ASSERT(a.amount.amount >= 0, "action amount ${m}, should always >= 0", ("m", a.amount.amount));
