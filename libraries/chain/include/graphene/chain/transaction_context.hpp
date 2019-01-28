@@ -29,16 +29,16 @@ namespace graphene { namespace chain {
             return ram_statistics;
         }
 
-        void check_cross_contract_depth()
+        void check_inter_contract_depth()
         {
             // check max_inter_contract_depth
-            cross_contract_calling_count++;
-            FC_ASSERT(cross_contract_calling_count <= cross_contract_calling_params.max_inter_contract_depth,
-                    "max cross contract calling can not exceed ${m}", ("m", cross_contract_calling_params.max_inter_contract_depth));
+            FC_ASSERT(inter_contract_calling_count <= inter_contract_calling_params.max_inter_contract_depth,
+                    "max cross contract calling can not exceed ${m}", ("m", inter_contract_calling_params.max_inter_contract_depth));
+            inter_contract_calling_count++;
         }
 
-        const cross_contract_calling_params_t get_cross_contract_calling_params() const {
-            return cross_contract_calling_params;
+        const inter_contract_calling_params_t get_inter_contract_calling_params() const {
+            return inter_contract_calling_params;
         }
 
       private:
@@ -58,8 +58,8 @@ namespace graphene { namespace chain {
       private:
         database*                              _db;
         uint64_t                               trx_origin;
-        uint64_t                               cross_contract_calling_count = 0;
-        const cross_contract_calling_params_t  &cross_contract_calling_params;
+        uint64_t                               inter_contract_calling_count = 0;
+        const inter_contract_calling_params_t  &inter_contract_calling_params;
         std::map<uint64_t, int64_t>            ram_statistics;
 
         mutable fc::time_point                 start;

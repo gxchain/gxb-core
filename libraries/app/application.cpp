@@ -414,6 +414,10 @@ namespace detail {
              _chain_db->set_rpc_mock_calc_fee(true);
          }
 
+         if (_options->count("state-snapshots-dir")) {
+             _chain_db->set_snapshot_dir(_options->at("state-snapshots-dir").as<string>());
+         }
+
          if (_options->count("api-access")) {
              if (fc::exists(_options->at("api-access").as<boost::filesystem::path>())) {
                  _apiaccess = fc::json::from_file(_options->at("api-access").as<boost::filesystem::path>()).as<api_access>(20);
@@ -957,6 +961,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("version,v", "Display version information")
          ("contracts-console", "print contract's output to console")
          ("rpc-mock-calc-fee", "rec-server mock caculate required fees, default fasle")
+         ("state-snapshots-dir", bpo::value<string>(), "the location of the state snapshots directory")
 		 ("truncate,x", bpo::value<string>()->composing(), "truncate db file by block_number")
          ;
    command_line_options.add(_cli_options);

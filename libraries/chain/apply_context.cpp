@@ -54,14 +54,14 @@ void apply_context::exec_one()
    }
    reset_console();
    auto end = fc::time_point::now();
-   dlog("[(${a},${n})->${r}] elapsed ${n}", ("a", act.contract_id)("n", std::string(act.method_name))("r", receiver)("n", end - start));
+   dlog("[(${a},${n})->${r}] elapsed ${e}", ("a", act.contract_id)("n", std::string(act.method_name))("r", receiver)("e", end - start));
 }
 
 void apply_context::exec()
 {
     // adjust balance
     if (amount.valid()) {
-        // amount always > 0
+        // amount always >= 0
         auto amnt = *amount;
         db().adjust_balance(account_id_type(act.sender), -amnt);
         db().adjust_balance(account_id_type(act.contract_id), amnt);
@@ -93,12 +93,6 @@ void apply_context::reset_console()
 
 void apply_context::execute_inline(action &&a)
 {
-    // check action contract code
-    const account_object& contract_obj = account_id_type(a.contract_id)(db());
-    FC_ASSERT(contract_obj.code.size() > 0, "inline action's code account ${account} does not exist", ("account", a.contract_id));
-
-    // check action amount, should always >= 0
-    FC_ASSERT(a.amount.amount >= 0, "action amount ${m}, should always >= 0", ("m", a.amount.amount));
     _inline_actions.emplace_back(move(a));
 }
 
@@ -117,7 +111,7 @@ void apply_context::check_payer_permission(account_name& payer)
 int apply_context::db_store_i64(uint64_t scope, uint64_t table, account_name payer, uint64_t id, const char *buffer, size_t buffer_size)
 {
     check_payer_permission(payer);
-	return db_store_i64(receiver, scope, table, payer, id, buffer, buffer_size);
+    return db_store_i64(receiver, scope, table, payer, id, buffer, buffer_size);
 }
 
 int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, account_name payer, uint64_t id, const char *buffer, size_t buffer_size)
@@ -139,6 +133,9 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, a
     int64_t ram_delta = (int64_t)(buffer_size + config::billable_size_v<key_value_object>);
     if(_db->head_block_time() > HARDFORK_1016_TIME) {
         trx_context.update_ram_statistics(payer, ram_delta);
+        _db->modify(tab, [&](table_id_object& t) {
+          ++t.count;
+        });
     } else {
         update_ram_usage(ram_delta);
     }
@@ -193,6 +190,13 @@ void apply_context::db_remove_i64(int iterator)
     int64_t ram_delta = -(int64_t)(obj.value.size() + config::billable_size_v<key_value_object>);
     if(_db->head_block_time() > HARDFORK_1016_TIME) {
         trx_context.update_ram_statistics(obj.payer, ram_delta);
+
+        _db->modify(table_obj, [&](table_id_object& t) {
+           --t.count;
+        });
+        if (table_obj.count == 0) {
+           remove_table(table_obj);
+        }
     } else {
         update_ram_usage(ram_delta);
     }
@@ -349,6 +353,7 @@ const table_id_object &apply_context::find_or_create_table(uint64_t code, name s
 
 void apply_context::remove_table(const table_id_object &tid)
 {
+    trx_context.update_ram_statistics(tid.payer, -config::billable_size_v<table_id_object>);
     _db->remove(tid);
 }
 

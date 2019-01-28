@@ -138,11 +138,10 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
     if (op.amount.valid()) {
         // check method_name, must be payable
         FC_ASSERT(iter->payable, "method_name ${m} not payable", ("m", op.method_name));
-    }
 
-    // check balance
-    if (op.amount.valid()) {
+        // amount must > 0
         FC_ASSERT(op.amount->amount > 0, "amount must > 0");
+
         // check balance
         const asset_object &asset_type = op.amount->asset_id(d);
         bool sufficient_balance = d.get_balance(op.account(d), asset_type).amount >= op.amount->amount;
@@ -161,11 +160,13 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
         }
     }
 
-    // ram-account must exists
-    const auto &account_idx = d.get_index_type<account_index>().indices().get<by_name>();
-    const auto &account_itr = account_idx.find("ram-account");
-    FC_ASSERT(account_itr != account_idx.end(), "ram-account not exist");
-    ram_account_id = account_itr->id;
+    if (d.head_block_time() > HARDFORK_1016_TIME) {
+        // ram-account must exists
+        const auto &account_idx = d.get_index_type<account_index>().indices().get<by_name>();
+        const auto &account_itr = account_idx.find("ram-account");
+        FC_ASSERT(account_itr != account_idx.end(), "ram-account not exist");
+        ram_account_id = account_itr->id;
+    }
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
@@ -220,9 +221,6 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
             r.account = account_id_type(ram.first);
             r.ram_bytes = ram.second;
 
-            if(0 == r.ram_bytes)
-                continue;
-
             // charge and set ram_fee
             charge_ram_fee_by_account(r, d, op);
             receipt.ram_receipts.push_back(r);
@@ -239,7 +237,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
         share_type fee_core = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
 
         // convert fee_core to fee_uia
-        asset fee_uia = d.from_core_asset(asset{fee_core, asset_id_type(1)}, op.fee.asset_id);
+        asset fee_uia = d.from_core_asset(asset{fee_core, d.current_core_asset_id()}, op.fee.asset_id);
 
         generic_evaluator::prepare_fee(op.fee_payer(), fee_uia, op);
         generic_evaluator::convert_fee();
@@ -294,6 +292,11 @@ void contract_call_evaluator::charge_base_fee(database &db, const contract_call_
 
 void contract_call_evaluator::charge_ram_fee_by_account(account_receipt &r, database &db, const contract_call_operation &op)
 {
+    if(0 == r.ram_bytes) {
+        r.ram_fee = asset{0, op.fee.asset_id};
+        return;
+    }
+
     int64_t ram_fee_core = ceil(1.0 * r.ram_bytes * fee_param.price_per_kbyte_ram / 1024);
     //make sure ram-account have enough GXC to refund
     if (ram_fee_core < 0) {

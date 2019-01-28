@@ -151,7 +151,10 @@ bool database::_push_block(const signed_block& new_block)
 
             // pop blocks until we hit the forked block
             while( head_block_id() != branches.second.back()->data.previous )
-               pop_block();
+            {
+                ilog( "popping block #${n} ${id}", ("n",head_block_num())("id",head_block_id()) );
+                pop_block();
+            }
 
             // push all blocks on the new fork
             for( auto ritr = branches.first.rbegin(); ritr != branches.first.rend(); ++ritr )

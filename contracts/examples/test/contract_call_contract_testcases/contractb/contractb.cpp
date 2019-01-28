@@ -14,6 +14,7 @@ class contractb : public contract
   public:
     contractb(uint64_t uname)
         : contract(uname)
+        , tbs(_self, _self)
     {
     }
 
@@ -43,7 +44,6 @@ class contractb : public contract
     }
 
     // @abi action
-    // @abi payable
     void senderpass(const std::string &ccca, const std::string &cccb, const std::string &cccc, uint64_t cnt) {
         uint64_t sender = get_trx_sender();
         int64_t accountc_id = get_account_id(ccca.c_str(), ccca.length());
@@ -88,6 +88,64 @@ class contractb : public contract
     void minustrans(const std::string &cccb)
     {
     }
+
+    // @abi action
+    // @abi payable
+    void ramadd(const std::string &ccca, const std::string &cccb, const std::string &cccc, bool aadd, bool badd, bool cadd)
+    {
+        if(badd)
+            tbs.emplace(0, [this](auto &o) {
+                o.owner = tbs.available_primary_key();
+            });
+
+        ram_params_t params{ccca, cccb, cccc, aadd, badd, cadd};
+        action act(cccc, N(ramadd), std::move(params), _self);
+        act.send();
+    }
+
+    // @abi action
+    // @abi payable
+    void ramdel(const std::string &ccca, const std::string &cccb, const std::string &cccc, bool adel, bool bdel, bool cdel, uint64_t pk)
+    {
+        if(bdel) {
+            const auto &i =tbs.find(pk);
+            if(i != tbs.end())
+                tbs.erase(*i);
+        }
+
+        ram_params_t params{ccca, cccb, cccc, adel, bdel, cdel, pk};
+        action act(cccc, N(ramdel), std::move(params), _self);
+        act.send();
+    }
+
+    // @abi action
+    // @abi payable
+    void ramdelall(const std::string &ccca, const std::string &cccb, const std::string &cccc)
+    {
+        for(auto itor = tbs.begin(); itor!=tbs.end();){
+            itor = tbs.erase(itor);
+        }
+
+        action act(cccc, N(ramdelall), std::move(""), _self);
+        act.send();
+    }
+
+    // @abi action
+    void transfer(const std::string &ccca, const std::string &cccb, const std::string &cccc)
+    {
+    }
+
+  private:
+    //@abi table tb i64
+    struct tb {
+        uint64_t owner;
+        uint64_t primary_key() const { return owner; }
+        GRAPHENE_SERIALIZE(tb, (owner))
+    };
+
+    typedef graphene::multi_index<N(tb), tb> tb_index;
+
+    tb_index tbs;
 };
 
-GRAPHENE_ABI(contractb, (common)(circle)(senderpass)(senderfail)(receiverpass)(originpass)(minustrans))
+GRAPHENE_ABI(contractb, (common)(circle)(senderpass)(senderfail)(receiverpass)(originpass)(minustrans)(ramadd)(ramdel)(ramdelall)(transfer))

@@ -116,6 +116,9 @@ namespace graphene { namespace chain {
          void wipe(const fc::path& data_dir, bool include_blocks);
          void close(bool rewind = true);
 
+         // flush snapshot object_database
+         void flush(const fc::string& data_dir, const fc::string& block_id);
+
          //////////////////// db_block.cpp ////////////////////
 
          /**
@@ -275,7 +278,7 @@ namespace graphene { namespace chain {
          const data_transaction_commission_percent_t          get_commission_percent() const;
          const vm_cpu_limit_t                   get_cpu_limit() const;
          const trust_node_pledge_t              get_trust_node_pledge() const;
-         const cross_contract_calling_params_t& get_cross_contract_calling_params() const;
+         const inter_contract_calling_params_t& get_inter_contract_calling_params() const;
 
          const bool                             get_contract_log_to_console() const { return contract_log_to_console; }
          void                                   set_contract_log_to_console(bool log_switch) { contract_log_to_console = log_switch; }
@@ -490,7 +493,7 @@ namespace graphene { namespace chain {
          flat_map<uint32_t,block_id_type>  _checkpoints;
 
          // max transaction cpu time, configured by config.ini
-         uint32_t                          _max_trx_cpu_time;
+         uint32_t                          _max_trx_cpu_time = 10000;
 
          node_property_object              _node_property_object;
 
@@ -504,6 +507,14 @@ namespace graphene { namespace chain {
          bool                              _opened = false;
          bool                              contract_log_to_console = false;
          bool                              rpc_mock_calc_fee = false;
+
+         // for state snapshot
+        public:
+           void           set_snapshot_dir(const fc::string& data_dir) { snapshot_dir = data_dir; }
+           fc::string     get_snapshot_dir() const { return snapshot_dir; }
+
+        private:
+           fc::string                        snapshot_dir;
    };
 
    namespace detail

@@ -131,9 +131,10 @@ namespace graphene { namespace chain {
        int64_t amount = GRAPHENE_BLOCKCHAIN_PRECISION * 10000;// 10000 GXC (asset 1.3.1)
    };
 
-   struct cross_contract_calling_params_t {
+   struct inter_contract_calling_params_t {
        uint8_t max_inter_contract_depth = 3;
        uint32_t contract_basic_fee_vesting_period_seconds = 259200;
+       uint32_t max_inline_action_size = 1024*64;
    };
 
    struct operation_ext_copyright_hash_t {
@@ -522,6 +523,14 @@ namespace graphene { namespace chain {
       friend bool operator == ( const extended_private_key_type& p1, const extended_private_key_type& p2);
       friend bool operator != ( const extended_private_key_type& p1, const extended_private_key_type& p2);
    };
+
+   struct state_snapshot_result
+   {
+        uint32_t            head_block_num = 0;
+        block_id_type       head_block_id;
+        string              snapshot_dir;
+   };
+
 } }  // graphene::chain
 
 namespace fc
@@ -540,6 +549,8 @@ FC_REFLECT( graphene::chain::extended_public_key_type, (key_data) )
 FC_REFLECT( graphene::chain::extended_public_key_type::binary_key, (check)(data) )
 FC_REFLECT( graphene::chain::extended_private_key_type, (key_data) )
 FC_REFLECT( graphene::chain::extended_private_key_type::binary_key, (check)(data) )
+FC_REFLECT( graphene::chain::state_snapshot_result, (head_block_num)(head_block_id)(snapshot_dir) )
+
 
 FC_REFLECT_ENUM( graphene::chain::data_market_type_enum,
                  (free_data_market)
@@ -670,7 +681,7 @@ FC_REFLECT(graphene::chain::lock_balance_params_t, (params))
 FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
 FC_REFLECT(graphene::chain::asset_symbol_t, (symbol))
 FC_REFLECT(graphene::chain::trust_node_pledge_t, (amount))
-FC_REFLECT(graphene::chain::cross_contract_calling_params_t, (max_inter_contract_depth)(contract_basic_fee_vesting_period_seconds))
+FC_REFLECT(graphene::chain::inter_contract_calling_params_t, (max_inter_contract_depth)(contract_basic_fee_vesting_period_seconds)(max_inline_action_size))
 
 
 FC_REFLECT_ENUM(graphene::chain::asset_issuer_permission_flags,

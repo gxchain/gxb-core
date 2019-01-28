@@ -112,6 +112,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<vector<account_id_type>> get_key_references( vector<public_key_type> key )const;
      bool is_public_key_registered(string public_key) const;
 
+      state_snapshot_result create_snapshot() const;
+
       // Accounts
       vector<optional<account_object>> get_accounts(const vector<account_id_type>& account_ids)const;
       std::map<string,full_account> get_full_accounts( const vector<string>& names_or_ids, bool subscribe );

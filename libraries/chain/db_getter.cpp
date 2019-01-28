@@ -82,17 +82,17 @@ const trust_node_pledge_t database::get_trust_node_pledge() const
 	return trust_node_pledge_t();
 }
 
-const cross_contract_calling_params_t& database::get_cross_contract_calling_params() const
+const inter_contract_calling_params_t& database::get_inter_contract_calling_params() const
 {
     const chain_parameters& params = get_global_properties().parameters;
     for (auto& ext : params.extensions) {
-        if (ext.which() == future_extensions::tag<cross_contract_calling_params_t>::value) {
-            return ext.get<cross_contract_calling_params_t>();
+        if (ext.which() == future_extensions::tag<inter_contract_calling_params_t>::value) {
+            return ext.get<inter_contract_calling_params_t>();
         }
     }
 
     // return default value
-    static cross_contract_calling_params_t default_params;
+    static inter_contract_calling_params_t default_params;
     return default_params;
 }
 
