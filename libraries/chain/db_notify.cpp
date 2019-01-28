@@ -26,6 +26,12 @@ struct get_impacted_account_visitor
       _impacted.insert( op.to );
    }
 
+   void operator()(const inline_transfer_operation &op)
+   {
+       _impacted.insert(op.from);
+       _impacted.insert(op.to);
+   }
+
    void operator()( const asset_claim_fees_operation& op ){}
    void operator()( const limit_order_create_operation& op ) {}
    void operator()( const limit_order_cancel_operation& op ) {}
