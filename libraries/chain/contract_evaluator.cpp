@@ -160,11 +160,13 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
         }
     }
 
-    // ram-account must exists
-    const auto &account_idx = d.get_index_type<account_index>().indices().get<by_name>();
-    const auto &account_itr = account_idx.find("ram-account");
-    FC_ASSERT(account_itr != account_idx.end(), "ram-account not exist");
-    ram_account_id = account_itr->id;
+    if (d.head_block_time() > HARDFORK_1016_TIME) {
+        // ram-account must exists
+        const auto &account_idx = d.get_index_type<account_index>().indices().get<by_name>();
+        const auto &account_itr = account_idx.find("ram-account");
+        FC_ASSERT(account_itr != account_idx.end(), "ram-account not exist");
+        ram_account_id = account_itr->id;
+    }
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op)) }
@@ -235,7 +237,7 @@ operation_result contract_call_evaluator::do_apply(const contract_call_operation
         share_type fee_core = fee_param.fee + ram_fee.to_uint64() + cpu_fee.to_uint64();
 
         // convert fee_core to fee_uia
-        asset fee_uia = d.from_core_asset(asset{fee_core, asset_id_type(1)}, op.fee.asset_id);
+        asset fee_uia = d.from_core_asset(asset{fee_core, d.current_core_asset_id()}, op.fee.asset_id);
 
         generic_evaluator::prepare_fee(op.fee_payer(), fee_uia, op);
         generic_evaluator::convert_fee();
