@@ -482,6 +482,7 @@ uint32_t database::push_applied_action( const operation& op )
    actobj.receiver        = op.get<contract_call_operation>().contract_id;
    actobj.txid            = get_cur_trx()->id();
    _applied_acts.emplace_back(actobj);
+   _action_trace = &(_applied_acts.back()->inline_traces);
    return _applied_acts.size() - 1;
 }
 void database::set_applied_operation_result( uint32_t op_id, const operation_result& result )
@@ -719,7 +720,7 @@ operation_result database::apply_operation(transaction_evaluation_state& eval_st
    }
    auto result = eval->evaluate(eval_state, op, true, billed_cpu_time_us);
    set_applied_operation_result( op_id, result );
-   
+
    if(u_which == operation::tag< contract_call_operation >::value){
       set_applied_action_result (act_id,result ); 
    }

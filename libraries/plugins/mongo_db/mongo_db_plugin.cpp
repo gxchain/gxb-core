@@ -127,9 +127,9 @@ namespace detail {
             return;
         else{
             for(auto & act_tra: inline_traces){
-                if(std::find(collect_accs.begin(),collect_accs.end(),act_tra.sender)!=collect_accs.end())
+                if(std::find(collect_accs.begin(),collect_accs.end(),act_tra.sender)==collect_accs.end())
                     collect_accs.push_back(act_tra.sender);
-                if(std::find(collect_accs.begin(),collect_accs.end(),act_tra.receiver)!=collect_accs.end())
+                if(std::find(collect_accs.begin(),collect_accs.end(),act_tra.receiver)==collect_accs.end())
                     collect_accs.push_back(act_tra.receiver);
                 collect_inline_action_account(act_tra.inline_traces,collect_accs);
             }
