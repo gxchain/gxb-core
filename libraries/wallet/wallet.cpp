@@ -101,6 +101,7 @@
        std::string operator()(const void_result& x) const;
        std::string operator()(const object_id_type& oid);
        std::string operator()(const asset& a);
+       std::string operator()(const contract_receipt_old& r);
        std::string operator()(const contract_receipt& r);
     };
 
@@ -946,6 +947,25 @@
        {
           _builder_transactions.erase(handle);
        }
+       get_table_rows_result get_table_rows_ex(string contract, string table, const get_table_rows_params &params)
+       {
+           try {
+               FC_ASSERT(params.lower_bound >= 0 && params.limit > 0, "lower_bound must >=0 and limit must > 0");
+               account_object contract_obj = get_account(contract);
+
+               const auto &tables = contract_obj.abi.tables;
+               auto iter = std::find_if(tables.begin(), tables.end(),
+                                        [&](const table_def &t) { return t.name == table; });
+
+               if (iter != tables.end()) {
+                   return _remote_db->get_table_rows_ex(contract, table, params);
+               } else {
+                   FC_ASSERT(false, "No table found for ${contract}", ("contract", contract));
+               }
+               return get_table_rows_result();
+           }
+           FC_CAPTURE_AND_RETHROW((contract)(table))
+       }
 
        get_table_rows_result get_table_rows(string contract, string table, uint64_t start, uint64_t limit)
        { try {
@@ -1132,10 +1152,17 @@
              auto action_type = abis.get_action_type(method);
              GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
              contract_call_op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
+             contract_call_op.fee = asset{0, asset_id_type(1)};
 
              signed_transaction tx;
              tx.operations.push_back(contract_call_op);
-             set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+             vector<fc::variant> fees = _remote_db->get_required_fees(tx.operations, fee_asset_obj->id);
+             asset fee;
+             fc::from_variant(fees[0], fee, GRAPHENE_MAX_NESTED_OBJECTS);
+             contract_call_op.fee = fee;
+
+             tx.operations.clear();
+             tx.operations.push_back(contract_call_op);
              tx.validate();
 
              return sign_transaction(tx, broadcast);
@@ -2341,7 +2368,6 @@
           asset_object fee_asset_obj = get_asset(fee_asset_symbol);
           witness_object witness = get_witness(witness_name);
           account_object witness_account = get_account( witness.witness_account );
-          fc::ecc::private_key active_private_key = get_private_key_for_account(witness_account);
 
           witness_update_operation witness_update_op;
           witness_update_op.witness = witness.id;
@@ -3175,7 +3201,6 @@
           proposal_create_operation prop_op;
 
           prop_op.expiration_time = expiration_time;
-          prop_op.review_period_seconds = current_params.committee_proposal_review_period;
           prop_op.fee_paying_account = get_account(proposing_account).id;
 
           prop_op.proposed_ops.emplace_back(update_op);
@@ -3306,7 +3331,6 @@
           proposal_create_operation prop_op;
 
           prop_op.expiration_time = expiration_time;
-          prop_op.review_period_seconds = current_params.committee_proposal_review_period;
           prop_op.fee_paying_account = get_account(proposing_account).id;
 
           prop_op.proposed_ops.emplace_back(update_op);
@@ -3866,6 +3890,11 @@
     std::string operation_result_printer::operator()(const asset& a)
     {
        return _wallet.get_asset(a.asset_id).amount_to_pretty_string(a);
+    }
+
+    std::string operation_result_printer::operator()(const contract_receipt_old& r)
+    {
+       return std::string(r);
     }
 
     std::string operation_result_printer::operator()(const contract_receipt& r)
@@ -4638,7 +4667,7 @@
     }
     
     signed_transaction wallet_api::update_contract(string contract,
-                                                  string new_owner,
+                                                  optional<string> new_owner,
                                                   string contract_dir,
                                                   string fee_asset_symbol,
                                                   bool broadcast)
@@ -4661,7 +4690,10 @@
     {
         return my->get_contract_tables(contract);
     }
-
+    get_table_rows_result wallet_api::get_table_rows_ex(string contract, string table, const get_table_rows_params &params) const
+    {
+        return my->get_table_rows_ex(contract, table, params);
+    }
     get_table_rows_result wallet_api::get_table_rows(string contract, string table, uint64_t start, uint64_t limit) const
     {
         return my->get_table_rows(contract, table, start, limit);

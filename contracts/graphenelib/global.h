@@ -10,9 +10,9 @@ extern "C" {
     // return head block time
     int64_t get_head_block_time();
     // return trx sender
-    int64_t get_trx_sender();
+    uint64_t get_trx_sender();
     // return original trx sender
-    int64_t get_trx_origin();
+    uint64_t get_trx_origin();
     // get account_id by name, return  -1 if name not exists, return account_id if succeed
     int64_t get_account_id(const char *data, uint32_t length);
     // get asset_id by name, return -1 if asset not exists, return asset id if succeeed

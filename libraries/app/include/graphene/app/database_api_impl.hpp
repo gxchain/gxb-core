@@ -79,6 +79,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Objects
       fc::variants get_objects(const vector<object_id_type>& ids)const;
+      get_table_rows_result get_table_rows_ex(string contract, string table, const get_table_rows_params &params) const;
       get_table_rows_result get_table_rows(string contract, string table, uint64_t start, uint64_t limit=10) const;
       fc::variants get_table_objects(uint64_t code, uint64_t scope, uint64_t table, uint64_t lower, uint64_t uppper, uint64_t limit=10) const;
       bytes serialize_contract_call_args(string contract, string method, string json_args) const;
@@ -110,6 +111,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Keys
       vector<vector<account_id_type>> get_key_references( vector<public_key_type> key )const;
      bool is_public_key_registered(string public_key) const;
+
+      state_snapshot_result create_snapshot() const;
 
       // Accounts
       vector<optional<account_object>> get_accounts(const vector<account_id_type>& account_ids)const;

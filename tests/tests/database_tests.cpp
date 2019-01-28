@@ -114,13 +114,14 @@ BOOST_AUTO_TEST_CASE(failed_modify_test)
 BOOST_AUTO_TEST_CASE( db_store_i64_undo )
 {
    try {
-      database db;
       auto ses = db._undo_db.start_undo_session();
       auto cpu_param = vm_cpu_limit_t();
 
       const contract_call_operation op;
+      bytes args;
+      action a{account_id_type().instance.value, account_id_type().instance.value, N(hi), args};
       transaction_context trx_context(db, account_id_type().instance, fc::microseconds(cpu_param.trx_cpu_limit));
-      apply_context ctx{db, trx_context, {account_id_type(), N(hi), {}}, optional<asset>()};
+      apply_context ctx{db, trx_context, a};
       auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
 
       ses.undo();
@@ -141,13 +142,14 @@ BOOST_AUTO_TEST_CASE( db_store_i64_undo )
 BOOST_AUTO_TEST_CASE( db_store_i64_commit )
 {
    try {
-      database db;
       auto ses = db._undo_db.start_undo_session();
       auto cpu_param = vm_cpu_limit_t();
 
       const contract_call_operation op;
       transaction_context trx_context(db, account_id_type().instance, fc::microseconds(cpu_param.trx_cpu_limit));
-      apply_context ctx{db, trx_context, {account_id_type(), N(hi), {}}, optional<asset>()};
+      bytes args;
+      action a{account_id_type().instance.value, account_id_type().instance.value, N(hi), args};
+      apply_context ctx{db, trx_context, a};
       auto i = ctx.db_store_i64(1,1,name("good"), 1, "good", 4);
 
       ses.commit();

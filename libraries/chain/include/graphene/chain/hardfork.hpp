@@ -57,7 +57,7 @@
 
 // enable smart contract update
 #ifndef HARDFORK_1009_TIME
-#define HARDFORK_1009_TIME (fc::time_point_sec( 1541030400 )) // for test, 2018-11-01T00:00:00
+#define HARDFORK_1009_TIME (fc::time_point_sec( 1548720000 )) // for devnet, 2019-01-29T00:00:00(UTC)
 #endif
 
 // set min witness num 21
@@ -75,9 +75,37 @@
 #define HARDFORK_1012_TIME (fc::time_point_sec( 1544407200 )) // for devnet, 2018-12-10T00:00:00
 #endif
 
+// call_contract fix fee calculation
+#ifndef HARDFORK_1013_TIME
+// should be updated before next release, should be removed after next release
+#define HARDFORK_1013_TIME (fc::time_point_sec( 1548720000 )) // for devnet, 2019-01-29T00:00:00(UTC)
+#endif
+
+// can transfer to contract account
+#ifndef HARDFORK_1014_TIME
+// should be updated before next release
+#define HARDFORK_1014_TIME (fc::time_point_sec( 1545436800 )) // for test, 2018-12-22T00:00:00(UTC)
+#endif
+
+#ifndef HARDFORK_1015_TIME
+// disable udpate_contract for normal account
+#define HARDFORK_1015_TIME (fc::time_point_sec( 1548720000 )) // for devnet, 2019-01-29T00:00:00(UTC)
+#endif
+
 // enable witness guaranty
 #ifndef HARDFORK_1129_TIME
-#define HARDFORK_1129_TIME (fc::time_point_sec( 1542099600 )) // for test, 2018-11-13T09:00:00(UTC)
+#define HARDFORK_1129_TIME (fc::time_point_sec( 1548720000 )) // for devnet, 2019-01-29T00:00:00(UTC)
+#endif
+
+// #1103 the time point before you can renaming asset symbol
+// UTC 2018-11-30 00:00:00
+#ifndef HARDFORK_1103_TIME
+#define HARDFORK_1103_TIME (fc::time_point_sec( 1543507200 ))
+#endif
+
+#ifndef HARDFORK_1016_TIME
+// disable udpate_contract for normal account
+#define HARDFORK_1016_TIME (fc::time_point_sec( 1548720000 )) // for devnet, 2019-01-29T00:00:00(UTC)
 #endif
 
 // #413 Add operation to claim asset fees

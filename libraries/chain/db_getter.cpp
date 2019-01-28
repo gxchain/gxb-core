@@ -82,6 +82,20 @@ const trust_node_pledge_t database::get_trust_node_pledge() const
 	return trust_node_pledge_t();
 }
 
+const inter_contract_calling_params_t& database::get_inter_contract_calling_params() const
+{
+    const chain_parameters& params = get_global_properties().parameters;
+    for (auto& ext : params.extensions) {
+        if (ext.which() == future_extensions::tag<inter_contract_calling_params_t>::value) {
+            return ext.get<inter_contract_calling_params_t>();
+        }
+    }
+
+    // return default value
+    static inter_contract_calling_params_t default_params;
+    return default_params;
+}
+
 const chain_property_object& database::get_chain_properties()const
 {
    return get( chain_property_id_type() );
@@ -135,6 +149,36 @@ node_property_object& database::node_properties()
 uint32_t database::last_non_undoable_block_num() const
 {
    return head_block_num() - (_undo_db.size() - _undo_db.active_sessions());
+}
+
+asset_id_type database::current_core_asset_id()
+{
+    asset_id_type core_asset_id = asset_id_type();
+    if (head_block_time() > HARDFORK_1008_TIME)
+    {
+        core_asset_id = asset_id_type(1);
+    }
+    return core_asset_id;
+}
+
+asset database::from_core_asset(const asset &a, const asset_id_type &id)
+{
+    asset_id_type core_asset_id = current_core_asset_id();
+    FC_ASSERT(a.asset_id == core_asset_id, "asset is not core_asset");
+
+    if(id == core_asset_id) {
+        return a;
+    }
+
+    const auto &pr = get<asset_object>(id).options.core_exchange_rate;
+    if (head_block_time() > HARDFORK_1013_TIME)
+    {
+        return asset(a.amount * pr.quote.amount / pr.base.amount, id);
+    }
+    else
+    {
+        return asset(a.amount / uint64_t(pr.to_real()), id);
+    }
 }
 
 
