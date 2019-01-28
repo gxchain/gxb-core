@@ -52,15 +52,15 @@ database& generic_evaluator::db()const { return trx_state->db(); }
 
    void generic_evaluator::prepare_fee(account_id_type account_id, asset fee, const operation& o)
    {
-      if (trx_state->skip_fee) {
-          return;
-      }
-
       const database& d = db();
       fee_from_account = fee;
       FC_ASSERT( fee.amount >= 0 );
       fee_paying_account = &account_id(d);
       fee_paying_account_statistics = &fee_paying_account->statistics(d);
+
+      if (trx_state->skip_fee) {
+          return;
+      }
 
       fee_asset = &fee.asset_id(d);
       fee_asset_dyn_data = &fee_asset->dynamic_asset_data_id(d);

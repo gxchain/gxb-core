@@ -340,24 +340,24 @@
     }
   ],
   "initial_assets": [{
-      "accumulated_fees": 0,
-      "collateral_records": [],
-      "description": "asset NULL",
-      "is_bitasset": false,
-      "issuer_name": "nathan",
-      "max_supply": 100000000000000,
-      "precision": 5,
-      "symbol": "NULL"
-  }, {
-  "accumulated_fees": 0,
-  "collateral_records": [],
-  "description": "asset GXC",
-  "is_bitasset": false,
-  "issuer_name": "nathan",
-  "max_supply": 100000000000000,
-  "precision": 5,
-  "symbol": "GXC"
-  }
+          "accumulated_fees": 0,
+          "collateral_records": [],
+          "description": "asset NLL",
+          "is_bitasset": false,
+          "issuer_name": "nathan",
+          "max_supply": 100000000000000,
+          "precision": 5,
+          "symbol": "NLL"
+      }, {
+          "accumulated_fees": 0,
+          "collateral_records": [],
+          "description": "asset GXC",
+          "is_bitasset": false,
+          "issuer_name": "nathan",
+          "max_supply": 100000000000000,
+          "precision": 5,
+          "symbol": "GXC"
+      }
   ],
   "initial_balances": [{
       "owner": "GXCFAbAx7yuxt725qSZvfwWqkdCwp9ZnUama",
