@@ -169,7 +169,7 @@ class global_api : public context_aware_api
     uint64_t get_trx_sender()
     {
         // get op payer
-        return context.trx_context.get_trx_origin();
+        return context.sender;
     }
 
     // get origin of trx
@@ -1065,12 +1065,37 @@ class transaction_api : public context_aware_api {
    public:
       using context_aware_api::context_aware_api;
 
-      void send_inline( array_ptr<char> data, size_t data_len ) {
-         //TODO
+      void send_inline(array_ptr<char> data, size_t data_len) {
+         FC_ASSERT(context._db->head_block_time() > HARDFORK_1016_TIME,
+                 "cross-contract calling can not serve before timestamp:${t}", ("t", HARDFORK_1016_TIME));//TODO can be removed when release after time HARDFORK_1016_TIME
+
+         uint32_t max_inline_action_size = context.trx_context.get_inter_contract_calling_params().max_inline_action_size;
+         FC_ASSERT(data_len <= max_inline_action_size, "inline action too big, max size=${s} bytes", ("s", max_inline_action_size));
+
+         context.trx_context.check_inter_contract_depth();
 
          action act;
-         fc::raw::unpack<action>(data, data_len, act, 5);
-         idump((act));
+         fc::raw::unpack<action>(data, data_len, act, 20);
+
+         // check action sender
+         FC_ASSERT(act.sender == context.receiver,
+                 "the sender must be current contract, actually act.sender=${s}, current receiver=${r}", ("s", act.sender)("r", context.receiver));
+         // check amount
+         FC_ASSERT(act.amount.amount >=0, "action amount must >= 0, actual amount: ${a}", ("a", act.amount.amount));
+
+         // check action contract code
+         const account_object& contract_obj = account_id_type(act.contract_id)(*context._db);
+         FC_ASSERT(contract_obj.code.size() > 0, "inline action's code account ${account} does not exist", ("account", act.contract_id));
+
+         // check method_name, must be payable
+         const auto &actions = contract_obj.abi.actions;
+         auto iter = std::find_if(actions.begin(), actions.end(),
+                 [&](const action_def &act_def) { return act_def.name == act.method_name; });
+         FC_ASSERT(iter != actions.end(), "method_name ${m} not found in abi", ("m", act.method_name));
+         if (act.amount.amount > 0) {
+             FC_ASSERT(iter->payable, "method_name ${m} not payable", ("m", act.method_name));
+         }
+
          context.execute_inline(std::move(act));
       }
 };

@@ -14,10 +14,11 @@ class contractb : public contract
     {
     }
 
-    /// @abi action
+    // @abi action
+    // @abi payable
     void hi()
     {
-        printf("hi");
+        print("hi i'm contractb\n");
     }
 };
 

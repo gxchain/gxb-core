@@ -1503,14 +1503,20 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
            tx.operations.push_back(op.get<contract_call_operation>());
            tx.set_expiration(_db.get_dynamic_global_properties().time + fc::seconds(30));
            processed_transaction ptx = _db.push_transaction(tx, ~0);
-           auto receipt = ptx.operation_results.back().get<contract_receipt>();
 
+           asset op_fee = (_db.head_block_time() > HARDFORK_1016_TIME) ?
+               ptx.operation_results.back().get<contract_receipt>().fee :
+               ptx.operation_results.back().get<contract_receipt_old>().fee;
+
+           if (id != asset_id_type(1)) {
+               op_fee = _db.from_core_asset(op_fee, id);
+           }
            fc::variant r;
-           fc::to_variant(receipt.fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
+           fc::to_variant(op_fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
            result.push_back(r);
        } else {
            result.push_back(helper.set_op_fees(op));
-      }
+       }
    }
 
    return result;
