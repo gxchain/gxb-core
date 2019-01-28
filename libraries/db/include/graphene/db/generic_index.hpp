@@ -59,6 +59,7 @@ namespace graphene { namespace chain {
             ObjectType item;
             item.id = get_next_id();
             constructor( item );
+            idump((item));
             auto insert_result = _indices.insert( std::move(item) );
             FC_ASSERT(insert_result.second, "Could not create object! Most likely a uniqueness constraint is violated.");
             use_next_id();

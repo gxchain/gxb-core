@@ -365,6 +365,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    } inhibitor(*this);
 
    transaction_evaluation_state genesis_eval_state(this);
+   genesis_eval_state.skip_fee = true;
+   genesis_eval_state.skip_fee_schedule_check = true;
 
    flat_index<block_summary_object>& bsi = get_mutable_index_type< flat_index<block_summary_object> >();
    bsi.resize(0xffff+1);
@@ -533,6 +535,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    } );
    create<block_summary_object>([&](block_summary_object&) {});
 
+   ilog("create inital accounts");
    // Create initial accounts
    for( const auto& account : genesis_state.initial_accounts )
    {
@@ -550,6 +553,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          cop.active = authority(1, account.active_key, 1);
          cop.options.memo_key = account.active_key;
       }
+      idump((cop));
       account_id_type account_id(apply_operation(genesis_eval_state, cop).get<object_id_type>());
 
       if( account.is_lifetime_member )
@@ -588,6 +592,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    map<asset_id_type, share_type> total_supplies;
    map<asset_id_type, share_type> total_debts;
 
+   ilog("create initial assets");
    // Create initial assets
    for( const genesis_state_type::initial_asset_type& asset : genesis_state.initial_assets )
    {
@@ -637,24 +642,27 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       dynamic_data_id = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& d) {
          d.accumulated_fees = asset.accumulated_fees;
       }).id;
+      idump((dynamic_data_id));
 
       total_supplies[ new_asset_id ] += asset.accumulated_fees;
 
+      idump((asset.symbol)(asset.description)(asset.precision)(asset.issuer_name)(asset.max_supply));
       create<asset_object>([&](asset_object& a) {
          a.symbol = asset.symbol;
+         idump((a.symbol));
          a.options.description = asset.description;
          a.precision = asset.precision;
          string issuer_name = asset.issuer_name;
          a.issuer = get_account_id(issuer_name);
+         idump((get_account_id(issuer_name)));
          a.options.max_supply = asset.max_supply;
-         a.options.flags = witness_fed_asset;
-         a.options.issuer_permissions = charge_market_fee | override_authority | white_list | transfer_restricted | disable_confidential |
-                                       ( asset.is_bitasset ? disable_force_settle | global_settle | witness_fed_asset | committee_fed_asset : 0 );
+         a.options.issuer_permissions = override_authority | white_list | transfer_restricted | disable_confidential;
          a.dynamic_asset_data_id = dynamic_data_id;
-         a.bitasset_data_id = bitasset_data_id;
       });
+      ilog("create asset finished");
    }
 
+   ilog("create initial balances");
    // Create initial balances
    share_type total_allocation;
    for( const auto& handout : genesis_state.initial_balances )
@@ -668,6 +676,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       total_supplies[ asset_id ] += handout.amount;
    }
 
+   ilog("create initial vesting balances");
    // Create initial vesting balances
    for( const genesis_state_type::initial_vesting_balance_type& vest : genesis_state.initial_vesting_balances )
    {
@@ -738,11 +747,13 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        } );
    }
 
+   ilog("create special witness account");
    // Create special witness account
    const witness_object& wit = create<witness_object>([&](witness_object& w) {});
    FC_ASSERT( wit.id == GRAPHENE_NULL_WITNESS );
    remove(wit);
 
+   ilog("create initial witnesses");
    // Create initial witnesses
    std::for_each(genesis_state.initial_witness_candidates.begin(), genesis_state.initial_witness_candidates.end(),
                  [&](const genesis_state_type::initial_witness_type& witness) {
@@ -752,6 +763,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       apply_operation(genesis_eval_state, op);
    });
 
+   ilog("create initial committee members");
    // Create initial committee members
    std::for_each(genesis_state.initial_committee_candidates.begin(), genesis_state.initial_committee_candidates.end(),
                  [&](const genesis_state_type::initial_committee_member_type& member) {
@@ -773,6 +785,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       p.parameters.current_fees = genesis_state.initial_parameters.current_fees;
    });
 
+   ilog("crearte witness scheduler");
    // Create witness scheduler
    create<witness_schedule_object>([&]( witness_schedule_object& wso )
    {
@@ -780,6 +793,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          wso.current_shuffled_witnesses.push_back( wid );
    });
 
+   ilog("create FBA");
    // Create FBA counters
    create<fba_accumulator_object>([&]( fba_accumulator_object& acc )
    {
