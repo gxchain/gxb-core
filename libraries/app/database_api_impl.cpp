@@ -606,6 +606,30 @@ bool database_api_impl::is_account_registered(string name) const
     return is_known;
 }
 
+state_snapshot_result database_api_impl::create_snapshot() const 
+{
+    state_snapshot_result result;
+
+    ilog("create_snapshot ...");
+    block_id_type block_id = _db.head_block_id();
+    uint32_t  block_num = _db.head_block_num();
+
+    fc::string snapshot_dir = _db.get_snapshot_dir();
+    if (snapshot_dir.empty()) {
+        return result;
+    }
+
+
+    // create snapshot
+    _db.flush(snapshot_dir, block_id.str());
+    fc::string snapshot_filename = "object_database-" + block_id.str();
+
+    result.head_block_num = block_num;
+    result.head_block_id = block_id;
+    result.snapshot_dir = snapshot_dir + "/" + snapshot_filename;
+    return result;
+}
+
 vector<optional<account_object>> database_api_impl::get_accounts(const vector<account_id_type>& account_ids)const
 {
    vector<optional<account_object>> result; result.reserve(account_ids.size());
@@ -1479,14 +1503,20 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
            tx.operations.push_back(op.get<contract_call_operation>());
            tx.set_expiration(_db.get_dynamic_global_properties().time + fc::seconds(30));
            processed_transaction ptx = _db.push_transaction(tx, ~0);
-           auto receipt = ptx.operation_results.back().get<contract_receipt>();
 
+           asset op_fee = (_db.head_block_time() > HARDFORK_1016_TIME) ?
+               ptx.operation_results.back().get<contract_receipt>().fee :
+               ptx.operation_results.back().get<contract_receipt_old>().fee;
+
+           if (id != asset_id_type(1)) {
+               op_fee = _db.from_core_asset(op_fee, id);
+           }
            fc::variant r;
-           fc::to_variant(receipt.fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
+           fc::to_variant(op_fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
            result.push_back(r);
        } else {
            result.push_back(helper.set_op_fees(op));
-      }
+       }
    }
 
    return result;

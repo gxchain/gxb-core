@@ -101,6 +101,7 @@
        std::string operator()(const void_result& x) const;
        std::string operator()(const object_id_type& oid);
        std::string operator()(const asset& a);
+       std::string operator()(const contract_receipt_old& r);
        std::string operator()(const contract_receipt& r);
     };
 
@@ -2367,7 +2368,6 @@
           asset_object fee_asset_obj = get_asset(fee_asset_symbol);
           witness_object witness = get_witness(witness_name);
           account_object witness_account = get_account( witness.witness_account );
-          fc::ecc::private_key active_private_key = get_private_key_for_account(witness_account);
 
           witness_update_operation witness_update_op;
           witness_update_op.witness = witness.id;
@@ -3201,7 +3201,6 @@
           proposal_create_operation prop_op;
 
           prop_op.expiration_time = expiration_time;
-          prop_op.review_period_seconds = current_params.committee_proposal_review_period;
           prop_op.fee_paying_account = get_account(proposing_account).id;
 
           prop_op.proposed_ops.emplace_back(update_op);
@@ -3332,7 +3331,6 @@
           proposal_create_operation prop_op;
 
           prop_op.expiration_time = expiration_time;
-          prop_op.review_period_seconds = current_params.committee_proposal_review_period;
           prop_op.fee_paying_account = get_account(proposing_account).id;
 
           prop_op.proposed_ops.emplace_back(update_op);
@@ -3892,6 +3890,11 @@
     std::string operation_result_printer::operator()(const asset& a)
     {
        return _wallet.get_asset(a.asset_id).amount_to_pretty_string(a);
+    }
+
+    std::string operation_result_printer::operator()(const contract_receipt_old& r)
+    {
+       return std::string(r);
     }
 
     std::string operation_result_printer::operator()(const contract_receipt& r)

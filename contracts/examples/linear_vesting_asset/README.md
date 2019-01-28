@@ -37,7 +37,7 @@ unlocked >>> get_contract_tables ch3
 
 3. 查询合约ch3 vestingrule，最多查询10ms就立即返回结果
 ```
-unlocked >>> get_table_objects ch3 vestingrule
+unlocked >>> get_table_rows ch3 vestingrule 0 -1
 [{
     "account_id": 17,
     "asset_id": 0,

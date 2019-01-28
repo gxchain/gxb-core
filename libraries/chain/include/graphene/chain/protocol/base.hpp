@@ -82,7 +82,7 @@ namespace graphene { namespace chain {
     */
 
    struct void_result{};
-   typedef fc::static_variant<void_result,object_id_type,asset,contract_receipt> operation_result;
+   typedef fc::static_variant<void_result,object_id_type,asset,contract_receipt_old,contract_receipt> operation_result;
 
    struct base_operation
    {
@@ -115,7 +115,8 @@ namespace graphene { namespace chain {
        lock_balance_params_t, // 6
        vm_cpu_limit_t, // 7
        asset_symbol_t,
-	   trust_node_pledge_t
+	   trust_node_pledge_t,
+	   inter_contract_calling_params_t
        > future_extensions;
 
    /**

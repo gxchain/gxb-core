@@ -133,7 +133,7 @@ void trust_node_pledge_helper::reset()
 
 inline void trust_node_pledge_helper::do_evaluate(database& db, const account_id_type& account_id)
 {
-	uint64_t pledge_needed = db.get_trust_node_pledge().amount;
+	int64_t pledge_needed = db.get_trust_node_pledge().amount;
 	FC_ASSERT(pledge_needed >= 0, "trust node pledge must >= 0");
 
 	const auto &pledge_idx = db.get_index_type<trust_node_pledge_index>().indices().get<by_account>();

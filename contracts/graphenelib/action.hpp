@@ -2,6 +2,7 @@
 #include <graphenelib/action.h>
 #include <graphenelib/datastream.hpp>
 #include <graphenelib/serialize.hpp>
+#include <graphenelib/global.h>
 #include <boost/preprocessor/variadic/size.hpp>
 #include <boost/preprocessor/variadic/to_tuple.hpp>
 #include <boost/preprocessor/tuple/enum.hpp>
@@ -30,36 +31,73 @@ namespace graphene {
     * meta-data about the authorization levels.
     */
    struct action {
-      uint64_t                   account;
-      action_name                name;
-      bytes                      data;
+      uint64_t                   sender;
+      uint64_t                   contract_id;
+      contract_asset             amount;
+      action_name                method;
+      bytes                      method_args_binary;
 
       action() = default;
 
       /**
        *  @tparam T - the type of the action data
-       *  @param a - name of the contract account
-       *  @param n - name of the action
-       *  @param value - will be serialized via pack into data
+       *  @param contract_id - id of the contract account
+       *  @param method - name of the action
+       *  @param args - will be serialized via pack into data
        */
       template <typename T>
-      action(uint64_t a, action_name n, T &&value)
-          : account(a)
-          , name(n)
-          , data(pack(std::forward<T>(value)))
+      action(uint64_t contract_id, action_name method, T &&args)
+          : contract_id(contract_id)
+          , method(method)
+          , method_args_binary(pack(std::forward<T>(args)))
       {
       }
 
-      GRAPHENE_SERIALIZE(action, (account)(name)(data))
+      /**
+       *  @tparam T - the type of the action data
+       *  @param contract_id - id of the contract account
+       *  @param method - name of the action
+       *  @param args - will be serialized via pack into data
+       *  @param sender - the contract caller
+       *  @param amt - the amount of asset to transfer to target contract
+       */
+      template <typename T>
+      action(uint64_t contract_id, action_name method, T &&args, uint64_t sender, const contract_asset &amt = {0, 0})
+          : sender(sender)
+          , contract_id(contract_id)
+          , amount(amt)
+          , method(method)
+          , method_args_binary(pack(std::forward<T>(args)))
+      {
+      }
 
-      /*
+      /**
+       *  @tparam T - the type of the action data
+       *  @param contract - name of the contract account
+       *  @param method - name of the action
+       *  @param args - will be serialized via pack into data
+       *  @param sender - the contract caller
+       *  @param amt - the amount of asset to transfer to target contract
+       */
+      template <typename T>
+      action(std::string contract, action_name method, T &&args, uint64_t sender, const contract_asset &amt = {0, 0})
+          : sender(sender)
+          , amount(amt)
+          , method(method)
+          , method_args_binary(pack(std::forward<T>(args)))
+      {
+          int64_t acc_id = get_account_id(contract.c_str(), contract.length());
+          graphene_assert(-1 != acc_id, "account not found");
+          contract_id = acc_id;
+      }
+
+      GRAPHENE_SERIALIZE(action, (sender)(contract_id)(amount)(method)(method_args_binary))
+
       void send() const
       {
           auto serialize = pack(*this);
           ::send_inline(serialize.data(), serialize.size());
       }
-      */
-
    };
 
 } // namespace graphene

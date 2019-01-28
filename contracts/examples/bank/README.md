@@ -25,7 +25,7 @@ gxx -g contracts/examples/bank/bank.abi contracts/examples/bank/bank.cpp
 ##### 部署合约
 ```
 // 这里使用nathan帐户部署合约，部署的合约名为bank
-unlocked >>> deploy_contract bank nathan 0 0 ./contracts/examples/bank GXS true
+unlocked >>> deploy_contract bank nathan 0 0 ./contracts/examples/bank GXC true
 
 ```
 
@@ -34,7 +34,7 @@ unlocked >>> deploy_contract bank nathan 0 0 ./contracts/examples/bank GXS true
 1. 调用合约的deposit方法
 ```
 // 使用nathan帐户，调用bank合约，方法名为deposit,  发送资产总量为100 GXS(链上为大数，需要乘以10万)
-unlocked >>> call_contract nathan bank {"amount":10000000,"asset_id":1.3.1} deposit "{}" GXS true
+unlocked >>> call_contract nathan bank {"amount":10000000,"asset_id":1.3.1} deposit "{}" GXC true
 ```
 
 2. 查询bank合约的帐户余额
@@ -54,7 +54,7 @@ unlocked >>> get_contract_tables bank
 
 4. 查询合约的account表，该表记录了帐户在合约中的余额
 ```
-unlocked >>> get_table_objects bank account
+unlocked >>> get_table_rows bank account 0 -1
 [{
     "owner": 17,
     "balances": [{

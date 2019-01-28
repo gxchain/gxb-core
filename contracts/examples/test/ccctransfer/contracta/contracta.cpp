@@ -14,14 +14,15 @@ class contracta : public contract
     {
     }
 
-    /// @abi action
-    void hicontract(uint64_t act_id)
+    // @abi action
+    // @abi payable
+    void hi(uint64_t contratb_id)
     {
-        print("hi contract:", act_id);
-        std::string s = "abc";
-        action a(act_id, N(hi), bytes(s.begin(), s.end()));
-        a.send();
+        print("hi i'm contracta's function hi\n");
+
+        action b(contratb_id, N(hi), "", _self, {100000, 1});
+        b.send();
     }
 };
 
-GRAPHENE_ABI(contracta, (hicontract))
+GRAPHENE_ABI(contracta, (hi))
