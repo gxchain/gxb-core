@@ -93,7 +93,7 @@
 
 #ifndef HARDFORK_1016_TIME
 // disable udpate_contract for normal account
-#define HARDFORK_1015_TIME (fc::time_point_sec( 1546084800 )) // for testnet, 2018-12-29T12:00:00 UTC
+#define HARDFORK_1016_TIME (fc::time_point_sec( 1546084800 )) // for testnet, 2018-12-29T12:00:00 UTC
 #endif
 
 // #413 Add operation to claim asset fees
