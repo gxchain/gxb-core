@@ -32,7 +32,7 @@ gxx -g contracts/examples/riddle/riddle.abi contracts/examples/riddle/riddle.cpp
 
 ```shell
 // 这里使用nathan帐户部署合约，部署的合约名为riddle
-unlocked >>> deploy_contract riddle nathan 0 0 ./contracts/examples/riddle GXS true
+unlocked >>> deploy_contract riddle nathan 0 0 ./contracts/examples/riddle GXC true
 ```
 
 ##### 调用合约
@@ -47,7 +47,7 @@ unlocked >>> deploy_contract riddle nathan 0 0 ./contracts/examples/riddle GXS t
 
 ```shell
 // 发起谜题
-call_contract nathan riddle null issue "{\"question\":\"1 + 2 = ?\", \"hashed_answer\":\"810d7c3ca6aa6411102588f8636833035138a35f32f5e7b2df96d2ab2dc4d660\"}" GXS true
+call_contract nathan riddle null issue "{\"question\":\"1 + 2 = ?\", \"hashed_answer\":\"810d7c3ca6aa6411102588f8636833035138a35f32f5e7b2df96d2ab2dc4d660\"}" GXC true
 ```
 
 2. 查询riddle合约的存储表
@@ -66,12 +66,12 @@ unlocked >>> get_table_objects riddle record
 
 ```
 // 使用nathan帐户解谜
-unlocked >>> call_contract nathan riddle null reveal "{\"issuer\":\"nathan\", \"answer\":\"I don't know.\"}" GXS true
+unlocked >>> call_contract nathan riddle null reveal "{\"issuer\":\"nathan\", \"answer\":\"I don't know.\"}" GXC true
 ```
 
 4. 合约存储表
 
 ```
-unlocked >>> get_table_objects riddle record
+unlocked >>> get_table_rows riddle record 0 -1
 []
 ```

@@ -169,7 +169,7 @@ class global_api : public context_aware_api
     uint64_t get_trx_sender()
     {
         // get op payer
-        return context.trx_context.get_trx_origin();
+        return context.sender;
     }
 
     // get origin of trx
@@ -1065,12 +1065,37 @@ class transaction_api : public context_aware_api {
    public:
       using context_aware_api::context_aware_api;
 
-      void send_inline( array_ptr<char> data, size_t data_len ) {
-         //TODO
+      void send_inline(array_ptr<char> data, size_t data_len) {
+         FC_ASSERT(context._db->head_block_time() > HARDFORK_1016_TIME,
+                 "cross-contract calling can not serve before timestamp:${t}", ("t", HARDFORK_1016_TIME));//TODO can be removed when release after time HARDFORK_1016_TIME
+
+         uint32_t max_inline_action_size = context.trx_context.get_inter_contract_calling_params().max_inline_action_size;
+         FC_ASSERT(data_len <= max_inline_action_size, "inline action too big, max size=${s} bytes", ("s", max_inline_action_size));
+
+         context.trx_context.check_inter_contract_depth();
 
          action act;
-         fc::raw::unpack<action>(data, data_len, act, 5);
-         idump((act));
+         fc::raw::unpack<action>(data, data_len, act, 20);
+
+         // check action sender
+         FC_ASSERT(act.sender == context.receiver,
+                 "the sender must be current contract, actually act.sender=${s}, current receiver=${r}", ("s", act.sender)("r", context.receiver));
+         // check amount
+         FC_ASSERT(act.amount.amount >=0, "action amount must >= 0, actual amount: ${a}", ("a", act.amount.amount));
+
+         // check action contract code
+         const account_object& contract_obj = account_id_type(act.contract_id)(*context._db);
+         FC_ASSERT(contract_obj.code.size() > 0, "inline action's code account ${account} does not exist", ("account", act.contract_id));
+
+         // check method_name, must be payable
+         const auto &actions = contract_obj.abi.actions;
+         auto iter = std::find_if(actions.begin(), actions.end(),
+                 [&](const action_def &act_def) { return act_def.name == act.method_name; });
+         FC_ASSERT(iter != actions.end(), "method_name ${m} not found in abi", ("m", act.method_name));
+         if (act.amount.amount > 0) {
+             FC_ASSERT(iter->payable, "method_name ${m} not payable", ("m", act.method_name));
+         }
+
          context.execute_inline(std::move(act));
       }
 };
@@ -1521,19 +1546,40 @@ class asset_api : public context_aware_api
         FC_ASSERT(d.get_balance(from_account, a.asset_id).amount >= amount, "insufficient balance ${b}, unable to withdraw ${a} from account ${c}", ("b", d.to_pretty_string(d.get_balance(from_account, a.asset_id)))("a", amount)("c", from_account));
 
         // adjust balance
-        if (d.head_block_time() > HARDFORK_1014_TIME) {
-            transaction_evaluation_state op_context(&d);
-            op_context.skip_fee_schedule_check = true;
-            transfer_operation transfer_op;
-            transfer_op.amount = a;
-            transfer_op.from = from_account;
-            transfer_op.to = to_account;
-            transfer_op.fee = asset{0, asset_id_type(1)};
-            d.apply_operation(op_context, transfer_op);
-        } else {
-            d.adjust_balance(from_account, -a);
-            d.adjust_balance(to_account, a);
+        d.adjust_balance(from_account, -a);
+        d.adjust_balance(to_account, a);
+    }
+
+    void inline_transfer(int64_t from, int64_t to, int64_t asset_id, int64_t amount, array_ptr<char> data, size_t datalen)
+    {
+        auto &d = context.db();
+        if (d.head_block_time() <= HARDFORK_1017_TIME) {
+            // should remove hardfork, after HARDFORK_1017_TIME
+            FC_ASSERT(false, "inline_transfer not enabled");
         }
+
+        FC_ASSERT(from == context.receiver, "can only transfer from contract ${c}", ("c", context.receiver));
+        FC_ASSERT(from >= 0, "account id ${a} from must  > 0", ("a", from));
+        FC_ASSERT(to >= 0, "account id ${a} to must > 0", ("a", to));
+        FC_ASSERT(asset_id >= 0, "asset id ${a} must > 0", ("a", asset_id));
+
+        asset a{amount, asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID)};
+        account_id_type from_account = account_id_type(from & GRAPHENE_DB_MAX_INSTANCE_ID);
+        account_id_type to_account = account_id_type(to & GRAPHENE_DB_MAX_INSTANCE_ID);
+
+        std::string memo(data, datalen);
+
+        // apply operation
+        transaction_evaluation_state op_context(&d);
+        op_context.skip_fee_schedule_check = true;
+        inline_transfer_operation op;
+        op.amount = a;
+        op.from = from_account;
+        op.to = to_account;
+        op.memo = memo;
+        op.fee = asset{0, asset_id_type(1)};
+        op.validate();
+        d.apply_operation(op_context, op);
     }
 
     // get account balance by asset_id
@@ -1630,6 +1676,7 @@ REGISTER_INTRINSICS(action_api,
 
 REGISTER_INTRINSICS(asset_api,
 (withdraw_asset,                 void(int64_t, int64_t, int64_t, int64_t))
+(inline_transfer,                void(int64_t, int64_t, int64_t, int64_t, int, int))
 (get_balance,                    int64_t(int64_t, int64_t))
 );
 

@@ -101,7 +101,7 @@ void database::reindex(fc::path data_dir, bool fast_replay)
       if( i == flush_point )
       {
          std::cerr << "Writing database to disk at block " << i << std::endl;
-         flush();
+         object_database::flush();
          std::cerr << "Done" << std::endl;
       }
       if( head_block_time() >= last_block->timestamp - gpo.parameters.maximum_time_until_expiration )
@@ -198,6 +198,13 @@ void database::open(
 
 void database::truncate_block_db(const fc::path &path, uint64_t block_num) {
    _block_id_to_block.truncate_block_db(path, block_num);
+}
+
+void database::flush(const fc::string& data_dir, const fc::string& block_id)
+{ try {
+    object_database::flush(data_dir, block_id);
+  }
+  FC_CAPTURE_LOG_AND_RETHROW((data_dir)(block_id))
 }
 
 void database::close(bool rewind)

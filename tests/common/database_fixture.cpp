@@ -89,6 +89,9 @@ database_fixture::database_fixture()
       genesis_state.initial_witness_candidates.push_back({name, init_account_priv_key.get_public_key()});
    }
    genesis_state.initial_parameters.current_fees->zero_all_fees();
+   contract_call_operation::fee_parameters_type &t = const_cast<contract_call_operation::fee_parameters_type &>(genesis_state.initial_parameters.current_fees->get<contract_call_operation>());
+   t.fee = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
+   t.price_per_kbyte_ram = GRAPHENE_BLOCKCHAIN_PRECISION / 2;
    open_database();
 
    // add account tracking for ahplugin for special test case with track-account enabled

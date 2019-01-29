@@ -2,27 +2,30 @@
 
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/name.hpp>
-#include <graphene/chain/protocol/asset.hpp>
+#include <graphene/chain/protocol/contract_asset.hpp>
 
 namespace graphene { namespace chain {
 
    struct action {
-      int64_t                  contract_id;
-      action_name              method_name;
-      bytes                    data;
+
+      uint64_t                   sender;
+      uint64_t                   contract_id;
+      contract_asset             amount;
+      action_name                method_name;
+      bytes                      data;
 
       action() {}
 
-      action(uint64_t account, action_name name, const bytes& d )
-            : contract_id(account & GRAPHENE_DB_MAX_INSTANCE_ID), method_name(name), data(d) {
+      action(uint64_t sender, uint64_t contract_id, action_name name, const bytes& data, const contract_asset &amt = contract_asset{0, 0})
+            : sender(sender)
+            , contract_id(contract_id)
+            , amount(amt)
+            , method_name(name)
+            , data(data)
+      {
       }
-
-      action(account_id_type account, action_name name, const bytes& d )
-            : contract_id(account.instance), method_name(name), data(d) {
-      }
-
    };
 
 } } /// namespace graphene::chain
 
-FC_REFLECT(graphene::chain::action, (contract_id)(method_name)(data))
+FC_REFLECT(graphene::chain::action, (sender)(contract_id)(amount)(method_name)(data))

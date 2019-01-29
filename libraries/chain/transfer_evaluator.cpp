@@ -38,14 +38,6 @@ void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
    const asset_object&   asset_type      = op.amount.asset_id(d);
 
    try {
-	  if (d.head_block_time() <= HARDFORK_1014_TIME)
-      GRAPHENE_ASSERT(
-         to_account.code.size() == 0,
-         transfer_restricted_transfer_to_contract,
-         "the account '${to}' is a contract account",
-         ("to", to_account.name)
-         );
-
       GRAPHENE_ASSERT(
          is_authorized_asset( d, from_account, asset_type ),
          transfer_from_account_not_whitelisted,
@@ -88,8 +80,6 @@ void_result transfer_evaluator::do_apply(const transfer_operation& o, int32_t bi
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-
-
 void_result override_transfer_evaluator::do_evaluate( const override_transfer_operation& op )
 { try {
    const database& d = db();
@@ -127,5 +117,31 @@ void_result override_transfer_evaluator::do_apply(const override_transfer_operat
    db().adjust_balance( o.to, o.amount );
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
+
+void_result inline_transfer_evaluator::do_evaluate(const inline_transfer_operation &op)
+{ try {
+   const database& d = db();
+
+   const account_object& from_account    = op.from(d);
+   const account_object& to_account      = op.to(d);
+   const asset_object&   asset_type      = op.amount.asset_id(d);
+
+   try {
+       bool insufficient_balance = d.get_balance(from_account, asset_type).amount >= op.amount.amount;
+       FC_ASSERT(insufficient_balance,
+                 "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
+                 ("a", from_account.name)("t", to_account.name)("total_transfer", d.to_pretty_string(op.amount))("balance", d.to_pretty_string(d.get_balance(from_account, asset_type))));
+
+       return void_result();
+   } FC_RETHROW_EXCEPTIONS(error, "Unable to transfer ${a} from ${f} to ${t}", ("a",d.to_pretty_string(op.amount))("f",op.from(d).name)("t",op.to(d).name));
+
+} FC_CAPTURE_AND_RETHROW((op))}
+
+void_result inline_transfer_evaluator::do_apply(const inline_transfer_operation& op, int32_t billed_cpu_time_us)
+{ try {
+    db().adjust_balance(op.from, -op.amount);
+    db().adjust_balance(op.to, op.amount);
+    return void_result();
+} FC_CAPTURE_AND_RETHROW((op))}
 
 } } // graphene::chain

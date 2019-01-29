@@ -68,6 +68,30 @@ index& object_database::get_mutable_index(uint8_t space_id, uint8_t type_id)
    return *idx;
 }
 
+void object_database::flush(const fc::path& data_dir, const fc::string& block_id)
+{
+   ilog("Save object_database in ${d}", ("d", data_dir));
+   fc::path obj_db = data_dir / ("object_database-" + block_id);
+   fc::path old_obj_db = data_dir / ("object_database-" + block_id + ".old");
+   fc::path tmp_obj_db = data_dir / ("object_database-" + block_id + ".tmp");
+
+   fc::create_directories(tmp_obj_db / "lock");
+   for( uint32_t space = 0; space < _index.size(); ++space ) {
+       fc::create_directories(tmp_obj_db / fc::to_string(space));
+       const auto types = _index[space].size();
+       for (uint32_t type = 0; type < types; ++type) {
+           if (_index[space][type])
+               _index[space][type]->save(tmp_obj_db / fc::to_string(space) / fc::to_string(type));
+      }
+   }
+   fc::remove_all(tmp_obj_db / "lock");
+   if (fc::exists(obj_db)) {
+       fc::rename(obj_db, old_obj_db);
+   }
+   fc::rename(tmp_obj_db, obj_db);
+   fc::remove_all(old_obj_db);
+}
+
 void object_database::flush()
 {
 //   ilog("Save object_database in ${d}", ("d", _data_dir));

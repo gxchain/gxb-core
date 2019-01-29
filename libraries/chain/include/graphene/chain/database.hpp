@@ -116,6 +116,9 @@ namespace graphene { namespace chain {
          void wipe(const fc::path& data_dir, bool include_blocks);
          void close(bool rewind = true);
 
+         // flush snapshot object_database
+         void flush(const fc::string& data_dir, const fc::string& block_id);
+
          //////////////////// db_block.cpp ////////////////////
 
          /**
@@ -141,8 +144,8 @@ namespace graphene { namespace chain {
          bool before_last_checkpoint()const;
 
          // set / get max_trx_cpu_time
-         void set_max_trx_cpu_time(int32_t max_trx_cpu_time) { _max_trx_cpu_time = max_trx_cpu_time; }
-         const int32_t  get_max_trx_cpu_time() { return _max_trx_cpu_time; };
+         void set_max_trx_cpu_time(uint32_t max_trx_cpu_time) { _max_trx_cpu_time = max_trx_cpu_time; }
+         const uint32_t  get_max_trx_cpu_time() { return _max_trx_cpu_time; };
 
          bool push_block( const signed_block& b, uint32_t skip = skip_nothing );
          processed_transaction push_transaction( const signed_transaction& trx, uint32_t skip = skip_nothing );
@@ -268,6 +271,7 @@ namespace graphene { namespace chain {
          const data_transaction_commission_percent_t          get_commission_percent() const;
          const vm_cpu_limit_t                   get_cpu_limit() const;
          const trust_node_pledge_t              get_trust_node_pledge() const;
+         const inter_contract_calling_params_t& get_inter_contract_calling_params() const;
 
          const bool                             get_contract_log_to_console() const { return contract_log_to_console; }
          void                                   set_contract_log_to_console(bool log_switch) { contract_log_to_console = log_switch; }
@@ -288,6 +292,9 @@ namespace graphene { namespace chain {
 
 
          uint32_t last_non_undoable_block_num() const;
+
+         asset_id_type current_core_asset_id();
+         asset from_core_asset(const asset &a, const asset_id_type &id);
          //////////////////// db_init.cpp ////////////////////
 
          void initialize_evaluators();
@@ -343,6 +350,8 @@ namespace graphene { namespace chain {
 
          // helper to handle cashback rewards
          void deposit_cashback(const account_object& acct, share_type amount, bool require_vesting = true);
+         // to handle contract calling fees
+         void deposit_contract_call_cashback(const account_object& acct, share_type amount);
          // helper to handle witness pay
          void deposit_witness_pay(const witness_object& wit, share_type amount);
 
@@ -475,7 +484,7 @@ namespace graphene { namespace chain {
          flat_map<uint32_t,block_id_type>  _checkpoints;
 
          // max transaction cpu time, configured by config.ini
-         int32_t                           _max_trx_cpu_time;
+         uint32_t                          _max_trx_cpu_time = 10000;
 
          node_property_object              _node_property_object;
 
@@ -489,6 +498,14 @@ namespace graphene { namespace chain {
          bool                              _opened = false;
          bool                              contract_log_to_console = false;
          bool                              rpc_mock_calc_fee = false;
+
+         // for state snapshot
+        public:
+           void           set_snapshot_dir(const fc::string& data_dir) { snapshot_dir = data_dir; }
+           fc::string     get_snapshot_dir() const { return snapshot_dir; }
+
+        private:
+           fc::string                        snapshot_dir;
    };
 
    namespace detail
