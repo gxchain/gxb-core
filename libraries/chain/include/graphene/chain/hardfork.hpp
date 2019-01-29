@@ -81,8 +81,7 @@
 
 // call_contract fix fee calculation
 #ifndef HARDFORK_1013_TIME
-// should be removed after next release
-#define HARDFORK_1013_TIME (fc::time_point_sec( 1548907200 )) // for testnet, 2019-01-31T04:00:00(UTC)
+#define HARDFORK_1013_TIME (fc::time_point_sec(  1545034200 )) // for testnet, 2018-12-17T08:10:00(UTC)
 #endif
 
 // add inline_transfer api for contract
