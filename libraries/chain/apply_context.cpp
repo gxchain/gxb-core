@@ -69,22 +69,31 @@ void apply_context::exec()
 
     exec_one();
 
-    auto& cur_inline_trace = _db->get_applied_trace();
-    std::vector<action_trace>* backup_inline_trace;
-    if(cur_inline_trace != nullptr)
-        backup_inline_trace = cur_inline_trace;
+    auto itr_plugin = std::find(_db->_loaded_plugins.begin(),_db->_loaded_plugins.end(),"mongodb_plugin");
+    if(itr_plugin != _db->_loaded_plugins.end()){
+        ilog("apply_context load mongodb test test test test!!!!!!!");
+        auto& cur_inline_trace = _db->get_applied_trace();
+        std::vector<action_trace>* backup_inline_trace;
+        if(cur_inline_trace != nullptr)
+            backup_inline_trace = cur_inline_trace;
 
-    for (const auto &inline_action : _inline_actions) {
-        if(cur_inline_trace != nullptr){
-            action_trace trace;
-            trace.sender = account_id_type(inline_action.sender);
-            trace.receiver = account_id_type(inline_action.contract_id);
-            trace.act = inline_action;
-            backup_inline_trace->push_back(trace); 
-            cur_inline_trace = &(backup_inline_trace->back().inline_traces); // modify current inline_actions
+        for (const auto &inline_action : _inline_actions) {
+            if(cur_inline_trace != nullptr){
+                action_trace trace;
+                trace.sender = account_id_type(inline_action.sender);
+                trace.receiver = account_id_type(inline_action.contract_id);
+                trace.act = inline_action;
+                backup_inline_trace->push_back(trace); 
+                cur_inline_trace = &(backup_inline_trace->back().inline_traces); // modify current inline_actions
+            }
+            trx_context.dispatch_action(inline_action, inline_action.contract_id);
         }
-        trx_context.dispatch_action(inline_action, inline_action.contract_id);
+    }else{
+        for (const auto &inline_action : _inline_actions) {
+            trx_context.dispatch_action(inline_action, inline_action.contract_id);
+        }
     }
+
 }
 
 void apply_context::reset_console()

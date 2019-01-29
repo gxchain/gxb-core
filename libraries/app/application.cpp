@@ -945,6 +945,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("dbg-init-key", bpo::value<string>(), "Block signing key to use for init witnesses, overrides genesis file")
          ("api-access", bpo::value<boost::filesystem::path>(), "JSON file specifying API permissions")
          ("plugins", bpo::value<string>(), "Space-separated list of plugins to activate")
+         ("load_mongodb_plugin", bpo::value<bool>(), "Save action histroy with mongo_db plugin")
          ;
    command_line_options.add(configuration_file_options);
    command_line_options.add_options()
@@ -1008,8 +1009,11 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
       wanted.push_back("witness");
       wanted.push_back("account_history");
       wanted.push_back("data_transaction");
-      wanted.push_back("mongo_db");
    }
+   if( options.count("load_mongodb_plugin") && options.at("load_mongodb_plugin").as<bool>()){
+         wanted.push_back("mongo_db");
+   }
+
    for (auto& it : wanted)
    {
       if (!it.empty()) enable_plugin(it);

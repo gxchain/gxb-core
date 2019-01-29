@@ -720,13 +720,16 @@ operation_result database::apply_operation(transaction_evaluation_state& eval_st
    FC_ASSERT( eval, "No registered evaluator for operation ${op}", ("op",op) );
    auto op_id = push_applied_operation( op );
    uint64_t act_id;
-   if(u_which == operation::tag< contract_call_operation >::value){
+   auto itr_plugin = std::find(_loaded_plugins.begin(),_loaded_plugins.end(),"mongodb_plugin");
+   if(u_which == operation::tag< contract_call_operation >::value && itr_plugin != _loaded_plugins.end()){
+      ilog("db_block load mongodb test test test test!!!!!!!");
       act_id = push_applied_action (op ); 
    }
    auto result = eval->evaluate(eval_state, op, true, billed_cpu_time_us);
    set_applied_operation_result( op_id, result );
 
-   if(u_which == operation::tag< contract_call_operation >::value){
+   if(u_which == operation::tag< contract_call_operation >::value && itr_plugin != _loaded_plugins.end()){
+      ilog("db_block load mongodb test test test test!!!!!!!");
       set_applied_action_result (act_id,result ); 
    }
    return result;

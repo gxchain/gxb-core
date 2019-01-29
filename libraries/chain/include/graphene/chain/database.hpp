@@ -378,6 +378,7 @@ namespace graphene { namespace chain {
          /** when popping a block, the transactions that were removed get cached here so they
           * can be reapplied at the proper time */
          std::deque< signed_transaction >       _popped_tx;
+         std::list< std::string>                _loaded_plugins;
 
          /**
           * @}

@@ -45,6 +45,8 @@ namespace detail {
                 try {
                     ilog( "mongo_db_plugin shutdown in process please be patient this can take a few minutes" );
                     done = true;
+                    auto& db = _self.database();
+                    db._loaded_plugins.remove("mongodb_plugin");
                     condition.notify_one();
 
                     consume_thread.join();
@@ -423,8 +425,14 @@ void mongo_db_plugin::plugin_initialize(const boost::program_options::variables_
 {
     try{
         if( options.count("mongodb-uri") && options.count("track-action-account")){
-
-            LOAD_VALUE_SET(options, "track-action-account", my->_tracked_accounts, graphene::chain::account_id_type);
+            const std::vector<std::string>& ops = options.at("track-action-account").as<std::vector<std::string>>();
+            auto ops_itor = std::find(ops.begin(),ops.end(),"*");
+            if(ops_itor == ops.end()){
+                LOAD_VALUE_SET(options, "track-action-account", my->_tracked_accounts, graphene::chain::account_id_type);
+            }
+            else{
+                my->_tracked_accounts.clear();
+            }
             std::string uri_str = options.at( "mongodb-uri" ).as<std::string>();
             ilog( "connecting to ${u}", ("u", uri_str));
             
@@ -435,6 +443,8 @@ void mongo_db_plugin::plugin_initialize(const boost::program_options::variables_
                 my->db_name = "gxchain";
             detail::mongo_db_plugin_impl::mongo_pool = std::make_shared<mongocxx::pool>(uri);
             detail::mongo_db_plugin_impl::pdb = &database();
+            auto& db = database();
+            db._loaded_plugins.push_back("mongodb_plugin");
             database().add_index< primary_index< action_history_index > >();
             database().applied_block.connect( [&]( const signed_block& tra){ my->update_action_histories(tra); } );
             database().applied_irr_num.connect( [&]( uint32_t num){ my->remove_action_histories(num); } );
@@ -447,7 +457,7 @@ void mongo_db_plugin::plugin_initialize(const boost::program_options::variables_
             my->init();   
         }  
         else{
-            ilog( "mongo_db_plugin disabled." );
+            ilog( "mongo_db_plugin disabled.please change your config" );
         }
     } FC_LOG_AND_RETHROW()
 }
