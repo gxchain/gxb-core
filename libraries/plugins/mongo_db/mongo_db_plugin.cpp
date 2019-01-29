@@ -39,7 +39,8 @@ using namespace chain;
 namespace detail {
     class mongo_db_plugin_impl{
         public:
-            mongo_db_plugin_impl(mongo_db_plugin& plugin):_self(plugin){}
+            mongo_db_plugin_impl(mongo_db_plugin& plugin):_self(plugin){
+            }
             virtual ~mongo_db_plugin_impl(){
                 try {
                     ilog( "mongo_db_plugin shutdown in process please be patient this can take a few minutes" );
@@ -63,14 +64,16 @@ namespace detail {
             void wipe_database();
             static std::vector<account_action_history_object> get_action_history_mongodb(app::get_action_history_params params);
 
-            fc::optional<abi_serializer> get_abi_serializer( uint64_t accid );
+            static fc::optional<abi_serializer> get_abi_serializer( uint64_t accid );
             template<typename T> fc::variant to_variant_with_abi( const T& obj );
+            template<typename T> static void from_variant_with_abi( fc::variant v, std::shared_ptr<T>& pobj );
             template<typename Queue, typename Entry> void queue(Queue& queue, const Entry e);
 
             // link to mongo_server
             static std::string db_name;
             mongocxx::instance instance;
             static std::shared_ptr<mongocxx::pool> mongo_pool;
+            static chain::database* pdb;
 
             // collections consum thread
             mongocxx::collection _action_traces;        // actions(account、action、inline_traces)
@@ -105,6 +108,7 @@ namespace detail {
 
     std::shared_ptr<mongocxx::pool> mongo_db_plugin_impl::mongo_pool = nullptr;
     std::string mongo_db_plugin_impl::db_name = "";
+    chain::database* mongo_db_plugin_impl::pdb = nullptr;
 
     
     bool mongo_db_plugin_impl::check_trackacc(const account_action_history_object& act_obj)
@@ -153,7 +157,7 @@ namespace detail {
 
         mongocxx::options::find opts{};
         opts.limit(params.limit);
-        opts.projection(make_document(kvp("_id",0),kvp("action.act.data",0)));
+        opts.projection(make_document(kvp("_id",0)));
 
         if(params.reverse) opts.sort(make_document(kvp("_id",-1)));
         else opts.sort(make_document(kvp("_id",1)));
@@ -172,25 +176,15 @@ namespace detail {
 
         auto cursor = _action_traces.find(filterdoc.view(),opts);
         
+
         for( auto doc : cursor){
-            auto subdoc = doc["action"];
-            auto json_doc = bsoncxx::to_json(subdoc.get_document().view());
-
-            // also can modify abi_serializer.hpp  293 line to solved
-            FC_ASSERT(json_doc.find("\"account\"") != std::string::npos &&
-                json_doc.find("\"name\"") != std::string::npos , "mongdb document type error !");
-
-            json_doc=json_doc.replace(json_doc.find("\"account\""),9,"\"contract_id\"");
-            json_doc=json_doc.replace(json_doc.find("\"name\""),6,"\"method_name\"");
-
-            if(json_doc.find("\"hex_data\"") != std::string::npos)
-                json_doc=json_doc.replace(json_doc.find("\"hex_data\""),10,"\"data\"");
-
-            auto var_doc = fc::json::from_string(json_doc);
             
-            account_action_history_object obj;
-            fc::from_variant(var_doc,obj,20);
-            result.push_back(obj);
+            auto doc1 = doc["action"];
+            auto json_1 = bsoncxx::to_json(doc1.get_document().view());
+            fc::variant v = fc::json::from_string(json_1);
+            std::shared_ptr<account_action_history_object> pobj = std::make_shared<account_action_history_object>(); 
+            from_variant_with_abi(v,pobj);
+            result.push_back(*pobj);
         }
         
         return result;
@@ -201,15 +195,24 @@ namespace detail {
         using bsoncxx::builder::basic::make_document;
         try {
             fc::microseconds abi_serializer_max_time = fc::microseconds(1000*1500);
-            auto& db =_self.database();
-            const account_object& accobj = account_id_type(accid)(db);
+            const account_object& accobj = account_id_type(accid)(*pdb);
             abi_serializer abis;
             abis.set_abi(accobj.abi,abi_serializer_max_time);
             return abis;
         }FC_LOG_AND_RETHROW() 
         
     }
+    template<typename T>
+    void mongo_db_plugin_impl::from_variant_with_abi( fc::variant v, std::shared_ptr<T>& pobj ) {
 
+        fc::microseconds abi_serializer_max_time = fc::microseconds(1000*1500);
+        
+        abi_serializer::from_variant( v, pobj,
+                                    [&]( uint64_t accid ) { return get_abi_serializer( accid ); },
+                                    abi_serializer_max_time );
+        
+        return;
+    }
     template<typename T>
     fc::variant mongo_db_plugin_impl::to_variant_with_abi( const T& obj ) {
         fc::variant pretty_output;
@@ -431,7 +434,7 @@ void mongo_db_plugin::plugin_initialize(const boost::program_options::variables_
             if( my->db_name.empty())
                 my->db_name = "gxchain";
             detail::mongo_db_plugin_impl::mongo_pool = std::make_shared<mongocxx::pool>(uri);
-
+            detail::mongo_db_plugin_impl::pdb = &database();
             database().add_index< primary_index< action_history_index > >();
             database().applied_block.connect( [&]( const signed_block& tra){ my->update_action_histories(tra); } );
             database().applied_irr_num.connect( [&]( uint32_t num){ my->remove_action_histories(num); } );

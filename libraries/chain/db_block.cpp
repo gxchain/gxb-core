@@ -475,6 +475,11 @@ uint32_t database::push_applied_action( const operation& op )
    actobj.block_num       = _current_block_num;
    actobj.trx_in_block    = _current_trx_in_block;
    actobj.op_in_trx       = _current_op_in_trx;
+   actobj.act.sender      = op.get<contract_call_operation>().account.instance.value;
+   if(op.get<contract_call_operation>().amount){
+      actobj.act.amount.amount      = (*(op.get<contract_call_operation>().amount)).amount.value;
+      actobj.act.amount.asset_id    = (*(op.get<contract_call_operation>().amount)).asset_id.instance.value;
+   }
    actobj.act.contract_id = op.get<contract_call_operation>().contract_id.instance.value;
    actobj.act.data        = op.get<contract_call_operation>().data;
    actobj.act.method_name = op.get<contract_call_operation>().method_name;

@@ -281,8 +281,10 @@ namespace impl {
          FC_ASSERT( ++recursion_depth < abi_serializer::max_recursion_depth, "recursive definition, max_recursion_depth ${r} ", ("r", abi_serializer::max_recursion_depth) );
          FC_ASSERT( fc::time_point::now() < deadline, "serialization time limit ${t}us exceeded", ("t", max_serialization_time) );
          mutable_variant_object mvo;
-         mvo("account", act.contract_id, 20);
-         mvo("name", act.method_name, 20);
+         mvo("sender",act.sender,20);
+         mvo("contract_id", act.contract_id, 20);
+         mvo("amount",act.amount,20);
+         mvo("method_name", act.method_name, 20);
 
          try {
              auto abi = resolver(act.contract_id);
@@ -405,7 +407,7 @@ namespace impl {
       {
          FC_ASSERT( ++recursion_depth < abi_serializer::max_recursion_depth, "recursive definition, max_recursion_depth ${r} ", ("r", abi_serializer::max_recursion_depth) );
          FC_ASSERT( fc::time_point::now() < deadline, "serialization time limit ${t}us exceeded", ("t", max_serialization_time) );
-         from_variant(v, o);
+         from_variant(v, o, 20);
       }
 
       /**
@@ -464,10 +466,14 @@ namespace impl {
          FC_ASSERT( ++recursion_depth < abi_serializer::max_recursion_depth, "recursive definition, max_recursion_depth ${r} ", ("r", abi_serializer::max_recursion_depth) );
          FC_ASSERT( fc::time_point::now() < deadline, "serialization time limit ${t}us exceeded", ("t", max_serialization_time) );
          const variant_object& vo = v.get_object();
-         FC_ASSERT(vo.contains("contract_id"), "Missing account");
-         FC_ASSERT(vo.contains("method_name"), "Missing name");
+         FC_ASSERT(vo.contains("contract_id"), "Missing contract_id");
+         FC_ASSERT(vo.contains("method_name"), "Missing method_name");
+         FC_ASSERT(vo.contains("sender"), "Missing sender");
+         FC_ASSERT(vo.contains("amount"), "Missing amount");
          from_variant(vo["contract_id"], act.contract_id);
          from_variant(vo["method_name"], act.method_name);
+         from_variant(vo["sender"], act.sender);
+         from_variant(vo["amount"], act.amount,20);
 
 //         if (vo.contains("authorization")) {
 //            from_variant(vo["authorization"], act.authorization);
