@@ -212,10 +212,14 @@ class apply_context {
             int store(uint64_t scope, uint64_t table, account_name payer,
                       uint64_t id, secondary_key_proxy_const_type value)
             {
-               if(context._db->head_block_time() > HARDFORK_1016_TIME) {//can not be removed after the chain upgraded
-                  FC_ASSERT(payer == 0 || payer == context.sender, "payer must be 0 or current contract account");
-                  if(payer==0)
-                     payer = context.receiver;
+               if(context._db->head_block_time() > HARDFORK_1018_TIME) {
+                   context.check_payer_permission(payer);
+               } else {
+                   if(context._db->head_block_time() > HARDFORK_1016_TIME) {//can be removed after the chain upgraded
+                      FC_ASSERT(payer == 0 || payer == context.sender, "payer must be 0 or current contract account");
+                      if(payer==0)
+                         payer = context.receiver;
+                   }
                }
 
                auto &tab = const_cast<table_id_object&>(context.find_or_create_table(context.receiver, scope, table, payer));

@@ -96,6 +96,11 @@
 #define HARDFORK_1016_TIME (fc::time_point_sec( 1547536200 )) // for mainnet, 2018-12-29T12:00:00 UTC
 #endif
 
+#ifndef HARDFORK_1018_TIME
+// for testnet payer check, can be deleted after next release of testnet
+#define HARDFORK_1018_TIME (fc::time_point_sec( 1550361600 )) // for test, 2019-02-17T00:00:00(UTC)
+#endif
+
 // #413 Add operation to claim asset fees
 #ifndef HARDFORK_413_TIME
 #define HARDFORK_413_TIME (fc::time_point_sec( 1446652800 ))
