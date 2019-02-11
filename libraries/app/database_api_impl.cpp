@@ -623,7 +623,6 @@ state_snapshot_result database_api_impl::create_snapshot() const
         ilog("head_block_num: ${head}, last_irreversible_block_num: ${l}", ("head", _db.head_block_num())("l", cutoff));
         ilog( "Rewinding from ${head} to ${cutoff}", ("head",_db.head_block_num())("cutoff",cutoff) );
         while (_db.head_block_num() > cutoff) {
-            block_id_type popped_block_id = _db.head_block_id();
             _db.pop_block();
         }
     } catch (const fc::exception &e) {
