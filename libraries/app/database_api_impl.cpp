@@ -606,19 +606,34 @@ bool database_api_impl::is_account_registered(string name) const
     return is_known;
 }
 
-state_snapshot_result database_api_impl::create_snapshot() const 
+state_snapshot_result database_api_impl::create_snapshot() const
 {
     state_snapshot_result result;
 
     ilog("create_snapshot ...");
-    block_id_type block_id = _db.head_block_id();
-    uint32_t  block_num = _db.head_block_num();
-
     fc::string snapshot_dir = _db.get_snapshot_dir();
     if (snapshot_dir.empty()) {
         return result;
     }
 
+    clear_pending();
+    try {
+        uint32_t cutoff = _db.get_dynamic_global_properties().last_irreversible_block_num;
+
+        ilog("head_block_num: ${head}, last_irreversible_block_num: ${l}", ("head", _db.head_block_num())("l", cutoff));
+        ilog( "Rewinding from ${head} to ${cutoff}", ("head",_db.head_block_num())("cutoff",cutoff) );
+        while (_db.head_block_num() > cutoff) {
+            block_id_type popped_block_id = _db.head_block_id();
+            _db.pop_block();
+            _db._fork_db.remove(popped_block_id);
+        }
+    } catch (const fc::exception &e) {
+        wlog( "Database close unexpected exception: ${e}", ("e", e) );
+    }
+    clear_pending();
+
+    block_id_type block_id = _db.head_block_id();
+    uint32_t  block_num = _db.head_block_num();
 
     // create snapshot
     _db.flush(snapshot_dir, block_id.str());
