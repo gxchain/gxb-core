@@ -616,7 +616,7 @@ state_snapshot_result database_api_impl::create_snapshot() const
         return result;
     }
 
-    clear_pending();
+    _db.clear_pending();
     try {
         uint32_t cutoff = _db.get_dynamic_global_properties().last_irreversible_block_num;
 
@@ -625,12 +625,11 @@ state_snapshot_result database_api_impl::create_snapshot() const
         while (_db.head_block_num() > cutoff) {
             block_id_type popped_block_id = _db.head_block_id();
             _db.pop_block();
-            _db._fork_db.remove(popped_block_id);
         }
     } catch (const fc::exception &e) {
         wlog( "Database close unexpected exception: ${e}", ("e", e) );
     }
-    clear_pending();
+    _db.clear_pending();
 
     block_id_type block_id = _db.head_block_id();
     uint32_t  block_num = _db.head_block_num();
