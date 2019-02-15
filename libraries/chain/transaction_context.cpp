@@ -49,13 +49,14 @@ namespace graphene { namespace chain {
        }
    }
 
-   void transaction_context::dispatch_action(const action &a, uint64_t receiver)
+   void transaction_context::dispatch_operation(const inter_contract_call_operation &op, uint64_t receiver)
    {
-       apply_context acontext(db(), *this, a);
-       acontext.receiver = receiver;
+       auto &d = db();
 
        try {
-           acontext.exec();
+           transaction_evaluation_state op_context(&d);
+           op_context.skip_fee_schedule_check = true;
+           d.apply_operation(op_context, op);
        } catch (...) {
            wlog("apply_context exec failed");
            throw;

@@ -94,8 +94,8 @@ struct contract_update_operation : public base_operation {
 
 struct contract_call_operation : public base_operation {
     struct fee_parameters_type {
-        uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
-        uint64_t price_per_kbyte_ram =  GRAPHENE_BLOCKCHAIN_PRECISION / 2;
+        uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
+        uint64_t price_per_kbyte_ram = GRAPHENE_BLOCKCHAIN_PRECISION / 2;
         uint64_t price_per_ms_cpu = 0;
     };
 
@@ -108,6 +108,34 @@ struct contract_call_operation : public base_operation {
     extensions_type                         extensions;
 
     account_id_type fee_payer() const { return account; }
+
+    void validate() const
+    {
+        FC_ASSERT(fee.amount >= 0);
+        FC_ASSERT(data.size() >= 0);
+    }
+
+    share_type calculate_fee(const fee_parameters_type &k) const
+    {
+        // just return basic fee, real fee will be calculated after runing
+        return k.fee;
+    }
+};
+
+struct inter_contract_call_operation : public base_operation {
+    struct fee_parameters_type {
+        uint64_t fee = 0;
+    };
+
+    asset                                   fee;
+    account_id_type                         sender_contract;
+    account_id_type                         contract_id;
+    fc::optional<asset>                     amount;
+    action_name                             method_name;
+    bytes                                   data;
+    extensions_type                         extensions;
+
+    account_id_type fee_payer() const { return sender_contract; }
 
     void validate() const
     {
@@ -152,6 +180,16 @@ FC_REFLECT(graphene::chain::contract_call_operation::fee_parameters_type,
 FC_REFLECT(graphene::chain::contract_call_operation,
             (fee)
             (account)
+            (contract_id)
+            (amount)
+            (method_name)
+            (data)
+            (extensions))
+
+FC_REFLECT(graphene::chain::inter_contract_call_operation::fee_parameters_type, (fee))
+FC_REFLECT(graphene::chain::inter_contract_call_operation,
+            (fee)
+            (sender_contract)
             (contract_id)
             (amount)
             (method_name)

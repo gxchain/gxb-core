@@ -31,6 +31,7 @@
 #include <graphene/chain/genesis_state.hpp>
 #include <graphene/chain/evaluator.hpp>
 #include <graphene/chain/wasm_interface.hpp>
+#include <graphene/chain/transaction_context.hpp>
 
 #include <graphene/db/object_database.hpp>
 #include <graphene/db/object.hpp>
@@ -506,6 +507,13 @@ namespace graphene { namespace chain {
 
         private:
            fc::string                        snapshot_dir;
+
+        // for inter contract
+        public:
+           void                     set_contract_transaction_ctx(transaction_context *ctx) { contract_transaction_ctx = ctx; }
+           transaction_context*     get_contract_transaction_ctx() const { return contract_transaction_ctx; }
+        private:
+           transaction_context             *contract_transaction_ctx = nullptr;
    };
 
    namespace detail
