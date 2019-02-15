@@ -508,11 +508,8 @@
         */
        void set_operation_fees(signed_transaction& tx, const fee_schedule& s, fc::optional<asset_object> fee_asset = fc::optional<asset_object>())
        {
-           auto core_asset_id = asset_id_type();
            auto dyn_props = get_dynamic_global_properties();
-           if (dyn_props.time > HARDFORK_1008_TIME) {
-               core_asset_id = asset_id_type(1);
-           }
+           auto core_asset_id = (dyn_props.time > HARDFORK_1008_TIME) ? asset_id_type(1) : asset_id_type();
            for( auto& op : tx.operations )  {
                if (fee_asset.valid()) {
                    s.set_fee(op, fee_asset->options.core_exchange_rate, core_asset_id);
@@ -934,10 +931,8 @@
              op.review_period_seconds = review_period_seconds;
           trx.operations = {op};
 
-          auto core_asset_id = asset_id_type();
-          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
-              core_asset_id = asset_id_type(1);
-          }
+          auto dyn_props = get_dynamic_global_properties();
+          auto core_asset_id = (dyn_props.time > HARDFORK_1008_TIME) ? asset_id_type(1) : asset_id_type();
           _remote_db->get_global_properties().parameters.current_fees->set_fee(trx.operations.front(), price::unit_price(core_asset_id), core_asset_id);
 
           return trx = sign_transaction(trx, broadcast);
@@ -3204,10 +3199,8 @@
           prop_op.fee_paying_account = get_account(proposing_account).id;
 
           prop_op.proposed_ops.emplace_back(update_op);
-          auto core_asset_id = asset_id_type();
-          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
-              core_asset_id = asset_id_type(1);
-          }
+          auto dyn_props = get_dynamic_global_properties();
+          auto core_asset_id = (dyn_props.time > HARDFORK_1008_TIME) ? asset_id_type(1) : asset_id_type();
           current_params.current_fees->set_fee(prop_op.proposed_ops.back().op, price::unit_price(core_asset_id), core_asset_id);
 
           signed_transaction tx;
@@ -3334,10 +3327,8 @@
           prop_op.fee_paying_account = get_account(proposing_account).id;
 
           prop_op.proposed_ops.emplace_back(update_op);
-          auto core_asset_id = asset_id_type();
-          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
-              core_asset_id = asset_id_type(1);
-          }
+          auto dyn_props = get_dynamic_global_properties();
+          auto core_asset_id = (dyn_props.time > HARDFORK_1008_TIME) ? asset_id_type(1) : asset_id_type();
           current_params.current_fees->set_fee(prop_op.proposed_ops.back().op, price::unit_price(core_asset_id), core_asset_id);
 
           signed_transaction tx;
@@ -5531,11 +5522,8 @@
        FC_ASSERT(asset_obj.valid(), "Could not find asset matching ${asset}", ("asset", symbol));
        auto amount = asset_obj->amount_from_string(amount_in);
 
-       auto core_asset_id = asset_id_type();
        auto dyn_props = get_dynamic_global_properties();
-       if (dyn_props.time > HARDFORK_1008_TIME) {
-           core_asset_id = asset_id_type(1);
-       }
+       auto core_asset_id = (dyn_props.time > HARDFORK_1008_TIME) ? asset_id_type(1) : asset_id_type();
        from_blind.fee = fees->calculate_fee(from_blind, asset_obj->options.core_exchange_rate, core_asset_id);
 
        auto blind_in = asset_obj->amount_to_string( from_blind.fee + amount );
@@ -5619,11 +5607,8 @@
 
        //auto from_priv_key = my->get_private_key( from_key );
 
-       auto core_asset_id = asset_id_type();
        auto dyn_props = get_dynamic_global_properties();
-       if (dyn_props.time > HARDFORK_1008_TIME) {
-           core_asset_id = asset_id_type(1);
-       }
+       auto core_asset_id = (dyn_props.time > HARDFORK_1008_TIME) ? asset_id_type(1) : asset_id_type();
        blind_tr.fee = fees->calculate_fee(blind_tr, asset_obj->options.core_exchange_rate, core_asset_id);
 
        vector<commitment_type> used;
