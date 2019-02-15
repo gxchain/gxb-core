@@ -5531,7 +5531,12 @@
        FC_ASSERT(asset_obj.valid(), "Could not find asset matching ${asset}", ("asset", symbol));
        auto amount = asset_obj->amount_from_string(amount_in);
 
-       from_blind.fee  = fees->calculate_fee( from_blind, asset_obj->options.core_exchange_rate );
+       auto core_asset_id = asset_id_type();
+       auto dyn_props = get_dynamic_global_properties();
+       if (dyn_props.time > HARDFORK_1008_TIME) {
+           core_asset_id = asset_id_type(1);
+       }
+       from_blind.fee = fees->calculate_fee(from_blind, asset_obj->options.core_exchange_rate, core_asset_id);
 
        auto blind_in = asset_obj->amount_to_string( from_blind.fee + amount );
 
@@ -5546,7 +5551,7 @@
        from_blind.amount = amount;
        from_blind.blinding_factor = conf.outputs.back().decrypted_memo.blinding_factor;
        from_blind.inputs.push_back( {conf.outputs.back().decrypted_memo.commitment, authority() } );
-       from_blind.fee  = fees->calculate_fee( from_blind, asset_obj->options.core_exchange_rate );
+       from_blind.fee = fees->calculate_fee(from_blind, asset_obj->options.core_exchange_rate, core_asset_id);
 
        idump( (from_blind) );
        conf.trx.operations.push_back(from_blind);
@@ -5614,7 +5619,12 @@
 
        //auto from_priv_key = my->get_private_key( from_key );
 
-       blind_tr.fee  = fees->calculate_fee( blind_tr, asset_obj->options.core_exchange_rate );
+       auto core_asset_id = asset_id_type();
+       auto dyn_props = get_dynamic_global_properties();
+       if (dyn_props.time > HARDFORK_1008_TIME) {
+           core_asset_id = asset_id_type(1);
+       }
+       blind_tr.fee = fees->calculate_fee(blind_tr, asset_obj->options.core_exchange_rate, core_asset_id);
 
        vector<commitment_type> used;
 
@@ -5826,7 +5836,13 @@
                   [&]( const blind_output& a, const blind_output& b ){ return a.commitment < b.commitment; } );
 
        confirm.trx.operations.push_back( bop );
-       my->set_operation_fees( confirm.trx, my->_remote_db->get_global_properties().parameters.current_fees);
+       if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+           auto fee_asset_obj = my->find_asset(asset_id_type(1));
+           my->set_operation_fees( confirm.trx, my->_remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+       }
+       else {
+           my->set_operation_fees( confirm.trx, my->_remote_db->get_global_properties().parameters.current_fees);
+       }
        confirm.trx.validate();
        confirm.trx = sign_transaction(confirm.trx, broadcast);
 
