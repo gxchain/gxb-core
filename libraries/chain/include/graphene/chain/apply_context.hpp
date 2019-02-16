@@ -531,13 +531,13 @@ class apply_context {
 
    private:
       iterator_cache<key_value_object>    keyval_cache;
-      vector<action>                      _inline_actions;
+      vector<inter_contract_call_operation>                      _inline_operations;
       bool                                contract_log_to_console;
 
    public:
       void exec();
       void exec_one();
-      void execute_inline(action &&a);
+      void execute_inline(inter_contract_call_operation &&op);
 
    public:
       void check_payer_permission(account_name& payer);
