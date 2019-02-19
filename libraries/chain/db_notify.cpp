@@ -288,6 +288,8 @@ struct get_impacted_account_visitor
    }
 
    void operator() (const inter_contract_call_operation& op) {
+       _impacted.insert(op.sender_contract);
+       _impacted.insert(op.contract_id);
    }
 };
 

@@ -340,7 +340,7 @@ void_result inter_contract_call_evaluator::do_apply(const inter_contract_call_op
     database &d = db();
     transaction_context* contract_transaction_ctx = d.get_contract_transaction_ctx();
 
-    action act{op.sender_contract.instance, op.contract_id.instance, op.method_name, op.data};//TODO rename action to operation etc...
+    action act{op.sender_contract.instance, op.contract_id.instance, op.method_name, op.data};
     if (op.amount.valid()) {
         act.amount.amount = op.amount->amount.value;
         act.amount.asset_id = op.amount->asset_id.instance;
