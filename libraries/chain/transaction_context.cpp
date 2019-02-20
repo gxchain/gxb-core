@@ -14,6 +14,12 @@ namespace graphene { namespace chain {
         inter_contract_calling_params(d.get_inter_contract_calling_params()),
         transaction_cpu_usage_us(0)
    {
+       _db->set_contract_transaction_ctx(this);
+   }
+
+   transaction_context::~transaction_context()
+   {
+       _db->set_contract_transaction_ctx(nullptr);
    }
 
    void transaction_context::pause_billing_timer() {
@@ -49,13 +55,14 @@ namespace graphene { namespace chain {
        }
    }
 
-   void transaction_context::dispatch_action(const action &a, uint64_t receiver)
+   void transaction_context::dispatch_operation(const inter_contract_call_operation &op)
    {
-       apply_context acontext(db(), *this, a);
-       acontext.receiver = receiver;
+       auto &d = db();
 
        try {
-           acontext.exec();
+           transaction_evaluation_state op_context(&d);
+           op_context.skip_fee_schedule_check = true;
+           d.apply_operation(op_context, op);
        } catch (...) {
            wlog("apply_context exec failed");
            throw;
