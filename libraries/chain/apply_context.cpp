@@ -68,8 +68,8 @@ void apply_context::exec()
 
     exec_one();
 
-    for (const auto &inline_action : _inline_actions) {
-        trx_context.dispatch_action(inline_action, inline_action.contract_id);
+    for (const auto &inline_operation : _inline_operations) {
+        trx_context.dispatch_operation(inline_operation);
     }
 }
 
@@ -81,9 +81,9 @@ void apply_context::reset_console()
     }
 }
 
-void apply_context::execute_inline(action &&a)
+void apply_context::execute_inline(inter_contract_call_operation &&op)
 {
-    _inline_actions.emplace_back(move(a));
+    _inline_operations.emplace_back(move(op));
 }
 
 void apply_context::check_payer_permission(account_name& payer)

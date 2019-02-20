@@ -66,4 +66,13 @@ class contract_call_evaluator : public evaluator<contract_call_evaluator>
     contract_call_operation::fee_parameters_type fee_param;
 };
 
+class inter_contract_call_evaluator : public evaluator<inter_contract_call_evaluator>
+{
+  public:
+    typedef inter_contract_call_operation operation_type;
+
+    void_result do_evaluate(const inter_contract_call_operation &op);
+    void_result do_apply(const inter_contract_call_operation &op, uint32_t billed_cpu_time_us = 0);
+};
+
 } }
