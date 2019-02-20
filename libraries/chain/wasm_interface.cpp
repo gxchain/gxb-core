@@ -285,9 +285,9 @@ class crypto_api : public context_aware_api {
       bool verify_signature(array_ptr<char> data, size_t datalen, const fc::ecc::compact_signature& sig, array_ptr<char> pub_key, size_t pub_keylen)
       {
           digest_type::encoder enc;
-          fc::raw::pack(enc, std::string(data.value));
+          fc::raw::pack(enc, std::string(data.value, datalen));
 
-          public_key_type pk{pub_key.value};
+          public_key_type pk{std::string(pub_key.value, pub_keylen)};
           return public_key_type(fc::ecc::public_key(sig, enc.result(), true)) == pk;
       }
 };
