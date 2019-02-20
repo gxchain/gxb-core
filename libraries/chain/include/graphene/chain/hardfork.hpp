@@ -96,6 +96,11 @@
 #define HARDFORK_1016_TIME (fc::time_point_sec( 1548907200 )) // for testnet, 2019-01-31T04:00:00(UTC)
 #endif
 
+#ifndef HARDFORK_1018_TIME
+// for testnet payer check, can be deleted after next release of testnet
+#define HARDFORK_1018_TIME (fc::time_point_sec( 1551398400 )) // for testnet, 2019-03-01T00:00:00(UTC)
+#endif
+
 // #1103 the time point before you can renaming asset symbol
 #ifndef HARDFORK_1103_TIME
 #define HARDFORK_1103_TIME (fc::time_point_sec( 1541203200 ))
