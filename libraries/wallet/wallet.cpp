@@ -4989,7 +4989,7 @@
         return my->get_pub_key_from_wif_key(wif_key);
     }
 
-    signature_type wallet_api::sign_string(string wif_key, const string &raw_string, bool pack = true)
+    signature_type wallet_api::sign_string(string wif_key, const string &raw_string, bool pack)
     {
         return my->sign_string(wif_key, raw_string, pack);
     }
