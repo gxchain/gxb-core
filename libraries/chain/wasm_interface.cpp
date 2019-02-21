@@ -224,13 +224,22 @@ class crypto_api : public context_aware_api {
                               const fc::ecc::compact_signature &sig,
                               array_ptr<char> pub, size_t publen)
       {
-
           public_key_type pk;
           datastream<const char *> pubds(pub, publen);
           fc::raw::unpack(pubds, pk);
 
           auto check = public_key_type(fc::ecc::public_key(sig, digest, true));
           FC_ASSERT(check == pk, "Error expected key different than recovered key");
+      }
+
+      //deprecated
+      bool verify_signature(array_ptr<char> data, size_t datalen, const fc::ecc::compact_signature& sig, array_ptr<char> pub_key, size_t pub_keylen)
+      {
+          digest_type::encoder enc;
+          fc::raw::pack(enc, std::string(data.value));
+
+          public_key_type pk{std::string(pub_key.value)};
+          return public_key_type(fc::ecc::public_key(sig, enc.result(), true)) == pk;
       }
 
       template<class Encoder> auto encode(char* data, size_t datalen) {
@@ -280,15 +289,6 @@ class crypto_api : public context_aware_api {
 
       void ripemd160(array_ptr<char> data, size_t datalen, fc::ripemd160& hash_val) {
          hash_val = encode<fc::ripemd160::encoder>( data, datalen );
-      }
-
-      bool verify_signature(array_ptr<char> data, size_t datalen, const fc::ecc::compact_signature& sig, array_ptr<char> pub_key, size_t pub_keylen)
-      {
-          digest_type::encoder enc;
-          fc::raw::pack(enc, std::string(data.value, datalen));
-
-          public_key_type pk{std::string(pub_key.value, pub_keylen)};
-          return public_key_type(fc::ecc::public_key(sig, enc.result(), true)) == pk;
       }
 };
 
@@ -1667,7 +1667,8 @@ REGISTER_INTRINSICS(global_api,
 );
 
 REGISTER_INTRINSICS(crypto_api,
-(assert_recover_key,     void(int, int, int, int)       )
+(assert_recover_key,     void(int, int, int, int)      )
+(verify_signature,       int(int, int, int, int, int)  )
 (assert_sha256,          void(int, int, int)           )
 (assert_sha1,            void(int, int, int)           )
 (assert_sha512,          void(int, int, int)           )
@@ -1676,7 +1677,6 @@ REGISTER_INTRINSICS(crypto_api,
 (sha256,                 void(int, int, int)           )
 (sha512,                 void(int, int, int)           )
 (ripemd160,              void(int, int, int)           )
-(verify_signature,       int(int, int, int, int, int)  )
 );
 
 REGISTER_INTRINSICS(action_api,
