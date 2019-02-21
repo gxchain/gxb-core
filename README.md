@@ -54,13 +54,6 @@ Current binary version of the GXB-Core software for ubuntu 14.04 LTS, see [here]
 ## Docs
 Technical document is available [here](https://docs.gxchain.org/)
 
-
-#### Document For Exchange
-1. [Document For Exchange(中文)](https://github.com/gxchain/gxb-core/wiki/for_exchanges_cn)
-
-2. [Document For Exchange(en)](https://github.com/gxchain/gxb-core/wiki/Instruction-for-exchanges)
-
-
 ## Getting Started
 
 #### Building
