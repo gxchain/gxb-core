@@ -6,6 +6,8 @@ namespace graphene { namespace chain {
       public:
         transaction_context(database &d, uint64_t origin, fc::microseconds max_trx_cpu_us);
 
+        ~transaction_context();
+
         void pause_billing_timer();
 
         void resume_billing_timer();
@@ -42,11 +44,7 @@ namespace graphene { namespace chain {
         }
 
       private:
-        void dispatch_action(const action &a, uint64_t receiver);
-        inline void dispatch_action(const action &a)
-        {
-            dispatch_action(a, a.contract_id);
-        };
+        void dispatch_operation(const inter_contract_call_operation &op);
 
       private:
         friend class apply_context;
