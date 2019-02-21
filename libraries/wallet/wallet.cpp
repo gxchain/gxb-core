@@ -3692,14 +3692,18 @@
           return fc::string(wif_pub_key);
        }
 
-      signature_type sign_string(string wif_key, const string &raw_string)
+      signature_type sign_string(string wif_key, const string &raw_string, bool pack = true)
       {
           fc::optional<fc::ecc::private_key> privkey = wif_to_key(wif_key);
           FC_ASSERT(privkey.valid(), "Malformed private key in _keys");
 
-          digest_type::encoder enc;
-          fc::raw::pack(enc, raw_string);
-          return privkey->sign_compact(enc.result());
+          if (pack) {
+              digest_type::encoder enc;
+              fc::raw::pack(enc, raw_string);
+              return privkey->sign_compact(enc.result());
+          } else {
+              return privkey->sign_compact(fc::sha256::hash(raw_string));
+          }
       }
 
        void flood_network(string prefix, uint32_t number_of_transactions)
@@ -4985,9 +4989,9 @@
         return my->get_pub_key_from_wif_key(wif_key);
     }
 
-    signature_type wallet_api::sign_string(string wif_key, const string &raw_string)
+    signature_type wallet_api::sign_string(string wif_key, const string &raw_string, bool pack)
     {
-        return my->sign_string(wif_key, raw_string);
+        return my->sign_string(wif_key, raw_string, pack);
     }
 
     bool wallet_api::verify_transaction_signature(const signed_transaction& trx, public_key_type pub_key)
