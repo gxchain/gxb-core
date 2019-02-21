@@ -14,6 +14,11 @@ extern "C" {
  */
 void assert_recover_key(const checksum256 *digest,const signature *sig,
                               const char *pub, uint32_t publen);
+/*
+ *  This method is deprecated, assert_recover_key is more efficient and robust
+ */
+bool verify_signature(const char *data, uint32_t datalen, const signature* sig,  const char *pub_key, uint32_t pub_keylen);
+
 /**
  *  This method is implemented as:
  *
@@ -81,6 +86,4 @@ void sha512(const char *data, uint32_t length, checksum512 *hash);
  *  `hash` should be checksum<160>
  */
 void ripemd160(const char *data, uint32_t length, checksum160 *hash);
-
-bool verify_signature(const char *data, uint32_t datalen, const signature* sig,  const char *pub_key, uint32_t pub_keylen);
 }
