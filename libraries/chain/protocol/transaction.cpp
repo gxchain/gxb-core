@@ -279,7 +279,8 @@ void verify_authority( const vector<operation>& ops, const flat_set<public_key_t
       GRAPHENE_ASSERT( required_active.find(GRAPHENE_COMMITTEE_ACCOUNT) == required_active.end(),
                        invalid_committee_approval, "Committee account may only propose transactions" );
 
-   sign_state s(sigs,get_active);
+   flat_set<public_key_type> keys;
+   sign_state s(sigs,get_active, keys);
    s.max_recursion = max_recursion_depth;
    for( auto& id : active_aprovals )
       s.approved_by.insert( id );
