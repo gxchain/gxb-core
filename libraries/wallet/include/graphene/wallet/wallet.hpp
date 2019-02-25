@@ -2066,9 +2066,10 @@ class wallet_api
        *
        * @param wif_key private key
        * @param raw_string string to be signed
+       * @param pack pack raw_string befor sha256
        * @return signature_type
        */
-      signature_type sign_string(string wif_key, const string &raw_string);
+      signature_type sign_string(string wif_key, const string &raw_string, bool pack = true);
 
       /** verify_transaction_signature
        * @param trx

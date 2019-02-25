@@ -136,8 +136,8 @@ namespace graphene { namespace chain {
             contract_call_operation, //75
             contract_update_operation, //76
             trust_node_pledge_withdraw_operation, //77
-            inline_transfer_operation //78
-
+            inline_transfer_operation, //78
+            inter_contract_call_operation //79
          > operation;
 
    /// @} // operations group

@@ -212,11 +212,7 @@ class apply_context {
             int store(uint64_t scope, uint64_t table, account_name payer,
                       uint64_t id, secondary_key_proxy_const_type value)
             {
-               if(context._db->head_block_time() > HARDFORK_1016_TIME) {//can not be removed after the chain upgraded
-                  FC_ASSERT(payer == 0 || payer == context.sender, "payer must be 0 or current contract account");
-                  if(payer==0)
-                     payer = context.receiver;
-               }
+               context.check_payer_permission(payer);
 
                auto &tab = const_cast<table_id_object&>(context.find_or_create_table(context.receiver, scope, table, payer));
 
@@ -531,13 +527,13 @@ class apply_context {
 
    private:
       iterator_cache<key_value_object>    keyval_cache;
-      vector<action>                      _inline_actions;
+      vector<inter_contract_call_operation>                      _inline_operations;
       bool                                contract_log_to_console;
 
    public:
       void exec();
       void exec_one();
-      void execute_inline(action &&a);
+      void execute_inline(inter_contract_call_operation &&op);
 
    public:
       void check_payer_permission(account_name& payer);

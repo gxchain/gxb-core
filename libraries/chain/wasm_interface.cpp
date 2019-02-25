@@ -224,13 +224,22 @@ class crypto_api : public context_aware_api {
                               const fc::ecc::compact_signature &sig,
                               array_ptr<char> pub, size_t publen)
       {
-
           public_key_type pk;
           datastream<const char *> pubds(pub, publen);
           fc::raw::unpack(pubds, pk);
 
           auto check = public_key_type(fc::ecc::public_key(sig, digest, true));
           FC_ASSERT(check == pk, "Error expected key different than recovered key");
+      }
+
+      //deprecated
+      bool verify_signature(array_ptr<char> data, size_t datalen, const fc::ecc::compact_signature& sig, array_ptr<char> pub_key, size_t pub_keylen)
+      {
+          digest_type::encoder enc;
+          fc::raw::pack(enc, std::string(data.value));
+
+          public_key_type pk{std::string(pub_key.value)};
+          return public_key_type(fc::ecc::public_key(sig, enc.result(), true)) == pk;
       }
 
       template<class Encoder> auto encode(char* data, size_t datalen) {
@@ -280,15 +289,6 @@ class crypto_api : public context_aware_api {
 
       void ripemd160(array_ptr<char> data, size_t datalen, fc::ripemd160& hash_val) {
          hash_val = encode<fc::ripemd160::encoder>( data, datalen );
-      }
-
-      bool verify_signature(array_ptr<char> data, size_t datalen, const fc::ecc::compact_signature& sig, array_ptr<char> pub_key, size_t pub_keylen)
-      {
-          digest_type::encoder enc;
-          fc::raw::pack(enc, std::string(data.value));
-
-          public_key_type pk{pub_key.value};
-          return public_key_type(fc::ecc::public_key(sig, enc.result(), true)) == pk;
       }
 };
 
@@ -1096,7 +1096,15 @@ class transaction_api : public context_aware_api {
              FC_ASSERT(iter->payable, "method_name ${m} not payable", ("m", act.method_name));
          }
 
-         context.execute_inline(std::move(act));
+         inter_contract_call_operation op;
+         op.fee = asset{0, context._db->current_core_asset_id()};
+         if(act.amount.amount > 0)
+             op.amount = asset{act.amount.amount, asset_id_type(act.amount.asset_id)};
+         op.contract_id = account_id_type(act.contract_id);
+         op.data = act.data;
+         op.method_name = act.method_name;
+         op.sender_contract = account_id_type(context.receiver);
+         context.execute_inline(std::move(op));
       }
 };
 
@@ -1538,7 +1546,6 @@ class asset_api : public context_aware_api
         FC_ASSERT(to >= 0, "account id ${a} to must > 0", ("a", to));
         FC_ASSERT(asset_id >= 0, "asset id ${a} must > 0", ("a", asset_id));
 
-        // dlog("${f} -> ${t}, amount ${a}, asset_id ${i}", ("f", from)("t", to)("a", amount)("i", asset_id));
         auto &d = context.db();
         asset a{amount, asset_id_type(asset_id & GRAPHENE_DB_MAX_INSTANCE_ID)};
         account_id_type from_account = account_id_type(from & GRAPHENE_DB_MAX_INSTANCE_ID);
@@ -1546,8 +1553,14 @@ class asset_api : public context_aware_api
         FC_ASSERT(d.get_balance(from_account, a.asset_id).amount >= amount, "insufficient balance ${b}, unable to withdraw ${a} from account ${c}", ("b", d.to_pretty_string(d.get_balance(from_account, a.asset_id)))("a", amount)("c", from_account));
 
         // adjust balance
-        d.adjust_balance(from_account, -a);
-        d.adjust_balance(to_account, a);
+        transaction_evaluation_state op_context(&d);
+        op_context.skip_fee_schedule_check = true;
+        transfer_operation transfer_op;
+        transfer_op.amount = a;
+        transfer_op.from = from_account;
+        transfer_op.to = to_account;
+        transfer_op.fee = asset{0, asset_id_type(1)};
+        d.apply_operation(op_context, transfer_op);
     }
 
     void inline_transfer(int64_t from, int64_t to, int64_t asset_id, int64_t amount, array_ptr<char> data, size_t datalen)
@@ -1654,7 +1667,8 @@ REGISTER_INTRINSICS(global_api,
 );
 
 REGISTER_INTRINSICS(crypto_api,
-(assert_recover_key,     void(int, int, int, int)       )
+(assert_recover_key,     void(int, int, int, int)      )
+(verify_signature,       int(int, int, int, int, int)  )
 (assert_sha256,          void(int, int, int)           )
 (assert_sha1,            void(int, int, int)           )
 (assert_sha512,          void(int, int, int)           )
@@ -1663,7 +1677,6 @@ REGISTER_INTRINSICS(crypto_api,
 (sha256,                 void(int, int, int)           )
 (sha512,                 void(int, int, int)           )
 (ripemd160,              void(int, int, int)           )
-(verify_signature,       int(int, int, int, int, int)  )
 );
 
 REGISTER_INTRINSICS(action_api,

@@ -328,4 +328,27 @@ void contract_call_evaluator::charge_ram_fee_by_account(account_receipt &r, data
     }
 }
 
+void_result inter_contract_call_evaluator::do_evaluate(const inter_contract_call_operation &op)
+{ try {
+    database &d = db();
+    FC_ASSERT(d.get_contract_transaction_ctx() != nullptr, "contract_transaction_ctx invalid");
+    return void_result();
+} FC_CAPTURE_AND_RETHROW((op.sender_contract)(op.contract_id)(op.fee)(op.amount)(op.method_name)(op.data)) }
+
+void_result inter_contract_call_evaluator::do_apply(const inter_contract_call_operation &op, uint32_t billed_cpu_time_us)
+{ try {
+    database &d = db();
+    transaction_context* contract_transaction_ctx = d.get_contract_transaction_ctx();
+
+    action act{op.sender_contract.instance, op.contract_id.instance, op.method_name, op.data};
+    if (op.amount.valid()) {
+        act.amount.amount = op.amount->amount.value;
+        act.amount.asset_id = op.amount->asset_id.instance;
+    }
+
+    apply_context ctx{d, *contract_transaction_ctx, act};
+    ctx.exec();
+    return void_result();
+} FC_CAPTURE_AND_RETHROW((op.sender_contract)(op.contract_id)(op.fee)(op.amount)(op.method_name)(op.data)) }
+
 } } // graphene::chain
