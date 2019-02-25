@@ -96,6 +96,11 @@
 #define HARDFORK_1016_TIME (fc::time_point_sec( 1547536200 )) // for mainnet, 2018-12-29T12:00:00 UTC
 #endif
 
+#ifndef HARDFORK_1019_TIME
+// for mainnet can transfer to contract account, can be removed after mainnet released
+#define HARDFORK_1019_TIME (fc::time_point_sec( 1552176000 ))  // for mainnet, 2019-03-10T00:00:00 UTC
+#endif
+
 // #413 Add operation to claim asset fees
 #ifndef HARDFORK_413_TIME
 #define HARDFORK_413_TIME (fc::time_point_sec( 1446652800 ))
