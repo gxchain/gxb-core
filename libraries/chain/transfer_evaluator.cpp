@@ -63,15 +63,6 @@ void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
           );
       }
 
-      if(d.head_block_time() <= HARDFORK_1019_TIME) { // can be removed after mainnet released
-          GRAPHENE_ASSERT(
-             to_account.is_contract_account(),
-             transfer_restricted_transfer_to_contract,
-             "the account '${to}' is a contract account",
-             ("to", to_account.name)
-             );
-      }
-
       bool insufficient_balance = d.get_balance( from_account, asset_type ).amount >= op.amount.amount;
       FC_ASSERT( insufficient_balance,
                  "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
