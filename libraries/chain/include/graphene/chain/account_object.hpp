@@ -310,6 +310,12 @@ namespace graphene { namespace chain {
             return db.get(*cashback_vb);
          }
 
+         /// @return true if this is a contract account; false otherwise.
+         bool is_contract_account()const
+         {
+            return code.size() == 0;
+         }
+
          /// @return true if this is a lifetime member account; false otherwise.
          bool is_lifetime_member()const
          {
