@@ -1555,12 +1555,14 @@ class asset_api : public context_aware_api
         // adjust balance
         transaction_evaluation_state op_context(&d);
         op_context.skip_fee_schedule_check = true;
-        transfer_operation transfer_op;
-        transfer_op.amount = a;
-        transfer_op.from = from_account;
-        transfer_op.to = to_account;
-        transfer_op.fee = asset{0, asset_id_type(1)};
-        d.apply_operation(op_context, transfer_op);
+
+        inline_transfer_operation op;
+        op.amount = a;
+        op.from = from_account;
+        op.to = to_account;
+        op.fee = asset{0, asset_id_type(1)};
+        op.validate();
+        d.apply_operation(op_context, op);
     }
 
     void inline_transfer(int64_t from, int64_t to, int64_t asset_id, int64_t amount, array_ptr<char> data, size_t datalen)
