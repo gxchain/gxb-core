@@ -88,6 +88,8 @@ void abi_serializer::configure_built_in_types()
     built_in_types.emplace("bytes", pack_unpack<bytes>());
     built_in_types.emplace("string", pack_unpack<string>());
 
+
+    built_in_types.emplace("block_id_type", pack_unpack<checksum160_type>());
     built_in_types.emplace("checksum160", pack_unpack<checksum160_type>());
     built_in_types.emplace("checksum256", pack_unpack<checksum256_type>());
     built_in_types.emplace("checksum512", pack_unpack<checksum512_type>());
