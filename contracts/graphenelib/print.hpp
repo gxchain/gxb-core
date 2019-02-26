@@ -156,6 +156,26 @@ namespace graphene {
       prints(val?"true":"false");
    }
 
+   inline void print( public_key val){
+      print("0x");
+      printhex(val.data,sizeof(val.data));
+   }
+   inline void print( signature val){
+      print("0x");
+      printhex(val.data,sizeof(val.data));
+   }
+   inline void print( checksum256 val){
+      print("0x");
+      printhex(val.hash,sizeof(val.hash));
+   }
+   inline void print( checksum160 val){
+      print("0x");
+      printhex(val.hash,sizeof(val.hash));
+   }
+   inline void print( checksum512 val){
+      print("0x");
+      printhex(val.hash,sizeof(val.hash));
+   }
 
    template<typename T>
    inline void print( T&& t ) {
