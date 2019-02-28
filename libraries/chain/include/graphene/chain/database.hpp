@@ -296,6 +296,7 @@ namespace graphene { namespace chain {
 
          asset_id_type current_core_asset_id();
          asset from_core_asset(const asset &a, const asset_id_type &id);
+         inline asset to_core_asset(const asset &a);
          //////////////////// db_init.cpp ////////////////////
 
          void initialize_evaluators();
