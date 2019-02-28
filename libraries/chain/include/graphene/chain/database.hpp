@@ -296,6 +296,16 @@ namespace graphene { namespace chain {
 
          asset_id_type current_core_asset_id();
          asset from_core_asset(const asset &a, const asset_id_type &id);
+         asset to_core_asset(const asset &a)
+         {
+             asset_id_type core_asset_id = current_core_asset_id();
+             if(a.asset_id == core_asset_id) {
+                 return a;
+             }
+
+             const auto &rate = get<asset_object>(a.asset_id).options.core_exchange_rate;
+             return asset(a.amount * rate.base.amount / rate.quote.amount, core_asset_id);
+         }
          //////////////////// db_init.cpp ////////////////////
 
          void initialize_evaluators();

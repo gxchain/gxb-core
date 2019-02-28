@@ -1530,9 +1530,7 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
                ptx.operation_results.back().get<contract_receipt>().fee :
                ptx.operation_results.back().get<contract_receipt_old>().fee;
 
-           if (id != asset_id_type(1)) {
-               op_fee = _db.from_core_asset(op_fee, id);
-           }
+           op_fee = _db.from_core_asset(_db.to_core_asset(op_fee), id);
            fc::variant r;
            fc::to_variant(op_fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
            result.push_back(r);
