@@ -185,7 +185,9 @@ void apply_context::db_remove_i64(int iterator)
            --t.count;
         });
         if (table_obj.count == 0) {
-           remove_table(table_obj);
+           if(_db->head_block_time() <= HARDFORK_1020_TIME) {
+              remove_table(table_obj);
+           }
         }
     } else {
         update_ram_usage(ram_delta);
