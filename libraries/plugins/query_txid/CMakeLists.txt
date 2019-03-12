@@ -4,7 +4,7 @@ add_library( graphene_query_txid
              query_txid_plugin.cpp
            )
 
-target_link_libraries( graphene_query_txid graphene_chain graphene_app )
+target_link_libraries( graphene_query_txid graphene_chain graphene_app leveldb)
 target_include_directories( graphene_query_txid
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
