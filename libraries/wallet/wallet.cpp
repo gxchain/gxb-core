@@ -1147,7 +1147,7 @@
              auto action_type = abis.get_action_type(method);
              GRAPHENE_ASSERT(!action_type.empty(), action_validate_exception, "Unknown action ${action} in contract ${contract}", ("action", method)("contract", contract));
              contract_call_op.data = abis.variant_to_binary(action_type, action_args_var, fc::milliseconds(1000000));
-             contract_call_op.fee = asset{0, asset_id_type(1)};
+             contract_call_op.fee = (get_dynamic_global_properties().time > HARDFORK_1008_TIME) ? asset{0, asset_id_type(1)} : asset{0, asset_id_type(0)};
 
              signed_transaction tx;
              tx.operations.push_back(contract_call_op);
