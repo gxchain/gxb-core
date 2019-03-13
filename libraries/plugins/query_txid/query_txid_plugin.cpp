@@ -40,7 +40,7 @@ namespace detail
         uint32_t                        curr_block_num = 0;   
 
         DB                              *db;
-        std::string                     db_path;
+        std::string                     db_path = "/tmp/lvd.db";
         void get_entry_queue();                     //Consume specified number (default 1000) of the entry structure, inserted into leveldb, transactional (insert db and delete from memory to synchronize)
         void put_entry_queue(uint64_t irr_num);     //Produce the entry structure of the confirmed transaction into the queue
     };
@@ -52,13 +52,6 @@ namespace detail
         Options options;
         options.create_if_missing = true;
         Status s = DB::Open(options,db_path,&db);
-
-        leveldb::Iterator* it = db->NewIterator(leveldb::ReadOptions());
-        for (it->SeekToFirst(); it->Valid(); it->Next()) {
-            ilog("key:${key}--value:${value}",("key",it->key().ToString())("value",it->value().ToString()));
-        }
-        assert(it->status().ok());  // Check for any errors found during the scan
-        delete it;
     }
     void query_txid_plugin_impl::collect_txid_index(const signed_block &b){
         graphene::chain::database& db = database();
@@ -88,6 +81,7 @@ namespace detail
                 auto item = trx_queue.front();
                 trx_queue.pop();
                 auto serialize = fc::raw::pack(item);
+                ilog("buffer:${buffer}",("buffer",serialize.data()));
                 std::string txid(item.txid);
                 batch.Put(txid,{serialize.data(),serialize.size()});
             }
@@ -98,9 +92,14 @@ namespace detail
         }  
         sig_able_put.notify_all();
         lock.unlock();
+        leveldb::Iterator* it = db->NewIterator(leveldb::ReadOptions());
+        for (it->SeekToFirst(); it->Valid(); it->Next()) {
+            ilog("key:${key} -- value:${value}",("key",it->key().ToString())("value",it->value().ToString()));
+        }
+        assert(it->status().ok());  // Check for any errors found during the scan
+        delete it;
     }
     void query_txid_plugin_impl::put_entry_queue(uint64_t irr_num){
-        ilog("produce thread todo test11111112 ");
         //1.Write to the queue, use the mutex to lock the queue
         std::unique_lock<std::mutex> lock(mut);
         //2.Push the entry structure of the confirmed transaction into the queue
@@ -108,7 +107,6 @@ namespace detail
             ilog("produce thread todo test ");
             sig_able_put.wait(lock);
         }
-        ilog("produce thread todo test222222 ");
         graphene::chain::database& db = database();
         const auto& trxen_idx = db.get_index_type<trx_entry_index>();
         const auto& bybn_idx = trxen_idx.indices().get<by_blocknum>();
