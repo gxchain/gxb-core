@@ -267,6 +267,8 @@ class apply_context {
 
             void update(int iterator, account_name payer, secondary_key_proxy_const_type secondary)
             {
+                context.check_payer_permission(payer);
+
                 const auto &obj = itr_cache.get(iterator);
 
                 const auto &table_obj = itr_cache.get_table(obj.t_id);
