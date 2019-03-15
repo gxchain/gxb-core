@@ -276,7 +276,7 @@ class apply_context {
 
                 context._db->modify(obj, [&](ObjectType &o) {
                     secondary_key_helper_t::set(o.secondary_key, secondary);
-                    o.payer = payer;
+//                    o.payer = payer;
                 });
             }
 
