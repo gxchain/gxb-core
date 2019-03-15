@@ -66,13 +66,13 @@
 // call_contract fix fee calculation
 #ifndef HARDFORK_1013_TIME
 // should be updated before next release, should be removed after next release
-#define HARDFORK_1013_TIME (fc::time_point_sec( 1545034200 )) // for test, 2018-12-17T08:10:00(UTC)
+#define HARDFORK_1013_TIME (fc::time_point_sec( 1553832000 )) // for mainnet, 2019-03-29T04:00:00(UTC)
 #endif
 
 // add inline_transfer api for contract
 #ifndef HARDFORK_1017_TIME
 // should be updated before next release
-#define HARDFORK_1017_TIME (fc::time_point_sec( 1545436800 )) // for test, 2018-12-22T00:00:00(UTC)
+#define HARDFORK_1017_TIME (fc::time_point_sec( 1553832000 )) // for mainnet, 2019-03-29T04:00:00(UTC)
 #endif
 
 #ifndef HARDFORK_1015_TIME
@@ -93,22 +93,22 @@
 
 #ifndef HARDFORK_1016_TIME
 // disable udpate_contract for normal account
-#define HARDFORK_1016_TIME (fc::time_point_sec( 1547536200 )) // for mainnet, 2018-12-29T12:00:00 UTC
+#define HARDFORK_1016_TIME (fc::time_point_sec( 1553832000 )) // for mainnet, 2019-03-29T04:00:00(UTC)
 #endif
 
 #ifndef HARDFORK_1019_TIME
 // for mainnet can transfer to contract account, can be removed after mainnet released
-#define HARDFORK_1019_TIME (fc::time_point_sec( 1552176000 ))  // for mainnet, 2019-03-10T00:00:00 UTC
+#define HARDFORK_1019_TIME (fc::time_point_sec( 1553832000 )) // for mainnet, 2019-03-29T04:00:00(UTC)
 #endif
 
 #ifndef HARDFORK_1020_TIME
 // for testnet after this time can not remove contract table
-#define HARDFORK_1020_TIME (fc::time_point_sec( 1552381200 )) // for testnet, 2019-03-12T08:00:00(UTC)
+#define HARDFORK_1020_TIME (fc::time_point_sec( 1553832000 )) // for mainnet, 2019-03-29T04:00:00(UTC)
 #endif
 
 #ifndef HARDFORK_1021_TIME
 // for testnet after this time can be remove contract table
-#define HARDFORK_1021_TIME (fc::time_point_sec( 1553040000 )) // for testnet, 2019-03-15T00:00:00(UTC)
+#define HARDFORK_1021_TIME (fc::time_point_sec( 1553832000 )) // for mainnet, 2019-03-29T04:00:00(UTC)
 #endif
 
 // #413 Add operation to claim asset fees
