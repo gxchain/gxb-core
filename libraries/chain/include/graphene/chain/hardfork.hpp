@@ -113,7 +113,7 @@
 
 #ifndef HARDFORK_1021_TIME
 // for testnet after this time can be remove contract table
-#define HARDFORK_1021_TIME (fc::time_point_sec( 1553040000 )) // for testnet, 2019-03-15T00:00:00(UTC)
+#define HARDFORK_1021_TIME (fc::time_point_sec( 1552708800 )) // for testnet, 2019-03-16T04:00:00(UTC)
 #endif
 
 // #413 Add operation to claim asset fees
