@@ -181,5 +181,4 @@ asset database::from_core_asset(const asset &a, const asset_id_type &id)
     }
 }
 
-
 } }
