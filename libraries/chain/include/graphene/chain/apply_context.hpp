@@ -267,6 +267,10 @@ class apply_context {
 
             void update(int iterator, account_name payer, secondary_key_proxy_const_type secondary)
             {
+                if(context._db->head_block_time() > HARDFORK_1021_TIME) {//can be removed after release online
+                    context.check_payer_permission(payer);
+                }
+
                 const auto &obj = itr_cache.get(iterator);
 
                 const auto &table_obj = itr_cache.get_table(obj.t_id);
@@ -274,7 +278,9 @@ class apply_context {
 
                 context._db->modify(obj, [&](ObjectType &o) {
                     secondary_key_helper_t::set(o.secondary_key, secondary);
-                    o.payer = payer;
+                    if(context._db->head_block_time() <= HARDFORK_1021_TIME) {//this can be removed after release online, the operation o.payer = payer should remove also
+                        o.payer = payer;
+                    }
                 });
             }
 
