@@ -146,6 +146,7 @@ bool database::_push_block(const signed_block& new_block)
          if( new_head->data.block_num() > head_block_num() )
          {
             wlog( "switch forks, switching to fork, block id ${id}, block num ${num}", ("id",new_head->data.id())("num", new_head->data.block_num()) );
+            wlog("switch forks, wso ${o}", ("o", witness_schedule_id_type()(*this)));
             auto branches = _fork_db.fetch_branch_from(new_head->data.id(), head_block_id());
 
             // pop blocks until we hit the forked block
