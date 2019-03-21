@@ -145,13 +145,13 @@ bool database::_push_block(const signed_block& new_block)
          //Only switch forks if new_head is actually higher than head
          if( new_head->data.block_num() > head_block_num() )
          {
-            wlog( "Switching to fork: ${id}", ("id",new_head->data.id()) );
+            wlog( "Switching to fork, block id ${id}, block num ${num}", ("id",new_head->data.id())("num", new_head->data.block_num()) );
             auto branches = _fork_db.fetch_branch_from(new_head->data.id(), head_block_id());
 
             // pop blocks until we hit the forked block
             while( head_block_id() != branches.second.back()->data.previous )
             {
-                ilog( "popping block #${n} ${id}", ("n",head_block_num())("id",head_block_id()) );
+                ilog( "popping block #${n} ${id}, block ${b}", ("n",head_block_num())("id",head_block_id())("b",fetch_block_by_id(head_block_id()) ) );
                 pop_block();
             }
 
