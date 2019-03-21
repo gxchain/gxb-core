@@ -225,9 +225,20 @@ class crypto_api : public context_aware_api {
                               array_ptr<char> pub, size_t publen)
       {
           public_key_type pk;
-          datastream<const char *> pubds(pub, publen);
-          fc::raw::unpack(pubds, pk);
-
+          if(context.db().head_block_time() > HARDFORK_1022_TIME) {
+              const std::string pubstr(pub,publen);
+              if(pubstr.find(GRAPHENE_ADDRESS_PREFIX)!= std::string::npos){
+                  pk = public_key_type(pubstr);
+              }else
+              {
+                  datastream<const char *> pubds(pub, publen);
+                  fc::raw::unpack(pubds, pk);
+              }
+          }else{
+              datastream<const char *> pubds(pub, publen);
+              fc::raw::unpack(pubds, pk);
+          }
+          
           auto check = public_key_type(fc::ecc::public_key(sig, digest, true));
           FC_ASSERT(check == pk, "Error expected key different than recovered key");
       }
