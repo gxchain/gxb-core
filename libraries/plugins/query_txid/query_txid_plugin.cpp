@@ -7,6 +7,7 @@
 #include <condition_variable>
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
+#include <fc/signals.hpp>
 
 namespace graphene{ namespace query_txid{
 
@@ -18,7 +19,6 @@ namespace detail
     public:
         query_txid_plugin_impl(query_txid_plugin& _plugin):_self(_plugin){}
         ~query_txid_plugin_impl(){
-            insert_db_thread.join();
         }
 
         void collect_txid_index(const signed_block &b);
@@ -28,30 +28,50 @@ namespace detail
             return _self.database();
         }
         void init();
-    private:
-        query_txid_plugin&              _self;
-        std::queue<trx_entry_object>    trx_queue;              //read and write queue
-        uint64_t                        limit_batch = 1;     //limit of leveldb batch
-        uint64_t                        size_queue  = 10000;    //queue size
-        std::mutex                      mut;                    //lock
-        std::thread                     insert_db_thread;
-        std::condition_variable         sig_able_put;               
-        std::condition_variable         sig_able_get;           
-        uint32_t                        curr_block_num = 0;   
+        static optional<trx_entry_object> query_trx_by_id(std::string txid);
 
-        DB                              *db;
-        std::string                     db_path = "/tmp/lvd.db";
-        void get_entry_queue();                     //Consume specified number (default 1000) of the entry structure, inserted into leveldb, transactional (insert db and delete from memory to synchronize)
-        void put_entry_queue(uint64_t irr_num);     //Produce the entry structure of the confirmed transaction into the queue
+    private:
+        query_txid_plugin&                  _self;
+        uint64_t                            limit_batch = 10;   //limit of leveldb batch
+
+        fc::signal<void()>                  sig_db_write;
+        fc::signal<void(const uint64_t)>    sig_remove;
+
+        static DB*                          leveldb;
+        std::string                         db_path = "/tmp/lvd.db";
+        void consume_block();                                   //Consume block
+        void remove_trx_index(const uint64_t trx_entry_id);     //Remove trx_index in db
     };
-    void query_txid_plugin_impl::init(){
-        //Create a consumer thread that continuously reads the entry structure from the queue
-        insert_db_thread = std::thread(&query_txid_plugin_impl::get_entry_queue,this);
-        
+    DB* query_txid_plugin_impl::leveldb = nullptr;
+    void query_txid_plugin_impl::init(){     
         //Create leveldb
         Options options;
         options.create_if_missing = true;
-        Status s = DB::Open(options,db_path,&db);
+        Status s = DB::Open(options,db_path,&leveldb);
+
+        // Respond to the sig_db_write signale
+        sig_db_write.connect( [&](){ consume_block(); });
+        sig_remove.connect( [&](const uint64_t trx_entry_id){ remove_trx_index(trx_entry_id); });
+    }
+    optional<trx_entry_object> query_txid_plugin_impl::query_trx_by_id(std::string txid)
+    {
+        std::string value;
+        
+        leveldb::Status s = leveldb->Get(leveldb::ReadOptions(), txid, &value);
+        if(!s.ok()) return optional<trx_entry_object>();
+        std::vector<char> data(value.begin(), value.end());
+        auto result = fc::raw::unpack<trx_entry_object>(data);
+        return result;
+        /*
+        leveldb::Iterator* it = leveldb->NewIterator(leveldb::ReadOptions());
+        for (it->SeekToFirst(); it->Valid(); it->Next()) {
+
+            trx_entry_object obj = fc::raw::unpack<trx_entry_object>(it->value().data(),it->value().size());
+            //ilog("key:${key} -- value:${value}",("key",it->key().ToString())("value",it->value().ToString()));
+        }
+        assert(it->status().ok());  // Check for any errors found during the scan
+        delete it;*/
+        
     }
     void query_txid_plugin_impl::collect_txid_index(const signed_block &b){
         graphene::chain::database& db = database();
@@ -67,61 +87,54 @@ namespace detail
         const auto& dpo = db.get_dynamic_global_properties();
         auto irr_num = dpo.last_irreversible_block_num;
         ilog("irr_number: ${irr_num}", ("irr_num",irr_num));
-        put_entry_queue(irr_num);
+        sig_db_write();         
     }
-    void query_txid_plugin_impl::get_entry_queue(){
-        std::unique_lock<std::mutex> lock(mut);
-        while(trx_queue.size() == 0){
-            sig_able_get.wait(lock);    
-        }
-        while(trx_queue.size()>limit_batch){
+    void query_txid_plugin_impl::consume_block(){
+        ilog("consum consume consume consume");
+        graphene::chain::database& db = database();
+        const auto& dpo = db.get_dynamic_global_properties();
+        uint64_t irr_num = dpo.last_irreversible_block_num;
+        //判断是否满足写入到db的条件（配置文件中配置了写入的条数）
+        const auto& trx_idx = db.get_index_type<trx_entry_index>().indices();
+        const auto& trx_bn_idx = trx_idx.get<by_blocknum>();
+        auto itor_begin = trx_idx.begin();
+        if(itor_begin == trx_idx.end()) return;
+        auto itor_end   = trx_bn_idx.lower_bound(irr_num);
+        auto number = (--itor_end)->id.instance() - itor_begin->id.instance();
+        ilog("trx begin is, ${num}",("num",itor_begin->id.instance()));
+        ilog("trx end is, ${num}",("num",itor_end->id.instance()));
+        ilog("trx in db num is, ${num}",("num",number));
+        while(number > limit_batch){
             // 从队列中取出前n项元素，插入到leveldb中，使用同步的方式，原子操作，保证插入成功或者失败
             leveldb::WriteBatch batch;
+            auto itor_backup = itor_begin;
             for(auto idx = 0; idx<limit_batch ; idx++){
-                auto item = trx_queue.front();
-                trx_queue.pop();
-                auto serialize = fc::raw::pack(item);
-                ilog("buffer:${buffer}",("buffer",serialize.data()));
-                std::string txid(item.txid);
+                auto serialize = fc::raw::pack(*itor_begin);
+                //ilog("buffer:${buffer}",("buffer",serialize.data()));
+                std::string txid(itor_begin->txid);
                 batch.Put(txid,{serialize.data(),serialize.size()});
+                itor_begin++;
+                if(itor_begin->id.instance() == itor_end->id.instance()) break;
             }
             leveldb::WriteOptions write_options;
             write_options.sync = true;
-            Status s = db->Write(write_options,&batch);
-            sig_able_put.notify_all();
-        }  
-        sig_able_put.notify_all();
-        lock.unlock();
-        leveldb::Iterator* it = db->NewIterator(leveldb::ReadOptions());
-        for (it->SeekToFirst(); it->Valid(); it->Next()) {
-            ilog("key:${key} -- value:${value}",("key",it->key().ToString())("value",it->value().ToString()));
+            Status s = leveldb->Write(write_options,&batch);
+            if (!s.ok()){
+                itor_begin = itor_backup;
+                break;
+            }
+            number -= limit_batch;
         }
-        assert(it->status().ok());  // Check for any errors found during the scan
-        delete it;
+        sig_remove(itor_begin->id.instance());
     }
-    void query_txid_plugin_impl::put_entry_queue(uint64_t irr_num){
-        //1.Write to the queue, use the mutex to lock the queue
-        std::unique_lock<std::mutex> lock(mut);
-        //2.Push the entry structure of the confirmed transaction into the queue
-        while(trx_queue.size() >= size_queue){
-            ilog("produce thread todo test ");
-            sig_able_put.wait(lock);
-        }
+    void query_txid_plugin_impl::remove_trx_index(const uint64_t trx_entry_id)
+    {
+        ilog("remove remove remove remove ${num}",("num",trx_entry_id));
         graphene::chain::database& db = database();
-        const auto& trxen_idx = db.get_index_type<trx_entry_index>();
-        const auto& bybn_idx = trxen_idx.indices().get<by_blocknum>();
-        for(auto itor = bybn_idx.lower_bound(curr_block_num); itor != bybn_idx.end(); itor++){
-            ilog("block_num: ${block_num}",("block_num",itor->block_num));
-            if(itor->block_num < irr_num){
-                trx_queue.push(*itor);
-                curr_block_num = itor->block_num;
-                sig_able_get.notify_all();
-                ilog("curr_block: ${curr_block}",("curr_block",curr_block_num));
-            }else{ break;}   
-        }   
-        curr_block_num++;
-        //3.Send a signal to release the mutex
-        lock.unlock();
+        const auto& trx_idx = db.get_index_type<trx_entry_index>().indices();
+        for(auto itor = trx_idx.begin();itor->id.instance() < trx_entry_id;itor++){
+            db.remove(*itor);
+        }
     }
 }
 
@@ -158,6 +171,10 @@ void query_txid_plugin::plugin_initialize(const boost::program_options::variable
 
 void query_txid_plugin::plugin_startup(){
 
+}
+
+optional<trx_entry_object> query_txid_plugin::query_trx_by_id(std::string txid){
+    return detail::query_txid_plugin_impl::query_trx_by_id(txid);
 }
 
 }}

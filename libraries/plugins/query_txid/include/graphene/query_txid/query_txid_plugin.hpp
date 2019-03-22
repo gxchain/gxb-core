@@ -24,6 +24,8 @@ namespace graphene { namespace query_txid {
         virtual void plugin_initialize(const boost::program_options::variables_map& options) override;
         virtual void plugin_startup() override;
 
+        static optional<trx_entry_object> query_trx_by_id(std::string txid);
+
         friend class detail::query_txid_plugin_impl;
 
         std::unique_ptr<detail::query_txid_plugin_impl> my;
