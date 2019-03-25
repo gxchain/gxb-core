@@ -267,6 +267,7 @@ class utility {
        * @returns a suggested brain_key
        */
       static brain_key_info suggest_brain_key();
+      static fc::ecc::public_key_data get_orginal_public_key(std::string pub_key);
 };
 
 struct operation_detail {
@@ -930,9 +931,15 @@ class wallet_api
        * a long passphrase that provides enough entropy to generate cyrptographic
        * keys.  This function will suggest a suitably random string that should
        * be easy to write down (and, with effort, memorize).
-       * @returns a suggested brain_key
+        * @returns a suggested brain_key
        */
       brain_key_info suggest_brain_key()const;
+
+      /** Generate the original public key from the readable public key.
+        * @param pub_key    GXChain public_key, such as:GXC6GfnGLQeBHsL9PpZvpoJcJnpsSj9cJR4n6eySebZ66K5mFav5y
+        * @returns a original public key
+       */
+      fc::ecc::public_key_data get_orginal_public_key(std::string pub_key)const;
 
      /**
       * Derive any number of *possible* owner keys from a given brain key.
@@ -2196,6 +2203,7 @@ FC_API( graphene::wallet::wallet_api,
         (import_account_keys)
         (import_balance)
         (suggest_brain_key)
+        (get_orginal_public_key)
         (derive_owner_keys_from_brain_key)
         (register_account)
         (deploy_contract)
