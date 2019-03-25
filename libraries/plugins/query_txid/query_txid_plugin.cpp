@@ -86,11 +86,11 @@ namespace detail
         // Store irreversible transactions in leveldb according to the current irreversible block
         const auto& dpo = db.get_dynamic_global_properties();
         auto irr_num = dpo.last_irreversible_block_num;
-        ilog("irr_number: ${irr_num}", ("irr_num",irr_num));
+        //ilog("irr_number: ${irr_num}", ("irr_num",irr_num));
         sig_db_write();         
     }
     void query_txid_plugin_impl::consume_block(){
-        ilog("consum consume consume consume");
+        //ilog("consum consume consume consume");
         graphene::chain::database& db = database();
         const auto& dpo = db.get_dynamic_global_properties();
         uint64_t irr_num = dpo.last_irreversible_block_num;
@@ -101,9 +101,9 @@ namespace detail
         if(itor_begin == trx_idx.end()) return;
         auto itor_end   = trx_bn_idx.lower_bound(irr_num);
         auto number = (--itor_end)->id.instance() - itor_begin->id.instance();
-        ilog("trx begin is, ${num}",("num",itor_begin->id.instance()));
-        ilog("trx end is, ${num}",("num",itor_end->id.instance()));
-        ilog("trx in db num is, ${num}",("num",number));
+        //ilog("trx begin is, ${num}",("num",itor_begin->id.instance()));
+        //ilog("trx end is, ${num}",("num",itor_end->id.instance()));
+        //ilog("trx in db num is, ${num}",("num",number));
         while(number > limit_batch){
             // 从队列中取出前n项元素，插入到leveldb中，使用同步的方式，原子操作，保证插入成功或者失败
             leveldb::WriteBatch batch;
