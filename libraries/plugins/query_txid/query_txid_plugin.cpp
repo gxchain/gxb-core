@@ -83,10 +83,6 @@ namespace detail
                 obj.trx_in_block  = idx;
             }); 
         }
-        // Store irreversible transactions in leveldb according to the current irreversible block
-        const auto& dpo = db.get_dynamic_global_properties();
-        auto irr_num = dpo.last_irreversible_block_num;
-        //ilog("irr_number: ${irr_num}", ("irr_num",irr_num));
         sig_db_write();         
     }
     void query_txid_plugin_impl::consume_block(){
@@ -104,6 +100,7 @@ namespace detail
         //ilog("trx begin is, ${num}",("num",itor_begin->id.instance()));
         //ilog("trx end is, ${num}",("num",itor_end->id.instance()));
         //ilog("trx in db num is, ${num}",("num",number));
+        auto backupnum = number;
         while(number > limit_batch){
             // 从队列中取出前n项元素，插入到leveldb中，使用同步的方式，原子操作，保证插入成功或者失败
             leveldb::WriteBatch batch;
@@ -125,15 +122,23 @@ namespace detail
             }
             number -= limit_batch;
         }
-        sig_remove(itor_begin->id.instance());
+        if(backupnum > limit_batch)
+            sig_remove(itor_begin->id.instance());
     }
     void query_txid_plugin_impl::remove_trx_index(const uint64_t trx_entry_id)
     {
-        ilog("remove remove remove remove ${num}",("num",trx_entry_id));
-        graphene::chain::database& db = database();
-        const auto& trx_idx = db.get_index_type<trx_entry_index>().indices();
-        for(auto itor = trx_idx.begin();itor->id.instance() < trx_entry_id;itor++){
-            db.remove(*itor);
+        //ilog("remove remove remove remove ${num}",("num",trx_entry_id));
+        graphene::chain::database &db = database();
+        const auto &trx_idx = db.get_index_type<trx_entry_index>().indices();
+        //ilog("remove,${trx_ent_id},bengin: ${begin},end: ${end}",("trx_ent_id",trx_entry_id)("begin",trx_idx.begin()->id.instance())("end",trx_idx.rbegin()->id.instance()));
+        for (auto itor = trx_idx.begin(); itor != trx_idx.end();) {
+            auto backup_itr = itor;
+            ++itor;
+            if (itor->id.instance() < trx_entry_id) {
+                db.remove(*backup_itr);
+            } else {
+                break;
+            }
         }
     }
 }
