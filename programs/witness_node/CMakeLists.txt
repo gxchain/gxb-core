@@ -13,7 +13,7 @@ endif()
 target_link_libraries( witness_node
                        PRIVATE graphene_app graphene_delayed_node
                        graphene_account_history
-                       graphene_witness graphene_chain graphene_debug_witness
+                       graphene_witness graphene_chain graphene_debug_witness graphene_query_txid
                        graphene_data_transaction graphene_snapshot graphene_egenesis_full fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
 
 install( TARGETS
