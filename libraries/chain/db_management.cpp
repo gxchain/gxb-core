@@ -61,7 +61,7 @@ void database::reindex(fc::path data_dir, bool fast_replay)
    auto start = fc::time_point::now();
    const auto last_block_num = last_block->block_num();
    uint32_t flush_point = last_block_num < 10000 ? 0 : last_block_num - 10000;
-   uint32_t undo_point = last_block_num < 50 ? 0 : last_block_num - 50;
+   uint32_t undo_point = last_block_num < 10000 ? 0 : last_block_num - 10000;
 
    std::cerr << "Replaying blocks, starting at " << head_block_num() + 1 << std::endl;
    if( head_block_num() >= undo_point )
