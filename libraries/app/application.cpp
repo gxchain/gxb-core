@@ -1007,8 +1007,8 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
       wanted.push_back("account_history");
       wanted.push_back("data_transaction");
    }
-   if( options.count("query-txid") && options.at("query-txid").as<bool>()){
-         wanted.push_back("query_txid");
+   if (options.count("query-txid") && options.at("query-txid").as<bool>()) {
+      wanted.push_back("query_txid");
    }
    for (auto& it : wanted)
    {

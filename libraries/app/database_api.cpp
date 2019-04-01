@@ -151,7 +151,7 @@ processed_transaction database_api::get_transaction( uint32_t block_num, uint32_
 {
    return my->get_transaction( block_num, trx_in_block );
 }
-optional<processed_transaction> database_api::get_transaction_rows(std::string txid)const
+optional<processed_transaction> database_api::get_transaction_rows(transaction_id_type txid)const
 {
    return my->get_transaction_rows(txid);
 }
