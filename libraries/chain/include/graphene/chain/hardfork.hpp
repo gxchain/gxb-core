@@ -111,6 +111,11 @@
 #define HARDFORK_1021_TIME (fc::time_point_sec( 1553832000 )) // for mainnet, 2019-03-29T04:00:00(UTC)
 #endif
 
+#ifndef HARDFORK_1022_TIME
+// for testnet after this time can support "GXC....." public key in assert_recover_key
+#define HARDFORK_1022_TIME (fc::time_point_sec( 1553990400 )) // for testnet, 2019-03-31T00:00:00(UTC)
+#endif
+
 // #413 Add operation to claim asset fees
 #ifndef HARDFORK_413_TIME
 #define HARDFORK_413_TIME (fc::time_point_sec( 1446652800 ))

@@ -334,7 +334,8 @@ namespace graphene { namespace chain {
       index128_object_type,
       index256_object_type,
       index_double_object_type,
-      index_long_double_object_type
+      index_long_double_object_type,
+      impl_trx_entry_history_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -417,6 +418,7 @@ namespace graphene { namespace chain {
    class signature_object;
    class table_id_object;
    class key_value_object;
+   class trx_entry_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -443,6 +445,7 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_signature_object_type, signature_object>      signature_id_type;
    typedef object_id< implementation_ids, impl_table_id_object_type, table_id_object>        table_id_object_id_type;
    typedef object_id< implementation_ids, impl_key_value_object_type, key_value_object>      key_value_object_id_type;
+   typedef object_id< implementation_ids, impl_trx_entry_history_object_type, trx_entry_object> trx_entry_object_id_type;
 
 
    //typedef object_id< implementation_ids, impl_search_results_object_type,search_results_object<DerivedClass>>          search_results_id_type;
@@ -614,6 +617,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (index256_object_type)
                  (index_double_object_type)
                  (index_long_double_object_type)
+                 (impl_trx_entry_history_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -664,6 +668,7 @@ FC_REFLECT_TYPENAME( graphene::chain::trust_node_pledge_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::signature_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::table_id_object_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::key_value_object_id_type)
+FC_REFLECT_TYPENAME( graphene::chain::trx_entry_object_id_type)
 
 FC_REFLECT(graphene::chain::void_t, )
 FC_REFLECT(graphene::chain::operation_ext_version_t, (version))

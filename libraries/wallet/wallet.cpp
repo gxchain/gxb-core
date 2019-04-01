@@ -3951,6 +3951,11 @@
            result.pub_key = priv_key.get_public_key();
            return result;
        }
+       fc::ecc::public_key_data utility::get_orginal_public_key(std::string pub_key)
+       {
+          public_key_type puk(pub_key);
+          return puk.key_data;
+       }
     }}
 
     namespace graphene { namespace wallet {
@@ -4221,7 +4226,10 @@
     {
         return graphene::wallet::utility::suggest_brain_key();
     }
-
+    fc::ecc::public_key_data wallet_api::get_orginal_public_key(std::string pub_key)const
+    {
+        return graphene::wallet::utility::get_orginal_public_key(pub_key);
+    }
     vector<brain_key_info> wallet_api::derive_owner_keys_from_brain_key(string brain_key, int number_of_desired_keys) const
     {
        return graphene::wallet::utility::derive_owner_keys_from_brain_key(brain_key, number_of_desired_keys);

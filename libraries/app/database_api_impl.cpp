@@ -41,6 +41,7 @@
 #include <graphene/chain/transaction_context.hpp>
 #include <graphene/chain/apply_context.hpp>
 #include <graphene/chain/transaction_object.hpp>
+#include <graphene/query_txid/query_txid_plugin.hpp>
 
 #include <cctype>
 
@@ -459,6 +460,20 @@ processed_transaction database_api_impl::get_transaction(uint32_t block_num, uin
    FC_ASSERT( opt_block );
    FC_ASSERT( opt_block->transactions.size() > trx_num );
    return opt_block->transactions[trx_num];
+}
+
+optional<processed_transaction> database_api_impl::get_transaction_rows(std::string txid)const
+{
+   auto result = query_txid::query_txid_plugin::query_trx_by_id(txid);
+   if(result){
+        const auto& trx_entry = *result;
+        auto opt_block = _db.fetch_block_by_number(trx_entry.block_num);
+        FC_ASSERT( opt_block );
+        FC_ASSERT( opt_block->transactions.size() > trx_entry.trx_in_block );
+        optional<processed_transaction> res = opt_block->transactions[trx_entry.trx_in_block];
+        return res;
+   }
+   return {};
 }
 
 global_property_object database_api_impl::get_global_properties()const

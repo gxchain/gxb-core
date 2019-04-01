@@ -145,20 +145,21 @@ bool database::_push_block(const signed_block& new_block)
          //Only switch forks if new_head is actually higher than head
          if( new_head->data.block_num() > head_block_num() )
          {
-            wlog( "Switching to fork: ${id}", ("id",new_head->data.id()) );
+            wlog( "switch forks, switching to fork, block id ${id}, block num ${num}", ("id",new_head->data.id())("num", new_head->data.block_num()) );
+            wlog("switch forks, wso ${o}", ("o", witness_schedule_id_type()(*this)));
             auto branches = _fork_db.fetch_branch_from(new_head->data.id(), head_block_id());
 
             // pop blocks until we hit the forked block
             while( head_block_id() != branches.second.back()->data.previous )
             {
-                ilog( "popping block #${n} ${id}", ("n",head_block_num())("id",head_block_id()) );
+                ilog( "switch forks, popping block #${n} ${id}, ${time}, block ${b}", ("n",head_block_num())("id",head_block_id())("time", head_block_time())("b",fetch_block_by_id(head_block_id()) ) );
                 pop_block();
             }
 
             // push all blocks on the new fork
             for( auto ritr = branches.first.rbegin(); ritr != branches.first.rend(); ++ritr )
             {
-                ilog( "pushing blocks from fork ${n} ${id}", ("n",(*ritr)->data.block_num())("id",(*ritr)->data.id()) );
+                ilog( "switch forks, pushing blocks from fork ${n} ${id} ${time} block ${b}", ("n",(*ritr)->data.block_num())("id",(*ritr)->data.id())("time", (*ritr)->data.timestamp)("b", (*ritr)->data) );
                 optional<fc::exception> except;
                 try {
                    undo_database::session session = _undo_db.start_undo_session();
