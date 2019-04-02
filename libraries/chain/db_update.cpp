@@ -174,7 +174,7 @@ void database::clear_expired_transactions()
    auto& transaction_idx = static_cast<transaction_index&>(get_mutable_index(implementation_ids, impl_transaction_object_type));
    const auto& dedupe_index = transaction_idx.indices().get<by_expiration>();
    while ((!dedupe_index.empty()) && (head_block_time() > dedupe_index.begin()->trx.expiration)) {
-       dlog("clear expired trx ${trx}", ("trx", dedupe_index.begin()->trx));
+       dlog("clear expired trx ${trx}, txid ${txid}", ("trx", dedupe_index.begin()->trx)("txid", dedupe_index.begin()->trx.id()));
        transaction_idx.remove(*dedupe_index.begin());
    }
 } FC_CAPTURE_AND_RETHROW() }
