@@ -942,6 +942,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("dbg-init-key", bpo::value<string>(), "Block signing key to use for init witnesses, overrides genesis file")
          ("api-access", bpo::value<boost::filesystem::path>(), "JSON file specifying API permissions")
          ("plugins", bpo::value<string>(), "Space-separated list of plugins to activate")
+         ("query-txid", bpo::value<bool>(), "Plugin to save txid records")
          ;
    command_line_options.add(configuration_file_options);
    command_line_options.add_options()
@@ -1005,6 +1006,8 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
       wanted.push_back("witness");
       wanted.push_back("account_history");
       wanted.push_back("data_transaction");
+   }
+   if (options.count("query-txid") && options.at("query-txid").as<bool>()) {
       wanted.push_back("query_txid");
    }
    for (auto& it : wanted)

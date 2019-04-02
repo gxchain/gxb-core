@@ -138,7 +138,7 @@ class database_api
        */
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
 
-      optional<processed_transaction> get_transaction_rows(std::string txid)const;
+      optional<processed_transaction> get_transaction_rows(transaction_id_type txid)const;
 
       /**
        * If the transaction has not expired, this method will return the transaction for the given ID or

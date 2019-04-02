@@ -41,7 +41,10 @@
 #include <graphene/chain/transaction_context.hpp>
 #include <graphene/chain/apply_context.hpp>
 #include <graphene/chain/transaction_object.hpp>
+
+#ifdef QUERY_TXID_PLUGIN_HPP
 #include <graphene/query_txid/query_txid_plugin.hpp>
+#endif
 
 #include <cctype>
 
@@ -462,18 +465,38 @@ processed_transaction database_api_impl::get_transaction(uint32_t block_num, uin
    return opt_block->transactions[trx_num];
 }
 
-optional<processed_transaction> database_api_impl::get_transaction_rows(std::string txid)const
+optional<processed_transaction> database_api_impl::get_transaction_rows(transaction_id_type txid)const
 {
-   auto result = query_txid::query_txid_plugin::query_trx_by_id(txid);
-   if(result){
-        const auto& trx_entry = *result;
-        auto opt_block = _db.fetch_block_by_number(trx_entry.block_num);
-        FC_ASSERT( opt_block );
-        FC_ASSERT( opt_block->transactions.size() > trx_entry.trx_in_block );
-        optional<processed_transaction> res = opt_block->transactions[trx_entry.trx_in_block];
-        return res;
-   }
-   return {};
+#ifdef QUERY_TXID_PLUGIN_HPP
+    auto &txid_index = _db.get_index_type<trx_entry_index>().indices().get<by_txid>();
+    auto itor = txid_index.find(txid);
+    if (itor == txid_index.end()) {
+        std::string txid_str(txid);
+        auto result = query_txid::query_txid_plugin::query_trx_by_id(txid_str);
+        if (result) {
+            const auto &trx_entry = *result;
+            auto opt_block = _db.fetch_block_by_number(trx_entry.block_num);
+            FC_ASSERT(opt_block);
+            FC_ASSERT(opt_block->transactions.size() > trx_entry.trx_in_block);
+            optional<processed_transaction> res = opt_block->transactions[trx_entry.trx_in_block];
+            return res;
+        }
+        return {};
+    } else {
+        const auto &dpo = _db.get_dynamic_global_properties();
+        if (itor->block_num <= dpo.last_irreversible_block_num) {
+            const auto &trx_entry = *itor;
+            auto opt_block = _db.fetch_block_by_number(trx_entry.block_num);
+            FC_ASSERT(opt_block);
+            FC_ASSERT(opt_block->transactions.size() > trx_entry.trx_in_block);
+            optional<processed_transaction> res = opt_block->transactions[trx_entry.trx_in_block];
+            return res;
+        } else {
+            return {};
+        }
+    }
+#endif
+    return {};
 }
 
 global_property_object database_api_impl::get_global_properties()const
