@@ -173,8 +173,10 @@ void database::clear_expired_transactions()
    //Transactions must have expired by at least two forking windows in order to be removed.
    auto& transaction_idx = static_cast<transaction_index&>(get_mutable_index(implementation_ids, impl_transaction_object_type));
    const auto& dedupe_index = transaction_idx.indices().get<by_expiration>();
-   while( (!dedupe_index.empty()) && (head_block_time() > dedupe_index.begin()->trx.expiration) )
-      transaction_idx.remove(*dedupe_index.begin());
+   while ((!dedupe_index.empty()) && (head_block_time() > dedupe_index.begin()->trx.expiration)) {
+       dlog("clear expired trx ${trx}", ("trx", dedupe_index.begin()->trx));
+       transaction_idx.remove(*dedupe_index.begin());
+   }
 } FC_CAPTURE_AND_RETHROW() }
 
 void database::clear_expired_proposals()
