@@ -179,6 +179,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Authority / validation
       std::string get_transaction_hex(const signed_transaction& trx)const;
+      std::string get_unsigned_transaction_hex(const transaction &trx) const;
       std::string serialize_transaction(const signed_transaction& trx) const;
       set<public_key_type> get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const;
       set<public_key_type> get_potential_signatures( const signed_transaction& trx )const;
