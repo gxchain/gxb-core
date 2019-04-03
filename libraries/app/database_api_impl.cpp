@@ -1338,6 +1338,10 @@ std::string database_api_impl::get_transaction_hex(const signed_transaction& trx
 {
    return fc::to_hex(fc::raw::pack(trx));
 }
+std::string database_api_impl::get_unsigned_transaction_hex(const transaction &trx) const
+{
+    return fc::to_hex(fc::raw::pack(trx));
+}
 
 std::string database_api_impl::serialize_transaction(const signed_transaction& trx) const
 {
