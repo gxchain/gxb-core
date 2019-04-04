@@ -73,7 +73,9 @@ void undo_database::on_modify( const object& obj )
       return;
    auto itr =  state.old_values.find(obj.id);
    if( itr != state.old_values.end() ) return;
+   idump((obj));
    state.old_values[obj.id] = obj.clone();
+   idump((state.old_values[obj.id]));
 }
 void undo_database::on_remove( const object& obj )
 {

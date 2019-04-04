@@ -176,6 +176,8 @@ void apply_context::db_remove_i64(int iterator)
 
     const auto &table_obj = keyval_cache.get_table(obj.t_id);
     FC_ASSERT(table_obj.code == receiver, "db access violation");
+    idump((table_obj));
+    idump((table_obj.id)(table_obj.id.number));
 
     int64_t ram_delta = -(int64_t)(obj.value.size() + config::billable_size_v<key_value_object>);
     if(_db->head_block_time() > HARDFORK_1016_TIME) {
