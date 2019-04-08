@@ -116,6 +116,7 @@ std::vector<block_id_type> database::get_block_ids_on_fork(block_id_type head_of
  */
 bool database::push_block(const signed_block& new_block, uint32_t skip)
 {
+   idump((_pending_tx));
 //   idump((new_block.block_num())(new_block.id())(new_block.timestamp)(new_block.previous));
    bool result;
    detail::with_skip_flags( *this, skip, [&]()
@@ -127,6 +128,7 @@ bool database::push_block(const signed_block& new_block, uint32_t skip)
       });
    });
    return result;
+   idump((_pending_tx));
 }
 
 bool database::_push_block(const signed_block& new_block)
