@@ -549,6 +549,9 @@ class database_api
       /// @brief Get a hexdump of the serialized binary form of a transaction
       std::string get_transaction_hex(const signed_transaction& trx)const;
 
+      /// @brief Get a hexdump of the serialized binary form of a unsigned transaction
+      std::string get_unsigned_transaction_hex(const transaction &trx) const;
+
       /// @brief Get a hexdump of the serialized binary form of a transaction
       std::string serialize_transaction(const signed_transaction& tx) const;
 
@@ -843,6 +846,7 @@ FC_API(graphene::app::database_api,
 
    // Authority / validation
    (get_transaction_hex)
+   (get_unsigned_transaction_hex)
    (get_required_signatures)
    (get_potential_signatures)
    (get_potential_address_signatures)

@@ -507,6 +507,11 @@ std::string database_api::get_transaction_hex(const signed_transaction& trx)cons
    return my->get_transaction_hex( trx );
 }
 
+std::string database_api::get_unsigned_transaction_hex(const transaction &trx) const
+{
+    return my->get_unsigned_transaction_hex(trx);
+}
+
 std::string database_api::serialize_transaction(const signed_transaction& trx) const
 {
     return my->serialize_transaction(trx);

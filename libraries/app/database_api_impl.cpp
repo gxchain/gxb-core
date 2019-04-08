@@ -41,7 +41,10 @@
 #include <graphene/chain/transaction_context.hpp>
 #include <graphene/chain/apply_context.hpp>
 #include <graphene/chain/transaction_object.hpp>
+
+#ifdef QUERY_TXID_PLUGIN_HPP
 #include <graphene/query_txid/query_txid_plugin.hpp>
+#endif
 
 #include <cctype>
 
@@ -464,6 +467,7 @@ processed_transaction database_api_impl::get_transaction(uint32_t block_num, uin
 
 optional<processed_transaction> database_api_impl::get_transaction_rows(transaction_id_type txid)const
 {
+#ifdef QUERY_TXID_PLUGIN_HPP
     auto &txid_index = _db.get_index_type<trx_entry_index>().indices().get<by_txid>();
     auto itor = txid_index.find(txid);
     if (itor == txid_index.end()) {
@@ -491,6 +495,8 @@ optional<processed_transaction> database_api_impl::get_transaction_rows(transact
             return {};
         }
     }
+#endif
+    return {};
 }
 
 global_property_object database_api_impl::get_global_properties()const
@@ -1331,6 +1337,10 @@ vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& 
 std::string database_api_impl::get_transaction_hex(const signed_transaction& trx)const
 {
    return fc::to_hex(fc::raw::pack(trx));
+}
+std::string database_api_impl::get_unsigned_transaction_hex(const transaction &trx) const
+{
+    return fc::to_hex(fc::raw::pack(trx));
 }
 
 std::string database_api_impl::serialize_transaction(const signed_transaction& trx) const
