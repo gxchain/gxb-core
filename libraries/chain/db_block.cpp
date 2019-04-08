@@ -116,7 +116,9 @@ std::vector<block_id_type> database::get_block_ids_on_fork(block_id_type head_of
  */
 bool database::push_block(const signed_block& new_block, uint32_t skip)
 {
-   idump((_pending_tx));
+   for (it : _pending_tx){
+       ilog("before _push_block ${txid}", ("txid", it.id()));
+   }
 //   idump((new_block.block_num())(new_block.id())(new_block.timestamp)(new_block.previous));
    bool result;
    detail::with_skip_flags( *this, skip, [&]()
@@ -127,7 +129,9 @@ bool database::push_block(const signed_block& new_block, uint32_t skip)
          result = _push_block(new_block);
       });
    });
-   idump((_pending_tx));
+   for (it : _pending_tx){
+       ilog("after _push_block ${txid}", ("txid", it.id()));
+   }
    return result;
 }
 
@@ -363,7 +367,9 @@ signed_block database::_generate_block(
    uint64_t new_block_cpu = 0;
    uint64_t postponed_tx_count = 0;
    // pop pending state (reset to head block state)
-   idump((_pending_tx));
+   for (it : _pending_tx){
+       ilog("before gen_block ${txid}", ("txid", it.id()));
+   }
    for (const processed_transaction &tx : _pending_tx) {
        ilog("package ${txid}", ("txid", tx.id()));
        size_t new_total_size = total_block_size + fc::raw::pack_size(tx);
@@ -430,9 +436,13 @@ signed_block database::_generate_block(
        FC_ASSERT(fc::raw::pack_size(pending_block) <= get_global_properties().parameters.maximum_block_size);
    }
 
-   idump((_pending_tx));
+   for (it : _pending_tx){
+       ilog("befor push_block  ${txid}", ("txid", it.id()));
+   }
    push_block(pending_block, skip | skip_transaction_signatures);
-   idump((_pending_tx));
+   for (it : _pending_tx){
+       ilog("after push_block ${txid}", ("txid", it.id()));
+   }
 
    return pending_block;
 } FC_CAPTURE_AND_RETHROW((witness_id)) }
