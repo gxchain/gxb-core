@@ -127,8 +127,8 @@ bool database::push_block(const signed_block& new_block, uint32_t skip)
          result = _push_block(new_block);
       });
    });
-   return result;
    idump((_pending_tx));
+   return result;
 }
 
 bool database::_push_block(const signed_block& new_block)
