@@ -82,6 +82,7 @@ struct pending_transactions_restorer
             if( !_db.is_known_transaction( tx.id() ) ) {
                // since push_transaction() takes a signed_transaction,
                // the operation_results field will be ignored.
+               ilog("push popped_transaction ${txid}", ("txid", tx.id()));
                _db._push_transaction( tx );
             }
          } catch ( const fc::exception& e ) {
@@ -96,6 +97,7 @@ struct pending_transactions_restorer
             if( !_db.is_known_transaction( tx.id() ) ) {
                // since push_transaction() takes a signed_transaction,
                // the operation_results field will be ignored.
+               ilog("push _pending_transaction ${txid}", ("txid", tx.id()));
                _db._push_transaction( tx );
             }
          }
