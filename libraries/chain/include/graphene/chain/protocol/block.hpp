@@ -60,6 +60,7 @@ namespace graphene { namespace chain {
     {
         signed_block_with_info(const signed_block& block) : signed_block(block) {
             block_id = id();
+            ref_block_prefix = block_id._hash[1];
             signing_key = signee();
             transaction_ids.reserve(transactions.size());
             for (const processed_transaction& tx : transactions) {
@@ -72,6 +73,7 @@ namespace graphene { namespace chain {
         block_id_type block_id;
         public_key_type signing_key;
         vector< transaction_id_type > transaction_ids;
+        uint32_t ref_block_prefix;
     };
 
 } } // graphene::chain
@@ -79,5 +81,5 @@ namespace graphene { namespace chain {
 FC_REFLECT( graphene::chain::block_header, (previous)(timestamp)(witness)(transaction_merkle_root)(extensions) )
 FC_REFLECT_DERIVED( graphene::chain::signed_block_header, (graphene::chain::block_header), (witness_signature) )
 FC_REFLECT_DERIVED( graphene::chain::signed_block, (graphene::chain::signed_block_header), (transactions) )
-FC_REFLECT_DERIVED( graphene::chain::signed_block_with_info, (graphene::chain::signed_block), (block_id)(signing_key)(transaction_ids) )
+FC_REFLECT_DERIVED( graphene::chain::signed_block_with_info, (graphene::chain::signed_block), (block_id)(signing_key)(transaction_ids)(ref_block_prefix) )
 
