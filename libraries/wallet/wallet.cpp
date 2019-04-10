@@ -876,12 +876,12 @@
           FC_ASSERT(_builder_transactions.count(handle));
           return _builder_transactions[handle];
        }
-       signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true)
+       signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true,uint32_t number=10)
        {
           FC_ASSERT(_builder_transactions.count(transaction_handle));
 
           //return _builder_transactions[transaction_handle] = sign_transaction(_builder_transactions[transaction_handle], broadcast);
-          return _builder_transactions[transaction_handle] = sign_transaction_num(_builder_transactions[transaction_handle], 10);
+          return _builder_transactions[transaction_handle] = sign_transaction_num(_builder_transactions[transaction_handle], number);
        }
 
        pair<transaction_id_type,signed_transaction> broadcast_transaction(signed_transaction tx)
@@ -2702,11 +2702,22 @@
        signed_transaction sign_transaction_num(signed_transaction tx, uint32_t number)
        {
            std::vector<signed_transaction> tx_list;
+           tx.expiration += 3600;
            for (auto i = 0; i < number; i++) {
                tx.expiration += 1;
+               //0000000000000000087a68616f2d31323302000000000000000001
+               auto& op = tx.operations.front();
+               auto& call_op = op.get<contract_call_operation>();
+               auto index = 17;
+               call_op.data[index] += 1;
+               if(call_op.data[index] == 0xFF){
+                  call_op.data[index+1] += 1;
+                  call_op.data[index] = 0;
+               }
                auto new_transaction = sign_transaction(tx, false);
                tx_list.emplace_back(new_transaction);
            }
+           ilog("build success and then broadcast");
            for (auto itor:tx_list) {
                try {
                    _remote_net_broadcast->broadcast_transaction(itor);
@@ -2743,7 +2754,7 @@
            uint32_t expiration_time_offset = 0;
            for (;;)
            {
-               tx.set_expiration(dyn_props.time + fc::seconds(30 + expiration_time_offset));
+               tx.set_expiration(dyn_props.time + fc::seconds(3600 + expiration_time_offset));
                tx.clear_signatures();
 
                for (const public_key_type &key : approving_key_set)
@@ -4445,9 +4456,9 @@
        return my->preview_builder_transaction(handle);
     }
 
-    signed_transaction wallet_api::sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast)
+    signed_transaction wallet_api::sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast,uint32_t number)
     {
-       return my->sign_builder_transaction(transaction_handle, broadcast);
+       return my->sign_builder_transaction(transaction_handle, broadcast,number);
     }
 
     pair<transaction_id_type,signed_transaction> wallet_api::broadcast_transaction(signed_transaction tx)

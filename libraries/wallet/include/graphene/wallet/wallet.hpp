@@ -797,7 +797,7 @@ class wallet_api
       /**
        * @ingroup Transaction Builder API
        */
-      signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true);
+      signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true,uint32_t number=10);
 
       /** Broadcast signed transaction
        * @param tx signed transaction
