@@ -880,7 +880,8 @@
        {
           FC_ASSERT(_builder_transactions.count(transaction_handle));
 
-          return _builder_transactions[transaction_handle] = sign_transaction(_builder_transactions[transaction_handle], broadcast);
+          //return _builder_transactions[transaction_handle] = sign_transaction(_builder_transactions[transaction_handle], broadcast);
+          return _builder_transactions[transaction_handle] = sign_transaction_num(_builder_transactions[transaction_handle], 10);
        }
 
        pair<transaction_id_type,signed_transaction> broadcast_transaction(signed_transaction tx)
@@ -2697,6 +2698,25 @@
 
           return sign_transaction( tx, broadcast );
        } FC_CAPTURE_AND_RETHROW( (account_to_modify)(desired_number_of_witnesses)(desired_number_of_committee_members)(broadcast) ) }
+       
+       signed_transaction sign_transaction_num(signed_transaction tx, uint32_t number)
+       {
+           std::vector<signed_transaction> tx_list;
+           for (auto i = 0; i < number; i++) {
+               tx.expiration += 1;
+               auto new_transaction = sign_transaction(tx, false);
+               tx_list.emplace_back(new_transaction);
+           }
+           for (auto itor:tx_list) {
+               try {
+                   _remote_net_broadcast->broadcast_transaction(itor);
+               } catch (const fc::exception &e) {
+                   elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", itor.id().str())("e", e.to_detail_string()));
+                   throw;
+               }
+           }
+           return tx;
+       }
 
        signed_transaction sign_transaction(signed_transaction tx, bool broadcast = false)
        {
@@ -4915,6 +4935,11 @@
     {
        my->_wallet_filename = wallet_filename;
     }
+
+    signed_transaction wallet_api::sign_transaction_num(signed_transaction tx, uint32_t number)
+    { try {
+       return my->sign_transaction_num( tx, number);
+    } FC_CAPTURE_AND_RETHROW( (tx) ) }
 
     signed_transaction wallet_api::sign_transaction(signed_transaction tx, bool broadcast /* = false */)
     { try {

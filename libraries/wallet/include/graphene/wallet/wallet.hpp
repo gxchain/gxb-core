@@ -1861,6 +1861,7 @@ class wallet_api
                                                                 uint16_t desired_number_of_committee_members,
                                                                 bool broadcast = false);
 
+      signed_transaction sign_transaction_num(signed_transaction tx, uint32_t number);
       /** Signs a transaction.
        *
        * Given a fully-formed transaction that is only lacking signatures, this signs
@@ -2267,6 +2268,7 @@ FC_API( graphene::wallet::wallet_api,
         (save_wallet_file)
         (serialize_transaction)
         (serialize_proxy_transfer_params)
+        (sign_transaction_num)
         (sign_transaction)
         (get_prototype_operation)
         (propose_parameter_change)
