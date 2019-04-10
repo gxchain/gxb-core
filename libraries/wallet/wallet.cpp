@@ -2705,15 +2705,6 @@
            tx.expiration += 3600;
            for (auto i = 0; i < number; i++) {
                tx.expiration += 1;
-               //0000000000000000087a68616f2d31323302000000000000000001
-               auto& op = tx.operations.front();
-               auto& call_op = op.get<contract_call_operation>();
-               auto index = 17;
-               call_op.data[index] += 1;
-               if(call_op.data[index] == 0xFF){
-                  call_op.data[index+1] += 1;
-                  call_op.data[index] = 0;
-               }
                auto new_transaction = sign_transaction(tx, false);
                tx_list.emplace_back(new_transaction);
            }
