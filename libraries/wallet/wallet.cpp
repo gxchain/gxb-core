@@ -2714,7 +2714,7 @@
 
            std::vector<signed_transaction> tx_list;
            for (auto i = 0; i < number; i++) {
-               if (i % 1000 == 0) {
+               if (i % 200 == 0) {
                    std::cerr << "sign transactions  " << double(i) / number * 100 << "% " << i << " of "  << number << std::endl;
                }
                tx.set_expiration(dyn_props.time + fc::seconds(3600 + i));
@@ -2730,7 +2730,7 @@
            for (const auto& iter : tx_list) {
                try {
                    _remote_net_broadcast->broadcast_transaction(iter);
-                   if (++c % 1000 == 0) {
+                   if (++c % 200 == 0) {
                        std::cerr << "broadcast transactions  " << double(c) / tx_list.size() * 100 << "% " << c << " of "  << tx_list.size() << std::endl;
                    }
                } catch (const fc::exception &e) {

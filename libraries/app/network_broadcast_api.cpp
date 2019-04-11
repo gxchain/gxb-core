@@ -59,10 +59,10 @@ namespace graphene { namespace app {
 
     void network_broadcast_api::broadcast_transaction(const signed_transaction& trx)
     {
-       dlog("received trx message ${trx}",("trx",trx));
+       // dlog("received trx message ${trx}",("trx",trx));
 
-       trx.validate();
-       _app.chain_database()->push_transaction(trx);// evaluatet trx
+       // trx.validate();
+       // _app.chain_database()->push_transaction(trx);// evaluatet trx
        if (_app.p2p_node() != nullptr)
            _app.p2p_node()->broadcast_transaction(trx); // broadcast trx
     }
