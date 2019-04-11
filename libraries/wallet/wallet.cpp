@@ -2702,16 +2702,17 @@
        signed_transaction sign_transaction_num(signed_transaction tx, uint32_t number)
        {
            std::vector<signed_transaction> tx_list;
-           tx.expiration += 3600;
            for (auto i = 0; i < number; i++) {
-               tx.expiration += 1;
+               if (i % 1000 == 0) {
+                   std::cerr << "sign transactions  " << double(i) / number * 100 << "% " << i << " of "  << number << std::endl;
+               }
                auto new_transaction = sign_transaction(tx, false);
                tx_list.emplace_back(new_transaction);
            }
-           ilog("build success and then broadcast");
-           for (auto itor:tx_list) {
+           ilog("build ${c} trxs success and then broadcast", ("c", tx_list.size()));
+           for (auto iter : tx_list) {
                try {
-                   _remote_net_broadcast->broadcast_transaction(itor);
+                   _remote_net_broadcast->broadcast_transaction(iter);
                } catch (const fc::exception &e) {
                    elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", itor.id().str())("e", e.to_detail_string()));
                    throw;
