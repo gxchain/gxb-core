@@ -2714,7 +2714,7 @@
                try {
                    _remote_net_broadcast->broadcast_transaction(iter);
                } catch (const fc::exception &e) {
-                   elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", itor.id().str())("e", e.to_detail_string()));
+                   elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", iter.id().str())("e", e.to_detail_string()));
                    throw;
                }
            }
