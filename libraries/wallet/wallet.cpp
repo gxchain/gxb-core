@@ -2701,17 +2701,33 @@
        
        signed_transaction sign_transaction_num(signed_transaction tx, uint32_t number)
        {
+           auto dyn_props = get_dynamic_global_properties();
+           tx.set_reference_block(dyn_props.head_block_id);
+
+           set<public_key_type> pks = _remote_db->get_potential_signatures(tx);
+           flat_set<public_key_type> owned_keys;
+           owned_keys.reserve(pks.size());
+           std::copy_if( pks.begin(), pks.end(), std::inserter(owned_keys, owned_keys.end()),
+                   [this](const public_key_type& pk){ return _keys.find(pk) != _keys.end(); } );
+           tx.clear_signatures();
+           set<public_key_type> approving_key_set = _remote_db->get_required_signatures(tx, owned_keys);
+
            std::vector<signed_transaction> tx_list;
            for (auto i = 0; i < number; i++) {
                if (i % 1000 == 0) {
                    std::cerr << "sign transactions  " << double(i) / number * 100 << "% " << i << " of "  << number << std::endl;
                }
-               auto new_transaction = sign_transaction(tx, false);
-               tx_list.emplace_back(new_transaction);
+               tx.set_expiration(dyn_props.time + fc::seconds(3600 + i));
+               tx.clear_signatures();
+
+               for (const public_key_type &key : approving_key_set)
+                   tx.sign(get_private_key(key), _chain_id);
+
+               tx_list.emplace_back(tx);
            }
            ilog("build ${c} trxs success and then broadcast", ("c", tx_list.size()));
            int c = 0;
-           for (auto iter : tx_list) {
+           for (const auto& iter : tx_list) {
                try {
                    _remote_net_broadcast->broadcast_transaction(iter);
                    if (++c % 1000 == 0) {
