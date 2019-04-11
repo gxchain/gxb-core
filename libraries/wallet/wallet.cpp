@@ -2710,9 +2710,13 @@
                tx_list.emplace_back(new_transaction);
            }
            ilog("build ${c} trxs success and then broadcast", ("c", tx_list.size()));
+           int c = 0;
            for (auto iter : tx_list) {
                try {
                    _remote_net_broadcast->broadcast_transaction(iter);
+                   if (++c % 1000 == 0) {
+                       std::cerr << "broadcast transactions  " << double(c) / tx_list.size() * 100 << "% " << c << " of "  << tx_list.size() << std::endl;
+                   }
                } catch (const fc::exception &e) {
                    elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", iter.id().str())("e", e.to_detail_string()));
                    throw;
