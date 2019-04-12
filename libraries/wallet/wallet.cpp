@@ -2729,9 +2729,10 @@
            int c = 0;
            for (const auto& iter : tx_list) {
                try {
-                   _remote_net_broadcast->broadcast_transaction(iter);
+                   auto res = broadcast_transaction(iter);
                    if (++c % 200 == 0) {
                        std::cerr << "broadcast transactions  " << double(c) / tx_list.size() * 100 << "% " << c << " of "  << tx_list.size() << std::endl;
+                       std::cerr << "txid " res.first << std::endl;
                    }
                } catch (const fc::exception &e) {
                    elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", iter.id().str())("e", e.to_detail_string()));
