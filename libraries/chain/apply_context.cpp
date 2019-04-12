@@ -130,6 +130,9 @@ int apply_context::db_store_i64(uint64_t code, uint64_t scope, uint64_t table, a
         update_ram_usage(ram_delta);
     }
 
+    _db->update_contract_ram_statistic(code, table, ram_delta);
+    _db->update_payer_ram_statistic(payer, ram_delta);
+
     keyval_cache.cache_table(tab);
     return keyval_cache.add(new_obj);
 }
@@ -148,12 +151,16 @@ void apply_context::db_update_i64(int iterator, account_name payer, const char *
     const int64_t overhead = config::billable_size_v<key_value_object>;
     int64_t old_size = (int64_t)(obj.value.size() + overhead);
     int64_t new_size = (int64_t)(buffer_size + overhead);
+    _db->update_contract_ram_statistic(receiver, table_obj.id.number, new_size - old_size);
     if(_db->head_block_time() > HARDFORK_1016_TIME) {
         if (obj.payer != payer) {
             // refund the existing payer
             trx_context.update_ram_statistics(obj.payer,  -(old_size));
             // charge the new payer
             trx_context.update_ram_statistics(payer, new_size);
+            _db->update_payer_ram_statistic(obj.payer, -(old_size));
+            _db->update_payer_ram_statistic(payer, new_size);
+
         } else if (old_size != new_size) {
             // charge/refund the existing payer the difference
             trx_context.update_ram_statistics(obj.payer, new_size - old_size);
@@ -178,6 +185,8 @@ void apply_context::db_remove_i64(int iterator)
     FC_ASSERT(table_obj.code == receiver, "db access violation");
 
     int64_t ram_delta = -(int64_t)(obj.value.size() + config::billable_size_v<key_value_object>);
+    _db->update_contract_ram_statistic(receiver, table_obj.id.number, ram_delta);
+    _db->update_payer_ram_statistic(obj.payer, ram_delta);
     if(_db->head_block_time() > HARDFORK_1016_TIME) {
         trx_context.update_ram_statistics(obj.payer, ram_delta);
 
@@ -333,6 +342,7 @@ const table_id_object &apply_context::find_or_create_table(uint64_t code, name s
     // update db usage
     if (_db->head_block_time() > HARDFORK_1016_TIME) {
         trx_context.update_ram_statistics(payer, config::billable_size_v<table_id_object>);
+        _db->update_contract_ram_statistic(code, table.value, payer, config::billable_size_v<table_id_object>);
     }
 
     return _db->create<table_id_object>([&](table_id_object &t_id){

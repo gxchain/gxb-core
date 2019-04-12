@@ -406,6 +406,15 @@ namespace detail {
 
          if (_options->count("contracts-console")) {
              _chain_db->set_contract_log_to_console(true);
+
+         }
+
+         if (_options->count("count-contracts-ram")) {
+             if(!_options->count("replay-blockchain")) {
+                 elog("replay-blockchain must appointed when use count-contracts-ram");//TODO use persistent storage
+                 std::exit(EXIT_FAILURE);
+             }
+             _chain_db->set_count_contract_ram(true);
          }
 
          if (_options->count("rpc-mock-calc-fee")) {

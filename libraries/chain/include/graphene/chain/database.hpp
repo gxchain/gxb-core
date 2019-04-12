@@ -276,6 +276,8 @@ namespace graphene { namespace chain {
 
          const bool                             get_contract_log_to_console() const { return contract_log_to_console; }
          void                                   set_contract_log_to_console(bool log_switch) { contract_log_to_console = log_switch; }
+         const bool                             get_count_contract_ram() const { return count_contract_ram; }
+         void                                   set_count_contract_ram(bool to_be_count) { count_contract_ram = to_be_count; }
          const bool                             get_rpc_mock_calc_fee() const { return rpc_mock_calc_fee; }
          void                                   set_rpc_mock_calc_fee(bool mock) { rpc_mock_calc_fee = mock; }
          const dynamic_global_property_object&  get_dynamic_global_properties()const;
@@ -509,6 +511,47 @@ namespace graphene { namespace chain {
          bool                              _opened = false;
          bool                              contract_log_to_console = false;
          bool                              rpc_mock_calc_fee = false;
+
+         // for contract ram statistic
+        public:
+           const flat_map<uint64_t, flat_map<uint64_t, int64_t>> get_contracts_ram_statistic() const {
+               return contracts_ram_counter;
+           }
+
+           const flat_map<uint64_t, int64_t> get_payers_ram_statistic() const {
+               return payers_ram_counter;
+           }
+
+           void update_contract_ram_statistic(uint64_t cid, uint64_t tid, int64_t ram_usage) {
+               if(false == count_contract_ram) return;
+               auto contract_itr = contracts_ram_counter.find(cid);
+               if(contract_itr == contracts_ram_counter.end()) {
+                   contracts_ram_counter[cid] = map<int, int>();
+                   contracts_ram_counter[cid][tid] = ram_usage;
+               } else {
+                   auto table_itr = contract_itr->second.find(tid);
+                   if(table_itr == contract_itr->second.end()) {
+                       contract_itr->second[tid] = ram_usage;
+                   } else {
+                       contract_itr->second[tid] += ram_usage;
+                   }
+               }
+           }
+
+           void update_payer_ram_statistic(uint64_t payer, int64_t ram_usage) {
+               if(false == count_contract_ram) return;
+               auto payer_itr = payers_ram_counter.find(payer);
+               if(payer_itr == payers_ram_counter.end()) {
+                   payers_ram_counter[payer] = ram_usage;
+               } else {
+                   payers_ram_counter[payer] += ram_usage;
+               }
+           }
+
+        private:
+           bool                                              count_contract_ram = false;
+           flat_map<uint64_t, flat_map<uint64_t, int64_t>>   contracts_ram_counter;//contract_instance_id:map<table_id, ram_usage>
+           flat_map<uint64_t, int64_t>                       payers_ram_counter;
 
          // for state snapshot
         public:
