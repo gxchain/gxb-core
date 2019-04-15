@@ -17,6 +17,8 @@ extern "C" {
     int64_t get_account_id(const char *data, uint32_t length);
     // get asset_id by name, return -1 if asset not exists, return asset id if succeeed
     int64_t get_asset_id(const char *data, uint32_t length);
+    // get asset_precision, return -1 if asset not exists, retrun precision if succeed
+    int64_t get_asset_precision(const char *data, uint32_t datalen);
     // dump current transaction of current contract calling to dst in binary form
     int read_transaction(char* dst, uint32_t dst_size);
     // get current transaction size of current contract calling
