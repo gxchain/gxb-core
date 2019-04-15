@@ -71,7 +71,7 @@ struct pending_transactions_restorer
    pending_transactions_restorer( database& db, std::vector<processed_transaction>&& pending_transactions )
       : _db(db), _pending_transactions( std::move(pending_transactions) )
    {
-       ilog("pending_transactions_restorer pending_transactions");
+       ilog("pending_transactions_restorer construct");
        for (auto &it : _pending_transactions){
            ilog("stash _pending_transactions ${txid}", ("txid", it.id()));
        }
@@ -80,6 +80,7 @@ struct pending_transactions_restorer
 
    ~pending_transactions_restorer()
    {
+      ilog("pending_transactions_restorer desconstruct");
       for( const auto& tx : _db._popped_tx )
       {
          try {
@@ -88,6 +89,9 @@ struct pending_transactions_restorer
                // the operation_results field will be ignored.
                ilog("restore popped_transaction ${txid}", ("txid", tx.id()));
                _db._push_transaction( tx );
+            }
+            else {
+                ilog("${txid} already known", ("txid", tx.id()));
             }
          } catch ( const fc::exception& e ) {
              wlog("unexpected exception on pending_transactions_restorer _push_transaction ${e}, txid ${txid}", ("e", e)("txid", tx.id()));
@@ -103,6 +107,9 @@ struct pending_transactions_restorer
                // the operation_results field will be ignored.
                ilog("restore _pending_transaction ${txid}", ("txid", tx.id()));
                _db._push_transaction( tx );
+            }
+            else {
+                ilog("${txid} already known", ("txid", tx.id()));
             }
          }
          catch( const fc::exception& e )
