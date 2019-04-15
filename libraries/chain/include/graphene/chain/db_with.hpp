@@ -71,6 +71,10 @@ struct pending_transactions_restorer
    pending_transactions_restorer( database& db, std::vector<processed_transaction>&& pending_transactions )
       : _db(db), _pending_transactions( std::move(pending_transactions) )
    {
+       ilog("pending_transactions_restorer pending_transactions");
+       for (auto &it : _pending_transactions){
+           ilog("stash _pending_transactions ${txid}", ("txid", it.id()));
+       }
       _db.clear_pending();
    }
 
@@ -82,7 +86,7 @@ struct pending_transactions_restorer
             if( !_db.is_known_transaction( tx.id() ) ) {
                // since push_transaction() takes a signed_transaction,
                // the operation_results field will be ignored.
-               ilog("push popped_transaction ${txid}", ("txid", tx.id()));
+               ilog("restore popped_transaction ${txid}", ("txid", tx.id()));
                _db._push_transaction( tx );
             }
          } catch ( const fc::exception& e ) {
@@ -97,7 +101,7 @@ struct pending_transactions_restorer
             if( !_db.is_known_transaction( tx.id() ) ) {
                // since push_transaction() takes a signed_transaction,
                // the operation_results field will be ignored.
-               ilog("push _pending_transaction ${txid}", ("txid", tx.id()));
+               ilog("restore _pending_transaction ${txid}", ("txid", tx.id()));
                _db._push_transaction( tx );
             }
          }
