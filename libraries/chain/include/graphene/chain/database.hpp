@@ -514,11 +514,11 @@ namespace graphene { namespace chain {
 
          // for contract ram statistic
         public:
-           const flat_map<uint64_t, flat_map<uint64_t, int64_t>> get_contracts_ram_statistic() const {
+           const flat_map<uint64_t, flat_map<uint64_t, int64_t>>& get_contracts_ram_statistic() const {
                return contracts_ram_counter;
            }
 
-           const flat_map<uint64_t, int64_t> get_payers_ram_statistic() const {
+           const flat_map<uint64_t, int64_t>& get_payers_ram_statistic() const {
                return payers_ram_counter;
            }
 
