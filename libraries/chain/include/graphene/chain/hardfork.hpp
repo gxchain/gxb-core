@@ -116,6 +116,11 @@
 #define HARDFORK_1022_TIME (fc::time_point_sec( 1553990400 )) // for testnet, 2019-03-31T00:00:00(UTC)
 #endif
 
+#ifndef HARDFORK_1023_TIME
+// for testnet after this time add api get_asset_precision
+#define HARDFORK_1023_TIME (fc::time_point_sec( 1555761600 )) // for testnet, 2019-04-20T12:00:00(UTC)
+#endif
+
 // #413 Add operation to claim asset fees
 #ifndef HARDFORK_413_TIME
 #define HARDFORK_413_TIME (fc::time_point_sec( 1446652800 ))

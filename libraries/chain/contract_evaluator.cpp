@@ -147,7 +147,7 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
         bool sufficient_balance = d.get_balance(op.account(d), asset_type).amount >= op.amount->amount;
         FC_ASSERT(sufficient_balance,
                   "insufficient balance: ${balance}, unable to deposit '${total_transfer}' from account '${a}' to '${t}'",
-                  ("a", op.account)("t", contract_obj.id)("total_transfer", d.to_pretty_string(asset(op.amount->amount, asset_type)))
+                  ("a", op.account)("t", contract_obj.id)("total_transfer", d.to_pretty_string(*(op.amount)))
                   ("balance", d.to_pretty_string(d.get_balance(op.account(d), asset_type))));
     }
 

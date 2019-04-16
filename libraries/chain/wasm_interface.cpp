@@ -213,6 +213,24 @@ class global_api : public context_aware_api
         return -1;
     }
 
+    // @brief get asset precision by symbol
+    // @param data pointer of symbol
+    // @param  datalen length of symbol
+    // @return -1 fail;  >= 0 success
+    int64_t get_asset_precision(array_ptr<char> data, size_t datalen)
+    {
+        // this api only can be used after HARDFORK_1023_TIME
+        if (context.db().head_block_time() <= HARDFORK_1023_TIME) {
+            FC_ASSERT(false, "get_asset_precision can not be used");
+        }
+        FC_ASSERT(datalen >= 0, "datalen must >= 0");
+        std::string symbol(data,datalen);
+        const auto& idx = context.db().get_index_type<asset_index>().indices().get<by_symbol>();
+        auto itr = idx.find(symbol);
+        if(itr != idx.end())
+            return itr->precision;
+        return -1;
+    }
 };
 
 class crypto_api : public context_aware_api {
@@ -1676,6 +1694,7 @@ REGISTER_INTRINSICS(global_api,
 (get_account_name_by_id,int64_t(int, int, int64_t))
 (get_account_id,        int64_t(int, int)  )
 (get_asset_id,          int64_t(int, int)  )
+(get_asset_precision,   int64_t(int, int)  )
 );
 
 REGISTER_INTRINSICS(crypto_api,
