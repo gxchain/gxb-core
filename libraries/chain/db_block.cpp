@@ -643,6 +643,8 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
 
    //Finally process the operations
    processed_transaction ptrx(trx);
+
+   // set current trx
    set_cur_trx(dynamic_cast<const transaction*>(&trx));
    _current_op_in_trx = 0;
    for (uint16_t i = 0; i < ptrx.operations.size(); ++i) {
@@ -662,6 +664,8 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
        eval_state.operation_results.emplace_back(apply_operation(eval_state, op, billed_cpu_time_us));
        ++_current_op_in_trx;
    }
+   set_cur_trx(nullptr); // reset current trx
+
    ptrx.operation_results = std::move(eval_state.operation_results);
 
    //Make sure the temp account has no non-zero balances
