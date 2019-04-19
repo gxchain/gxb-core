@@ -1114,7 +1114,13 @@
 
            signed_transaction tx;
            tx.operations.push_back(op);
-           set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+           vector<fc::variant> fees = _remote_db->get_required_fees(tx.operations, fee_asset_obj->id);
+           asset fee;
+           fc::from_variant(fees[0], fee, GRAPHENE_MAX_NESTED_OBJECTS);
+           op.fee = fee;
+
+           tx.operations.clear();
+           tx.operations.push_back(op);
            tx.validate();
 
            return sign_transaction(tx, broadcast);

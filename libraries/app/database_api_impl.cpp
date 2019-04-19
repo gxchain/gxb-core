@@ -1552,7 +1552,18 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
            if (op.which() == operation::tag<contract_call_operation>::value) {
                result.push_back(mock_fee);
            } else {
-               result.push_back(helper.set_op_fees(op));
+               if (_db.head_block_time() > HARDFORK_1024_TIME) {
+                   if (op.which() == operation::tag<contract_update_operation>::value) {
+                       auto op_fee = _db.get_update_contract_fee(op, id);
+                       fc::variant r;
+                       fc::to_variant(op_fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
+                       result.push_back(r);
+                   } else {
+                       result.push_back(helper.set_op_fees(op));
+                   }
+               } else {
+                   result.push_back(helper.set_op_fees(op));
+               }
           }
        }
 
@@ -1577,7 +1588,18 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
            fc::to_variant(op_fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
            result.push_back(r);
        } else {
-           result.push_back(helper.set_op_fees(op));
+           if (_db.head_block_time() > HARDFORK_1024_TIME) {
+               if (op.which() == operation::tag<contract_update_operation>::value) {
+                   auto op_fee = _db.get_update_contract_fee(op, id);
+                   fc::variant r;
+                   fc::to_variant(op_fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
+                   result.push_back(r);
+               } else {
+                   result.push_back(helper.set_op_fees(op));
+               }
+           } else {
+               result.push_back(helper.set_op_fees(op));
+           }
        }
    }
 

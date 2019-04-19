@@ -126,7 +126,13 @@ void_result contract_update_evaluator::do_apply(const contract_update_operation 
         obj.code_version = code_hash;
         obj.abi = op.abi;
     });
-
+    if (d.head_block_time() > HARDFORK_1024_TIME) {
+        // overwrite contract_update_operation fee
+        asset fee = d.get_update_contract_fee(op, op.fee.asset_id);
+        generic_evaluator::prepare_fee(op.fee_payer(), fee, op);
+        generic_evaluator::convert_fee();
+        generic_evaluator::pay_fee();
+    }
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op.owner)(op.contract)(op.fee)(op.abi)) }
 
