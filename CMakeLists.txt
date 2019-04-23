@@ -9,6 +9,7 @@ set( CXX_STANDARD_REQUIRED ON)
 set( LOAD_TXID_PLUGIN 0)
 if(LOAD_TXID_PLUGIN)
   add_definitions(-DQUERY_TXID_PLUGIN_HPP)
+  set( QUERY_TXID graphene_query_txid)
 endif()
 
 set( CLI_CLIENT_EXECUTABLE_NAME graphene_client )
