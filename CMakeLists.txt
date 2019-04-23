@@ -6,8 +6,10 @@ set( BLOCKCHAIN_NAME "GXChain" )
 set( CMAKE_CXX_STANDARD 14 )
 set( CMAKE_CXX_EXTENSIONS ON )
 set( CXX_STANDARD_REQUIRED ON)
-
-option (QUERY_TXID_PLUGIN_HPP  "Support level-db txid query" OFF)
+set( LOAD_TXID_PLUGIN 0)
+if(LOAD_TXID_PLUGIN)
+  add_definitions(-DQUERY_TXID_PLUGIN_HPP)
+endif()
 
 set( CLI_CLIENT_EXECUTABLE_NAME graphene_client )
 set( GUI_CLIENT_EXECUTABLE_NAME gxb-core )
