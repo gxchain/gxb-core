@@ -34,7 +34,7 @@ class query_txid_plugin_impl
     void init();
     static optional<trx_entry_object> query_trx_by_id(std::string txid);
     std::string db_path = "trx_entry.db";
-    uint64_t limit_batch = 10; //limit of leveldb batch
+    uint64_t limit_batch = 1000; //limit of leveldb batch
 
   private:
     query_txid_plugin &_self;
