@@ -99,12 +99,12 @@ void query_txid_plugin_impl::consume_block()
 
         const auto &trx_idx = db.get_index_type<trx_entry_index>().indices();
         const auto &trx_bn_idx = trx_idx.get<by_blocknum>();
-        auto itor_begin = trx_idx.begin();
-        if (itor_begin == trx_idx.end()) return;
+        if (trx_idx.begin() == trx_idx.end()) return;
+        auto itor_begin = trx_bn_idx.begin();
         auto itor_end = trx_bn_idx.lower_bound(irr_num);
-        auto number = (--itor_end)->id.instance() - itor_begin->id.instance();
-
+        auto number = std::distance(itor_begin,itor_end);
         auto backupnum = number;
+        auto put_index = itor_begin->id.instance();
         while (number > limit_batch) {
             leveldb::WriteBatch batch;
             auto itor_backup = itor_begin;
@@ -112,20 +112,22 @@ void query_txid_plugin_impl::consume_block()
                 auto serialize = fc::raw::pack(*itor_begin);
                 std::string txid(itor_begin->txid);
                 batch.Put(txid, {serialize.data(), serialize.size()});
+                put_index = itor_begin->id.instance();
                 itor_begin++;
-                if (itor_begin->id.instance() == itor_end->id.instance()) break;
+                if (itor_begin == itor_end) break;
             }
             leveldb::WriteOptions write_options;
             write_options.sync = true;
             Status s = leveldb->Write(write_options, &batch);
             if (!s.ok()) {
                 itor_begin = itor_backup;
+                put_index = itor_begin->id.instance();
                 break;
             }
             number -= limit_batch;
         }
         if (backupnum > limit_batch)
-            sig_remove(itor_begin->id.instance());
+            sig_remove(put_index);
     }
     FC_LOG_AND_RETHROW()
 }
