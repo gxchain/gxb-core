@@ -199,8 +199,9 @@ asset database::get_update_contract_fee( const operation& op, asset_id_type id )
         auto data_fee = cu_op.calculate_data_fee(newsize - oldsize, contract_update_operation::fee_parameters_type().price_per_kbyte);
         amount += data_fee;
     }
-    asset op_fee(amount, id);
-    op_fee = from_core_asset(to_core_asset(op_fee), id);
+    asset_id_type core_asset_id = current_core_asset_id();
+    asset op_fee(amount, core_asset_id);
+    op_fee = from_core_asset(op_fee, id);
     return op_fee;
 }
 

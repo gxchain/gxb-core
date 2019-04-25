@@ -152,21 +152,17 @@ namespace graphene { namespace chain {
          if (!trx_state->skip_fee_schedule_check
                  && (o.which() != operation::tag<pay_data_transaction_operation>::value)
                  && (o.which() != operation::tag<contract_call_operation>::value)) {
-             if (db().head_block_time() > HARDFORK_1024_TIME) {
-                 if (o.which() != operation::tag<contract_update_operation>::value) {
-                     share_type required_fee = calculate_fee_for_operation(op);
-                     GRAPHENE_ASSERT(core_fee_paid >= required_fee,
-                                     insufficient_fee,
-                                     "Insufficient Fee Paid",
-                                     ("core_fee_paid", core_fee_paid)("required", required_fee));
-                 }
+             share_type required_fee;
+             if (db().head_block_time() > HARDFORK_1024_TIME && o.which() == operation::tag<contract_update_operation>::value) {
+                 asset_id_type core_asset_id = db().current_core_asset_id();
+                 required_fee = db().get_update_contract_fee(op, core_asset_id).amount;
              } else {
-                 share_type required_fee = calculate_fee_for_operation(op);
-                 GRAPHENE_ASSERT(core_fee_paid >= required_fee,
-                                 insufficient_fee,
-                                 "Insufficient Fee Paid",
-                                 ("core_fee_paid", core_fee_paid)("required", required_fee));
+                 required_fee = calculate_fee_for_operation(op);
              }
+             GRAPHENE_ASSERT(core_fee_paid >= required_fee,
+                             insufficient_fee,
+                             "Insufficient Fee Paid",
+                             ("core_fee_paid", core_fee_paid)("required", required_fee));
          }
          return eval->do_evaluate(op);
       }
