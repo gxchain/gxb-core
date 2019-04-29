@@ -1006,8 +1006,9 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
    else
    {
       wanted.push_back("witness");
-      wanted.push_back("account_history");
+      //wanted.push_back("account_history");
       wanted.push_back("data_transaction");
+      wanted.push_back("elasticsearch");
    }
 #ifdef QUERY_TXID_PLUGIN_HPP 
    if (options.count("query-txid") && options.at("query-txid").as<bool>()) {
