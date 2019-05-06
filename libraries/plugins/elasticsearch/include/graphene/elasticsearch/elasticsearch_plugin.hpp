@@ -95,6 +95,7 @@ struct adaptor_struct {
    {
       fc::mutable_variant_object o(op);
       vector<string> keys_to_rename;
+      map<string,string> ele_str_map;
       for (auto i = o.begin(); i != o.end(); ++i)
       {
          auto& element = (*i).value();
@@ -106,8 +107,17 @@ struct adaptor_struct {
                keys_to_rename.emplace_back(name);
             element = adapt(vo);
          }
-         else if (element.is_array())
-            adapt(element.get_array());
+         else if (element.is_array()){
+            string old_key = (*i).key();
+            auto ele_str = fc::json::to_string(o[old_key.c_str()]);
+            ele_str_map[old_key] = ele_str;
+         }
+      }
+      for(const auto& i : ele_str_map)
+      {
+         string key =  i.first + "_str";
+         o[key.c_str()]=i.second.c_str();
+         o.erase(i.first.c_str());
       }
       for (const auto& i : keys_to_rename)
       {
@@ -152,31 +162,6 @@ struct adaptor_struct {
          o["owner_"] = o["owner"].as_string();
          o.erase("owner");
       }
-      if (o.find("proposed_ops") != o.end())
-      {
-         o["proposed_ops"] = fc::json::to_string(o["proposed_ops"]);
-      }
-      if (o.find("initializer") != o.end())
-      {
-         o["initializer"] = fc::json::to_string(o["initializer"]);
-      }
-      if (o.find("policy") != o.end())
-      {
-         o["policy"] = fc::json::to_string(o["policy"]);
-      }
-      if (o.find("predicates") != o.end())
-      {
-         o["predicates"] = fc::json::to_string(o["predicates"]);
-      }
-      if (o.find("active_special_authority") != o.end())
-      {
-         o["active_special_authority"] = fc::json::to_string(o["active_special_authority"]);
-      }
-      if (o.find("owner_special_authority") != o.end())
-      {
-         o["owner_special_authority"] = fc::json::to_string(o["owner_special_authority"]);
-      }
-
 
       variant v;
       fc::to_variant(o, v, FC_PACK_MAX_DEPTH);

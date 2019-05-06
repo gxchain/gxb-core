@@ -55,7 +55,7 @@ class elasticsearch_plugin_impl
       uint32_t _elasticsearch_bulk_sync = 100;
       bool _elasticsearch_visitor = false;
       std::string _elasticsearch_basic_auth = "";
-      std::string _elasticsearch_index_prefix = "bitshares-";
+      std::string _elasticsearch_index_prefix = "gxchain";
       bool _elasticsearch_operation_object = true;
       uint32_t _elasticsearch_start_es_after_block = 0;
       CURL *curl; // curl handler
@@ -94,8 +94,7 @@ elasticsearch_plugin_impl::~elasticsearch_plugin_impl()
 bool elasticsearch_plugin_impl::update_account_histories( const signed_block& b )
 {
    checkState(b.timestamp);
-   index_name = graphene::utilities::generateIndexName(b.timestamp, _elasticsearch_index_prefix);
-
+   index_name = _elasticsearch_index_prefix;
    graphene::chain::database& db = database();
    const vector<optional< operation_history_object > >& hist = db.get_applied_operations();
    bool is_first = true;
@@ -134,15 +133,15 @@ bool elasticsearch_plugin_impl::update_account_histories( const signed_block& b 
       oho = create_oho();
 
       // populate what we can before impacted loop
-      getOperationType(oho);   //设置成员变量op_type
-      doOperationHistory(oho); // 设置成员变量os
-      doBlock(oho->trx_in_block, b); // 设置成员变量bs
+      getOperationType(oho);   
+      doOperationHistory(oho); 
+      doBlock(oho->trx_in_block, b); 
 
       const operation_history_object& op = *o_op;
 
       // get the set of accounts this operation applies to
       flat_set<account_id_type> impacted;
-      vector<authority> other; // 獲取該op操作關聯的賬戶身份
+      vector<authority> other; 
       operation_get_required_authorities( op.op, impacted, impacted, other ); // fee_payer is added here
 
       if( op.op.which() == operation::tag< account_create_operation >::value )
