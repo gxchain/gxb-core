@@ -61,6 +61,7 @@ class elasticsearch_plugin_impl
       CURL *curl; // curl handler
       vector <string> bulk_lines; //  vector of op lines
       vector<std::string> prepare;
+      std::multimap<uint64_t,std::vector<string> > unconfirmed_buffer;
 
       graphene::utilities::ES es;
       uint32_t limit_documents;
@@ -84,6 +85,7 @@ class elasticsearch_plugin_impl
       void createBulkLine(const account_transaction_history_object& ath);
       void prepareBulk(const account_transaction_history_id_type& ath_id);
       void populateESstruct();
+      void createConfirmBulk();
 };
 
 elasticsearch_plugin_impl::~elasticsearch_plugin_impl()
@@ -162,6 +164,7 @@ bool elasticsearch_plugin_impl::update_account_histories( const signed_block& b 
    // we send bulk at end of block when we are in sync for better real time client experience
    if(is_sync)
    {
+      createConfirmBulk();
       populateESstruct();
       if(es.bulk_lines.size() > 0)
       {
@@ -285,7 +288,20 @@ void elasticsearch_plugin_impl::createBulkLine(const account_transaction_history
    bulk_line_struct.block_data = bs;
    bulk_line = fc::json::to_string(bulk_line_struct);
 }
-
+void elasticsearch_plugin_impl::createConfirmBulk()
+{
+   graphene::chain::database& db = database();
+   const auto &dpo = db.get_dynamic_global_properties();
+   uint64_t irr_num = dpo.last_irreversible_block_num;
+   for(auto itor = unconfirmed_buffer.begin();itor != unconfirmed_buffer.end();){
+      if(itor->first < irr_num){
+         std::move(itor->second.begin(), itor->second.end(), std::back_inserter(bulk_lines));
+         itor = unconfirmed_buffer.erase(itor);
+      }else{
+         break;
+      }
+   } 
+}
 void elasticsearch_plugin_impl::prepareBulk(const account_transaction_history_id_type& ath_id)
 {
    const std::string _id = fc::json::to_string(ath_id);
@@ -295,7 +311,8 @@ void elasticsearch_plugin_impl::prepareBulk(const account_transaction_history_id
    bulk_header["_id"] = fc::to_string(ath_id.space_id) + "." + fc::to_string(ath_id.type_id) + "."
                       + fc::to_string(ath_id.instance.value);
    prepare = graphene::utilities::createBulk(bulk_header, std::move(bulk_line));
-   std::move(prepare.begin(), prepare.end(), std::back_inserter(bulk_lines));
+   unconfirmed_buffer.insert(pair<uint64_t,std::vector<std::string> >(bs.block_num,prepare)); 
+   createConfirmBulk();
    prepare.clear();
 }
 
@@ -380,7 +397,7 @@ void elasticsearch_plugin::plugin_set_program_options(
 
 void elasticsearch_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-   ilog("elastic_search init inti init init ");
+   ilog("elastic_search initialize ");
    database().applied_block.connect( [&]( const signed_block& b) {
       if (!my->update_account_histories(b))
          FC_THROW_EXCEPTION(fc::exception, "Error populating ES database, we are going to keep trying.");
