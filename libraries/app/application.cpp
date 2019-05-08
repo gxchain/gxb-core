@@ -943,7 +943,10 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("api-access", bpo::value<boost::filesystem::path>(), "JSON file specifying API permissions")
          ("plugins", bpo::value<string>(), "Space-separated list of plugins to activate")
    #ifdef QUERY_TXID_PLUGIN_HPP
-         ("query-txid", bpo::value<bool>(), "Plugin to save txid records")
+         ("load-query-txid-plugin", bpo::value<bool>(), "Plugin to save txid records")
+   #endif
+   #ifdef ELASTIC_SEARCH_PLUGIN_HPP
+         ("load-elastic-search-plugin", bpo::value<bool>(), "Plugin to save account history by elastic search database")
    #endif
          ;
    command_line_options.add(configuration_file_options);
@@ -1006,13 +1009,17 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
    else
    {
       wanted.push_back("witness");
-      //wanted.push_back("account_history");
+      wanted.push_back("account_history");
       wanted.push_back("data_transaction");
-      wanted.push_back("elasticsearch");
    }
 #ifdef QUERY_TXID_PLUGIN_HPP 
-   if (options.count("query-txid") && options.at("query-txid").as<bool>()) {
+   if (options.count("load-query-txid-plugin") && options.at("load-query-txid-plugin").as<bool>()) {
       wanted.push_back("query_txid");
+   }
+#endif
+#ifdef ELASTIC_SEARCH_PLUGIN_HPP
+   if (options.count("load-elastic-search-plugin-txid") && options.at("load-elastic-search-plugin").as<bool>()) {
+      wanted.push_back("elasticsearch");
    }
 #endif
    for (auto& it : wanted)

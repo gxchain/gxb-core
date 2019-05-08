@@ -32,7 +32,9 @@
 #ifdef QUERY_TXID_PLUGIN_HPP
 #include <graphene/query_txid/query_txid_plugin.hpp>
 #endif
+#ifdef ELASTIC_SEARCH_PLUGIN_HPP
 #include <graphene/elasticsearch/elasticsearch_plugin.hpp>
+#endif
 #include <fc/exception/exception.hpp>
 #include <fc/thread/thread.hpp>
 #include <fc/interprocess/signals.hpp>
@@ -91,8 +93,9 @@ int main(int argc, char** argv) {
 #ifdef QUERY_TXID_PLUGIN_HPP
       auto querytxid_plug = node->register_plugin<query_txid::query_txid_plugin>();
 #endif
+#ifdef ELASTIC_SEARCH_PLUGIN_HPP
       auto esearch_plug = node->register_plugin<elasticsearch::elasticsearch_plugin>();
-
+#endif
       try
       {
          bpo::options_description cli, cfg;
