@@ -438,7 +438,9 @@ void elasticsearch_plugin::plugin_startup()
    es.curl = my->curl;
    es.elasticsearch_url = my->_elasticsearch_node_url;
    es.auth = my->_elasticsearch_basic_auth;
-
+   es.index_prefix = my->_elasticsearch_index_prefix;
+   if(!graphene::utilities::CloseReadOnly(es))
+      FC_THROW_EXCEPTION(fc::exception, "Cancel ES database readonly faild");
    if(!graphene::utilities::checkES(es))
       FC_THROW_EXCEPTION(fc::exception, "ES database is not up in url ${url}", ("url", my->_elasticsearch_node_url));
    ilog("elasticsearch ACCOUNT HISTORY: plugin_startup() begin");

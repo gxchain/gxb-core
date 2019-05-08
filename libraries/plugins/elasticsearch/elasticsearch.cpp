@@ -78,7 +78,22 @@ bool SendBulk(ES&& es)
       return true;
    return false;
 }
+bool CloseReadOnly(ES& es)
+{
+   graphene::utilities::CurlRequest curl_request;
+   std::string parm = "{\"index.blocks.read_only_allow_delete\": false}";
+   curl_request.handler = es.curl;
+   curl_request.url = es.elasticsearch_url + es.index_prefix + "/_settings";
+   curl_request.auth = es.auth;
+   curl_request.type = "PUT";
+   curl_request.query = std::move(parm);
 
+   auto curlResponse = doCurl(curl_request);
+
+   if(handleBulkResponse(getResponseCode(curl_request.handler), curlResponse))
+      return true;
+   return false;
+}
 const std::string joinBulkLines(const std::vector<std::string>& bulk)
 {
    auto bulking = boost::algorithm::join(bulk, "\n");
@@ -98,8 +113,11 @@ bool handleBulkResponse(long http_code, const std::string& CurlReadBuffer)
    if(http_code == 200) {
       // all good, but check errors in response
       fc::variant j = fc::json::from_string(CurlReadBuffer);
+      if(CurlReadBuffer.find("errors") == std::string::npos)
+         return true;
       bool errors = j["errors"].as_bool();
       if(errors == true) {
+         ilog(CurlReadBuffer);
          return false;
       }
    }
@@ -175,6 +193,10 @@ const std::string doCurl(CurlRequest& curl)
    if(curl.type == "POST")
    {
       curl_easy_setopt(curl.handler, CURLOPT_POST, true);
+      curl_easy_setopt(curl.handler, CURLOPT_POSTFIELDS, curl.query.c_str());
+   }
+   if(curl.type == "PUT")
+   {
       curl_easy_setopt(curl.handler, CURLOPT_POSTFIELDS, curl.query.c_str());
    }
    curl_easy_setopt(curl.handler, CURLOPT_WRITEFUNCTION, WriteCallback);

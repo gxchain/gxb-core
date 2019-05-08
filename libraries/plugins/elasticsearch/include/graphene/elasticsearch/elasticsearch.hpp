@@ -64,5 +64,6 @@ namespace graphene { namespace utilities {
    const std::string doCurl(CurlRequest& curl);
    const std::string joinBulkLines(const std::vector<std::string>& bulk);
    long getResponseCode(CURL *handler);
+   bool CloseReadOnly(ES& es);
 
 } } // end namespace graphene::utilities
