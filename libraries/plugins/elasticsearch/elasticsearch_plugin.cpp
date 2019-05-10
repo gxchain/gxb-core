@@ -26,7 +26,7 @@
 #include <graphene/chain/impacted.hpp>
 #include <graphene/chain/account_evaluator.hpp>
 #include <curl/curl.h>
-#include <graphene/elasticsearch/elasticsearch.hpp>
+#include <graphene/utilities/elasticsearch.hpp>
 
 namespace graphene { namespace elasticsearch {
 

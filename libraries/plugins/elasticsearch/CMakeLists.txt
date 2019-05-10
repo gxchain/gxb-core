@@ -2,7 +2,6 @@ file(GLOB HEADERS "include/graphene/elasticsearch/*.hpp")
 
 add_library( graphene_elasticsearch
         elasticsearch_plugin.cpp
-        elasticsearch.cpp
            )
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
