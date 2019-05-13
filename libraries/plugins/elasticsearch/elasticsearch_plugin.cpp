@@ -56,7 +56,6 @@ class elasticsearch_plugin_impl
       std::string _elasticsearch_node_url = "http://localhost:9200/";
       uint32_t _elasticsearch_bulk_replay = 10000;
       uint32_t _elasticsearch_bulk_sync = 100;
-      bool _elasticsearch_visitor = false;
       std::string _elasticsearch_basic_auth = "";
       std::string _elasticsearch_index_prefix = "gxchain";
       bool _elasticsearch_operation_object = true;
@@ -389,10 +388,9 @@ void elasticsearch_plugin::plugin_set_program_options(
          ("elasticsearch-node-url", boost::program_options::value<std::string>(), "Elastic Search database node url(http://localhost:9200/)")
          ("elasticsearch-bulk-replay", boost::program_options::value<uint32_t>(), "Number of bulk documents to index on replay(10000)")
          ("elasticsearch-bulk-sync", boost::program_options::value<uint32_t>(), "Number of bulk documents to index on a syncronied chain(100)")
-         ("elasticsearch-visitor", boost::program_options::value<bool>(), "Use visitor to index additional data(slows down the replay(false))")
          ("elasticsearch-basic-auth", boost::program_options::value<std::string>(), "Pass basic auth to elasticsearch database('')")
-         ("elasticsearch-index-prefix", boost::program_options::value<std::string>(), "Add a prefix to the index(bitshares-)")
-         ("elasticsearch-operation-object", boost::program_options::value<bool>(), "Save operation as object(false)")
+         ("elasticsearch-index-prefix", boost::program_options::value<std::string>(), "Add a prefix to the index(gxchain)")
+         ("elasticsearch-operation-object", boost::program_options::value<bool>(), "Save operation as object(true)")
          ("elasticsearch-start-es-after-block", boost::program_options::value<uint32_t>(), "Start doing ES job after block(0)")
          ;
    cfg.add(cli);
@@ -417,9 +415,6 @@ void elasticsearch_plugin::plugin_initialize(const boost::program_options::varia
    }
    if (options.count("elasticsearch-bulk-sync")) {
       my->_elasticsearch_bulk_sync = options["elasticsearch-bulk-sync"].as<uint32_t>();
-   }
-   if (options.count("elasticsearch-visitor")) {
-      my->_elasticsearch_visitor = options["elasticsearch-visitor"].as<bool>();
    }
    if (options.count("elasticsearch-basic-auth")) {
       my->_elasticsearch_basic_auth = options["elasticsearch-basic-auth"].as<std::string>();
