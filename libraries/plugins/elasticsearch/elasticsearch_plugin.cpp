@@ -27,7 +27,10 @@
 #include <graphene/chain/account_evaluator.hpp>
 #include <curl/curl.h>
 #include <graphene/utilities/elasticsearch.hpp>
-
+#include <graphene/chain/account_object.hpp>
+#include <graphene/chain/config.hpp>
+#include <fc/smart_ref_impl.hpp>
+#include <fc/thread/thread.hpp>
 namespace graphene { namespace elasticsearch {
 
 namespace detail
@@ -439,8 +442,7 @@ void elasticsearch_plugin::plugin_startup()
    es.elasticsearch_url = my->_elasticsearch_node_url;
    es.auth = my->_elasticsearch_basic_auth;
    es.index_prefix = my->_elasticsearch_index_prefix;
-   if(!graphene::utilities::CloseReadOnly(es))
-      FC_THROW_EXCEPTION(fc::exception, "Cancel ES database readonly faild");
+   graphene::utilities::CloseReadOnly(es);
    if(!graphene::utilities::checkES(es))
       FC_THROW_EXCEPTION(fc::exception, "ES database is not up in url ${url}", ("url", my->_elasticsearch_node_url));
    ilog("elasticsearch ACCOUNT HISTORY: plugin_startup() begin");
