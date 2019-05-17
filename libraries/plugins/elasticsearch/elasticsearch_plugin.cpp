@@ -98,7 +98,7 @@ elasticsearch_plugin_impl::~elasticsearch_plugin_impl()
 bool elasticsearch_plugin_impl::update_account_histories( const signed_block& b )
 {
    checkState(b.timestamp);
-   index_name = _elasticsearch_index_prefix;
+   index_name = graphene::utilities::generateIndexName(b.timestamp, _elasticsearch_index_prefix);
    graphene::chain::database& db = database();
    const vector<optional< operation_history_object > >& hist = db.get_applied_operations();
    bool is_first = true;
