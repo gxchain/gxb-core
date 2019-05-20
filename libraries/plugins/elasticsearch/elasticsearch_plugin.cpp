@@ -371,7 +371,7 @@ elasticsearch_plugin::~elasticsearch_plugin()
 
 std::string elasticsearch_plugin::plugin_name()const
 {
-   return "elasticsearch";
+   return "elastic_search";
 }
 /*
 std::string elasticsearch_plugin::plugin_description()const

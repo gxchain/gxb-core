@@ -942,12 +942,6 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("dbg-init-key", bpo::value<string>(), "Block signing key to use for init witnesses, overrides genesis file")
          ("api-access", bpo::value<boost::filesystem::path>(), "JSON file specifying API permissions")
          ("plugins", bpo::value<string>(), "Space-separated list of plugins to activate")
-   #ifdef QUERY_TXID_PLUGIN_HPP
-         ("load-query-txid-plugin", bpo::value<bool>(), "Plugin to save txid records")
-   #endif
-   #ifdef ELASTIC_SEARCH_PLUGIN_HPP
-         ("load-elastic-search-plugin", bpo::value<bool>(), "Plugin to save account history by elastic search database")
-   #endif
          ;
    command_line_options.add(configuration_file_options);
    command_line_options.add_options()
@@ -1012,20 +1006,6 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
       wanted.push_back("account_history");
       wanted.push_back("data_transaction");
    }
-#ifdef QUERY_TXID_PLUGIN_HPP 
-   if (options.count("load-query-txid-plugin") && options.at("load-query-txid-plugin").as<bool>()) {
-      wanted.push_back("query_txid");
-   }
-#endif
-#ifdef ELASTIC_SEARCH_PLUGIN_HPP
-   if (options.count("load-elastic-search-plugin") && options.at("load-elastic-search-plugin").as<bool>()) {
-      auto ach_itor = std::find(wanted.begin(),wanted.end(),"account_history");
-      if(ach_itor != wanted.end()){
-         wanted.erase(ach_itor);
-         wanted.push_back("elasticsearch");
-      }
-   }
-#endif
    for (auto& it : wanted)
    {
       if (!it.empty()) enable_plugin(it);
