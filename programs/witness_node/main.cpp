@@ -29,7 +29,9 @@
 #include <graphene/delayed_node/delayed_node_plugin.hpp>
 #include <graphene/data_transaction/data_transaction_plugin.hpp>
 #include <graphene/snapshot/snapshot.hpp>
-
+#ifdef QUERY_TXID_PLUGIN_HPP
+#include <graphene/query_txid/query_txid_plugin.hpp>
+#endif
 #include <fc/exception/exception.hpp>
 #include <fc/thread/thread.hpp>
 #include <fc/interprocess/signals.hpp>
@@ -85,6 +87,9 @@ int main(int argc, char** argv) {
       auto delayed_plug = node->register_plugin<delayed_node::delayed_node_plugin>();
       auto data_transaction_plug = node->register_plugin<data_transaction::data_transaction_plugin>();
       auto snapshot_plug = node->register_plugin<snapshot_plugin::snapshot_plugin>();
+#ifdef QUERY_TXID_PLUGIN_HPP
+      auto querytxid_plug = node->register_plugin<query_txid::query_txid_plugin>();
+#endif
 
       try
       {
