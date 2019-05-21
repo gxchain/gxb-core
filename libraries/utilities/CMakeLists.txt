@@ -8,13 +8,15 @@ if(NOT GRAPHENE_GIT_REVISION_DESCRIPTION)
 endif(NOT GRAPHENE_GIT_REVISION_DESCRIPTION)
 
 file(GLOB HEADERS "include/graphene/utilities/*.hpp")
-
+if(LOAD_ELASTICSEARCH_PLUGIN)
+  set( ELASTIC_SEARCH_CPP elasticsearch.cpp)
+endif()
 set(sources
    key_conversion.cpp
    string_escape.cpp
    tempdir.cpp
    words.cpp
-   elasticsearch.cpp
+   ${ELASTIC_SEARCH_CPP}
    ${HEADERS})
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/git_revision.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp" @ONLY)
