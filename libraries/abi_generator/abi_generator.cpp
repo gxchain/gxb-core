@@ -446,7 +446,7 @@ bool abi_generator::is_vector(const clang::QualType& vqt) {
     qt = qt->getAs<clang::ElaboratedType>()->getNamedType();
 
   return isa<clang::TemplateSpecializationType>(qt.getTypePtr()) \
-    && boost::starts_with( get_type_name(qt, false), "vector");
+    && (boost::starts_with( get_type_name(qt, false), "vector")||boost::starts_with( get_type_name(qt, false), "set"));
 }
 
 bool abi_generator::is_vector(const string& type_name) {
