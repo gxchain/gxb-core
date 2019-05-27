@@ -188,6 +188,8 @@ namespace graphene {
          bool is_vector(const string& type_name);
          string add_vector(const clang::QualType& qt, size_t recursion_depth);
 
+         bool is_map(const clang::QualType& qt);
+         string add_map(const clang::QualType& qt, size_t recursion_depth);
          bool is_struct(const clang::QualType& qt);
          string add_struct(const clang::QualType& qt, string full_type_name, size_t recursion_depth);
 
@@ -200,6 +202,7 @@ namespace graphene {
          QualType get_vector_element_type(const clang::QualType& qt);
          string get_vector_element_type(const string& type_name);
 
+         std::vector<clang::QualType> get_map_element_type(const clang::QualType& qt);
          clang::QualType get_named_type_if_elaborated(const clang::QualType& qt);
 
          const clang::RecordDecl::field_range get_struct_fields(const clang::QualType& qt);

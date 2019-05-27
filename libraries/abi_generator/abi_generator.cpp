@@ -453,6 +453,16 @@ bool abi_generator::is_vector(const string& type_name) {
   return boost::ends_with(type_name, "[]");
 }
 
+bool abi_generator::is_map(const clang::QualType& mqt) {
+  QualType qt(mqt);
+
+  if ( is_elaborated(qt) )
+    qt = qt->getAs<clang::ElaboratedType>()->getNamedType();
+
+  return isa<clang::TemplateSpecializationType>(qt.getTypePtr()) \
+    && boost::starts_with( get_type_name(qt, false), "map");
+}
+
 bool abi_generator::is_struct_specialization(const clang::QualType& qt) {
   return is_struct(qt) && isa<clang::TemplateSpecializationType>(qt.getTypePtr());
 }
@@ -476,6 +486,17 @@ string abi_generator::get_vector_element_type(const string& type_name) {
   return type_name;
 }
 
+std::vector<clang::QualType> abi_generator::get_map_element_type(const clang::QualType& qt)
+{
+  const auto* tst = clang::dyn_cast<const clang::TemplateSpecializationType>(qt.getTypePtr());
+  ABI_ASSERT(tst != nullptr);
+  const clang::TemplateArgument& arg0 = tst->getArg(0);
+  const clang::TemplateArgument& arg1 = tst->getArg(1);
+  std::vector<clang::QualType> varg;
+  varg.emplace_back(arg0.getAsType());
+  varg.emplace_back(arg1.getAsType());
+  return varg;
+}
 string abi_generator::get_type_name(const clang::QualType& qt, bool with_namespace=false) {
   auto name = clang::TypeName::getFullyQualifiedName(qt, *ast_context);
   if(!with_namespace)
@@ -566,6 +587,46 @@ string abi_generator::add_vector(const clang::QualType& vqt, size_t recursion_de
   return vector_element_type_str;
 }
 
+string abi_generator::add_map(const clang::QualType& mqt, size_t recursion_depth)
+{
+  ABI_ASSERT( ++recursion_depth < max_recursion_depth, "recursive definition, max_recursion_depth" );
+
+  clang::QualType qt(get_named_type_if_elaborated(mqt));
+
+  auto map_element_type_list = get_map_element_type(qt);
+  ABI_ASSERT(!is_map(map_element_type_list[0]), "Only one-dimensional maps are supported");
+  ABI_ASSERT(!is_map(map_element_type_list[1]), "Only one-dimensional maps are supported");
+
+  add_type(map_element_type_list[0], recursion_depth);
+  add_type(map_element_type_list[1], recursion_depth);
+
+  auto map_element_type_str_0 = translate_type(get_type_name(map_element_type_list[0]));
+  auto map_element_type_str_1 = translate_type(get_type_name(map_element_type_list[1]));
+
+  static uint64_t index = 1;
+  std::string index_name = std::to_string(index);
+  std::string map_element_type_str = "map" + index_name + "[]";
+  index++;
+
+  // add struct 
+  struct_def map_def;
+  map_def.name = map_element_type_str.substr(0, map_element_type_str.length() - 2);
+  map_def.base = "";
+
+  std::string key_field_name = "key";
+  std::string key_field_type_name = map_element_type_str_0;
+  field_def key_struct_field{key_field_name, key_field_type_name};
+
+  std::string value_field_name = "value";
+  std::string value_field_type_name = map_element_type_str_1;
+  field_def value_struct_field{value_field_name, value_field_type_name};
+
+  map_def.fields.push_back(key_struct_field);
+  map_def.fields.push_back(value_struct_field);
+
+  output->structs.push_back(map_def);
+  return map_element_type_str;
+}
 string abi_generator::add_type(const clang::QualType& tqt, size_t recursion_depth) {
 
   ABI_ASSERT( ++recursion_depth < max_recursion_depth, "recursive definition, max_recursion_depth" );
@@ -591,6 +652,11 @@ string abi_generator::add_type(const clang::QualType& tqt, size_t recursion_dept
   if( is_vector(qt) ) {
     auto vector_type_name = add_vector(qt, recursion_depth);
     return is_type_def ? type_name : vector_type_name;
+  }
+
+  if( is_map(qt) ){
+    auto map_type_name = add_map(qt, recursion_depth);
+    return is_type_def ? type_name : map_type_name;
   }
 
   if( is_struct(qt) ) {
