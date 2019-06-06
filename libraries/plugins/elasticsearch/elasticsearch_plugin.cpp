@@ -60,7 +60,7 @@ class elasticsearch_plugin_impl
       std::string _elasticsearch_index_prefix = "gxchain";
       bool _elasticsearch_operation_object = true;
       uint32_t _elasticsearch_start_es_after_block = 0;
-      uint64_t _max_ops_per_account = 2000;
+      uint64_t _elasticsearch_max_ops_per_account = 0;
       CURL *curl; // curl handler
       vector <string> bulk_lines; //  vector of op lines
       vector<std::string> prepare;
@@ -324,7 +324,7 @@ void elasticsearch_plugin_impl::cleanObjects(const account_transaction_history_i
    graphene::chain::database& db = database();
    // remove everything except current object from ath
    const auto& stats_obj = account_id(db).statistics(db);
-   if( stats_obj.total_ops - stats_obj.removed_ops > _max_ops_per_account )
+   if( stats_obj.total_ops - stats_obj.removed_ops > _elasticsearch_max_ops_per_account )
    {
       const auto &his_idx = db.get_index_type<account_transaction_history_index>();
       const auto &by_seq_idx = his_idx.indices().get<by_seq>();
@@ -397,7 +397,7 @@ void elasticsearch_plugin::plugin_set_program_options(
          ("elasticsearch-index-prefix", boost::program_options::value<std::string>(), "Add a prefix to the index(gxchain)")
          ("elasticsearch-operation-object", boost::program_options::value<bool>(), "Save operation as object(true)")
          ("elasticsearch-start-es-after-block", boost::program_options::value<uint32_t>(), "Start doing ES job after block(0)")
-         ("max-ops-per-account", boost::program_options::value<uint64_t>(), "Maximum number of operations per account will be kept in memory")
+         ("elasticsearch-max-ops-per-account", boost::program_options::value<uint64_t>(), "Maximum number of operations per account will be kept in memory")
          ;
    cfg.add(cli);
 }
@@ -435,7 +435,7 @@ void elasticsearch_plugin::plugin_initialize(const boost::program_options::varia
       my->_elasticsearch_start_es_after_block = options["elasticsearch-start-es-after-block"].as<uint32_t>();
    }   
    if (options.count("max-ops-per-account")) {
-       my->_max_ops_per_account = options["max-ops-per-account"].as<uint64_t>();
+       my->_elasticsearch_max_ops_per_account = options["elasticsearch-max-ops-per-account"].as<uint64_t>();
    }
 }
 
