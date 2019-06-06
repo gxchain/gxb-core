@@ -60,6 +60,7 @@ class elasticsearch_plugin_impl
       std::string _elasticsearch_index_prefix = "gxchain";
       bool _elasticsearch_operation_object = true;
       uint32_t _elasticsearch_start_es_after_block = 0;
+      uint64_t _max_ops_per_account = 2000;
       CURL *curl; // curl handler
       vector <string> bulk_lines; //  vector of op lines
       vector<std::string> prepare;
@@ -322,27 +323,31 @@ void elasticsearch_plugin_impl::cleanObjects(const account_transaction_history_i
 {
    graphene::chain::database& db = database();
    // remove everything except current object from ath
-   const auto &his_idx = db.get_index_type<account_transaction_history_index>();
-   const auto &by_seq_idx = his_idx.indices().get<by_seq>();
-   auto itr = by_seq_idx.lower_bound(boost::make_tuple(account_id, 0));
-   if (itr != by_seq_idx.end() && itr->account == account_id && itr->id != ath_id) {
-      // if found, remove the entry
-      const auto remove_op_id = itr->operation_id;
-      const auto itr_remove = itr;
-      ++itr;
-      db.remove( *itr_remove );
-      // modify previous node's next pointer
-      // this should be always true, but just have a check here
-      if( itr != by_seq_idx.end() && itr->account == account_id )
-      {
-         db.modify( *itr, [&]( account_transaction_history_object& obj ){
-            obj.next = account_transaction_history_id_type();
-         });
-      }
-      // do the same on oho
-      const auto &by_opid_idx = his_idx.indices().get<by_opid>();
-      if (by_opid_idx.find(remove_op_id) == by_opid_idx.end()) {
-         db.remove(remove_op_id(db));
+   const auto& stats_obj = account_id(db).statistics(db);
+   if( stats_obj.total_ops - stats_obj.removed_ops > _max_ops_per_account )
+   {
+      const auto &his_idx = db.get_index_type<account_transaction_history_index>();
+      const auto &by_seq_idx = his_idx.indices().get<by_seq>();
+      auto itr = by_seq_idx.lower_bound(boost::make_tuple(account_id, 0));
+      if (itr != by_seq_idx.end() && itr->account == account_id && itr->id != ath_id) {
+         // if found, remove the entry
+         const auto remove_op_id = itr->operation_id;
+         const auto itr_remove = itr;
+         ++itr;
+         db.remove( *itr_remove );
+         // modify previous node's next pointer
+         // this should be always true, but just have a check here
+         if( itr != by_seq_idx.end() && itr->account == account_id )
+         {
+            db.modify( *itr, [&]( account_transaction_history_object& obj ){
+               obj.next = account_transaction_history_id_type();
+            });
+         }
+         // do the same on oho
+         const auto &by_opid_idx = his_idx.indices().get<by_opid>();
+         if (by_opid_idx.find(remove_op_id) == by_opid_idx.end()) {
+            db.remove(remove_op_id(db));
+         }
       }
    }
 }
@@ -392,6 +397,7 @@ void elasticsearch_plugin::plugin_set_program_options(
          ("elasticsearch-index-prefix", boost::program_options::value<std::string>(), "Add a prefix to the index(gxchain)")
          ("elasticsearch-operation-object", boost::program_options::value<bool>(), "Save operation as object(true)")
          ("elasticsearch-start-es-after-block", boost::program_options::value<uint32_t>(), "Start doing ES job after block(0)")
+         ("max-ops-per-account", boost::program_options::value<uint64_t>(), "Maximum number of operations per account will be kept in memory")
          ;
    cfg.add(cli);
 }
@@ -428,6 +434,9 @@ void elasticsearch_plugin::plugin_initialize(const boost::program_options::varia
    if (options.count("elasticsearch-start-es-after-block")) {
       my->_elasticsearch_start_es_after_block = options["elasticsearch-start-es-after-block"].as<uint32_t>();
    }   
+   if (options.count("max-ops-per-account")) {
+       my->_max_ops_per_account = options["max-ops-per-account"].as<uint64_t>();
+   }
 }
 
 void elasticsearch_plugin::plugin_startup()
