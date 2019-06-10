@@ -578,6 +578,7 @@ string abi_generator::add_vector(const clang::QualType& vqt, size_t recursion_de
 
   auto vector_element_type = get_vector_element_type(qt);
   ABI_ASSERT(!is_vector(vector_element_type), "Only one-dimensional arrays are supported");
+  ABI_ASSERT(!is_map(vector_element_type), "Only one-dimensional maps are supported");
 
   add_type(vector_element_type, recursion_depth);
 
@@ -600,8 +601,16 @@ string abi_generator::add_map(const clang::QualType& mqt, size_t recursion_depth
   add_type(map_element_type_list[0], recursion_depth);
   add_type(map_element_type_list[1], recursion_depth);
 
-  auto map_element_type_str_0 = translate_type(get_type_name(map_element_type_list[0]));
-  auto map_element_type_str_1 = translate_type(get_type_name(map_element_type_list[1]));
+  std::string map_element_type_str_0;
+  std::string map_element_type_str_1;
+  if(is_vector(map_element_type_list[0]))
+    map_element_type_str_0 = add_vector(map_element_type_list[0],recursion_depth);
+  else
+    map_element_type_str_0 = translate_type(get_type_name(map_element_type_list[0]));
+  if(is_vector(map_element_type_list[1]))
+    map_element_type_str_1 = add_vector(map_element_type_list[1],recursion_depth);
+  else
+    map_element_type_str_1 = translate_type(get_type_name(map_element_type_list[1]));
 
   static uint64_t index = 1;
   std::string index_name = std::to_string(index);
