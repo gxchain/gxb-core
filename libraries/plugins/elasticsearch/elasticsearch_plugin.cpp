@@ -434,7 +434,7 @@ void elasticsearch_plugin::plugin_initialize(const boost::program_options::varia
    if (options.count("elasticsearch-start-es-after-block")) {
       my->_elasticsearch_start_es_after_block = options["elasticsearch-start-es-after-block"].as<uint32_t>();
    }   
-   if (options.count("max-ops-per-account")) {
+   if (options.count("elasticsearch-max-ops-per-account")) {
        my->_elasticsearch_max_ops_per_account = options["elasticsearch-max-ops-per-account"].as<uint64_t>();
    }
 }
