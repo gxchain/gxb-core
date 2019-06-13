@@ -88,8 +88,8 @@ void_result contract_update_evaluator::do_evaluate(const contract_update_operati
     if(d.head_block_time() > HARDFORK_1015_TIME) {
         FC_ASSERT(contract_obj.code.size() > 0, "can not update a normal account: ${a}", ("a", op.contract));
     }
+    code_hash = fc::sha256::hash(op.code);
     if (d.head_block_time() < HARDFORK_1024_TIME) {
-        code_hash = fc::sha256::hash(op.code);
         FC_ASSERT(code_hash != contract_obj.code_version, "code not updated");
     }
 
