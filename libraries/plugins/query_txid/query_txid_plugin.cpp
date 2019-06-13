@@ -42,19 +42,19 @@ class query_txid_plugin_impl
     fc::signal<void()> sig_db_write;
     fc::signal<void(const uint64_t)> sig_remove;
 
-    static DB *leveldb;
+    static leveldb::DB *leveldb;
     void consume_block();                               //Consume block
     void remove_trx_index(const uint64_t trx_entry_id); //Remove trx_index in db
 };
-DB *query_txid_plugin_impl::leveldb = nullptr;
+leveldb::DB *query_txid_plugin_impl::leveldb = nullptr;
 
 void query_txid_plugin_impl::init()
 {
     try {
         //Create leveldb
-        Options options;
+        leveldb::Options options;
         options.create_if_missing = true;
-        Status s = DB::Open(options, db_path, &leveldb);
+        leveldb::Status s = leveldb::DB::Open(options, db_path, &leveldb);
 
         // Respond to the sig_db_write signale
         sig_db_write.connect([&]() { consume_block(); });
