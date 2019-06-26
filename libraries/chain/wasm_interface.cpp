@@ -213,6 +213,24 @@ class global_api : public context_aware_api
         return -1;
     }
 
+    // @brief get asset precision by symbol
+    // @param data pointer of symbol
+    // @param  datalen length of symbol
+    // @return -1 fail;  >= 0 success
+    int64_t get_asset_precision(array_ptr<char> data, size_t datalen)
+    {
+        // this api only can be used after HARDFORK_1023_TIME
+        if (context.db().head_block_time() <= HARDFORK_1023_TIME) {
+            FC_ASSERT(false, "get_asset_precision can not be used");
+        }
+        FC_ASSERT(datalen >= 0, "datalen must >= 0");
+        std::string symbol(data,datalen);
+        const auto& idx = context.db().get_index_type<asset_index>().indices().get<by_symbol>();
+        auto itr = idx.find(symbol);
+        if(itr != idx.end())
+            return itr->precision;
+        return -1;
+    }
 };
 
 class crypto_api : public context_aware_api {
@@ -225,8 +243,18 @@ class crypto_api : public context_aware_api {
                               array_ptr<char> pub, size_t publen)
       {
           public_key_type pk;
-          datastream<const char *> pubds(pub, publen);
-          fc::raw::unpack(pubds, pk);
+          if (context.db().head_block_time() > HARDFORK_1022_TIME) {
+              const std::string pubstr(pub, publen);
+              if (pubstr.find(GRAPHENE_ADDRESS_PREFIX) != std::string::npos) {
+                  pk = public_key_type(pubstr);
+              } else {
+                  datastream<const char *> pubds(pub, publen);
+                  fc::raw::unpack(pubds, pk);
+              }
+          } else {
+              datastream<const char *> pubds(pub, publen);
+              fc::raw::unpack(pubds, pk);
+          }
 
           auto check = public_key_type(fc::ecc::public_key(sig, digest, true));
           FC_ASSERT(check == pk, "Error expected key different than recovered key");
@@ -1666,6 +1694,7 @@ REGISTER_INTRINSICS(global_api,
 (get_account_name_by_id,int64_t(int, int, int64_t))
 (get_account_id,        int64_t(int, int)  )
 (get_asset_id,          int64_t(int, int)  )
+(get_asset_precision,   int64_t(int, int)  )
 );
 
 REGISTER_INTRINSICS(crypto_api,

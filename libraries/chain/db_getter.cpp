@@ -180,5 +180,29 @@ asset database::from_core_asset(const asset &a, const asset_id_type &id)
         return asset(a.amount / uint64_t(pr.to_real()), id);
     }
 }
+asset database::get_update_contract_fee( const operation& op, asset_id_type id )
+{
+    fc::variant result;
+    FC_ASSERT(op.which() == operation::tag<contract_update_operation>::value, "get_update_contract_fee error: op type is not contract_update_operation");
+    const contract_update_operation &cu_op = op.get<contract_update_operation>();
+    auto &contract_account = cu_op.contract;
+    auto acc_idx = get_index_type<account_index>().indices();
+    auto itor = acc_idx.find(contract_account);
+    FC_ASSERT(itor != acc_idx.end(), "contract account is not exist");
+    auto oldsize = fc::raw::pack_size(itor->abi) + itor->code.size();
+    auto newsize = fc::raw::pack_size(cu_op.abi) + cu_op.code.size();
+    share_type amount;
+    if (oldsize >= newsize) {
+        amount = contract_update_operation::fee_parameters_type().fee;
+    } else {
+        amount = contract_update_operation::fee_parameters_type().fee;
+        auto data_fee = cu_op.calculate_data_fee(newsize - oldsize, contract_update_operation::fee_parameters_type().price_per_kbyte);
+        amount += data_fee;
+    }
+    asset_id_type core_asset_id = current_core_asset_id();
+    asset op_fee(amount, core_asset_id);
+    op_fee = from_core_asset(op_fee, id);
+    return op_fee;
+}
 
 } }

@@ -151,6 +151,10 @@ processed_transaction database_api::get_transaction( uint32_t block_num, uint32_
 {
    return my->get_transaction( block_num, trx_in_block );
 }
+optional<processed_transaction> database_api::get_transaction_rows(transaction_id_type txid)const
+{
+   return my->get_transaction_rows(txid);
+}
 
 optional<signed_transaction> database_api::get_recent_transaction_by_id( const transaction_id_type& id )const
 {
@@ -501,6 +505,11 @@ vector<variant> database_api::lookup_vote_ids( const vector<vote_id_type>& votes
 std::string database_api::get_transaction_hex(const signed_transaction& trx)const
 {
    return my->get_transaction_hex( trx );
+}
+
+std::string database_api::get_unsigned_transaction_hex(const transaction &trx) const
+{
+    return my->get_unsigned_transaction_hex(trx);
 }
 
 std::string database_api::serialize_transaction(const signed_transaction& trx) const
