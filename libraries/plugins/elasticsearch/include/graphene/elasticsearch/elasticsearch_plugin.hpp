@@ -91,6 +91,19 @@ struct bulk_struct {
 };
 
 struct adaptor_struct {
+   void adaptbigamount(fc::mutable_variant_object &o, const std::string field){
+      // asset_to_issue asset_to_reserve asset_to_update , amount is too big, so default set mapping is text
+      if (o.find(field.c_str()) != o.end() && o[field.c_str()].is_object())
+      {
+         fc::mutable_variant_object tmp(o[field.c_str()].get_object());
+         if(tmp.find("amount")!=tmp.end()){
+            auto amo = tmp["amount"].as_int64();
+            tmp["amount_row"] = std::to_string(amo);
+            tmp.erase("amount");
+            o[field.c_str()] = tmp;
+         }
+      }
+   }
    variant adapt(const variant_object& op)
    {
       fc::mutable_variant_object o(op);
@@ -161,6 +174,18 @@ struct adaptor_struct {
       {
          o["owner_"] = o["owner"].as_string();
          o.erase("owner");
+      }
+      adaptbigamount(o,"asset_to_issue");
+      adaptbigamount(o,"amount_to_reserve");
+      adaptbigamount(o,"total_claimed");
+      adaptbigamount(o,"max_market_fee");
+      adaptbigamount(o,"max_supply");
+
+      if (o.find("max_market_fee") != o.end() )
+      {
+         auto amo = o["max_market_fee"].as_int64();
+         o.erase("max_market_fee");
+         o["max_market_fee_row"] = std::to_string(amo);
       }
 
       variant v;
