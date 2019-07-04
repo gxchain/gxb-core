@@ -175,19 +175,19 @@ struct adaptor_struct {
          o["owner_"] = o["owner"].as_string();
          o.erase("owner");
       }
-      adaptbigamount(o,"asset_to_issue");
-      adaptbigamount(o,"amount_to_reserve");
-      adaptbigamount(o,"total_claimed");
-      adaptbigamount(o,"max_market_fee");
-      adaptbigamount(o,"max_supply");
-
+      if (o.find("amount") != o.end())
+      {
+         auto amo = o["amount"].as_int64();
+         o["amount_str"] = std::to_string(amo);
+         o.erase("amount");
+      }
       if (o.find("max_market_fee") != o.end() )
       {
          auto amo = o["max_market_fee"].as_int64();
          o.erase("max_market_fee");
          o["max_market_fee_row"] = std::to_string(amo);
       }
-
+      
       variant v;
       fc::to_variant(o, v, FC_PACK_MAX_DEPTH);
       return v;
