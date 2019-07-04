@@ -301,7 +301,7 @@ void elasticsearch_plugin_impl::createConfirmBulk()
          std::move(itor->second.begin(), itor->second.end(), std::back_inserter(bulk_lines));
          itor = unconfirmed_buffer.erase(itor);
       }else{
-         break;
+         itor++;
       }
    } 
 }
@@ -335,6 +335,9 @@ void elasticsearch_plugin_impl::cleanObjects(const account_transaction_history_i
          const auto itr_remove = itr;
          ++itr;
          db.remove( *itr_remove );
+         db.modify( stats_obj, [&]( account_statistics_object& obj ){
+             obj.removed_ops = obj.removed_ops + 1;
+         });
          // modify previous node's next pointer
          // this should be always true, but just have a check here
          if( itr != by_seq_idx.end() && itr->account == account_id )
