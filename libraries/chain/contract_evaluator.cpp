@@ -88,9 +88,10 @@ void_result contract_update_evaluator::do_evaluate(const contract_update_operati
     if(d.head_block_time() > HARDFORK_1015_TIME) {
         FC_ASSERT(contract_obj.code.size() > 0, "can not update a normal account: ${a}", ("a", op.contract));
     }
-
     code_hash = fc::sha256::hash(op.code);
-    FC_ASSERT(code_hash != contract_obj.code_version, "code not updated");
+    if (d.head_block_time() < HARDFORK_1024_TIME) {
+        FC_ASSERT(code_hash != contract_obj.code_version, "code not updated");
+    }
 
     FC_ASSERT(op.code.size() > 0, "contract code cannot be empty");
 
@@ -120,7 +121,6 @@ void_result contract_update_evaluator::do_apply(const contract_update_operation 
         obj.code_version = code_hash;
         obj.abi = op.abi;
     });
-
     return void_result();
 } FC_CAPTURE_AND_RETHROW((op.owner)(op.contract)(op.fee)(op.abi)) }
 
@@ -147,7 +147,7 @@ void_result contract_call_evaluator::do_evaluate(const contract_call_operation &
         bool sufficient_balance = d.get_balance(op.account(d), asset_type).amount >= op.amount->amount;
         FC_ASSERT(sufficient_balance,
                   "insufficient balance: ${balance}, unable to deposit '${total_transfer}' from account '${a}' to '${t}'",
-                  ("a", op.account)("t", contract_obj.id)("total_transfer", d.to_pretty_string(op.amount->amount))
+                  ("a", op.account)("t", contract_obj.id)("total_transfer", d.to_pretty_string(*(op.amount)))
                   ("balance", d.to_pretty_string(d.get_balance(op.account(d), asset_type))));
     }
 

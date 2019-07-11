@@ -38,8 +38,13 @@ unlocked >>> deploy_contract redpacket nathan 0 0 ./contracts/examples/redpacket
 
 1. 发行红包
 ```
-// 使用nathan帐户，发行一个红包， 随机生成的红包口令为GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b， 金额总量为100 GXC(链上为大数，需要乘以10万)， 数量为5个
-unlocked >>> call_contract nathan redpacket {"amount":10000000,"asset_id":1.3.1} issue "{\"pubkey\":\"GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b\",\"number\":5}" GXC true
+// 使用nathan帐户，发行一个红包， 随机生成的红包口令为GXC8D5K9jywv2LDpKAicPFDPvLqcoPj4dkoUzGr9C9a5Hd3eZkxun，对应的原始公钥数组为`03b549faab63ea1b25a5b925e2f98b1a2eb33c207526eb54077c40e54f5c5d06f5` 金额总量为100 GXC(链上为大数，需要乘以10万)， 数量为5个
+//获取原始公钥
+unlocked >>> get_orginal_public_key GXC8D5K9jywv2LDpKAicPFDPvLqcoPj4dkoUzGr9C9a5Hd3eZkxun
+get_orginal_public_key GXC8D5K9jywv2LDpKAicPFDPvLqcoPj4dkoUzGr9C9a5Hd3eZkxun
+"03b549faab63ea1b25a5b925e2f98b1a2eb33c207526eb54077c40e54f5c5d06f5"
+
+unlocked >>> call_contract nathan redpacket {"amount":10000000,"asset_id":1.3.1} issue "{\"pubkey\":\"03b549faab63ea1b25a5b925e2f98b1a2eb33c207526eb54077c40e54f5c5d06f5\",\"number\":5}" GXC true
 ```
 
 2. 发行红包后，查询redpacket合约的帐户余额
@@ -53,13 +58,13 @@ unlocked >>> list_account_balances redpacket
 // 合约名redpacket
 // 打开红包的合约方法名 open
 // json为redpacket合约abi约定的参数， 其中issue为发行红包的帐户名，sig为签名(使用红包发起人提供的口令，对自己账号的instanceid(比如nathan的账号id是1.2.17，那么他的instanceid是17)进行签名, cli_wallet提供了sign_string方法)
-构造签名，这里红包口令(即共钥)对应的私钥是5J9vj4XiwVQ2HNr22uFrxgaaerqrPN7xZQER9z2hwSPeWdbMKBM:  
-sign_string 5J9vj4XiwVQ2HNr22uFrxgaaerqrPN7xZQER9z2hwSPeWdbMKBM 17
-unlocked >>> sign_string 5J9vj4XiwVQ2HNr22uFrxgaaerqrPN7xZQER9z2hwSPeWdbMKBM 17
-"1f1d104d5750beba9fd4b0637ce69cf54721a57cce91ca81904653307eb72b0a840bd8a80c58df0a7be206a4c5c5b1fa0d96d497667e54579e717d499d0a3498b2"
+构造签名，这里红包口令(即共钥)对应的私钥是5JCXJ9nry2oQUUFzTwoKJxgWyTY6KL5B2mWtagrhZCEFgnDMvqR:  
+sign_string 5JCXJ9nry2oQUUFzTwoKJxgWyTY6KL5B2mWtagrhZCEFgnDMvqR 17 false
+unlocked >>> sign_string 5JCXJ9nry2oQUUFzTwoKJxgWyTY6KL5B2mWtagrhZCEFgnDMvqR 17 false
+"1f724ed192ba04d5c770033e59c0df0742ee52d001dc1f92447bd9118511663ce638ea3fb5eb5e5d7ef71a82f53f1bbeeeea70aa198a5f48e2aa8358466852e313"
 
 
-unlocked >>> call_contract nathan redpacket null open "{\"issuer\":\"nathan\",\"sig\":\"1f1d104d5750beba9fd4b0637ce69cf54721a57cce91ca81904653307eb72b0a840bd8a80c58df0a7be206a4c5c5b1fa0d96d497667e54579e717d499d0a3498b2\"}" GXC true
+unlocked >>> call_contract nathan redpacket null open "{\"issuer\":\"nathan\",\"sig\":\"1f724ed192ba04d5c770033e59c0df0742ee52d001dc1f92447bd9118511663ce638ea3fb5eb5e5d7ef71a82f53f1bbeeeea70aa198a5f48e2aa8358466852e313\"}" GXC true
 
 ```
 
@@ -77,7 +82,7 @@ unlocked >>> get_contract_tables redpacket
 unlocked >>> get_table_rows redpacket packet 0 -1
 [{
     "issuer": 17,
-    "encoded_token": "GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b",
+    "encoded_token": "03b549faab63ea1b25a5b925e2f98b1a2eb33c207526eb54077c40e54f5c5d06f5",
     "total_amount": {
       "amount": 10000000,
       "asset_id": 0
@@ -119,6 +124,7 @@ unlocked >>> call_contract nathan redpacket null close "{}" GXC true
 
 本次演示使用的口令对
 ```
-pubkey:"GXC81z4c6gEHw57TxHfZyzjA52djZzYGX7KN8sJQcDyg6yitwov5b"
-wifkey:"5J9vj4XiwVQ2HNr22uFrxgaaerqrPN7xZQER9z2hwSPeWdbMKBM"
+pubkey:"GXC8D5K9jywv2LDpKAicPFDPvLqcoPj4dkoUzGr9C9a5Hd3eZkxun"
+pubkeyarray:"03b549faab63ea1b25a5b925e2f98b1a2eb33c207526eb54077c40e54f5c5d06f5"
+wifkey:"5JCXJ9nry2oQUUFzTwoKJxgWyTY6KL5B2mWtagrhZCEFgnDMvqR"
 ```
