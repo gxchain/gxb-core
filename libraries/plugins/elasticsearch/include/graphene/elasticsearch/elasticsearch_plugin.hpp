@@ -91,19 +91,6 @@ struct bulk_struct {
 };
 
 struct adaptor_struct {
-   void adaptbigamount(fc::mutable_variant_object &o, const std::string field){
-      // asset_to_issue asset_to_reserve asset_to_update , amount is too big, so default set mapping is text
-      if (o.find(field.c_str()) != o.end() && o[field.c_str()].is_object())
-      {
-         fc::mutable_variant_object tmp(o[field.c_str()].get_object());
-         if(tmp.find("amount")!=tmp.end()){
-            auto amo = tmp["amount"].as_int64();
-            tmp["amount_row"] = std::to_string(amo);
-            tmp.erase("amount");
-            o[field.c_str()] = tmp;
-         }
-      }
-   }
    variant adapt(const variant_object& op)
    {
       fc::mutable_variant_object o(op);
