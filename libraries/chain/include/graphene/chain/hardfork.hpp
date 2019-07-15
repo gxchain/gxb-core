@@ -113,17 +113,17 @@
 
 #ifndef HARDFORK_1022_TIME
 // for testnet after this time can support "GXC....." public key in assert_recover_key
-#define HARDFORK_1022_TIME (fc::time_point_sec( 93103180800 )) // for testnet, 4920-01-01T00:00:00(UTC)
+#define HARDFORK_1022_TIME (fc::time_point_sec( 2051193600 )) // for testnet, 2035-01-01T00:00:00(UTC)
 #endif
 
 #ifndef HARDFORK_1023_TIME
 // for testnet after this time add api get_asset_precision
-#define HARDFORK_1023_TIME (fc::time_point_sec( 93103180800 )) // for testnet, 4920-01-01T00:00:00(UTC)
+#define HARDFORK_1023_TIME (fc::time_point_sec( 2051193600 )) // for testnet, 2035-01-01T00:00:00(UTC)
 #endif
 
 #ifndef HARDFORK_1024_TIME
 // for testnet after this time modify update_contract logic
-#define HARDFORK_1024_TIME (fc::time_point_sec( 93103180800 )) // for testnet, 4920-01-01T00:00:00(UTC)
+#define HARDFORK_1024_TIME (fc::time_point_sec( 2051193600 )) // for testnet, 2035-01-01T00:00:00(UTC)
 #endif
 
 // #413 Add operation to claim asset fees
