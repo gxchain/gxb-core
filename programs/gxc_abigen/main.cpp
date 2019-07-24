@@ -7,7 +7,7 @@ using namespace graphene;
 
 using mvo = fc::mutable_variant_object;
 
-std::unique_ptr<FrontendActionFactory> create_factory(bool verbose, bool opt_sfs, string abi_context, abi_def &output, const string &contract, const vector<string> &actions)
+std::unique_ptr<FrontendActionFactory> create_factory(bool verbose, bool opt_sfs, string abi_context, abi_def &output, const string &contract, const vector<string> &actions,macro_info &macro_info_param)
 {
 
     struct abi_frontend_action_factory : public FrontendActionFactory {
@@ -18,28 +18,30 @@ std::unique_ptr<FrontendActionFactory> create_factory(bool verbose, bool opt_sfs
         abi_def &output;
         const string &contract;
         const vector<string> &actions;
+        macro_info &macro_info_param;
 
         abi_frontend_action_factory(bool verbose, bool opt_sfs, string abi_context,
-                                    abi_def &output, const string &contract, const vector<string> &actions)
+                                    abi_def &output, const string &contract, const vector<string> &actions, macro_info &macro_info_param)
             : verbose(verbose)
             , abi_context(abi_context)
             , output(output)
             , contract(contract)
             , actions(actions)
+            , macro_info_param(macro_info_param)
         {
         }
 
         clang::FrontendAction *create() override
         {
-            return new generate_abi_action(verbose, opt_sfs, abi_context, output, contract, actions);
+            return new generate_abi_action(verbose, opt_sfs, abi_context, output, contract, actions, macro_info_param);
         }
     };
 
     return std::unique_ptr<FrontendActionFactory>(
-        new abi_frontend_action_factory(verbose, opt_sfs, abi_context, output, contract, actions));
+        new abi_frontend_action_factory(verbose, opt_sfs, abi_context, output, contract, actions, macro_info_param));
 }
 
-std::unique_ptr<FrontendActionFactory> create_find_macro_factory(string &contract, vector<string> &actions, string abi_context)
+std::unique_ptr<FrontendActionFactory> create_find_macro_factory(string &contract, vector<string> &actions, string abi_context, macro_info &macro_info_param)
 {
 
     struct abi_frontend_macro_action_factory : public FrontendActionFactory {
@@ -47,23 +49,25 @@ std::unique_ptr<FrontendActionFactory> create_find_macro_factory(string &contrac
         string &contract;
         vector<string> &actions;
         string abi_context;
+        macro_info &macro_info_param;
 
         abi_frontend_macro_action_factory(string &contract, vector<string> &actions,
-                                          string abi_context)
+                                          string abi_context, macro_info &macro_info_param)
             : contract(contract)
             , actions(actions)
             , abi_context(abi_context)
+            , macro_info_param(macro_info_param)
         {
         }
 
         clang::FrontendAction *create() override
         {
-            return new find_gxc_abi_macro_action(contract, actions, abi_context);
+            return new find_gxc_abi_macro_action(contract, actions, abi_context, macro_info_param);
         }
     };
 
     return std::unique_ptr<FrontendActionFactory>(
-        new abi_frontend_macro_action_factory(contract, actions, abi_context));
+        new abi_frontend_macro_action_factory(contract, actions, abi_context, macro_info_param));
 }
 
 static cl::OptionCategory abi_generator_category("ABI generator options");
@@ -97,9 +101,10 @@ int main(int argc, const char **argv)
 
         string contract;
         vector<string> actions;
-        int result = Tool.run(create_find_macro_factory(contract, actions, abi_context).get());
+        macro_info macro_info_param;
+        int result = Tool.run(create_find_macro_factory(contract, actions, abi_context, macro_info_param).get());
         if (!result) {
-            result = Tool.run(create_factory(abi_verbose, abi_opt_sfs, abi_context, output, contract, actions).get());
+            result = Tool.run(create_factory(abi_verbose, abi_opt_sfs, abi_context, output, contract, actions, macro_info_param).get());
             if (!result) {
                 abi_serializer(output, fc::seconds(1));
                 fc::variant vabi;
