@@ -32,7 +32,8 @@ class linear_vesting_asset : public contract
         auto lr = vestingrules.find(to_account_id);
         graphene_assert(lr == vestingrules.end(), "have been locked, can only lock one time");
 
-        vestingrules.emplace(0, [&](auto &o) {
+        uint64_t owner = get_trx_sender();
+        vestingrules.emplace(owner, [&](auto &o) {
             o.account_id = to_account_id;
 
             o.vesting_amount = ast.amount;
@@ -66,8 +67,9 @@ class linear_vesting_asset : public contract
         graphene_assert(vested_amount > 0, "vested amount must > 0");
 
         withdraw_asset(_self, who_account_id, contract_asset_id, vested_amount);
-
-        vestingrules.modify(lr, 0, [&](auto &o) {
+        
+        uint64_t owner = get_trx_sender();
+        vestingrules.modify(lr, owner, [&](auto &o) {
             o.vested_amount += vested_amount;
         });
 
