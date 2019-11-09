@@ -57,7 +57,7 @@ namespace graphene { namespace app {
        }
     }
 
-    void network_broadcast_api::broadcast_transaction(const signed_transaction& trx)
+    transaction_id_type network_broadcast_api::broadcast_transaction(const signed_transaction& trx)
     {
        dlog("received trx message ${trx}",("trx",trx));
 
@@ -65,6 +65,7 @@ namespace graphene { namespace app {
        _app.chain_database()->push_transaction(trx);// evaluatet trx
        if (_app.p2p_node() != nullptr)
            _app.p2p_node()->broadcast_transaction(trx); // broadcast trx
+       return trx.id();
     }
 
     fc::variant network_broadcast_api::broadcast_transaction_synchronous(const signed_transaction& trx)

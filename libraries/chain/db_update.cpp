@@ -87,6 +87,13 @@ void database::update_global_dynamic_data( const signed_block& b )
       dgp.current_aslot += missed_blocks+1;
    });
 
+   uint32_t head_number;
+   if (_fork_db.head()) {
+       head_number = std::max(_dgp.head_block_number, _fork_db.head()->num);
+   } else {
+       head_number = _dgp.head_block_number;
+   }
+
    if( !(get_node_properties().skip_flags & skip_undo_history_check) )
    {
       GRAPHENE_ASSERT( _dgp.head_block_number - _dgp.last_irreversible_block_num  < GRAPHENE_MAX_UNDO_HISTORY, undo_database_exception,
@@ -95,9 +102,8 @@ void database::update_global_dynamic_data( const signed_block& b )
                  ("last_irreversible_block_num",_dgp.last_irreversible_block_num)("head", _dgp.head_block_number)
                  ("recently_missed",_dgp.recently_missed_count)("max_undo",GRAPHENE_MAX_UNDO_HISTORY) );
    }
-
-   _undo_db.set_max_size( _dgp.head_block_number - _dgp.last_irreversible_block_num + 1 );
-   _fork_db.set_max_size( _dgp.head_block_number - _dgp.last_irreversible_block_num + 1 );
+   _undo_db.set_max_size(_dgp.head_block_number - _dgp.last_irreversible_block_num + 1);
+   _fork_db.set_max_size(head_number - _dgp.last_irreversible_block_num + 1);
 }
 
 void database::update_signing_witness(const witness_object& signing_witness, const signed_block& new_block)

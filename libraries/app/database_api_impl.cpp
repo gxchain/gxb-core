@@ -42,6 +42,10 @@
 #include <graphene/chain/apply_context.hpp>
 #include <graphene/chain/transaction_object.hpp>
 
+#ifdef QUERY_TXID_PLUGIN_HPP
+#include <graphene/query_txid/query_txid_plugin.hpp>
+#endif
+
 #include <cctype>
 
 #include <cfenv>
@@ -459,6 +463,40 @@ processed_transaction database_api_impl::get_transaction(uint32_t block_num, uin
    FC_ASSERT( opt_block );
    FC_ASSERT( opt_block->transactions.size() > trx_num );
    return opt_block->transactions[trx_num];
+}
+
+optional<processed_transaction> database_api_impl::get_transaction_rows(transaction_id_type txid)const
+{
+#ifdef QUERY_TXID_PLUGIN_HPP
+    auto &txid_index = _db.get_index_type<trx_entry_index>().indices().get<by_txid>();
+    auto itor = txid_index.find(txid);
+    if (itor == txid_index.end()) {
+        std::string txid_str(txid);
+        auto result = query_txid::query_txid_plugin::query_trx_by_id(txid_str);
+        if (result) {
+            const auto &trx_entry = *result;
+            auto opt_block = _db.fetch_block_by_number(trx_entry.block_num);
+            FC_ASSERT(opt_block);
+            FC_ASSERT(opt_block->transactions.size() > trx_entry.trx_in_block);
+            optional<processed_transaction> res = opt_block->transactions[trx_entry.trx_in_block];
+            return res;
+        }
+        return {};
+    } else {
+        const auto &dpo = _db.get_dynamic_global_properties();
+        if (itor->block_num <= dpo.last_irreversible_block_num) {
+            const auto &trx_entry = *itor;
+            auto opt_block = _db.fetch_block_by_number(trx_entry.block_num);
+            FC_ASSERT(opt_block);
+            FC_ASSERT(opt_block->transactions.size() > trx_entry.trx_in_block);
+            optional<processed_transaction> res = opt_block->transactions[trx_entry.trx_in_block];
+            return res;
+        } else {
+            return {};
+        }
+    }
+#endif
+    return {};
 }
 
 global_property_object database_api_impl::get_global_properties()const
@@ -1300,6 +1338,10 @@ std::string database_api_impl::get_transaction_hex(const signed_transaction& trx
 {
    return fc::to_hex(fc::raw::pack(trx));
 }
+std::string database_api_impl::get_unsigned_transaction_hex(const transaction &trx) const
+{
+    return fc::to_hex(fc::raw::pack(trx));
+}
 
 std::string database_api_impl::serialize_transaction(const signed_transaction& trx) const
 {
@@ -1535,7 +1577,15 @@ vector< fc::variant > database_api_impl::get_required_fees( const vector<operati
            fc::to_variant(op_fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
            result.push_back(r);
        } else {
-           result.push_back(helper.set_op_fees(op));
+           if (_db.head_block_time() > HARDFORK_1024_TIME &&
+               op.which() == operation::tag<contract_update_operation>::value) {
+               auto op_fee = _db.get_update_contract_fee(op, id);
+               fc::variant r;
+               fc::to_variant(op_fee, r, GRAPHENE_MAX_NESTED_OBJECTS);
+               result.push_back(r);
+           } else {
+               result.push_back(helper.set_op_fees(op));
+           }
        }
    }
 

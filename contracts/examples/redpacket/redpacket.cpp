@@ -14,6 +14,7 @@
 using namespace graphene;
 
 static const uint64_t redpacket_asset_id = 1;//GXS
+static const uint64_t pk_length = 33;
 
 class redpacket : public contract
 {
@@ -30,11 +31,7 @@ class redpacket : public contract
     void issue(std::string pubkey, uint64_t number)
     {
         // check publick key
-        // TODO
-        std::string prefix("GXC");
-        const size_t prefix_len = prefix.size();
-        graphene_assert(pubkey.size() > prefix_len, "invalid public key");
-        graphene_assert(pubkey.substr(0, prefix_len) == prefix, "invalid public key");
+        graphene_assert(pubkey.size() == pk_length*2, "invalid public key");
 
         int64_t total_amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
@@ -91,9 +88,13 @@ class redpacket : public contract
         std::string s = std::to_string(sender);
         checksum256 hash;
         sha256(s.c_str(),s.length(),&hash);
-        assert_recover_key(&hash, &sig, packet_iter->pub_key.c_str(), packet_iter->pub_key.length());
-        //bool flag = verify_signature(s.c_str(), s.length(), &sig, packet_iter->pub_key.c_str(), packet_iter->pub_key.length());
-        //graphene_assert(flag, "signature not valid");
+        char pk[pk_length];
+        std::string pubkeystr = packet_iter->pub_key;
+        for(auto i=0 ,j=0;i<67;i+=2,j++){
+            std::string single = pubkeystr.substr(i,2);
+            pk[j] = strtol(single.c_str(), nullptr, 16); 
+        }
+        assert_recover_key(&hash, &sig, pk, pk_length);
 
         // check record
         auto record_iter = records.find(issuer_id);

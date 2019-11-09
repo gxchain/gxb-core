@@ -2,9 +2,10 @@
 
 namespace graphene {
 
-void abi_generator::set_target_contract(const string& contract, const vector<string>& actions) {
+void abi_generator::set_target_contract(const string& contract, const vector<string>& actions, macro_info *macro_info_param_ptr) {
   target_contract = contract;
   target_actions  = actions;
+  target_macro_info_param_ptr = macro_info_param_ptr;
 }
 
 void abi_generator::enable_optimizaton(abi_generator::optimization o) {
@@ -112,14 +113,21 @@ bool abi_generator::inspect_type_methods_for_actions(const Decl* decl) { try {
       regex payable_r(R"(@abi (payable)((?: [a-z0-9]+)*))");
       smatch payable_smatch;
       regex_search(raw_text, payable_smatch, payable_r);
-      raw_comment_is_action = payable_smatch.size() == 3;
+      if(!raw_comment_is_action){
+        raw_comment_is_action = payable_smatch.size() == 3;}
       payable = payable_smatch.size() == 3;
     }
+    // Check if current method is listed the ACTION macro
+    bool is_action_from_mlist = rec_decl->getName().str() == target_macro_info_param_ptr->contract_name && std::find(target_macro_info_param_ptr->macro_actions.begin(), target_macro_info_param_ptr->macro_actions.end(), method_name) != target_macro_info_param_ptr->macro_actions.end();
+    // Check if current method is listed the PAYABLE macro
+    bool is_payable_from_mlist = rec_decl->getName().str() == target_macro_info_param_ptr->contract_name && std::find(target_macro_info_param_ptr->macro_payables.begin(), target_macro_info_param_ptr->macro_payables.end(), method_name) != target_macro_info_param_ptr->macro_payables.end();
+    if(is_payable_from_mlist)
+        payable = true;
 
     // Check if current method is listed the GRAPHENE_ABI macro
     bool is_action_from_macro = rec_decl->getName().str() == target_contract && std::find(target_actions.begin(), target_actions.end(), method_name) != target_actions.end();
     
-    if(!raw_comment_is_action && !is_action_from_macro) {
+    if(!raw_comment_is_action && !is_action_from_macro &&!is_action_from_mlist && !is_payable_from_mlist) {
       return;
     }
 
@@ -190,15 +198,55 @@ void abi_generator::handle_decl(const Decl* decl) { try {
 
   // Only process declarations that has the `abi_context` folder as parent.
   SourceManager& source_manager = ast_context->getSourceManager();
-  auto file_name = source_manager.getFilename(decl->getLocStart());
+  auto file_name = source_manager.getFilename(decl->getLocation());
   if ( !abi_context.empty() && !file_name.startswith(abi_context) ) {
     return;
   }
 
+  auto pair = ast_context->getSourceManager().getDecomposedLoc(decl->getLocation());
+  auto code_buff = ast_context->getSourceManager().getBuffer(pair.first)->getBuffer().str();
+  if(target_macro_info_param_ptr->contract_name == ""){
+    // if not found CONTRACT macro , use class **** public : contract regex to search
+    regex r(R"(class\s*([a-z0-9]*)\s*\:\s*public)");
+    smatch smatch;
+    auto res = regex_search(code_buff, smatch, r);
+    ABI_ASSERT( res );
+    target_macro_info_param_ptr->contract_name = remove_namespace(smatch[1].str());
+  }
+  // add ACTION PAYABLE macro
   // Check if the current declaration has actions (GRAPHENE_ABI, or explicit)
   bool type_has_actions = inspect_type_methods_for_actions(decl);
   if( type_has_actions ) return;
 
+  // if found TABLE macro , then add table struct
+  if(code_buff.size()>pair.second && dyn_cast<CXXRecordDecl>(decl) != nullptr) {
+      auto table_decl = dyn_cast<CXXRecordDecl>(decl);
+      std::string current_code = code_buff.substr(pair.second, code_buff.size()-pair.second);
+      auto qt = table_decl->getTypeForDecl()->getCanonicalTypeInternal();
+      if(qt.getAsString().find("struct")!=std::string::npos && qt.getAsString().find(target_macro_info_param_ptr->contract_name)!=std::string::npos) {
+          regex r(R"(([a-z0-9]*)\s)");
+          smatch smatch;
+          auto res = regex_search(current_code, smatch, r);
+          ABI_ASSERT( res );
+          auto table_name = smatch[1].str();
+          auto itor = std::find(target_macro_info_param_ptr->macro_tables.begin(),target_macro_info_param_ptr->macro_tables.end(),table_name);
+          if(qt.getAsString().find(table_name)!=std::string::npos && itor!= (target_macro_info_param_ptr->macro_tables.end())){
+              auto str = add_struct(qt, table_name, 0);
+              const auto *s_def = find_struct(table_name);
+              ABI_ASSERT(s_def, "Unable to find type ${type}", ("type",table_name));
+              table_def table;
+              table.name = boost::algorithm::to_lower_copy(boost::erase_all_copy(table_name, "_"));
+              table.type = table_name;
+              table.index_type = "i64";
+              guess_key_names(table, *s_def);
+              const auto* ta = find_table(table.name);
+              if(!ta) {
+                  output->tables.push_back(table);
+              }
+              return;
+          }
+      }
+  }
   // The current Decl doesn't have actions
   const RawComment* raw_comment = ast_context->getRawCommentForDeclNoCache(decl);
   if(raw_comment == nullptr) {
@@ -446,11 +494,21 @@ bool abi_generator::is_vector(const clang::QualType& vqt) {
     qt = qt->getAs<clang::ElaboratedType>()->getNamedType();
 
   return isa<clang::TemplateSpecializationType>(qt.getTypePtr()) \
-    && boost::starts_with( get_type_name(qt, false), "vector");
+    && (boost::starts_with( get_type_name(qt, false), "vector")||boost::starts_with( get_type_name(qt, false), "set"));
 }
 
 bool abi_generator::is_vector(const string& type_name) {
   return boost::ends_with(type_name, "[]");
+}
+
+bool abi_generator::is_map(const clang::QualType& mqt) {
+  QualType qt(mqt);
+
+  if ( is_elaborated(qt) )
+    qt = qt->getAs<clang::ElaboratedType>()->getNamedType();
+
+  return isa<clang::TemplateSpecializationType>(qt.getTypePtr()) \
+    && boost::starts_with( get_type_name(qt, false), "map");
 }
 
 bool abi_generator::is_struct_specialization(const clang::QualType& qt) {
@@ -476,6 +534,17 @@ string abi_generator::get_vector_element_type(const string& type_name) {
   return type_name;
 }
 
+std::vector<clang::QualType> abi_generator::get_map_element_type(const clang::QualType& qt)
+{
+  const auto* tst = clang::dyn_cast<const clang::TemplateSpecializationType>(qt.getTypePtr());
+  ABI_ASSERT(tst != nullptr);
+  const clang::TemplateArgument& arg0 = tst->getArg(0);
+  const clang::TemplateArgument& arg1 = tst->getArg(1);
+  std::vector<clang::QualType> varg;
+  varg.emplace_back(arg0.getAsType());
+  varg.emplace_back(arg1.getAsType());
+  return varg;
+}
 string abi_generator::get_type_name(const clang::QualType& qt, bool with_namespace=false) {
   auto name = clang::TypeName::getFullyQualifiedName(qt, *ast_context);
   if(!with_namespace)
@@ -557,6 +626,7 @@ string abi_generator::add_vector(const clang::QualType& vqt, size_t recursion_de
 
   auto vector_element_type = get_vector_element_type(qt);
   ABI_ASSERT(!is_vector(vector_element_type), "Only one-dimensional arrays are supported");
+  ABI_ASSERT(!is_map(vector_element_type), "Only one-dimensional maps are supported");
 
   add_type(vector_element_type, recursion_depth);
 
@@ -566,6 +636,54 @@ string abi_generator::add_vector(const clang::QualType& vqt, size_t recursion_de
   return vector_element_type_str;
 }
 
+string abi_generator::add_map(const clang::QualType& mqt, size_t recursion_depth)
+{
+  ABI_ASSERT( ++recursion_depth < max_recursion_depth, "recursive definition, max_recursion_depth" );
+
+  clang::QualType qt(get_named_type_if_elaborated(mqt));
+
+  auto map_element_type_list = get_map_element_type(qt);
+  ABI_ASSERT(!is_map(map_element_type_list[0]), "Only one-dimensional maps are supported");
+  ABI_ASSERT(!is_map(map_element_type_list[1]), "Only one-dimensional maps are supported");
+
+  add_type(map_element_type_list[0], recursion_depth);
+  add_type(map_element_type_list[1], recursion_depth);
+
+  std::string map_element_type_str_0;
+  std::string map_element_type_str_1;
+  if(is_vector(map_element_type_list[0]))
+    map_element_type_str_0 = add_vector(map_element_type_list[0],recursion_depth);
+  else
+    map_element_type_str_0 = translate_type(get_type_name(map_element_type_list[0]));
+  if(is_vector(map_element_type_list[1]))
+    map_element_type_str_1 = add_vector(map_element_type_list[1],recursion_depth);
+  else
+    map_element_type_str_1 = translate_type(get_type_name(map_element_type_list[1]));
+
+  static uint64_t index = 1;
+  std::string index_name = std::to_string(index);
+  std::string map_element_type_str = "map" + index_name + "[]";
+  index++;
+
+  // add struct 
+  struct_def map_def;
+  map_def.name = map_element_type_str.substr(0, map_element_type_str.length() - 2);
+  map_def.base = "";
+
+  std::string key_field_name = "key";
+  std::string key_field_type_name = map_element_type_str_0;
+  field_def key_struct_field{key_field_name, key_field_type_name};
+
+  std::string value_field_name = "value";
+  std::string value_field_type_name = map_element_type_str_1;
+  field_def value_struct_field{value_field_name, value_field_type_name};
+
+  map_def.fields.push_back(key_struct_field);
+  map_def.fields.push_back(value_struct_field);
+
+  output->structs.push_back(map_def);
+  return map_element_type_str;
+}
 string abi_generator::add_type(const clang::QualType& tqt, size_t recursion_depth) {
 
   ABI_ASSERT( ++recursion_depth < max_recursion_depth, "recursive definition, max_recursion_depth" );
@@ -591,6 +709,11 @@ string abi_generator::add_type(const clang::QualType& tqt, size_t recursion_dept
   if( is_vector(qt) ) {
     auto vector_type_name = add_vector(qt, recursion_depth);
     return is_type_def ? type_name : vector_type_name;
+  }
+
+  if( is_map(qt) ){
+    auto map_type_name = add_map(qt, recursion_depth);
+    return is_type_def ? type_name : map_type_name;
   }
 
   if( is_struct(qt) ) {
@@ -635,11 +758,11 @@ string abi_generator::add_struct(const clang::QualType& sqt, string full_name, s
   int total_bases = 0;
 
   string base_name;
-  while( bitr != bases.end() ) {
+  while (bitr != bases.end() ) {
     auto base_qt = bitr->getType();
-    const auto* record_type = base_qt->getAs<clang::RecordType>();
-    if( record_type && is_struct(base_qt) && !record_type->getDecl()->field_empty() ) {
-      ABI_ASSERT(total_bases == 0, "Multiple inheritance not supported - ${type}", ("type",full_name));
+    const auto *record_type = base_qt->getAs<clang::RecordType>();
+    if (record_type && is_struct(base_qt) && !record_type->getDecl()->field_empty()) {
+      ABI_ASSERT(total_bases == 0, "Multiple inheritance not supported - ${type}", ("type", full_name));
       base_name = add_type(base_qt, recursion_depth);
       ++total_bases;
     }
