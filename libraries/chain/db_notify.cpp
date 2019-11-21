@@ -398,6 +398,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
             break;
         } case trust_node_pledge_object_type: {
             break;
+        } case staking_object_type: {
+            break;
         }
       }
    }

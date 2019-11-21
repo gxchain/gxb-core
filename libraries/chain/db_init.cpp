@@ -55,6 +55,7 @@
 #include <graphene/chain/second_hand_data_object.hpp>
 #include <graphene/chain/signature_object.hpp>
 #include <graphene/chain/contract_table_objects.hpp>
+#include <graphene/chain/staking_object.hpp>
 
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
@@ -172,6 +173,9 @@ const uint8_t lock_balance_object::type_id;
 
 const uint8_t trust_node_pledge_object::space_id;
 const uint8_t trust_node_pledge_object::type_id;
+
+const uint8_t staking_object::space_id;
+const uint8_t staking_object::type_id;
 
 const uint8_t signature_object::space_id;
 const uint8_t signature_object::type_id;
