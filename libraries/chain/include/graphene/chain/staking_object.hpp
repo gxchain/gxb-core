@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2017 gxb
+    Copyright (C) 2019 gxb
 
     This file is part of gxb-core.
 
