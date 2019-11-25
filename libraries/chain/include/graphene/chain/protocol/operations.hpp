@@ -49,6 +49,7 @@
 #include <graphene/chain/protocol/loyalty_ops.hpp>
 #include <graphene/chain/protocol/proxy_transfer_ops.hpp>
 #include <graphene/chain/protocol/contract_ops.hpp>
+#include <graphene/chain/protocol/staking_ops.hpp>
 
 namespace graphene { namespace chain {
 
