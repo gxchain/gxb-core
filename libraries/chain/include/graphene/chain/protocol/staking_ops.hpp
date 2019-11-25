@@ -35,6 +35,8 @@ namespace graphene { namespace chain {
         account_id_type                             owner;
         account_id_type                             trust_node;
         asset                                       amount;
+        fc::string                                  program_id;
+        uint32_t                                    weight;
         time_point_sec                              staking_seconds;
         extensions_type                             extensions;
 
@@ -93,6 +95,8 @@ FC_REFLECT( graphene::chain::staking_create_operation,
             (owner)
             (trust_node)
             (amount)
+            (program_id)
+            (weight)
             (staking_seconds)
             (extensions)
 )
