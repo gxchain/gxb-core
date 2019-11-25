@@ -36,8 +36,9 @@ namespace graphene { namespace chain {
           static const uint8_t type_id = staking_object_type;
 
           account_id_type   owner;
-          time_point_sec    create_time;
+          time_point_sec    create_date_time;
           uint32_t          staking_days;
+          uint32_t          weight;
           asset             amount;
           account_id_type   trust_node;
      };
@@ -60,4 +61,4 @@ namespace graphene { namespace chain {
 
  FC_REFLECT_DERIVED (graphene::chain::staking_object,
                      (graphene::chain::object),
-                     (owner)(create_time)(staking_days)(amount)(trust_node))
+                     (owner)(create_date_time)(staking_days)(weight)(amount)(trust_node))
