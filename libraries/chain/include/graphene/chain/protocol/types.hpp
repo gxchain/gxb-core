@@ -164,6 +164,15 @@ namespace graphene { namespace chain {
        vector< pair<fc::string, interest_rate_t> > params;
    };
 
+   struct staking_weight_t {
+       uint32_t staking_time = 0;
+       uint32_t weight = 0;
+       bool is_valid = false;
+   };
+   struct staking_params_t {
+       vector< pair<fc::string, staking_weight_t> > params;
+   };
+   
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
 
@@ -683,6 +692,8 @@ FC_REFLECT(graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_bases
 FC_REFLECT(graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
 FC_REFLECT(graphene::chain::interest_rate_t, (lock_days)(interest_rate)(is_valid))
 FC_REFLECT(graphene::chain::lock_balance_params_t, (params))
+FC_REFLECT(graphene::chain::staking_weight_t, (staking_time)(weight)(is_valid))
+FC_REFLECT(graphene::chain::staking_params_t, (params))
 FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
 FC_REFLECT(graphene::chain::asset_symbol_t, (symbol))
 FC_REFLECT(graphene::chain::trust_node_pledge_t, (amount))

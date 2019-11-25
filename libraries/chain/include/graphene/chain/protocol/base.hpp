@@ -116,7 +116,8 @@ namespace graphene { namespace chain {
        vm_cpu_limit_t, // 7
        asset_symbol_t,
 	   trust_node_pledge_t,
-	   inter_contract_calling_params_t
+	   inter_contract_calling_params_t,
+      staking_params_t
        > future_extensions;
 
    /**
