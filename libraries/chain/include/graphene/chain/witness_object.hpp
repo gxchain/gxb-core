@@ -47,6 +47,9 @@ namespace graphene { namespace chain {
          int64_t          total_missed = 0;
          uint32_t         last_confirmed_block_num = 0;
          bool             is_valid = true;
+         uint32_t         total_vote_weights = 0;
+         asset            vote_reward_pool; 
+         uint32_t         commission_rate = 0; 
 
          witness_object() : vote_id(vote_id_type::witness) {}
    };
@@ -81,5 +84,8 @@ FC_REFLECT_DERIVED( graphene::chain::witness_object, (graphene::db::object),
                     (url) 
                     (total_missed)
                     (last_confirmed_block_num)
-					(is_valid)
+					     (is_valid)
+                    (total_vote_weights)
+                    (vote_reward_pool)
+                    (commission_rate)
                   )

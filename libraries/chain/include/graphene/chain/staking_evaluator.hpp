@@ -26,7 +26,7 @@
 
 namespace graphene { namespace chain {
 
-
+#define STAKING_EXPIRED_TIME 30
 class staking_create_evaluator : public evaluator<staking_create_evaluator>
 {
 public:
