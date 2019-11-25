@@ -165,7 +165,7 @@ namespace graphene { namespace chain {
    };
 
    struct staking_weight_t {
-       uint32_t staking_time = 0;
+       uint32_t staking_days = 0;
        uint32_t weight = 0;
        bool is_valid = false;
    };
@@ -692,7 +692,7 @@ FC_REFLECT(graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_bases
 FC_REFLECT(graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
 FC_REFLECT(graphene::chain::interest_rate_t, (lock_days)(interest_rate)(is_valid))
 FC_REFLECT(graphene::chain::lock_balance_params_t, (params))
-FC_REFLECT(graphene::chain::staking_weight_t, (staking_time)(weight)(is_valid))
+FC_REFLECT(graphene::chain::staking_weight_t, (staking_days)(weight)(is_valid))
 FC_REFLECT(graphene::chain::staking_params_t, (params))
 FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
 FC_REFLECT(graphene::chain::asset_symbol_t, (symbol))

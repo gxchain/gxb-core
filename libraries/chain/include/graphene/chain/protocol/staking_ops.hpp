@@ -37,7 +37,7 @@ namespace graphene { namespace chain {
         asset                                       amount;
         fc::string                                  program_id;
         uint32_t                                    weight;
-        time_point_sec                              staking_seconds;
+        uint32_t                                    staking_days;
         extensions_type                             extensions;
 
         account_id_type fee_payer()const { return owner; }
@@ -97,7 +97,7 @@ FC_REFLECT( graphene::chain::staking_create_operation,
             (amount)
             (program_id)
             (weight)
-            (staking_seconds)
+            (staking_days)
             (extensions)
 )
 FC_REFLECT( graphene::chain::staking_update_operation,
