@@ -567,7 +567,17 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
         	 d._vote_id_valid[committee_itr->vote_id.instance()] = committee_itr->is_valid;
          }
       }
-
+      void statistical_vote_weight(){
+         const auto& all_witnesses = d.get_index_type<witness_index>().indices();
+         for (const witness_object &wit : all_witnesses) {
+            d.modify(wit, [&](witness_object &obj) {
+               d._vote_tally_buffer[wit.vote_id] = wit.total_vote_weights;
+               d._total_voting_stake += wit.total_vote_weights;
+            });
+            d._witness_count_histogram_buffer[0] = d._total_voting_stake;
+            d._committee_count_histogram_buffer[0] = d._total_voting_stake;
+         } 
+      }
       void operator()(const account_object& stake_account) {
          if( props.parameters.count_non_member_votes || stake_account.is_member(d.head_block_time()) )
          {
@@ -678,12 +688,16 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
          a.statistics(d).process_fees(a, d);
       }
    } fee_helper(*this, gpo);
-
-   perform_account_maintenance(std::tie(
-      tally_helper,
-      fee_helper
-      ));
-
+   if (head_block_time() > HARDFORK_1025_TIME) {
+      tally_helper.statistical_vote_weight();
+      perform_account_maintenance(std::tie(fee_helper));
+   }
+   else {
+      perform_account_maintenance(std::tie(
+         tally_helper,
+         fee_helper
+         ));
+   }
    struct clear_canary {
       clear_canary(vector<uint64_t>& target): target(target){}
       ~clear_canary() { target.clear(); }
