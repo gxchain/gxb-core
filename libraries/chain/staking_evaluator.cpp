@@ -147,6 +147,7 @@ void_result staking_claim_evaluator::do_apply(const staking_claim_operation& op,
         FC_ASSERT(obj.total_vote_weights > prev_vote_weights, "the vote statistics are wrong");
         obj.total_vote_weights -= prev_vote_weights;
     });
+    _db.adjust_balance(op.owner, stak_itor->amount); // adjust balance
     _db.remove(*stak_itor);
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
