@@ -54,7 +54,9 @@ void_result staking_create_evaluator::do_evaluate(const staking_create_operation
     FC_ASSERT(std::fabs(delta_seconds) <= STAKING_EXPIRED_TIME, "create_date_time expired");
 
     // check trust_node account
-    FC_ASSERT(_db.find_object(op.trust_node) != nullptr, "invalid trust node account ${id}",("id",op.trust_node));
+    auto wit_obj_itor = _db.find_object(op.trust_node);
+    FC_ASSERT(wit_obj_itor != nullptr, "nonexistent trust node account ${id}",("id",op.trust_node));
+    FC_ASSERT(wit_obj_itor->is_valid == true, "invalid trust node account ${id}",("id",op.trust_node));
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -85,7 +87,9 @@ void_result staking_update_evaluator::do_evaluate(const staking_update_operation
 { try {
     database& _db = db();
     // check trust_node account
-    FC_ASSERT(_db.find_object(op.trust_node) != nullptr, "invalid trust node account ${id}",("id",op.trust_node));
+    auto wit_obj_itor = _db.find_object(op.trust_node);
+    FC_ASSERT(wit_obj_itor != nullptr, "nonexistent trust node account ${id}",("id",op.trust_node));
+    FC_ASSERT(wit_obj_itor->is_valid == true, "invalid trust node account ${id}",("id",op.trust_node));
     // check staking_id
     auto stak_itor = _db.find_object(op.staking_id);
     FC_ASSERT(stak_itor != nullptr, "invalid staking_id ${id}",("id",op.staking_id));
