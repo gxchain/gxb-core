@@ -53,7 +53,7 @@ namespace graphene { namespace chain {
         trust_node_pledge_object,indexed_by<
             ordered_unique<tag<by_id>,member<object,object_id_type,&object::id>>,
             ordered_unique<tag<by_owner>,member<staking_object,account_id_type,&staking_object::owner>>,
-            ordered_unique<tag<by_trust_node>,member<staking_object,account_id_type, &staking_object::trust_node>>> 
+            ordered_unique<tag<by_trust_node>,member<staking_object,witness_id_type, &staking_object::trust_node>>> 
      > staking_multi_index_type;
 
      typedef generic_index<staking_object, staking_multi_index_type> staking_index;
