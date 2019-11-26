@@ -33,7 +33,7 @@ namespace graphene { namespace chain {
 
         asset                                       fee;
         account_id_type                             owner;
-        account_id_type                             trust_node;
+        witness_id_type                             trust_node;
         asset                                       amount;
         fc::string                                  program_id;
         time_point_sec                              create_date_time;
@@ -56,7 +56,7 @@ namespace graphene { namespace chain {
 
         asset                                       fee;
         account_id_type                             owner;
-        account_id_type                             trust_node;
+        witness_id_type                             trust_node;
         staking_id_type                             staking_id;
         extensions_type                             extensions;
 

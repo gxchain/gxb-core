@@ -41,7 +41,7 @@ namespace graphene { namespace chain {
           uint32_t          weight;
           uint32_t          program_id;
           asset             amount;
-          account_id_type   trust_node;
+          witness_id_type   trust_node;
      };
      struct by_owner;
      struct by_trust_node;
