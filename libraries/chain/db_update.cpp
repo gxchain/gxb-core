@@ -118,11 +118,15 @@ void database::update_signing_witness(const witness_object& signing_witness, con
    {
       _dpo.witness_budget -= witness_pay;
    } );
+   share_type vote_rewards = witness_pay * signing_witness.commission_rate / 1000 ;
+   FC_ASSERT(vote_rewards <= witness_pay , "vote_rewards calculation error" );
+   share_type witness_rewards = witness_pay - vote_rewards;
+   deposit_witness_pay( signing_witness, witness_rewards );
 
-   deposit_witness_pay( signing_witness, witness_pay );
 
    modify( signing_witness, [&]( witness_object& _wit )
    {
+      _wit.vote_reward_pool += vote_rewards;
       _wit.last_aslot = new_block_aslot;
       _wit.last_confirmed_block_num = new_block.block_num();
    } );
