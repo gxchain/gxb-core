@@ -42,6 +42,7 @@ namespace graphene { namespace chain {
           uint32_t          program_id;
           asset             amount;
           witness_id_type   trust_node;
+          bool              is_valid;
      };
      struct by_owner;
      struct by_trust_node;
@@ -62,4 +63,4 @@ namespace graphene { namespace chain {
 
  FC_REFLECT_DERIVED (graphene::chain::staking_object,
                      (graphene::chain::object),
-                     (owner)(create_date_time)(staking_days)(weight)(program_id)(amount)(trust_node))
+                     (owner)(create_date_time)(staking_days)(weight)(program_id)(amount)(trust_node)(is_valid))

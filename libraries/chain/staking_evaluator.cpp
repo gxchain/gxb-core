@@ -72,6 +72,7 @@ object_id_type staking_create_evaluator::do_apply(const staking_create_operation
         obj.amount = op.amount;
         obj.weight = op.weight;
         obj.trust_node = op.trust_node;
+        obj.is_valid = true;
     });
     _db.adjust_balance(op.owner, -op.amount); // adjust balance
 
