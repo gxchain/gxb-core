@@ -39,7 +39,7 @@ namespace graphene { namespace chain {
           time_point_sec    create_date_time;
           uint32_t          staking_days;
           uint32_t          weight;
-          uint32_t          program_id;
+          fc::string        program_id;
           asset             amount;
           witness_id_type   trust_node;
           bool              is_valid;
@@ -51,7 +51,7 @@ namespace graphene { namespace chain {
      * @ingroup object_index
      */
      typedef multi_index_container<
-        trust_node_pledge_object,indexed_by<
+        staking_object,indexed_by<
             ordered_unique<tag<by_id>,member<object,object_id_type,&object::id>>,
             ordered_unique<tag<by_owner>,member<staking_object,account_id_type,&staking_object::owner>>,
             ordered_unique<tag<by_trust_node>,member<staking_object,witness_id_type, &staking_object::trust_node>>> 

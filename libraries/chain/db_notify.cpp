@@ -291,6 +291,15 @@ struct get_impacted_account_visitor
        _impacted.insert(op.sender_contract);
        _impacted.insert(op.contract_id);
    }
+   void operator() (const staking_create_operation& op) {
+       _impacted.insert(op.owner);
+   }
+   void operator() (const staking_update_operation& op) {
+       _impacted.insert(op.owner);
+   }
+   void operator() (const staking_claim_operation& op) {
+       _impacted.insert(op.owner);
+   }
 };
 
 void graphene::chain::operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

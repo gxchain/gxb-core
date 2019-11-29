@@ -18,6 +18,7 @@
  */
 
 #include <graphene/chain/staking_evaluator.hpp>
+#include <graphene/chain/witness_object.hpp>
 #include <cmath>
 
 namespace graphene { namespace chain {
@@ -54,8 +55,9 @@ void_result staking_create_evaluator::do_evaluate(const staking_create_operation
     FC_ASSERT(std::fabs(delta_seconds) <= STAKING_EXPIRED_TIME, "create_date_time expired");
 
     // check trust_node account
-    auto wit_obj_itor = _db.find_object(op.trust_node);
-    FC_ASSERT(wit_obj_itor != nullptr, "nonexistent trust node account ${id}",("id",op.trust_node));
+    const auto& witness_objects = _db.get_index_type<witness_index>().indices();
+    auto wit_obj_itor = witness_objects.find(op.trust_node);
+    FC_ASSERT(wit_obj_itor != witness_objects.end(), "nonexistent trust node account ${id}",("id",op.trust_node));
     FC_ASSERT(wit_obj_itor->is_valid == true, "invalid trust node account ${id}",("id",op.trust_node));
 
     return void_result();
@@ -77,9 +79,10 @@ object_id_type staking_create_evaluator::do_apply(const staking_create_operation
     _db.adjust_balance(op.owner, -op.amount); // adjust balance
 
     // adjust trust node total_vote_weight
-    auto wit_obj_itor  = _db.find_object(op.trust_node);
+    const auto& witness_objects = _db.get_index_type<witness_index>().indices();
+    auto wit_obj_itor = witness_objects.find(op.trust_node);
     _db.modify(*wit_obj_itor, [&](witness_object& obj) {
-        obj.total_vote_weights += op.amount * op.weight;
+        obj.total_vote_weights += op.amount.amount * op.weight;
     });
     return new_object.id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -88,12 +91,14 @@ void_result staking_update_evaluator::do_evaluate(const staking_update_operation
 { try {
     database& _db = db();
     // check trust_node account
-    auto wit_obj_itor = _db.find_object(op.trust_node);
-    FC_ASSERT(wit_obj_itor != nullptr, "nonexistent trust node account ${id}",("id",op.trust_node));
+    const auto& witness_objects = _db.get_index_type<witness_index>().indices();
+    auto wit_obj_itor = witness_objects.find(op.trust_node);
+    FC_ASSERT(wit_obj_itor != witness_objects.end(), "nonexistent trust node account ${id}",("id",op.trust_node));
     FC_ASSERT(wit_obj_itor->is_valid == true, "invalid trust node account ${id}",("id",op.trust_node));
     // check staking_id
-    auto stak_itor = _db.find_object(op.staking_id);
-    FC_ASSERT(stak_itor != nullptr, "invalid staking_id ${id}",("id",op.staking_id));
+    const auto& staking_objects = _db.get_index_type<staking_index>().indices();
+    auto stak_itor  = staking_objects.find(op.staking_id);
+    FC_ASSERT(stak_itor != staking_objects.end(), "invalid staking_id ${id}",("id",op.staking_id));
     // T+1 mode
     uint32_t past_days = (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()) / SECONDS_PER_DAY;
     FC_ASSERT(stak_itor->staking_days > past_days, "staking expired yet");
@@ -105,22 +110,24 @@ void_result staking_update_evaluator::do_apply(const staking_update_operation& o
 { try {
     database& _db = db();
     // modify staking object "trust_node" field
-    account_id_type prev_trust_node;
-    uint32_t prev_vote_weights;
-    auto stak_itor = _db.find_object(op.staking_id);
+    witness_id_type prev_trust_node;
+    share_type prev_vote_weights;
+    const auto& staking_objects = _db.get_index_type<staking_index>().indices();
+    auto stak_itor  = staking_objects.find(op.staking_id);
     _db.modify(*stak_itor, [&](staking_object& obj) {
         prev_trust_node = obj.trust_node;
-        prev_vote_weights = obj.amount * obj.weight;
+        prev_vote_weights = obj.amount.amount * obj.weight;
         obj.trust_node = op.trust_node;
     });
     // reduce the number of votes received on the previous node
-    auto prev_wit_itor  = _db.find_object(prev_trust_node);
+    const auto& witness_objects = _db.get_index_type<witness_index>().indices();
+    auto prev_wit_itor  = witness_objects.find(prev_trust_node);
     _db.modify(*prev_wit_itor, [&](witness_object& obj) {
         FC_ASSERT(obj.total_vote_weights > prev_vote_weights, "the vote statistics are wrong");
         obj.total_vote_weights -= prev_vote_weights;
     });
     // increase the number of votes for new nodes
-    auto wit_obj_itor  = _db.find_object(op.trust_node);
+    auto wit_obj_itor = witness_objects.find(op.trust_node);
     _db.modify(*wit_obj_itor, [&](witness_object& obj) {
         obj.total_vote_weights += prev_vote_weights;
     });
@@ -132,8 +139,9 @@ void_result staking_claim_evaluator::do_evaluate(const staking_claim_operation& 
 { try {
     database& _db = db();
     // check staking_id
-    auto stak_itor = _db.find_object(op.staking_id);
-    FC_ASSERT(stak_itor != nullptr, "invalid staking_id ${id}",("id",op.staking_id));
+    const auto& staking_objects = _db.get_index_type<staking_index>().indices();
+    auto stak_itor  = staking_objects.find(op.staking_id);
+    FC_ASSERT(stak_itor != staking_objects.end(), "invalid staking_id ${id}",("id",op.staking_id));
     // T+1 mode
     uint32_t past_days = (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()) / SECONDS_PER_DAY;
     FC_ASSERT(stak_itor->staking_days <= past_days, "claim timepoint has not arrived yet");
@@ -144,11 +152,13 @@ void_result staking_claim_evaluator::do_apply(const staking_claim_operation& op,
 { try {
     database& _db = db();
 
-    auto stak_itor = _db.find_object(op.staking_id);
+    const auto& staking_objects = _db.get_index_type<staking_index>().indices();
+    auto stak_itor  = staking_objects.find(op.staking_id);
     // reduce the number of votes received on the previous node
-    auto prev_wit_itor  = _db.find_object(stak_itor->trust_node);
+    const auto& witness_objects = _db.get_index_type<witness_index>().indices();
+    auto prev_wit_itor  = witness_objects.find(stak_itor->trust_node);
     _db.modify(*prev_wit_itor, [&](witness_object& obj) {
-        uint32_t prev_vote_weights = stak_itor->amount * stak_itor->weight;
+        share_type prev_vote_weights = stak_itor->amount.amount * stak_itor->weight;
         FC_ASSERT(obj.total_vote_weights > prev_vote_weights, "the vote statistics are wrong");
         obj.total_vote_weights -= prev_vote_weights;
     });

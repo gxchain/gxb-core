@@ -213,6 +213,26 @@ void database::deposit_contract_call_cashback(const account_object& acct, share_
 
    return;
 }
+void database::deposit_staking_cashback(const account_object& acct, share_type amount)
+{
+   if( amount == 0 )
+      return;
+
+   optional<vesting_balance_id_type> new_vbid = deposit_lazy_vesting(
+       acct.cashback_vb,
+       amount,
+       get_global_properties().parameters.staking_rewards_vesting_seconds,
+       acct.id,
+       true);
+
+   if (new_vbid.valid()) {
+       modify(acct, [&](account_object &_acct) {
+           _acct.cashback_vb = *new_vbid;
+       });
+   }
+
+   return;
+}
 
 void database::deposit_witness_pay(const witness_object& wit, share_type amount)
 {

@@ -47,7 +47,7 @@ namespace graphene { namespace chain {
          int64_t          total_missed = 0;
          uint32_t         last_confirmed_block_num = 0;
          bool             is_valid = true;
-         uint64_t         total_vote_weights = 0;
+         share_type       total_vote_weights = 0;
          share_type       vote_reward_pool = 0; 
          uint32_t         commission_rate = 0; 
 

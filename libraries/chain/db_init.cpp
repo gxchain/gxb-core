@@ -82,6 +82,7 @@
 #include <graphene/chain/loyalty_evaluator.hpp>
 #include <graphene/chain/proxy_transfer_evaluator.hpp>
 #include <graphene/chain/contract_evaluator.hpp>
+#include <graphene/chain/staking_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -271,6 +272,9 @@ void database::initialize_evaluators()
    register_evaluator<contract_update_evaluator>();
    register_evaluator<trust_node_pledge_withdraw_evaluator>();
    register_evaluator<inter_contract_call_evaluator>();
+   register_evaluator<staking_create_evaluator>();
+   register_evaluator<staking_update_evaluator>();
+   register_evaluator<staking_claim_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -335,6 +339,8 @@ void database::initialize_indexes()
    add_index< primary_index< key_value_index> >();
    add_index< primary_index< index64_index> >();
 
+   // staking object indexes
+   add_index< primary_index< staking_index> >();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)
