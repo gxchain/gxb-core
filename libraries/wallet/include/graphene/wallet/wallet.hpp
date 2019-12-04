@@ -2011,6 +2011,14 @@ class wallet_api
          const approval_delta& delta,
          bool broadcast /* = false */
          );
+      
+      /** Mortgage GXC to vote.
+      */
+      signed_transaction staking(account_id_type owner,
+                                  asset amount,
+                                  witness_id_type wit_id,
+                                  string program_id,
+                                  bool broadcast = false);
 
       /** get pocs_object.
        *
@@ -2282,6 +2290,7 @@ FC_API( graphene::wallet::wallet_api,
         (propose_league_update)
         (propose_fee_change)
         (approve_proposal)
+        (staking)
         (dbg_make_uia)
         (dbg_push_blocks)
         (dbg_generate_blocks)

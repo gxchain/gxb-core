@@ -3465,6 +3465,28 @@
           tx.validate();
           return sign_transaction(tx, broadcast);
        }
+       signed_transaction staking(
+          account_id_type owner,
+          asset amount,
+          witness_id_type wit_id,
+          string program_id,
+          bool broadcast = false
+        )
+       {
+          staking_create_operation sc_op;
+          sc_op.owner = owner;
+          sc_op.trust_node = wit_id;
+          sc_op.create_date_time = fc::time_point_sec(fc::time_point::now());
+          sc_op.program_id = "1";
+          sc_op.weight = 7;
+          sc_op.staking_days = 7;
+          signed_transaction tx;
+          tx.operations.push_back(sc_op);
+          auto fee_asset_obj = find_asset(asset_id_type(1));
+          set_operation_fees(tx, get_global_properties().parameters.current_fees, fee_asset_obj);
+          tx.validate();
+          return sign_transaction(tx, broadcast);
+       }
 
        void dbg_make_uia(string creator, string symbol)
        {
@@ -5099,7 +5121,16 @@
     {
        return my->approve_proposal( fee_paying_account, proposal_id, delta, broadcast );
     }
-
+    signed_transaction wallet_api::staking(
+        account_id_type owner,
+        asset amount,
+        witness_id_type wit_id,
+        string program_id,
+        bool broadcast
+        )
+    {
+       return my->staking(owner,amount,wit_id,program_id,broadcast);
+    }
     global_property_object wallet_api::get_global_properties() const
     {
        return my->get_global_properties();
