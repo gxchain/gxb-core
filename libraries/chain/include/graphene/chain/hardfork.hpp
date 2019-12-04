@@ -45,7 +45,7 @@
 // hardfork 1008
 // core asset hardfork
 #ifndef HARDFORK_1008_TIME
-#define HARDFORK_1008_TIME (fc::time_point_sec( 1541433600 )) // for mainnet, 2018-11-06T00:00:00
+#define HARDFORK_1008_TIME (fc::time_point_sec( 1936210000 )) // for mainnet, 2018-11-06T00:00:00
 #endif
 
 // set min witness num 21
