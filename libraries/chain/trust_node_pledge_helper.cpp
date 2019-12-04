@@ -139,10 +139,10 @@ inline void trust_node_pledge_helper::do_evaluate(database& db, const account_id
 	const auto &pledge_idx = db.get_index_type<trust_node_pledge_index>().indices().get<by_account>();
 	auto pledge_itr = pledge_idx.find(account_id);
    if(pledge_itr == pledge_idx.end()) {
-	   pledge_to_charge = asset{pledge_needed, asset_id_type(1)};
+	   pledge_to_charge = asset{pledge_needed, asset_id_type(0)};
    } else {
 	   pledge_object_exist = true;
-	   pledge_to_charge = asset{pledge_needed, asset_id_type(1)} - pledge_itr->amount;
+	   pledge_to_charge = asset{pledge_needed, asset_id_type(0)} - pledge_itr->amount;
 	   pledge_obj_ptr = const_cast<trust_node_pledge_object*>(&(*pledge_itr));
    }
 
