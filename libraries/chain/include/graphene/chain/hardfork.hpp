@@ -126,11 +126,6 @@
 #define HARDFORK_1024_TIME (fc::time_point_sec( 1556625600 )) // for testnet, 2019-04-30T12:00:00(UTC)
 #endif
 
-#ifndef HARDFORK_1025_TIME
-// for testnet after this time change to one vote only once logic
-#define HARDFORK_1025_TIME (fc::time_point_sec( 1577329200 )) // for testnet, 2019-04-30T12:00:00(UTC)
-#endif
-
 // #413 Add operation to claim asset fees
 #ifndef HARDFORK_413_TIME
 #define HARDFORK_413_TIME (fc::time_point_sec( 1446652800 ))
