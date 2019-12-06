@@ -2018,6 +2018,8 @@ class wallet_api
                                   asset amount,
                                   witness_id_type wit_id,
                                   string program_id,
+                                  uint32_t weight,
+                                  uint32_t days,
                                   bool broadcast = false);
       /** update vote.
       */
@@ -2301,6 +2303,8 @@ FC_API( graphene::wallet::wallet_api,
         (propose_fee_change)
         (approve_proposal)
         (staking_create)
+        (staking_update)
+        (staking_unlock)
         (dbg_make_uia)
         (dbg_push_blocks)
         (dbg_generate_blocks)

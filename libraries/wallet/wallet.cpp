@@ -3470,9 +3470,9 @@
           asset amount,
           witness_id_type wit_id,
           string program_id,
-          uint32_t weigth,
+          uint32_t weight,
           uint32_t days,
-          bool broadcast = false
+          bool broadcast
         )
        {
           staking_create_operation sc_op;
@@ -3497,7 +3497,7 @@
           account_id_type owner,
           staking_id_type stak_id,
           witness_id_type wit_id,                    
-          bool broadcast = false
+          bool broadcast
         )
        {
           staking_update_operation su_op;
@@ -3519,7 +3519,7 @@
        signed_transaction staking_unlock(
           account_id_type owner,
           staking_id_type stak_id,                   
-          bool broadcast = false
+          bool broadcast
         )
        {
           staking_claim_operation sul_op;
@@ -5186,7 +5186,7 @@
         account_id_type owner,
         staking_id_type stak_id,
         witness_id_type wit_id,                    
-        bool broadcast = false
+        bool broadcast
         )
     {
        return my->staking_update(owner,stak_id,wit_id,broadcast);
@@ -5194,7 +5194,7 @@
     signed_transaction wallet_api::staking_unlock(
         account_id_type owner,
         staking_id_type stak_id,
-        bool broadcast = false
+        bool broadcast
         )
     {
        return my->staking_unlock(owner,stak_id,broadcast);
