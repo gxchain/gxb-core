@@ -2012,6 +2012,26 @@ class wallet_api
          bool broadcast /* = false */
          );
 
+      /** Mortgage GXC to vote.
+      */
+      signed_transaction staking_create(account_id_type owner,
+                                  asset amount,
+                                  witness_id_type wit_id,
+                                  string program_id,
+                                  uint32_t weight,
+                                  uint32_t days,
+                                  bool broadcast = false);
+      /** update vote.
+      */
+      signed_transaction staking_update(account_id_type owner,
+                                  staking_id_type stak_id,
+                                  witness_id_type wit_id,                    
+                                  bool broadcast = false);
+      /** unlock vote.
+      */
+      signed_transaction staking_unlock(account_id_type owner,
+                                  staking_id_type stak_id,
+                                  bool broadcast = false);
       /** get pocs_object.
        *
        * @param league_id
@@ -2282,6 +2302,9 @@ FC_API( graphene::wallet::wallet_api,
         (propose_league_update)
         (propose_fee_change)
         (approve_proposal)
+        (staking_create)
+        (staking_update)
+        (staking_unlock)
         (dbg_make_uia)
         (dbg_push_blocks)
         (dbg_generate_blocks)
