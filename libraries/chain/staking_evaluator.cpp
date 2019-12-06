@@ -27,8 +27,10 @@ void_result staking_create_evaluator::do_evaluate(const staking_create_operation
 { try {
     database& _db = db();
     // gxc assets
-    FC_ASSERT(op.amount.asset_id == GRAPHENE_GXS_ASSET, "staking asset must be GXC");
-    FC_ASSERT(op.amount <= _db.get_balance(op.owner, GRAPHENE_GXS_ASSET), "account balance not enough");
+    //FC_ASSERT(op.amount.asset_id == GRAPHENE_GXS_ASSET, "staking asset must be GXC");
+    FC_ASSERT(op.amount.asset_id == asset_id_type(), "staking asset must be GXC");
+    //FC_ASSERT(op.amount <= _db.get_balance(op.owner, GRAPHENE_GXS_ASSET), "account balance not enough");
+    FC_ASSERT(op.amount <= _db.get_balance(op.owner, asset_id_type()), "account balance not enough");
     FC_ASSERT(op.amount.amount >= GRAPHENE_BLOCKCHAIN_PRECISION, "staking amount must > 1");
 
     // Check the staking time, such as 7 days, 30 days, 60 days, 90 days, with global parameters
