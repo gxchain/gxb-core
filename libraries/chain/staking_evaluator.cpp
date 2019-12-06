@@ -125,7 +125,7 @@ void_result staking_update_evaluator::do_apply(const staking_update_operation& o
     const auto& witness_objects = _db.get_index_type<witness_index>().indices();
     auto prev_wit_itor  = witness_objects.find(prev_trust_node);
     _db.modify(*prev_wit_itor, [&](witness_object& obj) {
-        FC_ASSERT(obj.total_vote_weights > prev_vote_weights, "the vote statistics are wrong");
+        FC_ASSERT(obj.total_vote_weights >= prev_vote_weights, "the vote statistics are wrong");
         obj.total_vote_weights -= prev_vote_weights;
     });
     // increase the number of votes for new nodes
@@ -161,7 +161,7 @@ void_result staking_claim_evaluator::do_apply(const staking_claim_operation& op,
     auto prev_wit_itor  = witness_objects.find(stak_itor->trust_node);
     _db.modify(*prev_wit_itor, [&](witness_object& obj) {
         share_type prev_vote_weights = stak_itor->amount.amount * stak_itor->weight;
-        FC_ASSERT(obj.total_vote_weights > prev_vote_weights, "the vote statistics are wrong");
+        FC_ASSERT(obj.total_vote_weights >= prev_vote_weights, "the vote statistics are wrong");
         obj.total_vote_weights -= prev_vote_weights;
     });
     _db.adjust_balance(op.owner, stak_itor->amount); // adjust balance
