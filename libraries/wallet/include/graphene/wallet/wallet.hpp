@@ -2011,7 +2011,7 @@ class wallet_api
          const approval_delta& delta,
          bool broadcast /* = false */
          );
-      
+
       /** Mortgage GXC to vote.
       */
       signed_transaction staking_create(account_id_type owner,
