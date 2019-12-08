@@ -38,6 +38,11 @@ void witness_update_operation::validate() const
        FC_ASSERT(new_url->size() < GRAPHENE_MAX_URL_LENGTH );
 }
 
+void wit_commission_set_operation::validate() const
+{
+   FC_ASSERT(fee.amount >= 0);
+}
+
 void trust_node_pledge_withdraw_operation::validate() const
 {
    FC_ASSERT(fee.amount >= 0);
