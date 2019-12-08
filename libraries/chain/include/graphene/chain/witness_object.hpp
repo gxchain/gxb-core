@@ -50,6 +50,7 @@ namespace graphene { namespace chain {
          share_type       total_vote_weights = 0;
          share_type       vote_reward_pool = 0; 
          uint32_t         commission_rate = 0; 
+         time_point_sec   commission_update_time;
 
          witness_object() : vote_id(vote_id_type::witness) {}
    };
@@ -88,4 +89,5 @@ FC_REFLECT_DERIVED( graphene::chain::witness_object, (graphene::db::object),
                     (total_vote_weights)
                     (vote_reward_pool)
                     (commission_rate)
+                    (commission_update_time)
                   )

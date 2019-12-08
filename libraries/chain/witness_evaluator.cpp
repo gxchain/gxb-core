@@ -98,6 +98,34 @@ void_result witness_update_evaluator::do_apply(const witness_update_operation& o
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
+void_result wit_commission_set_evaluator::do_evaluate( const wit_commission_set_operation& op )
+{ try {
+	database& _db = db();
+	FC_ASSERT(_db.get(op.witness).witness_account == op.witness_account);
+   trust_node_pledge_helper::do_evaluate(_db, op);
+   FC_ASSERT(op.commission_rate >= 0 && op.commission_rate <= 1000);
+   // TODO check commission_rate update time
+   
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result wit_commission_set_evaluator::do_apply(const wit_commission_set_operation& op, int32_t billed_cpu_time_us)
+{ try {
+   database& _db = db();
+   _db.modify(
+      _db.get(op.witness),
+      [&op,&_db]( witness_object& wit )
+      {
+         wit.commission_rate = op.commission_rate;
+         wit.commission_update_time = _db.head_block_time();
+      }
+   );
+
+	trust_node_pledge_helper::do_apply(_db, op);
+
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
 void_result trust_node_pledge_withdraw_evaluator::do_evaluate(const trust_node_pledge_withdraw_operation& op)
 { try {
    trust_node_pledge_helper::do_evaluate(db(), op);
