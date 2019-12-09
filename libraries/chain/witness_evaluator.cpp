@@ -105,7 +105,10 @@ void_result wit_commission_set_evaluator::do_evaluate( const wit_commission_set_
    trust_node_pledge_helper::do_evaluate(_db, op);
    FC_ASSERT(op.commission_rate >= 0 && op.commission_rate <= 1000);
    // TODO check commission_rate update time
-   
+   auto &wit_itor = _db.get(op.witness);
+   const auto& gpo = _db.get_global_properties();
+   int32_t delta_seconds = _db.head_block_time().sec_since_epoch() - wit_itor.commission_update_time.sec_since_epoch();
+   FC_ASSERT(std::fabs(delta_seconds) >= gpo.parameters.set_commission_interval, "the modification time is not yet up");
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
