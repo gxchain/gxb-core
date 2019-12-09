@@ -2032,6 +2032,12 @@ class wallet_api
       signed_transaction staking_unlock(account_id_type owner,
                                   staking_id_type stak_id,
                                   bool broadcast = false);
+      /** set the dividend ratio.
+      */
+      signed_transaction wit_set_commission(string witness_name,
+                                        uint32_t commission_rate,
+                                        string fee_asset_symbol,
+                                        bool broadcast = false);
       /** get pocs_object.
        *
        * @param league_id
@@ -2305,6 +2311,7 @@ FC_API( graphene::wallet::wallet_api,
         (staking_create)
         (staking_update)
         (staking_unlock)
+        (wit_set_commission)
         (dbg_make_uia)
         (dbg_push_blocks)
         (dbg_generate_blocks)

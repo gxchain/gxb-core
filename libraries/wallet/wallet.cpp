@@ -3537,6 +3537,32 @@
           tx.validate();
           return sign_transaction(tx, broadcast);
        }
+       signed_transaction wit_set_commission(
+          string witness_name,
+          uint32_t commission_rate,
+          string fee_asset_symbol,
+          bool broadcast
+        )
+       {
+          try {
+          asset_object fee_asset_obj = get_asset(fee_asset_symbol);
+          witness_object witness = get_witness(witness_name);
+          account_object witness_account = get_account( witness.witness_account );
+
+          wit_commission_set_operation wit_commission_set_op;
+          wit_commission_set_op.witness = witness.id;
+          wit_commission_set_op.witness_account = witness_account.id;
+          wit_commission_set_op.commission_rate = commission_rate;
+          wit_commission_set_op.commission_update_time = fc::time_point_sec(fc::time_point::now());
+
+          signed_transaction tx;
+          tx.operations.push_back( wit_commission_set_op );
+          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+          tx.validate();
+
+          return sign_transaction( tx, broadcast );
+          } FC_CAPTURE_AND_RETHROW( (witness_name)(commission_rate)(broadcast) )
+       }
        void dbg_make_uia(string creator, string symbol)
        {
           asset_options opts;
@@ -5198,6 +5224,15 @@
         )
     {
        return my->staking_unlock(owner,stak_id,broadcast);
+    }
+    signed_transaction wallet_api::wit_set_commission(
+          string witness_name,
+          uint32_t commission_rate,
+          string fee_asset_symbol,
+          bool broadcast
+        )
+    {
+       return my->wit_set_commission(witness_name,commission_rate,fee_asset_symbol,broadcast);
     }
     global_property_object wallet_api::get_global_properties() const
     {
