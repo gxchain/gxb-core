@@ -3481,6 +3481,7 @@
           sc_op.create_date_time = fc::time_point_sec(fc::time_point::now());
           sc_op.program_id = program_id;
           sc_op.weight = weight;
+          sc_op.amount = amount;
           sc_op.staking_days = days;
           signed_transaction tx;
           tx.operations.push_back(sc_op);
