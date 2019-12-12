@@ -45,7 +45,7 @@ namespace graphene { namespace chain {
          void_result do_apply(const witness_update_operation& o, int32_t billed_cpu_time_us = 0);
    };
    
-   class wit_commission_set_evaluator : public evaluator<witness_update_evaluator>
+   class wit_commission_set_evaluator : public evaluator<wit_commission_set_evaluator>
    {
       public:
          typedef wit_commission_set_operation operation_type;
