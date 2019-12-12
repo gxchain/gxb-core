@@ -111,5 +111,6 @@ FC_REFLECT( graphene::chain::chain_parameters,
             (account_fee_scale_bitshifts)
             (max_authority_depth)
             (switch_vote_one)
+            (set_commission_interval)
             (extensions)
           )
