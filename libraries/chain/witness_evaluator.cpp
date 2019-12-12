@@ -102,7 +102,7 @@ void_result wit_commission_set_evaluator::do_evaluate( const wit_commission_set_
 { try {
 	database& _db = db();
 	FC_ASSERT(_db.get(op.witness).witness_account == op.witness_account);
-   trust_node_pledge_helper::do_evaluate(_db, op);
+   //trust_node_pledge_helper::do_evaluate(_db, op);
    FC_ASSERT(op.commission_rate >= 0 && op.commission_rate <= 1000);
    // TODO check commission_rate update time
    auto &wit_itor = _db.get(op.witness);
