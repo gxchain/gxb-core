@@ -172,6 +172,11 @@ namespace graphene { namespace chain {
    struct staking_params_t {
        vector< pair<fc::string, staking_weight_t> > params;
    };
+   struct vote_params_t {
+       bool     switch_vote_one = false;
+       uint32_t set_commission_interval = 60*60*24*7; // 1 week
+       uint32_t staking_rewards_vesting_seconds = 60*60; // 1 h
+   };
    
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
@@ -697,6 +702,7 @@ FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
 FC_REFLECT(graphene::chain::asset_symbol_t, (symbol))
 FC_REFLECT(graphene::chain::trust_node_pledge_t, (amount))
 FC_REFLECT(graphene::chain::inter_contract_calling_params_t, (max_inter_contract_depth)(contract_basic_fee_vesting_period_seconds)(max_inline_action_size))
+FC_REFLECT(graphene::chain::vote_params_t, (switch_vote_one)(set_commission_interval)(staking_rewards_vesting_seconds))
 
 
 FC_REFLECT_ENUM(graphene::chain::asset_issuer_permission_flags,

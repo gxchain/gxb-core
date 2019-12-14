@@ -688,7 +688,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
          a.statistics(d).process_fees(a, d);
       }
    } fee_helper(*this, gpo);
-   if (gpo.parameters.switch_vote_one == true) {
+   if (get_vote_params().switch_vote_one == true) {
       tally_helper.statistical_vote_weight();
       perform_account_maintenance(std::tie(fee_helper));
       //distribute the dividend to each voting account
