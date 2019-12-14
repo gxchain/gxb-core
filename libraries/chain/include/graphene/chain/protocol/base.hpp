@@ -117,7 +117,8 @@ namespace graphene { namespace chain {
        asset_symbol_t,
 	   trust_node_pledge_t,
 	   inter_contract_calling_params_t,
-      staking_params_t
+      staking_params_t,
+      vote_params_t
        > future_extensions;
 
    /**

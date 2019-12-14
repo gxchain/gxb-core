@@ -221,7 +221,7 @@ void database::deposit_staking_cashback(const account_object& acct, share_type a
    optional<vesting_balance_id_type> new_vbid = deposit_lazy_vesting(
        acct.cashback_vb,
        amount,
-       get_global_properties().parameters.staking_rewards_vesting_seconds,
+       get_vote_params().staking_rewards_vesting_seconds,
        acct.id,
        true);
 

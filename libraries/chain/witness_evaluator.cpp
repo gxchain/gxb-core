@@ -108,7 +108,7 @@ void_result wit_commission_set_evaluator::do_evaluate( const wit_commission_set_
    auto &wit_itor = _db.get(op.witness);
    const auto& gpo = _db.get_global_properties();
    int32_t delta_seconds = _db.head_block_time().sec_since_epoch() - wit_itor.commission_update_time.sec_since_epoch();
-   FC_ASSERT(std::fabs(delta_seconds) >= gpo.parameters.set_commission_interval, "the modification time is not yet up");
+   FC_ASSERT(std::fabs(delta_seconds) >= _db.get_vote_params().set_commission_interval, "the modification time is not yet up");
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
