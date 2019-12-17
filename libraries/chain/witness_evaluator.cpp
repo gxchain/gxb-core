@@ -132,7 +132,7 @@ void_result wit_commission_set_evaluator::do_apply(const wit_commission_set_oper
 void_result wit_banned_remove_evaluator::do_evaluate( const wit_banned_remove_operation& op )
 { try {
 	database& _db = db();
-   trust_node_pledge_helper::do_evaluate(_db, op);
+   //trust_node_pledge_helper::do_evaluate(_db, op);
 	FC_ASSERT(_db.get(op.witness).witness_account == op.witness_account);
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
