@@ -92,6 +92,25 @@ namespace graphene { namespace chain {
       account_id_type fee_payer()const { return witness_account; }
       void            validate()const;
    };
+   /**
+    * @brief Remove the limitation on witness
+    * @ingroup operations
+    */
+   struct wit_banned_remove_operation : public base_operation
+   {
+      struct fee_parameters_type
+      {
+         share_type fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
+      };
+      asset             fee;
+      /// The witness object to update.
+      witness_id_type   witness;
+      /// The account which owns the witness. This account pays the fee for this operation.
+      account_id_type   witness_account;
+
+      account_id_type fee_payer()const { return witness_account; }
+      void            validate()const;
+   };
 
    /// TODO: witness_resign_operation : public base_operation
 
@@ -124,6 +143,9 @@ FC_REFLECT( graphene::chain::witness_update_operation, (fee)(witness)(witness_ac
 
 FC_REFLECT( graphene::chain::wit_commission_set_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::wit_commission_set_operation, (fee)(witness)(witness_account)(commission_rate)(commission_update_time) )
+
+FC_REFLECT( graphene::chain::wit_banned_remove_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::wit_banned_remove_operation, (fee)(witness)(witness_account) )
 
 FC_REFLECT( graphene::chain::trust_node_pledge_withdraw_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::trust_node_pledge_withdraw_operation, (fee)(witness_account) )

@@ -303,6 +303,9 @@ struct get_impacted_account_visitor
    void operator() (const wit_commission_set_operation& op) {
        _impacted.insert(op.witness_account);
    }
+   void operator() (const wit_banned_remove_operation& op) {
+       _impacted.insert(op.witness_account);
+   }
 };
 
 void graphene::chain::operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

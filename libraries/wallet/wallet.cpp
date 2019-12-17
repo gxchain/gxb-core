@@ -3563,6 +3563,29 @@
           return sign_transaction( tx, broadcast );
           } FC_CAPTURE_AND_RETHROW( (witness_name)(commission_rate)(broadcast) )
        }
+       signed_transaction wit_remove_banned(
+          string witness_name,
+          string fee_asset_symbol,
+          bool broadcast
+        )
+       {
+          try {
+          asset_object fee_asset_obj = get_asset(fee_asset_symbol);
+          witness_object witness = get_witness(witness_name);
+          account_object witness_account = get_account( witness.witness_account );
+
+          wit_banned_remove_operation wit_banned_remove_op;
+          wit_banned_remove_op.witness = witness.id;
+          wit_banned_remove_op.witness_account = witness_account.id;
+
+          signed_transaction tx;
+          tx.operations.push_back( wit_banned_remove_op );
+          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+          tx.validate();
+
+          return sign_transaction( tx, broadcast );
+          } FC_CAPTURE_AND_RETHROW( (witness_name)(broadcast) )
+       }
        void dbg_make_uia(string creator, string symbol)
        {
           asset_options opts;
@@ -5233,6 +5256,14 @@
         )
     {
        return my->wit_set_commission(witness_name,commission_rate,fee_asset_symbol,broadcast);
+    }
+    signed_transaction wallet_api::wit_remove_banned(
+          string witness_name,
+          string fee_asset_symbol,
+          bool broadcast
+       )
+    {
+       return my->wit_remove_banned(witness_name,fee_asset_symbol,broadcast);
     }
     global_property_object wallet_api::get_global_properties() const
     {

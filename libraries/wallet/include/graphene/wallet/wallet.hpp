@@ -2038,6 +2038,11 @@ class wallet_api
                                         uint32_t commission_rate,
                                         string fee_asset_symbol,
                                         bool broadcast = false);
+      /** remove the witness banned.
+      */
+      signed_transaction wit_remove_banned(string witness_name,
+                                        string fee_asset_symbol,
+                                        bool broadcast = false);
       /** get pocs_object.
        *
        * @param league_id
@@ -2312,6 +2317,7 @@ FC_API( graphene::wallet::wallet_api,
         (staking_update)
         (staking_unlock)
         (wit_set_commission)
+        (wit_remove_banned)
         (dbg_make_uia)
         (dbg_push_blocks)
         (dbg_generate_blocks)

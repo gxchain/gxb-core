@@ -357,6 +357,7 @@ void database::process_budget()
       share_type witness_budget = gpo.parameters.witness_pay_per_block.value * blocks_to_maint;
       rec.requested_witness_budget = witness_budget;
       witness_budget = std::min(witness_budget, available_funds);
+      ilog( "witness_budget: ${wb} ", ("wb", witness_budget) );
       rec.witness_budget = witness_budget;
       available_funds -= witness_budget;
 
@@ -567,15 +568,26 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
         	 d._vote_id_valid[committee_itr->vote_id.instance()] = committee_itr->is_valid;
          }
       }
+      bool check_block_missed(const witness_object &wit){
+         if(wit.total_missed < wit.previous_missed || wit.is_banned) return false;
+         return wit.total_missed - wit.previous_missed <= d.get_vote_params().missed_limit ||  wit.previous_missed == 0;
+      }
       void statistical_vote_weight(){
          const auto& all_witnesses = d.get_index_type<witness_index>().indices();
          for (const witness_object &wit : all_witnesses) {
-            d.modify(wit, [&](witness_object &obj) {
-               d._vote_tally_buffer[wit.vote_id] = wit.total_vote_weights.value;
-               d._total_voting_stake += wit.total_vote_weights.value;
-            });
-            d._witness_count_histogram_buffer[0] = d._total_voting_stake;
-            d._committee_count_histogram_buffer[0] = d._total_voting_stake;
+            if(check_block_missed(wit)){
+               d.modify(wit, [&](witness_object &obj) {
+                  d._vote_tally_buffer[wit.vote_id] = wit.total_vote_weights.value;
+                  d._total_voting_stake += wit.total_vote_weights.value;
+                  obj.previous_missed = obj.total_missed;
+               });
+               d._witness_count_histogram_buffer[0] = d._total_voting_stake;
+               d._committee_count_histogram_buffer[0] = d._total_voting_stake;
+            }else{
+               d.modify(wit, [&](witness_object &obj) {;
+                  obj.is_banned = true;
+               });
+            }
          } 
       }
       void operator()(const account_object& stake_account) {
