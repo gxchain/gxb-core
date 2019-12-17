@@ -709,7 +709,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
          if(stak_obj.is_valid == true){
             //expire
             uint32_t past_days = (head_block_time().sec_since_epoch() - stak_obj.create_date_time.sec_since_epoch()) / SECONDS_PER_DAY;
-            if(stak_obj.staking_days > past_days){
+            if(stak_obj.staking_days < past_days){
                modify(stak_obj, [&](staking_object &obj) {
                   obj.is_valid = false;
                });
