@@ -276,6 +276,7 @@ void database::initialize_evaluators()
    register_evaluator<staking_update_evaluator>();
    register_evaluator<staking_claim_evaluator>();
    register_evaluator<wit_commission_set_evaluator>();
+   register_evaluator<wit_banned_remove_evaluator>();
 }
 
 void database::initialize_indexes()

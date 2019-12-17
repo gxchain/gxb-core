@@ -142,7 +142,8 @@ namespace graphene { namespace chain {
             staking_create_operation,//80
             staking_update_operation,//81
             staking_claim_operation,//82
-            wit_commission_set_operation//83
+            wit_commission_set_operation,//83
+            wit_banned_remove_operation//84
          > operation;
 
    /// @} // operations group

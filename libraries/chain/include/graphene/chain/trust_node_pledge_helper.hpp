@@ -15,6 +15,9 @@ public:
     static void do_evaluate(database& db, const wit_commission_set_operation& op);
     static void do_apply(database& db, const wit_commission_set_operation& op);
 
+    static void do_evaluate(database& db, const wit_banned_remove_operation& op);
+    static void do_apply(database& db, const wit_banned_remove_operation& op);
+
     static void do_evaluate(database& db, const trust_node_pledge_withdraw_operation& op);
     static void do_apply(database& db, const trust_node_pledge_withdraw_operation& op);
 

@@ -51,6 +51,8 @@ namespace graphene { namespace chain {
          share_type       vote_reward_pool = 0; 
          uint32_t         commission_rate = 0; 
          time_point_sec   commission_update_time;
+         int64_t          previous_missed = 0;
+         bool             is_banned = false;
 
          witness_object() : vote_id(vote_id_type::witness) {}
    };
@@ -90,4 +92,6 @@ FC_REFLECT_DERIVED( graphene::chain::witness_object, (graphene::db::object),
                     (vote_reward_pool)
                     (commission_rate)
                     (commission_update_time)
+                    (previous_missed)
+                    (is_banned)
                   )

@@ -176,6 +176,7 @@ namespace graphene { namespace chain {
        bool     switch_vote_one = false;
        uint32_t set_commission_interval = 60*60*24*7; // 1 week
        uint32_t staking_rewards_vesting_seconds = 60*60; // 1 h
+       uint32_t missed_limit = 50;
    };
    
    typedef fc::ecc::private_key        private_key_type;

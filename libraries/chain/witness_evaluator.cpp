@@ -129,6 +129,31 @@ void_result wit_commission_set_evaluator::do_apply(const wit_commission_set_oper
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
+void_result wit_banned_remove_evaluator::do_evaluate( const wit_banned_remove_operation& op )
+{ try {
+	database& _db = db();
+   trust_node_pledge_helper::do_evaluate(_db, op);
+	FC_ASSERT(_db.get(op.witness).witness_account == op.witness_account);
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result wit_banned_remove_evaluator::do_apply(const wit_banned_remove_operation& op, int32_t billed_cpu_time_us)
+{ try {
+   database& _db = db();
+   _db.modify(
+      _db.get(op.witness),
+      [&op,&_db]( witness_object& wit )
+      {
+         wit.previous_missed = wit.total_missed;
+         wit.is_banned = false;
+      }
+   );
+
+	trust_node_pledge_helper::do_apply(_db, op);
+
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
 void_result trust_node_pledge_withdraw_evaluator::do_evaluate(const trust_node_pledge_withdraw_operation& op)
 { try {
    trust_node_pledge_helper::do_evaluate(db(), op);
