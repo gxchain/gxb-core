@@ -1007,6 +1007,20 @@ vector<vesting_balance_object> database_api_impl::get_vesting_balances( account_
    }
    FC_CAPTURE_AND_RETHROW( (account_id) );
 }
+vector<staking_object> database_api_impl::get_staking_object( account_id_type account_id )const
+{
+    try
+   {
+      vector<staking_object> result;
+      auto staking_range = _db.get_index_type<staking_index>().indices().get<by_owner>().equal_range(account_id);
+      std::for_each(staking_range.first, staking_range.second,
+                    [&result](const staking_object& staking_obj) {
+                       result.emplace_back(staking_obj);
+                    });
+      return result;
+   }
+   FC_CAPTURE_AND_RETHROW( (account_id) );
+}
 
 vector<optional<asset_object>> database_api_impl::get_assets(const vector<asset_id_type>& asset_ids)const
 {
