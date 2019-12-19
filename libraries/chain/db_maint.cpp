@@ -705,6 +705,12 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       perform_account_maintenance(std::tie(fee_helper));
       //distribute the dividend to each voting account
       const auto& staking_objects = get_index_type<staking_index>().indices();
+      //backup witness vote_reward_pool
+      map<witness_id_type,share_type> wit_reward_pools;
+      const auto& witness_objects = get_index_type<witness_index>().indices();
+      for(auto wit_obj:witness_objects){
+         wit_reward_pools[wit_obj.id] = wit_obj.vote_reward_pool;
+      }
       for (const auto &stak_obj : staking_objects) {
          if(stak_obj.is_valid == true){
             //expire
@@ -717,8 +723,10 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
             //calc reward
             const auto& witness_objects = get_index_type<witness_index>().indices();
             auto wit_obj_itor = witness_objects.find(stak_obj.trust_node);
-            if(wit_obj_itor != witness_objects.end() && wit_obj_itor->is_valid == true){
-               share_type voter_pay = wit_obj_itor->vote_reward_pool * stak_obj.amount.amount * stak_obj.weight / wit_obj_itor->total_vote_weights;
+            if(wit_reward_pools.find(stak_obj.trust_node) != wit_reward_pools.end() && 
+                           wit_obj_itor != witness_objects.end() && 
+                           wit_obj_itor->is_valid == true){
+               share_type voter_pay = wit_reward_pools[stak_obj.trust_node] * stak_obj.amount.amount * stak_obj.weight / wit_obj_itor->total_vote_weights;
                voter_pay = std::min(voter_pay, wit_obj_itor->vote_reward_pool);
                if(voter_pay != 0){
                   deposit_staking_cashback(get(stak_obj.owner),voter_pay);
