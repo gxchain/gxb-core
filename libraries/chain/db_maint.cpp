@@ -584,8 +584,9 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                d._witness_count_histogram_buffer[0] = d._total_voting_stake;
                d._committee_count_histogram_buffer[0] = d._total_voting_stake;
             }else{
-               d.modify(wit, [&](witness_object &obj) {;
+               d.modify(wit, [&](witness_object &obj) {
                   obj.is_banned = true;
+                  obj.previous_missed = obj.total_missed;
                });
             }
          } 
