@@ -1265,6 +1265,20 @@ vector<account_id_type> database_api_impl::get_trust_nodes() const
     }
     return result;
 }
+vector<staking_object> database_api_impl::get_voter_records(witness_id_type wit) const
+{
+    try
+   {
+      vector<staking_object> result;
+      auto staking_range = _db.get_index_type<staking_index>().indices().get<by_trust_node>().equal_range(wit);
+      std::for_each(staking_range.first, staking_range.second,
+                    [&result](const staking_object& staking_obj) {
+                       result.emplace_back(staking_obj);
+                    });
+      return result;
+   }
+   FC_CAPTURE_AND_RETHROW( (wit) );
+}
 
 vector<optional<committee_member_object>> database_api_impl::get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const
 {

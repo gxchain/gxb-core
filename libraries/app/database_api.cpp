@@ -467,6 +467,11 @@ vector<account_id_type> database_api::get_trust_nodes() const
     return my->get_trust_nodes();
 }
 
+vector<staking_object> database_api::get_voter_records(witness_id_type wit) const
+{
+    return my->get_voter_records(wit);
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Committee members                                                //
