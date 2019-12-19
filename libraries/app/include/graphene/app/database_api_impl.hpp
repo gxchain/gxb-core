@@ -137,6 +137,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<balance_object> get_balance_objects( const vector<address>& addrs )const;
       vector<asset> get_vested_balances( const vector<balance_id_type>& objs )const;
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
+      vector<staking_object> get_staking_object( account_id_type account_id )const;
 
       // Assets
       vector<optional<asset_object>> get_assets(const vector<asset_id_type>& asset_ids)const;

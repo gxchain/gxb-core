@@ -383,6 +383,11 @@ vector<vesting_balance_object> database_api::get_vesting_balances( account_id_ty
    return my->get_vesting_balances( account_id );
 }
 
+vector<staking_object> database_api::get_staking_object( account_id_type account_id )const
+{
+   return my->get_staking_object( account_id );
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Assets                                                           //
