@@ -118,8 +118,7 @@ void database::update_signing_witness(const witness_object& signing_witness, con
    {
       _dpo.witness_budget -= witness_pay;
    } );
-   if(get_vote_params().switch_vote_one == true){
-      //todo add hardfork????
+   if(head_block_time() > HARDFORK_1025_TIME && get_vote_params().switch_vote_one == true){
       share_type vote_rewards = witness_pay * signing_witness.commission_rate / 1000 ;
       FC_ASSERT(vote_rewards <= witness_pay , "vote_rewards calculation error" );
       share_type witness_rewards = witness_pay - vote_rewards;

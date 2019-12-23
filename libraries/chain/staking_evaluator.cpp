@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2017 gxb
+    Copyright (C) 2019 gxb
 
     This file is part of gxb-core.
 
@@ -79,6 +79,12 @@ object_id_type staking_create_evaluator::do_apply(const staking_create_operation
         obj.is_valid = true;
     });
     _db.adjust_balance(op.owner, -op.amount); // adjust balance
+
+    _db.modify(op.owner, [&](staking_object& obj) {
+        prev_trust_node = obj.trust_node;
+        prev_vote_weights = obj.amount.amount * obj.weight;
+        obj.trust_node = op.trust_node;
+    });
 
     // adjust trust node total_vote_weight
     const auto& witness_objects = _db.get_index_type<witness_index>().indices();
