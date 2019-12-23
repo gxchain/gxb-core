@@ -49,6 +49,7 @@
 #include <graphene/chain/protocol/loyalty_ops.hpp>
 #include <graphene/chain/protocol/proxy_transfer_ops.hpp>
 #include <graphene/chain/protocol/contract_ops.hpp>
+#include <graphene/chain/protocol/staking_ops.hpp>
 
 namespace graphene { namespace chain {
 
@@ -137,7 +138,12 @@ namespace graphene { namespace chain {
             contract_update_operation, //76
             trust_node_pledge_withdraw_operation, //77
             inline_transfer_operation, //78
-            inter_contract_call_operation //79
+            inter_contract_call_operation, //79
+            staking_create_operation,//80
+            staking_update_operation,//81
+            staking_claim_operation,//82
+            wit_commission_set_operation,//83
+            wit_banned_remove_operation//84
          > operation;
 
    /// @} // operations group

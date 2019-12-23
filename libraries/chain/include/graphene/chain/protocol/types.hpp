@@ -164,6 +164,21 @@ namespace graphene { namespace chain {
        vector< pair<fc::string, interest_rate_t> > params;
    };
 
+   struct staking_weight_t {
+       uint32_t staking_days = 0;
+       uint32_t weight = 0;
+       bool is_valid = false;
+   };
+   struct staking_params_t {
+       vector< pair<fc::string, staking_weight_t> > params;
+   };
+   struct vote_params_t {
+       bool     switch_vote_one = false;
+       uint32_t set_commission_interval = 60*60*24*7; // 1 week
+       uint32_t staking_rewards_vesting_seconds = 60*60; // 1 h
+       uint32_t missed_limit = 100000;
+   };
+   
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
 
@@ -335,7 +350,8 @@ namespace graphene { namespace chain {
       index256_object_type,
       index_double_object_type,
       index_long_double_object_type,
-      impl_trx_entry_history_object_type
+      impl_trx_entry_history_object_type,
+      impl_staking_object_type,
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -419,6 +435,7 @@ namespace graphene { namespace chain {
    class table_id_object;
    class key_value_object;
    class trx_entry_object;
+   class staking_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -446,7 +463,7 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_table_id_object_type, table_id_object>        table_id_object_id_type;
    typedef object_id< implementation_ids, impl_key_value_object_type, key_value_object>      key_value_object_id_type;
    typedef object_id< implementation_ids, impl_trx_entry_history_object_type, trx_entry_object> trx_entry_object_id_type;
-
+   typedef object_id< implementation_ids, impl_staking_object_type, staking_object>       staking_id_type;
 
    //typedef object_id< implementation_ids, impl_search_results_object_type,search_results_object<DerivedClass>>          search_results_id_type;
 
@@ -618,6 +635,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (index_double_object_type)
                  (index_long_double_object_type)
                  (impl_trx_entry_history_object_type)
+                 (impl_staking_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -669,6 +687,7 @@ FC_REFLECT_TYPENAME( graphene::chain::signature_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::table_id_object_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::key_value_object_id_type)
 FC_REFLECT_TYPENAME( graphene::chain::trx_entry_object_id_type)
+FC_REFLECT_TYPENAME( graphene::chain::staking_id_type)
 
 FC_REFLECT(graphene::chain::void_t, )
 FC_REFLECT(graphene::chain::operation_ext_version_t, (version))
@@ -678,10 +697,13 @@ FC_REFLECT(graphene::chain::pocs_threshold_league_t, (pocs_thresholds)(fee_bases
 FC_REFLECT(graphene::chain::pocs_threshold_league_data_product_t, (pocs_threshold))
 FC_REFLECT(graphene::chain::interest_rate_t, (lock_days)(interest_rate)(is_valid))
 FC_REFLECT(graphene::chain::lock_balance_params_t, (params))
+FC_REFLECT(graphene::chain::staking_weight_t, (staking_days)(weight)(is_valid))
+FC_REFLECT(graphene::chain::staking_params_t, (params))
 FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
 FC_REFLECT(graphene::chain::asset_symbol_t, (symbol))
 FC_REFLECT(graphene::chain::trust_node_pledge_t, (amount))
 FC_REFLECT(graphene::chain::inter_contract_calling_params_t, (max_inter_contract_depth)(contract_basic_fee_vesting_period_seconds)(max_inline_action_size))
+FC_REFLECT(graphene::chain::vote_params_t, (switch_vote_one)(set_commission_interval)(staking_rewards_vesting_seconds))
 
 
 FC_REFLECT_ENUM(graphene::chain::asset_issuer_permission_flags,

@@ -291,6 +291,21 @@ struct get_impacted_account_visitor
        _impacted.insert(op.sender_contract);
        _impacted.insert(op.contract_id);
    }
+   void operator() (const staking_create_operation& op) {
+       _impacted.insert(op.owner);
+   }
+   void operator() (const staking_update_operation& op) {
+       _impacted.insert(op.owner);
+   }
+   void operator() (const staking_claim_operation& op) {
+       _impacted.insert(op.owner);
+   }
+   void operator() (const wit_commission_set_operation& op) {
+       _impacted.insert(op.witness_account);
+   }
+   void operator() (const wit_banned_remove_operation& op) {
+       _impacted.insert(op.witness_account);
+   }
 };
 
 void graphene::chain::operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
@@ -398,7 +413,7 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
             break;
         } case trust_node_pledge_object_type: {
             break;
-        }
+        } 
       }
    }
    else if( obj->id.space() == implementation_ids )
@@ -478,6 +493,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
              case index_long_double_object_type:
               break;
              case impl_trx_entry_history_object_type:
+              break;
+             case impl_staking_object_type:
               break;
       }
 
