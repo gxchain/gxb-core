@@ -357,7 +357,6 @@ void database::process_budget()
       share_type witness_budget = gpo.parameters.witness_pay_per_block.value * blocks_to_maint;
       rec.requested_witness_budget = witness_budget;
       witness_budget = std::min(witness_budget, available_funds);
-      ilog( "witness_budget: ${wb} ", ("wb", witness_budget) );
       rec.witness_budget = witness_budget;
       available_funds -= witness_budget;
 
@@ -701,7 +700,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
          a.statistics(d).process_fees(a, d);
       }
    } fee_helper(*this, gpo);
-   if (get_vote_params().switch_vote_one == true) {
+   if (head_block_time() > HARDFORK_1025_TIME && get_vote_params().switch_vote_one == true) {
       tally_helper.statistical_vote_weight();
       perform_account_maintenance(std::tie(fee_helper));
       //distribute the dividend to each voting account
