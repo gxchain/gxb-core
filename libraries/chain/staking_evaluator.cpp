@@ -56,8 +56,8 @@ void_result staking_create_evaluator::do_evaluate(const staking_create_operation
     int32_t delta_seconds = op.create_date_time.sec_since_epoch() - _db.head_block_time().sec_since_epoch();
     FC_ASSERT(std::fabs(delta_seconds) <= STAKING_EXPIRED_TIME, "create_date_time expired");
 
-    auto& staking_objects = _db.get_index_type<staking_index>().indices().get<by_owner>();
-    FC_ASSERT(staking_objects.size() <= _db.get_vote_params().max_num_mortgages, "mortgages have reached their maximum number");
+    auto staking_ranges = _db.get_index_type<staking_index>().indices().get<by_owner>().equal_range(op.owner);
+    FC_ASSERT(std::distance(staking_ranges.first, staking_ranges.second) < _db.get_vote_params().max_num_mortgages, "mortgages have reached their maximum number");
 
     // check trust_node account
     const auto& witness_objects = _db.get_index_type<witness_index>().indices();
