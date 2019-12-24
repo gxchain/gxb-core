@@ -3465,7 +3465,127 @@
           tx.validate();
           return sign_transaction(tx, broadcast);
        }
+       signed_transaction staking_create(
+          account_id_type owner,
+          asset amount,
+          witness_id_type wit_id,
+          string program_id,
+          uint32_t weight,
+          uint32_t days,
+          bool broadcast
+        )
+       {
+          staking_create_operation sc_op;
+          sc_op.owner = owner;
+          sc_op.trust_node = wit_id;
+          sc_op.create_date_time = fc::time_point_sec(fc::time_point::now());
+          sc_op.program_id = program_id;
+          sc_op.weight = weight;
+          sc_op.staking_days = days;
+          signed_transaction tx;
+          tx.operations.push_back(sc_op);
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              auto fee_asset_obj = find_asset(asset_id_type(1));
+              set_operation_fees(tx, get_global_properties().parameters.current_fees, fee_asset_obj);
+          } else {
+              set_operation_fees(tx, get_global_properties().parameters.current_fees);
+          }
+          tx.validate();
+          return sign_transaction(tx, broadcast);
+       }
+       signed_transaction staking_update(
+          account_id_type owner,
+          staking_id_type stak_id,
+          witness_id_type wit_id,                    
+          bool broadcast
+        )
+       {
+          staking_update_operation su_op;
+          su_op.owner = owner;
+          su_op.trust_node = wit_id;
+          su_op.staking_id = stak_id;
 
+          signed_transaction tx;
+          tx.operations.push_back(su_op);
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              auto fee_asset_obj = find_asset(asset_id_type(1));
+              set_operation_fees(tx, get_global_properties().parameters.current_fees, fee_asset_obj);
+          } else {
+              set_operation_fees(tx, get_global_properties().parameters.current_fees);
+          }
+          tx.validate();
+          return sign_transaction(tx, broadcast);
+       }
+       signed_transaction staking_unlock(
+          account_id_type owner,
+          staking_id_type stak_id,                   
+          bool broadcast
+        )
+       {
+          staking_claim_operation sul_op;
+          sul_op.owner = owner;
+          sul_op.staking_id = stak_id;
+          
+          signed_transaction tx;
+          tx.operations.push_back(sul_op);
+          if (get_dynamic_global_properties().time > HARDFORK_1008_TIME) {
+              auto fee_asset_obj = find_asset(asset_id_type(1));
+              set_operation_fees(tx, get_global_properties().parameters.current_fees, fee_asset_obj);
+          } else {
+              set_operation_fees(tx, get_global_properties().parameters.current_fees);
+          }
+          tx.validate();
+          return sign_transaction(tx, broadcast);
+       }
+       signed_transaction wit_set_commission(
+          string witness_name,
+          uint32_t commission_rate,
+          string fee_asset_symbol,
+          bool broadcast
+        )
+       {
+          try {
+          asset_object fee_asset_obj = get_asset(fee_asset_symbol);
+          witness_object witness = get_witness(witness_name);
+          account_object witness_account = get_account( witness.witness_account );
+
+          wit_commission_set_operation wit_commission_set_op;
+          wit_commission_set_op.witness = witness.id;
+          wit_commission_set_op.witness_account = witness_account.id;
+          wit_commission_set_op.commission_rate = commission_rate;
+          wit_commission_set_op.commission_update_time = fc::time_point_sec(fc::time_point::now());
+
+          signed_transaction tx;
+          tx.operations.push_back( wit_commission_set_op );
+          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+          tx.validate();
+
+          return sign_transaction( tx, broadcast );
+          } FC_CAPTURE_AND_RETHROW( (witness_name)(commission_rate)(broadcast) )
+       }
+       signed_transaction wit_remove_banned(
+          string witness_name,
+          string fee_asset_symbol,
+          bool broadcast
+        )
+       {
+          try {
+          asset_object fee_asset_obj = get_asset(fee_asset_symbol);
+          witness_object witness = get_witness(witness_name);
+          account_object witness_account = get_account( witness.witness_account );
+
+          wit_banned_remove_operation wit_banned_remove_op;
+          wit_banned_remove_op.witness = witness.id;
+          wit_banned_remove_op.witness_account = witness_account.id;
+
+          signed_transaction tx;
+          tx.operations.push_back( wit_banned_remove_op );
+          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
+          tx.validate();
+
+          return sign_transaction( tx, broadcast );
+          } FC_CAPTURE_AND_RETHROW( (witness_name)(broadcast) )
+       }
        void dbg_make_uia(string creator, string symbol)
        {
           asset_options opts;
@@ -5099,7 +5219,52 @@
     {
        return my->approve_proposal( fee_paying_account, proposal_id, delta, broadcast );
     }
-
+    signed_transaction wallet_api::staking_create(
+        account_id_type owner,
+        asset amount,
+        witness_id_type wit_id,
+        string program_id,
+        uint32_t weigth,
+        uint32_t days,
+        bool broadcast
+        )
+    {
+       return my->staking_create(owner,amount,wit_id,program_id,weigth,days,broadcast);
+    }
+    signed_transaction wallet_api::staking_update(
+        account_id_type owner,
+        staking_id_type stak_id,
+        witness_id_type wit_id,                    
+        bool broadcast
+        )
+    {
+       return my->staking_update(owner,stak_id,wit_id,broadcast);
+    }
+    signed_transaction wallet_api::staking_unlock(
+        account_id_type owner,
+        staking_id_type stak_id,
+        bool broadcast
+        )
+    {
+       return my->staking_unlock(owner,stak_id,broadcast);
+    }
+    signed_transaction wallet_api::wit_set_commission(
+          string witness_name,
+          uint32_t commission_rate,
+          string fee_asset_symbol,
+          bool broadcast
+        )
+    {
+       return my->wit_set_commission(witness_name,commission_rate,fee_asset_symbol,broadcast);
+    }
+    signed_transaction wallet_api::wit_remove_banned(
+          string witness_name,
+          string fee_asset_symbol,
+          bool broadcast
+       )
+    {
+       return my->wit_remove_banned(witness_name,fee_asset_symbol,broadcast);
+    }
     global_property_object wallet_api::get_global_properties() const
     {
        return my->get_global_properties();

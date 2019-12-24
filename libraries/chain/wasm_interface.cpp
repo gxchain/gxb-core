@@ -223,7 +223,7 @@ class global_api : public context_aware_api
         if (context.db().head_block_time() <= HARDFORK_1023_TIME) {
             FC_ASSERT(false, "get_asset_precision can not be used");
         }
-        FC_ASSERT(datalen >= 0, "datalen must >= 0");
+        FC_ASSERT(datalen > 0, "datalen must > 0");
         std::string symbol(data,datalen);
         const auto& idx = context.db().get_index_type<asset_index>().indices().get<by_symbol>();
         auto itr = idx.find(symbol);

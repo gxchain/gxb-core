@@ -567,7 +567,29 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
         	 d._vote_id_valid[committee_itr->vote_id.instance()] = committee_itr->is_valid;
          }
       }
-
+      bool check_block_missed(const witness_object &wit){
+         if(wit.total_missed < wit.previous_missed || wit.is_banned) return false;
+         return wit.total_missed - wit.previous_missed <= d.get_vote_params().missed_limit ||  wit.previous_missed == 0;
+      }
+      void statistical_vote_weight(){
+         const auto& all_witnesses = d.get_index_type<witness_index>().indices();
+         for (const witness_object &wit : all_witnesses) {
+            if(check_block_missed(wit)){
+               d.modify(wit, [&](witness_object &obj) {
+                  d._vote_tally_buffer[wit.vote_id] = wit.total_vote_weights.value;
+                  d._total_voting_stake += wit.total_vote_weights.value;
+                  obj.previous_missed = obj.total_missed;
+               });
+               d._witness_count_histogram_buffer[0] = d._total_voting_stake;
+               d._committee_count_histogram_buffer[0] = d._total_voting_stake;
+            }else{
+               d.modify(wit, [&](witness_object &obj) {
+                  obj.is_banned = true;
+                  obj.previous_missed = obj.total_missed;
+               });
+            }
+         } 
+      }
       void operator()(const account_object& stake_account) {
          if( props.parameters.count_non_member_votes || stake_account.is_member(d.head_block_time()) )
          {
@@ -678,12 +700,50 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
          a.statistics(d).process_fees(a, d);
       }
    } fee_helper(*this, gpo);
-
-   perform_account_maintenance(std::tie(
-      tally_helper,
-      fee_helper
-      ));
-
+   if (head_block_time() > HARDFORK_1025_TIME && get_vote_params().switch_vote_one == true) {
+      tally_helper.statistical_vote_weight();
+      perform_account_maintenance(std::tie(fee_helper));
+      //distribute the dividend to each voting account
+      const auto& staking_objects = get_index_type<staking_index>().indices();
+      //backup witness vote_reward_pool
+      map<witness_id_type,share_type> wit_reward_pools;
+      const auto& witness_objects = get_index_type<witness_index>().indices();
+      for(auto wit_obj:witness_objects){
+         wit_reward_pools[wit_obj.id] = wit_obj.vote_reward_pool;
+      }
+      for (const auto &stak_obj : staking_objects) {
+         if(stak_obj.is_valid == true){
+            //expire
+            uint32_t past_days = (head_block_time().sec_since_epoch() - stak_obj.create_date_time.sec_since_epoch()) / SECONDS_PER_DAY;
+            if(stak_obj.staking_days < past_days){
+               modify(stak_obj, [&](staking_object &obj) {
+                  obj.is_valid = false;
+               });
+            } 
+            //calc reward
+            const auto& witness_objects = get_index_type<witness_index>().indices();
+            auto wit_obj_itor = witness_objects.find(stak_obj.trust_node);
+            if(wit_reward_pools.find(stak_obj.trust_node) != wit_reward_pools.end() && 
+                           wit_obj_itor != witness_objects.end() && 
+                           wit_obj_itor->is_valid == true){
+               share_type voter_pay = wit_reward_pools[stak_obj.trust_node] * stak_obj.amount.amount * stak_obj.weight / wit_obj_itor->total_vote_weights;
+               voter_pay = std::min(voter_pay, wit_obj_itor->vote_reward_pool);
+               if(voter_pay != 0){
+                  deposit_staking_cashback(get(stak_obj.owner),voter_pay);
+                  modify(*wit_obj_itor, [&](witness_object &obj) {
+                     obj.vote_reward_pool -= voter_pay;
+                  });
+               }
+            }
+         }
+      } 
+   }
+   else {
+      perform_account_maintenance(std::tie(
+         tally_helper,
+         fee_helper
+         ));
+   }
    struct clear_canary {
       clear_canary(vector<uint64_t>& target): target(target){}
       ~clear_canary() { target.clear(); }
