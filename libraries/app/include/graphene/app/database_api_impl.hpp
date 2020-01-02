@@ -153,7 +153,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       uint64_t get_witness_count()const;
 
       vector<account_id_type> get_trust_nodes() const;
-      vector<staking_object> get_voter_records(witness_id_type wit) const;
+      votes_records_result get_votes_records(witness_id_type wit,staking_id_type start,uint32_t limit) const;
 
       // Committee members
       vector<optional<committee_member_object>> get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const;

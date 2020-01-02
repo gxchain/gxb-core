@@ -45,10 +45,16 @@ struct get_table_rows_params {
     std::string index_position = "1"; // 1 - primary (first), 2 - secondary index (in order defined by multi_index), 3 - third index, etc
     optional<bool> reverse = false;
 };
+struct votes_records_result{
+   vector<staking_object> records;
+   bool                   more = false;
+   staking_id_type        next_id;
+};
 }} //
 
 FC_REFLECT( graphene::app::order, (price)(quote)(base) );
 FC_REFLECT( graphene::app::get_table_rows_result, (rows)(more) );
 FC_REFLECT( graphene::app::get_table_rows_params, (lower_bound)(upper_bound)(limit)(index_position)(reverse));
+FC_REFLECT( graphene::app::votes_records_result, (records)(more)(next_id) );
 
 

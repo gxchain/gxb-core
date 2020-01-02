@@ -1265,19 +1265,29 @@ vector<account_id_type> database_api_impl::get_trust_nodes() const
     }
     return result;
 }
-vector<staking_object> database_api_impl::get_voter_records(witness_id_type wit) const
+votes_records_result database_api_impl::get_votes_records(witness_id_type wit,staking_id_type start,uint32_t limit) const
 {
     try
    {
-      vector<staking_object> result;
-      auto staking_range = _db.get_index_type<staking_index>().indices().get<by_trust_node>().equal_range(wit);
-      std::for_each(staking_range.first, staking_range.second,
-                    [&result](const staking_object& staking_obj) {
-                       result.emplace_back(staking_obj);
-                    });
+      FC_ASSERT( limit <= 100 );
+      votes_records_result result;
+      const auto& trust_idx = _db.get_index_type<staking_index>().indices().get<by_trust_node>();
+      auto start_iter = trust_idx.lower_bound(boost::make_tuple(wit, start));
+      uint32_t count = 0;
+      for(auto iter = start_iter; ; iter++,count++ ){
+          if(iter == trust_idx.end()){
+            break;
+          }
+          if(count >=limit){
+            result.next_id = iter->id;
+            result.more = true;
+            break;
+          }
+          result.records.emplace_back(*iter);      
+      }
       return result;
    }
-   FC_CAPTURE_AND_RETHROW( (wit) );
+   FC_CAPTURE_AND_RETHROW( (wit)(start)(limit) );
 }
 
 vector<optional<committee_member_object>> database_api_impl::get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const
