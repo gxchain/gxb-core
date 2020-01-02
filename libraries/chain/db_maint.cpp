@@ -580,8 +580,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                   d._total_voting_stake += wit.total_vote_weights.value;
                   obj.previous_missed = obj.total_missed;
                });
-               d._witness_count_histogram_buffer[0] = d._total_voting_stake;
-               d._committee_count_histogram_buffer[0] = d._total_voting_stake;
             }else{
                d.modify(wit, [&](witness_object &obj) {
                   obj.is_banned = true;
@@ -589,6 +587,8 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                });
             }
          } 
+         d._witness_count_histogram_buffer[0] = d._total_voting_stake;
+         d._committee_count_histogram_buffer[0] = d._total_voting_stake;
       }
       void operator()(const account_object& stake_account) {
          if( props.parameters.count_non_member_votes || stake_account.is_member(d.head_block_time()) )
@@ -713,13 +713,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       }
       for (const auto &stak_obj : staking_objects) {
          if(stak_obj.is_valid == true){
-            //expire
-            uint32_t past_days = (head_block_time().sec_since_epoch() - stak_obj.create_date_time.sec_since_epoch()) / SECONDS_PER_DAY;
-            if(stak_obj.staking_days < past_days){
-               modify(stak_obj, [&](staking_object &obj) {
-                  obj.is_valid = false;
-               });
-            } 
             //calc reward
             const auto& witness_objects = get_index_type<witness_index>().indices();
             auto wit_obj_itor = witness_objects.find(stak_obj.trust_node);
@@ -728,12 +721,24 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                            wit_obj_itor->is_valid == true){
                share_type voter_pay = wit_reward_pools[stak_obj.trust_node] * stak_obj.amount.amount * stak_obj.weight / wit_obj_itor->total_vote_weights;
                voter_pay = std::min(voter_pay, wit_obj_itor->vote_reward_pool);
-               if(voter_pay != 0){
+               if(voter_pay != 0){ // > 0
                   deposit_staking_cashback(get(stak_obj.owner),voter_pay);
                   modify(*wit_obj_itor, [&](witness_object &obj) {
                      obj.vote_reward_pool -= voter_pay;
                   });
                }
+               //expire
+               if(stak_obj.staking_days * SECONDS_PER_DAY < (head_block_time().sec_since_epoch() - stak_obj.create_date_time.sec_since_epoch())){
+                  modify(stak_obj, [&](staking_object &obj) {
+                     obj.is_valid = false;
+                  });
+                  //reduce witness total_vote_weights;
+                  modify(*wit_obj_itor, [&](witness_object& obj) {
+                     share_type total_vote_weights = stak_obj.amount.amount * stak_obj.weight;
+                     share_type reduse_vote_weights = std::min(total_vote_weights, obj.total_vote_weights);
+                     obj.total_vote_weights -= reduse_vote_weights;
+                  });
+               } 
             }
          }
       } 

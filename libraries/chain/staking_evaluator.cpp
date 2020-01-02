@@ -103,8 +103,7 @@ void_result staking_update_evaluator::do_evaluate(const staking_update_operation
     auto stak_itor  = staking_objects.find(op.staking_id);
     FC_ASSERT(stak_itor != staking_objects.end(), "invalid staking_id ${id}",("id",op.staking_id));
     // T+1 mode
-    uint32_t past_days = (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()) / SECONDS_PER_DAY;
-    FC_ASSERT(stak_itor->staking_days > past_days, "staking expired yet");
+    FC_ASSERT(stak_itor->staking_days * SECONDS_PER_DAY > (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()), "staking expired yet");
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -146,8 +145,7 @@ void_result staking_claim_evaluator::do_evaluate(const staking_claim_operation& 
     auto stak_itor  = staking_objects.find(op.staking_id);
     FC_ASSERT(stak_itor != staking_objects.end(), "invalid staking_id ${id}",("id",op.staking_id));
     // T+1 mode
-    uint32_t past_days = (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()) / SECONDS_PER_DAY;
-    FC_ASSERT(stak_itor->staking_days <= past_days, "claim timepoint has not arrived yet");
+    FC_ASSERT(stak_itor->staking_days * SECONDS_PER_DAY < (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()), "claim timepoint has not arrived yet");
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -157,14 +155,6 @@ void_result staking_claim_evaluator::do_apply(const staking_claim_operation& op,
 
     const auto& staking_objects = _db.get_index_type<staking_index>().indices();
     auto stak_itor  = staking_objects.find(op.staking_id);
-    // reduce the number of votes received on the previous node
-    const auto& witness_objects = _db.get_index_type<witness_index>().indices();
-    auto prev_wit_itor  = witness_objects.find(stak_itor->trust_node);
-    _db.modify(*prev_wit_itor, [&](witness_object& obj) {
-        share_type prev_vote_weights = stak_itor->amount.amount * stak_itor->weight;
-        FC_ASSERT(obj.total_vote_weights >= prev_vote_weights, "the vote statistics are wrong");
-        obj.total_vote_weights -= prev_vote_weights;
-    });
     _db.adjust_balance(op.owner, stak_itor->amount); // adjust balance
     _db.remove(*stak_itor);
     return void_result();
