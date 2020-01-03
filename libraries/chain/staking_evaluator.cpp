@@ -108,7 +108,7 @@ void_result staking_update_evaluator::do_evaluate(const staking_update_operation
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result staking_update_evaluator::do_apply(const staking_update_operation& op, int32_t billed_cpu_time_us)
+operation_result staking_update_evaluator::do_apply(const staking_update_operation& op, int32_t billed_cpu_time_us)
 { try {
     database& _db = db();
     // modify staking object "trust_node" field
@@ -134,7 +134,7 @@ void_result staking_update_evaluator::do_apply(const staking_update_operation& o
         obj.total_vote_weights += prev_vote_weights;
     });
 
-    return void_result();
+    return prev_wit_itor->id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 void_result staking_claim_evaluator::do_evaluate(const staking_claim_operation& op)
@@ -149,7 +149,7 @@ void_result staking_claim_evaluator::do_evaluate(const staking_claim_operation& 
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result staking_claim_evaluator::do_apply(const staking_claim_operation& op, int32_t billed_cpu_time_us)
+operation_result staking_claim_evaluator::do_apply(const staking_claim_operation& op, int32_t billed_cpu_time_us)
 { try {
     database& _db = db();
 
@@ -157,6 +157,6 @@ void_result staking_claim_evaluator::do_apply(const staking_claim_operation& op,
     auto stak_itor  = staking_objects.find(op.staking_id);
     _db.adjust_balance(op.owner, stak_itor->amount); // adjust balance
     _db.remove(*stak_itor);
-    return void_result();
+    return stak_itor->amount;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 } } // namespace graphene::chain

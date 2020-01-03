@@ -42,7 +42,7 @@ public:
     typedef staking_update_operation operation_type;
 
     void_result do_evaluate(const staking_update_operation& op);
-    void_result do_apply(const staking_update_operation& op, int32_t billed_cpu_time_us = 0);
+    operation_result do_apply(const staking_update_operation& op, int32_t billed_cpu_time_us = 0);
 
 };
 
@@ -52,7 +52,7 @@ public:
     typedef staking_claim_operation operation_type;
 
     void_result do_evaluate(const staking_claim_operation& op);
-    void_result do_apply(const staking_claim_operation& op, int32_t billed_cpu_time_us = 0);
+    operation_result do_apply(const staking_claim_operation& op, int32_t billed_cpu_time_us = 0);
 
 };
 
