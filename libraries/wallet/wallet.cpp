@@ -3478,7 +3478,6 @@
           staking_create_operation sc_op;
           sc_op.owner = owner;
           sc_op.trust_node = wit_id;
-          sc_op.create_date_time = fc::time_point_sec(fc::time_point::now());
           sc_op.program_id = program_id;
           sc_op.weight = weight;
           sc_op.amount = amount;
