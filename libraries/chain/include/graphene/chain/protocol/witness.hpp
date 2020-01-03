@@ -87,7 +87,6 @@ namespace graphene { namespace chain {
       /// The account which owns the witness. This account pays the fee for this operation.
       account_id_type   witness_account;
       uint32_t          commission_rate;  // range[0,1000]
-      time_point_sec    commission_update_time; 
       extensions_type   extensions;
 
       account_id_type fee_payer()const { return witness_account; }
@@ -144,7 +143,7 @@ FC_REFLECT( graphene::chain::witness_update_operation::fee_parameters_type, (fee
 FC_REFLECT( graphene::chain::witness_update_operation, (fee)(witness)(witness_account)(new_url)(new_signing_key) )
 
 FC_REFLECT( graphene::chain::wit_commission_set_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::wit_commission_set_operation, (fee)(witness)(witness_account)(commission_rate)(commission_update_time)(extensions) )
+FC_REFLECT( graphene::chain::wit_commission_set_operation, (fee)(witness)(witness_account)(commission_rate)(extensions) )
 
 FC_REFLECT( graphene::chain::wit_banned_remove_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::wit_banned_remove_operation, (fee)(witness)(witness_account)(extensions) )

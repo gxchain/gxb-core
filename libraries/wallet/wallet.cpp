@@ -3554,7 +3554,6 @@
           wit_commission_set_op.witness = witness.id;
           wit_commission_set_op.witness_account = witness_account.id;
           wit_commission_set_op.commission_rate = commission_rate;
-          wit_commission_set_op.commission_update_time = fc::time_point_sec(fc::time_point::now());
 
           signed_transaction tx;
           tx.operations.push_back( wit_commission_set_op );
