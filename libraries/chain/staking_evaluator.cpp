@@ -51,8 +51,6 @@ void_result staking_create_evaluator::do_evaluate(const staking_create_operation
 
     uint32_t staking_days = iter_param->second.staking_days;
     FC_ASSERT(staking_days == op.staking_days, "input staking days invalid");
-    int32_t delta_seconds = op.create_date_time.sec_since_epoch() - _db.head_block_time().sec_since_epoch();
-    FC_ASSERT(std::fabs(delta_seconds) <= STAKING_EXPIRED_TIME, "create_date_time expired");
 
     auto staking_ranges = _db.get_index_type<staking_index>().indices().get<by_owner>().equal_range(op.owner);
     FC_ASSERT(std::distance(staking_ranges.first, staking_ranges.second) < _db.get_vote_params().max_num_mortgages, "mortgages have reached their maximum number");
@@ -71,7 +69,7 @@ object_id_type staking_create_evaluator::do_apply(const staking_create_operation
     database& _db = db();
     const auto& new_object = _db.create<staking_object>([&](staking_object& obj){
         obj.owner = op.owner;
-        obj.create_date_time = op.create_date_time;
+        obj.create_date_time = _db.head_block_time();
         obj.staking_days = op.staking_days;
         obj.program_id = op.program_id;
         obj.amount = op.amount;
@@ -103,13 +101,12 @@ void_result staking_update_evaluator::do_evaluate(const staking_update_operation
     auto stak_itor  = staking_objects.find(op.staking_id);
     FC_ASSERT(stak_itor != staking_objects.end(), "invalid staking_id ${id}",("id",op.staking_id));
     // T+1 mode
-    uint32_t past_days = (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()) / SECONDS_PER_DAY;
-    FC_ASSERT(stak_itor->staking_days > past_days, "staking expired yet");
+    FC_ASSERT(stak_itor->staking_days * SECONDS_PER_DAY > (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()), "staking expired yet");
 
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result staking_update_evaluator::do_apply(const staking_update_operation& op, int32_t billed_cpu_time_us)
+operation_result staking_update_evaluator::do_apply(const staking_update_operation& op, int32_t billed_cpu_time_us)
 { try {
     database& _db = db();
     // modify staking object "trust_node" field
@@ -135,7 +132,7 @@ void_result staking_update_evaluator::do_apply(const staking_update_operation& o
         obj.total_vote_weights += prev_vote_weights;
     });
 
-    return void_result();
+    return prev_wit_itor->id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 void_result staking_claim_evaluator::do_evaluate(const staking_claim_operation& op)
@@ -146,27 +143,18 @@ void_result staking_claim_evaluator::do_evaluate(const staking_claim_operation& 
     auto stak_itor  = staking_objects.find(op.staking_id);
     FC_ASSERT(stak_itor != staking_objects.end(), "invalid staking_id ${id}",("id",op.staking_id));
     // T+1 mode
-    uint32_t past_days = (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()) / SECONDS_PER_DAY;
-    FC_ASSERT(stak_itor->staking_days <= past_days, "claim timepoint has not arrived yet");
+    FC_ASSERT(stak_itor->staking_days * SECONDS_PER_DAY < (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()), "claim timepoint has not arrived yet");
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result staking_claim_evaluator::do_apply(const staking_claim_operation& op, int32_t billed_cpu_time_us)
+operation_result staking_claim_evaluator::do_apply(const staking_claim_operation& op, int32_t billed_cpu_time_us)
 { try {
     database& _db = db();
 
     const auto& staking_objects = _db.get_index_type<staking_index>().indices();
     auto stak_itor  = staking_objects.find(op.staking_id);
-    // reduce the number of votes received on the previous node
-    const auto& witness_objects = _db.get_index_type<witness_index>().indices();
-    auto prev_wit_itor  = witness_objects.find(stak_itor->trust_node);
-    _db.modify(*prev_wit_itor, [&](witness_object& obj) {
-        share_type prev_vote_weights = stak_itor->amount.amount * stak_itor->weight;
-        FC_ASSERT(obj.total_vote_weights >= prev_vote_weights, "the vote statistics are wrong");
-        obj.total_vote_weights -= prev_vote_weights;
-    });
     _db.adjust_balance(op.owner, stak_itor->amount); // adjust balance
     _db.remove(*stak_itor);
-    return void_result();
+    return stak_itor->amount;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 } } // namespace graphene::chain

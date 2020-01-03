@@ -50,12 +50,15 @@ namespace graphene { namespace chain {
      /**
      * @ingroup object_index
      */
-     typedef multi_index_container<
-        staking_object,indexed_by<
-            ordered_unique<tag<by_id>,member<object,object_id_type,&object::id>>,
-            ordered_non_unique<tag<by_owner>,member<staking_object,account_id_type,&staking_object::owner>>,
-            ordered_non_unique<tag<by_trust_node>,member<staking_object,witness_id_type, &staking_object::trust_node>>> 
-     > staking_multi_index_type;
+     using staking_multi_index_type = multi_index_container<
+         staking_object, indexed_by<
+                             ordered_unique<tag<by_id>, member<object, object_id_type, &object::id>>,
+                             ordered_non_unique<tag<by_owner>, member<staking_object, account_id_type, &staking_object::owner>>,
+                             ordered_non_unique<tag<by_trust_node>,
+                                                composite_key<
+                                                    staking_object,
+                                                    member<staking_object, witness_id_type, &staking_object::trust_node>,
+                                                    member<object, object_id_type, &object::id>>>>>;
 
      typedef generic_index<staking_object, staking_multi_index_type> staking_index;
 

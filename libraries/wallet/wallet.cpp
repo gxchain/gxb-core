@@ -3478,7 +3478,6 @@
           staking_create_operation sc_op;
           sc_op.owner = owner;
           sc_op.trust_node = wit_id;
-          sc_op.create_date_time = fc::time_point_sec(fc::time_point::now());
           sc_op.program_id = program_id;
           sc_op.weight = weight;
           sc_op.amount = amount;
@@ -3554,7 +3553,6 @@
           wit_commission_set_op.witness = witness.id;
           wit_commission_set_op.witness_account = witness_account.id;
           wit_commission_set_op.commission_rate = commission_rate;
-          wit_commission_set_op.commission_update_time = fc::time_point_sec(fc::time_point::now());
 
           signed_transaction tx;
           tx.operations.push_back( wit_commission_set_op );

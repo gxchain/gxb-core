@@ -104,9 +104,7 @@ void_result wit_commission_set_evaluator::do_evaluate( const wit_commission_set_
 	FC_ASSERT(_db.get(op.witness).witness_account == op.witness_account);
    trust_node_pledge_helper::do_evaluate(_db, op);
    FC_ASSERT(op.commission_rate >= 0 && op.commission_rate <= 1000);
-   // TODO check commission_rate update time
    auto &wit_itor = _db.get(op.witness);
-   const auto& gpo = _db.get_global_properties();
    int32_t delta_seconds = _db.head_block_time().sec_since_epoch() - wit_itor.commission_update_time.sec_since_epoch();
    FC_ASSERT(std::fabs(delta_seconds) >= _db.get_vote_params().set_commission_interval, "the modification time is not yet up");
    return void_result();
@@ -142,7 +140,7 @@ void_result wit_banned_remove_evaluator::do_apply(const wit_banned_remove_operat
    database& _db = db();
    _db.modify(
       _db.get(op.witness),
-      [&op,&_db]( witness_object& wit )
+      [&]( witness_object& wit )
       {
          wit.previous_missed = wit.total_missed;
          wit.is_banned = false;
