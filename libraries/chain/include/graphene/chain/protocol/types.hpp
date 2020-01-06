@@ -178,6 +178,9 @@ namespace graphene { namespace chain {
        uint32_t staking_rewards_vesting_seconds = 60*60; // 1 h
        uint32_t missed_limit = 100000;
        uint32_t max_num_mortgages = 10;
+       uint32_t witness_award_proportion = 500;
+       uint32_t valid_nodes_number = 35;
+       uint64_t min_staking = GRAPHENE_BLOCKCHAIN_PRECISION;
    };
    
    typedef fc::ecc::private_key        private_key_type;
