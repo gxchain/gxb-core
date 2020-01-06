@@ -120,7 +120,7 @@ void database::update_signing_witness(const witness_object& signing_witness, con
    } );
    if(head_block_time() > HARDFORK_1025_TIME && get_vote_params().switch_vote_one == true){
       share_type vote_rewards = witness_pay * signing_witness.commission_rate / 1000 ;
-      FC_ASSERT(vote_rewards <= witness_pay , "vote_rewards calculation error" );
+      vote_rewards = std::min(witness_pay, vote_rewards);
       share_type witness_rewards = witness_pay - vote_rewards;
       deposit_witness_pay( signing_witness, witness_rewards );
       modify( signing_witness, [&]( witness_object& _wit )
