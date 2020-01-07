@@ -102,7 +102,7 @@ void_result staking_update_evaluator::do_evaluate(const staking_update_operation
     FC_ASSERT(stak_itor != staking_objects.end(), "invalid staking_id ${id}",("id",op.staking_id));
     // T+1 mode
     FC_ASSERT(stak_itor->staking_days * SECONDS_PER_DAY > (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()), "staking expired yet");
-
+    FC_ASSERT(stak_itor->is_valid == true, "staking is not valid");
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -144,6 +144,7 @@ void_result staking_claim_evaluator::do_evaluate(const staking_claim_operation& 
     FC_ASSERT(stak_itor != staking_objects.end(), "invalid staking_id ${id}",("id",op.staking_id));
     // T+1 mode
     FC_ASSERT(stak_itor->staking_days * SECONDS_PER_DAY < (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()), "claim timepoint has not arrived yet");
+    FC_ASSERT(stak_itor->is_valid == false,"please wait for the dividend to end");
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
