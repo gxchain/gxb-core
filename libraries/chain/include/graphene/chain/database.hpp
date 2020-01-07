@@ -519,6 +519,10 @@ namespace graphene { namespace chain {
         public:
            void           set_snapshot_dir(const fc::string& data_dir) { snapshot_dir = data_dir; }
            fc::string     get_snapshot_dir() const { return snapshot_dir; }
+         
+         // Current cycle witness node vote statistics
+        public:
+           map<witness_id_type,share_type>   _vote_statistics;
 
         private:
            fc::string                        snapshot_dir;
