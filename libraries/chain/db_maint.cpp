@@ -701,6 +701,10 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       }
    } fee_helper(*this, gpo);
    if (head_block_time() > HARDFORK_1025_TIME && get_vote_params().switch_vote_one == true) {
+      //Count the new round of votes
+      tally_helper.statistical_vote_weight();
+      perform_account_maintenance(std::tie(fee_helper));
+
       //current staking awards pools
       const dynamic_global_property_object& dpo = get_dynamic_global_properties();
       share_type staking_awards_pools_bak = dpo.current_staking_awards_pools;
@@ -732,9 +736,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
             deposit_witness_pay( wit, witness_pay );
          }
       }
-      //Count the new round of votes
-      tally_helper.statistical_vote_weight();
-      perform_account_maintenance(std::tie(fee_helper));
       //distribute the dividend to each voting account
       const auto& staking_objects = get_index_type<staking_index>().indices();
       //backup witness vote_reward_pool
