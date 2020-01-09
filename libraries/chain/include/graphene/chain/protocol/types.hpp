@@ -707,7 +707,7 @@ FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
 FC_REFLECT(graphene::chain::asset_symbol_t, (symbol))
 FC_REFLECT(graphene::chain::trust_node_pledge_t, (amount))
 FC_REFLECT(graphene::chain::inter_contract_calling_params_t, (max_inter_contract_depth)(contract_basic_fee_vesting_period_seconds)(max_inline_action_size))
-FC_REFLECT(graphene::chain::vote_params_t, (switch_vote_one)(set_commission_interval)(staking_rewards_vesting_seconds)(missed_limit)(max_num_mortgages))
+FC_REFLECT(graphene::chain::vote_params_t, (switch_vote_one)(set_commission_interval)(staking_rewards_vesting_seconds)(missed_limit)(max_num_mortgages)(witness_award_proportion)(valid_nodes_number)(min_staking))
 
 
 FC_REFLECT_ENUM(graphene::chain::asset_issuer_permission_flags,
