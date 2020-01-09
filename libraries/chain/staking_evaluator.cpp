@@ -100,6 +100,11 @@ void_result staking_update_evaluator::do_evaluate(const staking_update_operation
     const auto& staking_objects = _db.get_index_type<staking_index>().indices();
     auto stak_itor  = staking_objects.find(op.staking_id);
     FC_ASSERT(stak_itor != staking_objects.end(), "invalid staking_id ${id}",("id",op.staking_id));
+    
+    auto pre_wit_itor = witness_objects.find(stak_itor->trust_node);
+    FC_ASSERT(pre_wit_itor != witness_objects.end(), "The previous trust node no longer exists, ${id}",("id",stak_itor->trust_node));
+    FC_ASSERT(pre_wit_itor->total_vote_weights >= (stak_itor->amount.amount * stak_itor->weight), "An error occurred in the old node-ticket statistics");
+    
     // T+1 mode
     FC_ASSERT(stak_itor->staking_days * SECONDS_PER_DAY > (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()), "staking expired yet");
     FC_ASSERT(stak_itor->is_valid == true, "staking is not valid");
@@ -122,8 +127,8 @@ operation_result staking_update_evaluator::do_apply(const staking_update_operati
     // reduce the number of votes received on the previous node
     const auto& witness_objects = _db.get_index_type<witness_index>().indices();
     auto prev_wit_itor  = witness_objects.find(prev_trust_node);
+    prev_vote_weights = std::min(prev_vote_weights,prev_wit_itor->total_vote_weights);
     _db.modify(*prev_wit_itor, [&](witness_object& obj) {
-        FC_ASSERT(obj.total_vote_weights >= prev_vote_weights, "the vote statistics are wrong");
         obj.total_vote_weights -= prev_vote_weights;
     });
     // increase the number of votes for new nodes
