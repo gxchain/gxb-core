@@ -32,8 +32,8 @@ namespace graphene { namespace chain {
      class staking_object : public graphene::chain::abstract_object<staking_object>
      {
        public:
-          static const uint8_t space_id = implementation_ids;
-          static const uint8_t type_id = impl_staking_object_type;
+          static const uint8_t space_id = protocol_ids;
+          static const uint8_t type_id = staking_object_type;
 
           account_id_type   owner;
           time_point_sec    create_date_time;

@@ -316,7 +316,7 @@ namespace graphene { namespace chain {
       data_transaction_complain_object_type,//24
       lock_balance_object_type,//25
 	  trust_node_pledge_object_type,//26
-
+      staking_object_type,//27
       OBJECT_TYPE_COUNT /////< Sentry value which contains the number of different object types
 
    };
@@ -355,7 +355,6 @@ namespace graphene { namespace chain {
       index_double_object_type,
       index_long_double_object_type,
       impl_trx_entry_history_object_type,
-      impl_staking_object_type,
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -388,6 +387,7 @@ namespace graphene { namespace chain {
    class data_transaction_complain_object;
    class lock_balance_object;
    class trust_node_pledge_object;
+   class staking_object;
 
    typedef object_id< protocol_ids, account_object_type,            account_object>               account_id_type;
    typedef object_id< protocol_ids, asset_object_type,              asset_object>                 asset_id_type;
@@ -414,7 +414,7 @@ namespace graphene { namespace chain {
    typedef object_id< protocol_ids, data_transaction_complain_object_type, data_transaction_complain_object> data_transaction_complain_id_type;
    typedef object_id< protocol_ids, lock_balance_object_type, lock_balance_object>       lock_balance_id_type;
    typedef object_id< protocol_ids, trust_node_pledge_object_type, trust_node_pledge_object>       trust_node_pledge_id_type;
-
+   typedef object_id< protocol_ids, staking_object_type, staking_object>       staking_id_type;
    // implementation types
    class global_property_object;
    class dynamic_global_property_object;
@@ -439,7 +439,6 @@ namespace graphene { namespace chain {
    class table_id_object;
    class key_value_object;
    class trx_entry_object;
-   class staking_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -467,7 +466,6 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_table_id_object_type, table_id_object>        table_id_object_id_type;
    typedef object_id< implementation_ids, impl_key_value_object_type, key_value_object>      key_value_object_id_type;
    typedef object_id< implementation_ids, impl_trx_entry_history_object_type, trx_entry_object> trx_entry_object_id_type;
-   typedef object_id< implementation_ids, impl_staking_object_type, staking_object>       staking_id_type;
 
    //typedef object_id< implementation_ids, impl_search_results_object_type,search_results_object<DerivedClass>>          search_results_id_type;
 
@@ -605,6 +603,7 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (data_transaction_complain_object_type)
                  (lock_balance_object_type)
                  (trust_node_pledge_object_type)
+                 (staking_object_type)
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,
@@ -639,7 +638,6 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (index_double_object_type)
                  (index_long_double_object_type)
                  (impl_trx_entry_history_object_type)
-                 (impl_staking_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
