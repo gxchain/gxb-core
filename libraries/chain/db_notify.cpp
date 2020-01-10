@@ -413,7 +413,9 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
             break;
         } case trust_node_pledge_object_type: {
             break;
-        } 
+        } case staking_object_type: {
+            break;
+        }
       }
    }
    else if( obj->id.space() == implementation_ids )
@@ -493,8 +495,6 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
              case index_long_double_object_type:
               break;
              case impl_trx_entry_history_object_type:
-              break;
-             case impl_staking_object_type:
               break;
       }
 
