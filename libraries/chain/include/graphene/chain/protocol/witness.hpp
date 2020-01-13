@@ -75,7 +75,7 @@ namespace graphene { namespace chain {
     * @brief Set a witness object's commission_rate and commission_update_time.
     * @ingroup operations
     */
-   struct wit_commission_set_operation : public base_operation
+   struct witness_set_commission_operation : public base_operation
    {
       struct fee_parameters_type
       {
@@ -96,7 +96,7 @@ namespace graphene { namespace chain {
     * @brief Remove the limitation on witness
     * @ingroup operations
     */
-   struct wit_banned_remove_operation : public base_operation
+   struct witness_unbanned_operation : public base_operation
    {
       struct fee_parameters_type
       {
@@ -142,11 +142,11 @@ FC_REFLECT( graphene::chain::witness_create_operation, (fee)(witness_account)(ur
 FC_REFLECT( graphene::chain::witness_update_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::witness_update_operation, (fee)(witness)(witness_account)(new_url)(new_signing_key) )
 
-FC_REFLECT( graphene::chain::wit_commission_set_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::wit_commission_set_operation, (fee)(witness)(witness_account)(commission_rate)(extensions) )
+FC_REFLECT( graphene::chain::witness_set_commission_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::witness_set_commission_operation, (fee)(witness)(witness_account)(commission_rate)(extensions) )
 
-FC_REFLECT( graphene::chain::wit_banned_remove_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::wit_banned_remove_operation, (fee)(witness)(witness_account)(extensions) )
+FC_REFLECT( graphene::chain::witness_unbanned_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::witness_unbanned_operation, (fee)(witness)(witness_account)(extensions) )
 
 FC_REFLECT( graphene::chain::trust_node_pledge_withdraw_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::trust_node_pledge_withdraw_operation, (fee)(witness_account) )

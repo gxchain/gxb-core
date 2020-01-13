@@ -300,10 +300,10 @@ struct get_impacted_account_visitor
    void operator() (const staking_claim_operation& op) {
        _impacted.insert(op.owner);
    }
-   void operator() (const wit_commission_set_operation& op) {
+   void operator() (const witness_set_commission_operation& op) {
        _impacted.insert(op.witness_account);
    }
-   void operator() (const wit_banned_remove_operation& op) {
+   void operator() (const witness_unbanned_operation& op) {
        _impacted.insert(op.witness_account);
    }
 };

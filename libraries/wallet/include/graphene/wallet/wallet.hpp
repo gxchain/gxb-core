@@ -2029,18 +2029,18 @@ class wallet_api
                                   bool broadcast = false);
       /** unlock vote.
       */
-      signed_transaction staking_unlock(account_id_type owner,
+      signed_transaction staking_claim(account_id_type owner,
                                   staking_id_type stak_id,
                                   bool broadcast = false);
       /** set the dividend ratio.
       */
-      signed_transaction wit_set_commission(string witness_name,
+      signed_transaction witness_set_commission(string witness_name,
                                         uint32_t commission_rate,
                                         string fee_asset_symbol,
                                         bool broadcast = false);
       /** remove the witness banned.
       */
-      signed_transaction wit_remove_banned(string witness_name,
+      signed_transaction witness_unbanned(string witness_name,
                                         string fee_asset_symbol,
                                         bool broadcast = false);
       /** get pocs_object.
@@ -2315,9 +2315,9 @@ FC_API( graphene::wallet::wallet_api,
         (approve_proposal)
         (staking_create)
         (staking_update)
-        (staking_unlock)
-        (wit_set_commission)
-        (wit_remove_banned)
+        (staking_claim)
+        (witness_set_commission)
+        (witness_unbanned)
         (dbg_make_uia)
         (dbg_push_blocks)
         (dbg_generate_blocks)

@@ -12,11 +12,11 @@ public:
     static void do_evaluate(database& db, const witness_update_operation& op);
     static void do_apply(database& db, const witness_update_operation& op);
 
-    static void do_evaluate(database& db, const wit_commission_set_operation& op);
-    static void do_apply(database& db, const wit_commission_set_operation& op);
+    static void do_evaluate(database& db, const witness_set_commission_operation& op);
+    static void do_apply(database& db, const witness_set_commission_operation& op);
 
-    static void do_evaluate(database& db, const wit_banned_remove_operation& op);
-    static void do_apply(database& db, const wit_banned_remove_operation& op);
+    static void do_evaluate(database& db, const witness_unbanned_operation& op);
+    static void do_apply(database& db, const witness_unbanned_operation& op);
 
     static void do_evaluate(database& db, const trust_node_pledge_withdraw_operation& op);
     static void do_apply(database& db, const trust_node_pledge_withdraw_operation& op);
