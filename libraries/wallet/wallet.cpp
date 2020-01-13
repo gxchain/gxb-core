@@ -3516,7 +3516,7 @@
           tx.validate();
           return sign_transaction(tx, broadcast);
        }
-       signed_transaction staking_unlock(
+       signed_transaction staking_claim(
           account_id_type owner,
           staking_id_type stak_id,                   
           bool broadcast
@@ -3537,7 +3537,7 @@
           tx.validate();
           return sign_transaction(tx, broadcast);
        }
-       signed_transaction wit_set_commission(
+       signed_transaction witness_set_commission(
           string witness_name,
           uint32_t commission_rate,
           string fee_asset_symbol,
@@ -3549,20 +3549,20 @@
           witness_object witness = get_witness(witness_name);
           account_object witness_account = get_account( witness.witness_account );
 
-          wit_commission_set_operation wit_commission_set_op;
-          wit_commission_set_op.witness = witness.id;
-          wit_commission_set_op.witness_account = witness_account.id;
-          wit_commission_set_op.commission_rate = commission_rate;
+          witness_set_commission_operation witness_set_commission_op;
+          witness_set_commission_op.witness = witness.id;
+          witness_set_commission_op.witness_account = witness_account.id;
+          witness_set_commission_op.commission_rate = commission_rate;
 
           signed_transaction tx;
-          tx.operations.push_back( wit_commission_set_op );
+          tx.operations.push_back( witness_set_commission_op );
           set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
           tx.validate();
 
           return sign_transaction( tx, broadcast );
           } FC_CAPTURE_AND_RETHROW( (witness_name)(commission_rate)(broadcast) )
        }
-       signed_transaction wit_remove_banned(
+       signed_transaction witness_unbanned(
           string witness_name,
           string fee_asset_symbol,
           bool broadcast
@@ -3573,12 +3573,12 @@
           witness_object witness = get_witness(witness_name);
           account_object witness_account = get_account( witness.witness_account );
 
-          wit_banned_remove_operation wit_banned_remove_op;
-          wit_banned_remove_op.witness = witness.id;
-          wit_banned_remove_op.witness_account = witness_account.id;
+          witness_unbanned_operation witness_unbanned_op;
+          witness_unbanned_op.witness = witness.id;
+          witness_unbanned_op.witness_account = witness_account.id;
 
           signed_transaction tx;
-          tx.operations.push_back( wit_banned_remove_op );
+          tx.operations.push_back( witness_unbanned_op );
           set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees, fee_asset_obj);
           tx.validate();
 
@@ -5239,30 +5239,30 @@
     {
        return my->staking_update(owner,stak_id,wit_id,broadcast);
     }
-    signed_transaction wallet_api::staking_unlock(
+    signed_transaction wallet_api::staking_claim(
         account_id_type owner,
         staking_id_type stak_id,
         bool broadcast
         )
     {
-       return my->staking_unlock(owner,stak_id,broadcast);
+       return my->staking_claim(owner,stak_id,broadcast);
     }
-    signed_transaction wallet_api::wit_set_commission(
+    signed_transaction wallet_api::witness_set_commission(
           string witness_name,
           uint32_t commission_rate,
           string fee_asset_symbol,
           bool broadcast
         )
     {
-       return my->wit_set_commission(witness_name,commission_rate,fee_asset_symbol,broadcast);
+       return my->witness_set_commission(witness_name,commission_rate,fee_asset_symbol,broadcast);
     }
-    signed_transaction wallet_api::wit_remove_banned(
+    signed_transaction wallet_api::witness_unbanned(
           string witness_name,
           string fee_asset_symbol,
           bool broadcast
        )
     {
-       return my->wit_remove_banned(witness_name,fee_asset_symbol,broadcast);
+       return my->witness_unbanned(witness_name,fee_asset_symbol,broadcast);
     }
     global_property_object wallet_api::get_global_properties() const
     {

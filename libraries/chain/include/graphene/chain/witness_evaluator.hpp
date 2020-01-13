@@ -48,19 +48,19 @@ namespace graphene { namespace chain {
    class wit_commission_set_evaluator : public evaluator<wit_commission_set_evaluator>
    {
       public:
-         typedef wit_commission_set_operation operation_type;
+         typedef witness_set_commission_operation operation_type;
 
-         void_result do_evaluate( const wit_commission_set_operation& o );
-         void_result do_apply(const wit_commission_set_operation& o, int32_t billed_cpu_time_us = 0);
+         void_result do_evaluate( const witness_set_commission_operation& o );
+         void_result do_apply(const witness_set_commission_operation& o, int32_t billed_cpu_time_us = 0);
    };
 
    class wit_banned_remove_evaluator : public evaluator<wit_banned_remove_evaluator>
    {
       public:
-         typedef wit_banned_remove_operation operation_type;
+         typedef witness_unbanned_operation operation_type;
 
-         void_result do_evaluate( const wit_banned_remove_operation& o );
-         void_result do_apply(const wit_banned_remove_operation& o, int32_t billed_cpu_time_us = 0);
+         void_result do_evaluate( const witness_unbanned_operation& o );
+         void_result do_apply(const witness_unbanned_operation& o, int32_t billed_cpu_time_us = 0);
    };
 
    class trust_node_pledge_withdraw_evaluator : public evaluator<trust_node_pledge_withdraw_evaluator>

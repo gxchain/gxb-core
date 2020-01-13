@@ -40,13 +40,13 @@ void trust_node_pledge_helper::do_apply(database& db, const witness_update_opera
 	   }
 	);
 }
-void trust_node_pledge_helper::do_evaluate(database& db, const wit_commission_set_operation& op)
+void trust_node_pledge_helper::do_evaluate(database& db, const witness_set_commission_operation& op)
 {
 	reset();
 	do_evaluate(db, op.witness_account);
 }
 
-void trust_node_pledge_helper::do_apply(database& db, const wit_commission_set_operation& op)
+void trust_node_pledge_helper::do_apply(database& db, const witness_set_commission_operation& op)
 {
 	do_apply(db, op.witness_account);
 	db.modify(
@@ -56,13 +56,13 @@ void trust_node_pledge_helper::do_apply(database& db, const wit_commission_set_o
 	   }
 	);
 }
-void trust_node_pledge_helper::do_evaluate(database& db, const wit_banned_remove_operation& op)
+void trust_node_pledge_helper::do_evaluate(database& db, const witness_unbanned_operation& op)
 {
 	reset();
 	do_evaluate(db, op.witness_account);
 }
 
-void trust_node_pledge_helper::do_apply(database& db, const wit_banned_remove_operation& op)
+void trust_node_pledge_helper::do_apply(database& db, const witness_unbanned_operation& op)
 {
 	do_apply(db, op.witness_account);
 	db.modify(
