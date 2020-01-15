@@ -213,7 +213,7 @@ void database::deposit_contract_call_cashback(const account_object& acct, share_
 
    return;
 }
-void database::deposit_staking_cashback(const account_object& acct, share_type amount)
+void database::staking_cashback(const account_object& acct, share_type amount)
 {
    if( amount == 0 )
       return;

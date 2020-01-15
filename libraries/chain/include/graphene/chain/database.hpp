@@ -367,7 +367,7 @@ namespace graphene { namespace chain {
          // to handle contract calling fees
          void deposit_contract_call_cashback(const account_object& acct, share_type amount);
          // helper to handle staking rewards
-         void deposit_staking_cashback(const account_object& acct, share_type amount);
+         void staking_cashback(const account_object& acct, share_type amount);
          // helper to handle witness pay
          void deposit_witness_pay(const witness_object& wit, share_type amount);
 

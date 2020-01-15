@@ -45,7 +45,7 @@ namespace graphene { namespace chain {
          void_result do_apply(const witness_update_operation& o, int32_t billed_cpu_time_us = 0);
    };
    
-   class wit_commission_set_evaluator : public evaluator<wit_commission_set_evaluator>
+   class witness_set_commission_evaluator : public evaluator<witness_set_commission_evaluator>
    {
       public:
          typedef witness_set_commission_operation operation_type;
@@ -54,7 +54,7 @@ namespace graphene { namespace chain {
          void_result do_apply(const witness_set_commission_operation& o, int32_t billed_cpu_time_us = 0);
    };
 
-   class wit_banned_remove_evaluator : public evaluator<wit_banned_remove_evaluator>
+   class witness_unbanned_evaluator : public evaluator<witness_unbanned_evaluator>
    {
       public:
          typedef witness_unbanned_operation operation_type;

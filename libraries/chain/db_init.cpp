@@ -275,8 +275,8 @@ void database::initialize_evaluators()
    register_evaluator<staking_create_evaluator>();
    register_evaluator<staking_update_evaluator>();
    register_evaluator<staking_claim_evaluator>();
-   register_evaluator<wit_commission_set_evaluator>();
-   register_evaluator<wit_banned_remove_evaluator>();
+   register_evaluator<witness_set_commission_evaluator>();
+   register_evaluator<witness_unbanned_evaluator>();
 }
 
 void database::initialize_indexes()

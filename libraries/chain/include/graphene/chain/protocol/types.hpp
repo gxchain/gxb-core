@@ -172,15 +172,15 @@ namespace graphene { namespace chain {
    struct staking_params_t {
        vector< pair<fc::string, staking_weight_t> > params;
    };
-   struct vote_params_t {
-       bool     switch_vote_one = false;
+   struct vote_params_t {   
+       bool     staking_mode_on = false;  
        uint32_t set_commission_interval = 60*60*24*7; // 1 week
        uint32_t staking_rewards_vesting_seconds = 60*60; // 1 h
-       uint32_t missed_limit = 100000;
-       uint32_t max_num_mortgages = 10;
-       uint32_t witness_award_proportion = 500;
+       uint32_t missed_block_limit = 100000;  
+       uint32_t max_staking_count = 10; 
+       uint32_t witness_reward_proportion = 500; 
        uint32_t valid_nodes_number = 35;
-       uint64_t min_staking = GRAPHENE_BLOCKCHAIN_PRECISION;
+       uint64_t min_staking_amount = GRAPHENE_BLOCKCHAIN_PRECISION; 
    };
    
    typedef fc::ecc::private_key        private_key_type;
@@ -705,7 +705,7 @@ FC_REFLECT(graphene::chain::vm_cpu_limit_t, (trx_cpu_limit)(block_cpu_limit))
 FC_REFLECT(graphene::chain::asset_symbol_t, (symbol))
 FC_REFLECT(graphene::chain::trust_node_pledge_t, (amount))
 FC_REFLECT(graphene::chain::inter_contract_calling_params_t, (max_inter_contract_depth)(contract_basic_fee_vesting_period_seconds)(max_inline_action_size))
-FC_REFLECT(graphene::chain::vote_params_t, (switch_vote_one)(set_commission_interval)(staking_rewards_vesting_seconds)(missed_limit)(max_num_mortgages)(witness_award_proportion)(valid_nodes_number)(min_staking))
+FC_REFLECT(graphene::chain::vote_params_t, (staking_mode_on)(set_commission_interval)(staking_rewards_vesting_seconds)(missed_block_limit)(max_staking_count)(witness_reward_proportion)(valid_nodes_number)(min_staking_amount))
 
 
 FC_REFLECT_ENUM(graphene::chain::asset_issuer_permission_flags,

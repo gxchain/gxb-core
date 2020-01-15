@@ -118,12 +118,12 @@ void database::update_signing_witness(const witness_object& signing_witness, con
    {
       _dpo.witness_budget -= witness_pay;
    } );
-   if (head_block_time() > HARDFORK_1025_TIME && get_vote_params().switch_vote_one == true){
-      share_type witness_rewards = witness_pay * get_vote_params().witness_award_proportion / 1000;
+   if (head_block_time() > HARDFORK_1025_TIME && get_vote_params().staking_mode_on == true){
+      share_type witness_rewards = witness_pay * get_vote_params().witness_reward_proportion / 1000;
       witness_rewards = std::min(witness_rewards,witness_pay);
       modify( dpo, [&]( dynamic_global_property_object& _dpo )
       {
-         _dpo.current_staking_awards_pools += (witness_pay - witness_rewards);
+         _dpo.current_staking_reward_pool += (witness_pay - witness_rewards);
       } );
       deposit_witness_pay( signing_witness, witness_rewards );
    } else {
