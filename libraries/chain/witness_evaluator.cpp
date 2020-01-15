@@ -98,7 +98,7 @@ void_result witness_update_evaluator::do_apply(const witness_update_operation& o
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result wit_commission_set_evaluator::do_evaluate( const witness_set_commission_operation& op )
+void_result witness_set_commission_evaluator::do_evaluate( const witness_set_commission_operation& op )
 { try {
 	database& _db = db();
 	FC_ASSERT(_db.get(op.witness).witness_account == op.witness_account);
@@ -110,7 +110,7 @@ void_result wit_commission_set_evaluator::do_evaluate( const witness_set_commiss
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result wit_commission_set_evaluator::do_apply(const witness_set_commission_operation& op, int32_t billed_cpu_time_us)
+void_result witness_set_commission_evaluator::do_apply(const witness_set_commission_operation& op, int32_t billed_cpu_time_us)
 { try {
    database& _db = db();
    _db.modify(
@@ -127,7 +127,7 @@ void_result wit_commission_set_evaluator::do_apply(const witness_set_commission_
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result wit_banned_remove_evaluator::do_evaluate( const witness_unbanned_operation& op )
+void_result witness_unbanned_evaluator::do_evaluate( const witness_unbanned_operation& op )
 { try {
 	database& _db = db();
    trust_node_pledge_helper::do_evaluate(_db, op);
@@ -135,7 +135,7 @@ void_result wit_banned_remove_evaluator::do_evaluate( const witness_unbanned_ope
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result wit_banned_remove_evaluator::do_apply(const witness_unbanned_operation& op, int32_t billed_cpu_time_us)
+void_result witness_unbanned_evaluator::do_apply(const witness_unbanned_operation& op, int32_t billed_cpu_time_us)
 { try {
    database& _db = db();
    _db.modify(

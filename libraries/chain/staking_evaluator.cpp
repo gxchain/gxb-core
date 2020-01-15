@@ -29,7 +29,7 @@ void_result staking_create_evaluator::do_evaluate(const staking_create_operation
     // gxc assets
     FC_ASSERT(op.amount.asset_id == GRAPHENE_GXS_ASSET, "staking asset must be GXC");
     FC_ASSERT(op.amount <= _db.get_balance(op.owner, GRAPHENE_GXS_ASSET), "account balance not enough");
-    FC_ASSERT(op.amount.amount >= _db.get_vote_params().min_staking, "staking amount must > ${amount}",("amount",_db.get_vote_params().min_staking));
+    FC_ASSERT(op.amount.amount >= _db.get_vote_params().min_staking_amount, "staking amount must > ${amount}",("amount",_db.get_vote_params().min_staking_amount));
 
     // Check the staking time, such as 7 days, 30 days, 60 days, 90 days, with global parameters
 
@@ -53,7 +53,7 @@ void_result staking_create_evaluator::do_evaluate(const staking_create_operation
     FC_ASSERT(staking_days == op.staking_days, "input staking days invalid");
 
     auto staking_ranges = _db.get_index_type<staking_index>().indices().get<by_owner>().equal_range(op.owner);
-    FC_ASSERT(std::distance(staking_ranges.first, staking_ranges.second) < _db.get_vote_params().max_num_mortgages, "mortgages have reached their maximum number");
+    FC_ASSERT(std::distance(staking_ranges.first, staking_ranges.second) < _db.get_vote_params().max_staking_count, "mortgages have reached their maximum number");
 
     // check trust_node account
     const auto& witness_objects = _db.get_index_type<witness_index>().indices();
