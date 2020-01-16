@@ -495,7 +495,7 @@ class database_api
       /**
        * @brief Get a list of trust_nodes
        */
-      votes_records_result get_votes_records(witness_id_type wit,staking_id_type start,uint32_t limit) const;
+      votes_records_result get_staking_object_by_witness(witness_id_type wit,staking_id_type start,uint32_t limit) const;
 
       ///////////////////////
       // Committee members //
@@ -839,7 +839,7 @@ FC_API(graphene::app::database_api,
    (lookup_witness_accounts)
    (get_witness_count)
    (get_trust_nodes)
-   (get_votes_records)
+   (get_staking_object_by_witness)
 
    // Committee members
    (get_committee_members)
