@@ -1265,7 +1265,7 @@ vector<account_id_type> database_api_impl::get_trust_nodes() const
     }
     return result;
 }
-votes_records_result database_api_impl::get_votes_records(witness_id_type wit,staking_id_type start,uint32_t limit) const
+votes_records_result database_api_impl::get_staking_object_by_witness(witness_id_type wit,staking_id_type start,uint32_t limit) const
 {
     try
    {
