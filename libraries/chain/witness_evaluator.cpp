@@ -132,6 +132,7 @@ void_result witness_unbanned_evaluator::do_evaluate( const witness_unbanned_oper
 	database& _db = db();
    trust_node_pledge_helper::do_evaluate(_db, op);
 	FC_ASSERT(_db.get(op.witness).witness_account == op.witness_account);
+   FC_ASSERT(_db.get(op.witness).is_banned == true);
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
