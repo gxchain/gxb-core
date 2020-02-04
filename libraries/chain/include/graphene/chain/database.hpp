@@ -458,6 +458,7 @@ namespace graphene { namespace chain {
          void update_active_witnesses();
          void update_active_committee_members();
          void update_worker_votes();
+         void handling_expired_staking(const staking_object& staking_obj,const witness_id_type& witness_id);
 
          template<class... Types>
          void perform_account_maintenance(std::tuple<Types...> helpers);

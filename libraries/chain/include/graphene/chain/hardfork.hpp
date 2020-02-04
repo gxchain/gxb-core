@@ -136,6 +136,11 @@
 #define HARDFORK_1025_TIME (fc::time_point_sec( 1579147200 )) // for testnet, 2020-01-16T04:00:00(UTC)
 #endif
 
+#ifndef HARDFORK_1026_TIME
+// for testnet after this time fix staking_object expire check logic
+#define HARDFORK_1026_TIME (fc::time_point_sec( 1580810400 )) // for testnet, 2020-02-04T10:00:00(UTC)
+#endif
+
 // #413 Add operation to claim asset fees
 #ifndef HARDFORK_413_TIME
 #define HARDFORK_413_TIME (fc::time_point_sec( 1446652800 ))
