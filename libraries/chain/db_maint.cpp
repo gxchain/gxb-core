@@ -273,6 +273,23 @@ void database::update_active_committee_members()
    });
 } FC_CAPTURE_AND_RETHROW() }
 
+void database::handling_expired_staking(const staking_object& staking_obj,const witness_id_type& witness_id){
+   //staking expire
+   const auto& witness_objects = get_index_type<witness_index>().indices();
+   auto wit_obj_itor = witness_objects.find(witness_id);
+   if(staking_obj.staking_days * SECONDS_PER_DAY < (head_block_time().sec_since_epoch() - staking_obj.create_date_time.sec_since_epoch())&&
+                           wit_obj_itor != witness_objects.end()){
+      modify(staking_obj, [&](staking_object &obj) {
+         obj.is_valid = false;
+      });
+      //reduce witness total_vote_weights;
+      modify(*wit_obj_itor, [&](witness_object& obj) {
+         share_type total_vote_weights = staking_obj.amount.amount * staking_obj.weight;
+         share_type reduce_vote_weights = std::min(total_vote_weights, obj.total_vote_weights);
+         obj.total_vote_weights -= reduce_vote_weights;
+      });
+   } 
+}
 void database::initialize_budget_record( fc::time_point_sec now, budget_record& rec )const
 {
    const dynamic_global_property_object& dpo = get_dynamic_global_properties();
@@ -764,19 +781,13 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
                         obj.vote_reward_pool -= voter_pay;
                      });
                   }
-                  //staking expire
-                  if(stak_obj.staking_days * SECONDS_PER_DAY < (head_block_time().sec_since_epoch() - stak_obj.create_date_time.sec_since_epoch())){
-                     modify(stak_obj, [&](staking_object &obj) {
-                        obj.is_valid = false;
-                     });
-                     //reduce witness total_vote_weights;
-                     modify(*wit_obj_itor, [&](witness_object& obj) {
-                        share_type total_vote_weights = stak_obj.amount.amount * stak_obj.weight;
-                        share_type reduce_vote_weights = std::min(total_vote_weights, obj.total_vote_weights);
-                        obj.total_vote_weights -= reduce_vote_weights;
-                     });
-                  } 
+                  if(head_block_time() <= HARDFORK_1026_TIME){
+                     handling_expired_staking(stak_obj,stak_obj.trust_node);
+                  }  
                }
+               if(head_block_time() > HARDFORK_1026_TIME){
+                  handling_expired_staking(stak_obj,stak_obj.trust_node);
+               } 
             }
          } 
       }
