@@ -136,6 +136,11 @@
 #define HARDFORK_1026_TIME (fc::time_point_sec( 1580810400 )) // for testnet, 2020-02-04T10:00:00(UTC)
 #endif
 
+#ifndef HARDFORK_1027_TIME
+// for testnet after this time other accounts do not have the authority to update staking
+#define HARDFORK_1027_TIME (fc::time_point_sec( 1582279200 )) // for testnet, 2020-02-21T10:00:00(UTC)
+#endif
+
 // #413 Add operation to claim asset fees
 #ifndef HARDFORK_413_TIME
 #define HARDFORK_413_TIME (fc::time_point_sec( 1446652800 ))
