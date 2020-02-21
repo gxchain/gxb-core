@@ -91,6 +91,7 @@ object_id_type staking_create_evaluator::do_apply(const staking_create_operation
 void_result staking_update_evaluator::do_evaluate(const staking_update_operation& op)
 { try {
     database& _db = db();
+
     // check trust_node account
     const auto& witness_objects = _db.get_index_type<witness_index>().indices();
     auto wit_obj_itor = witness_objects.find(op.trust_node);
@@ -101,6 +102,10 @@ void_result staking_update_evaluator::do_evaluate(const staking_update_operation
     auto stak_itor  = staking_objects.find(op.staking_id);
     FC_ASSERT(stak_itor != staking_objects.end(), "invalid staking_id ${id}",("id",op.staking_id));
     
+    if(_db.head_block_time() > HARDFORK_1027_TIME){
+        // check owner
+        FC_ASSERT(stak_itor->owner == op.owner, "non-staking owners cannot update");
+    }
     auto pre_wit_itor = witness_objects.find(stak_itor->trust_node);
     FC_ASSERT(pre_wit_itor != witness_objects.end(), "The previous trust node no longer exists, ${id}",("id",stak_itor->trust_node));
     FC_ASSERT(pre_wit_itor->total_vote_weights >= (stak_itor->amount.amount * stak_itor->weight), "An error occurred in the old node-ticket statistics");
@@ -147,6 +152,10 @@ void_result staking_claim_evaluator::do_evaluate(const staking_claim_operation& 
     const auto& staking_objects = _db.get_index_type<staking_index>().indices();
     auto stak_itor  = staking_objects.find(op.staking_id);
     FC_ASSERT(stak_itor != staking_objects.end(), "invalid staking_id ${id}",("id",op.staking_id));
+    if(_db.head_block_time() > HARDFORK_1027_TIME){
+        // check owner
+        FC_ASSERT(stak_itor->owner == op.owner, "non-staking owners cannot claim");
+    }
     // T+1 mode
     FC_ASSERT(stak_itor->staking_days * SECONDS_PER_DAY < (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()), "claim timepoint has not arrived yet");
     FC_ASSERT(stak_itor->is_valid == false,"please wait for the dividend to end");
