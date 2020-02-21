@@ -383,9 +383,9 @@ vector<vesting_balance_object> database_api::get_vesting_balances( account_id_ty
    return my->get_vesting_balances( account_id );
 }
 
-vector<staking_object> database_api::get_staking_object( account_id_type account_id )const
+vector<staking_object> database_api::get_staking_objects( account_id_type account_id )const
 {
-   return my->get_staking_object( account_id );
+   return my->get_staking_objects( account_id );
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -467,9 +467,9 @@ vector<account_id_type> database_api::get_trust_nodes() const
     return my->get_trust_nodes();
 }
 
-votes_records_result database_api::get_staking_object_by_witness(witness_id_type wit,staking_id_type start,uint32_t limit) const
+votes_records_result database_api::get_staking_objects_by_witness(witness_id_type wit,staking_id_type start,uint32_t limit) const
 {
-    return my->get_staking_object_by_witness(wit,start,limit);
+    return my->get_staking_objects_by_witness(wit,start,limit);
 }
 
 //////////////////////////////////////////////////////////////////////
