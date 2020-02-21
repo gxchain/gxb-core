@@ -197,7 +197,7 @@ void database::deposit_contract_call_cashback(const account_object& acct, share_
 {
    if( amount == 0 )
       return;
-   if( _db.head_block_time() > HARDFORK_1027_TIME ){
+   if( head_block_time() > HARDFORK_1027_TIME ){
        optional<vesting_balance_id_type> new_vbid = deposit_lazy_vesting(
            acct.contract_call_cashback_vb,
            amount,
@@ -228,7 +228,7 @@ void database::staking_cashback(const account_object& acct, share_type amount)
 {
    if( amount == 0 )
       return;
-   if (_db.head_block_time() > HARDFORK_1027_TIME) {
+   if (head_block_time() > HARDFORK_1027_TIME) {
        optional<vesting_balance_id_type> new_vbid = deposit_lazy_vesting(
            acct.staking_cashback_vb,
            amount,
