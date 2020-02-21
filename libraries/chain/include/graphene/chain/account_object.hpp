@@ -278,6 +278,8 @@ namespace graphene { namespace chain {
           * Vesting balance which receives cashback_reward deposits.
           */
          optional<vesting_balance_id_type> cashback_vb;
+         optional<vesting_balance_id_type> contract_call_cashback_vb;
+         optional<vesting_balance_id_type> staking_cashback_vb;
 
          special_authority owner_special_authority = no_special_authority();
          special_authority active_special_authority = no_special_authority();
