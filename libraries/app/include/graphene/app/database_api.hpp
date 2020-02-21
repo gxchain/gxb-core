@@ -291,7 +291,7 @@ class database_api
 
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
 
-      vector<staking_object> get_staking_object( account_id_type account_id )const;
+      vector<staking_object> get_staking_objects( account_id_type account_id )const;
       /**
        * @brief Get the total number of transactions of the blockchain
        */
@@ -495,7 +495,7 @@ class database_api
       /**
        * @brief Get a list of trust_nodes
        */
-      votes_records_result get_staking_object_by_witness(witness_id_type wit,staking_id_type start,uint32_t limit) const;
+      votes_records_result get_staking_objects_by_witness(witness_id_type wit,staking_id_type start,uint32_t limit) const;
 
       ///////////////////////
       // Committee members //
@@ -823,7 +823,7 @@ FC_API(graphene::app::database_api,
    (get_balance_objects)
    (get_vested_balances)
    (get_vesting_balances)
-   (get_staking_object)
+   (get_staking_objects)
 
    // Assets
    (get_assets)
@@ -839,7 +839,7 @@ FC_API(graphene::app::database_api,
    (lookup_witness_accounts)
    (get_witness_count)
    (get_trust_nodes)
-   (get_staking_object_by_witness)
+   (get_staking_objects_by_witness)
 
    // Committee members
    (get_committee_members)
