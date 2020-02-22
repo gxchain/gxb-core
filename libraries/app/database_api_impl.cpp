@@ -742,6 +742,14 @@ std::map<std::string, full_account> database_api_impl::get_full_accounts( const 
       {
          acnt.cashback_balance = account->cashback_balance(_db);
       }
+      if (account->contract_call_cashback_vb)
+      {
+         acnt.contract_call_cashback_balance = account->contract_call_cashback_balance(_db);
+      }
+      if (account->staking_cashback_vb)
+      {
+         acnt.staking_cashback_balance = account->staking_cashback_balance(_db);
+      }
       // Add the account's proposals
       const auto& proposal_idx = _db.get_index_type<proposal_index>();
       const auto& pidx = dynamic_cast<const primary_index<proposal_index>&>(proposal_idx);
