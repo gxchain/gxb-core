@@ -141,11 +141,6 @@
 #define HARDFORK_1026_TIME (fc::time_point_sec( 1580810400 )) // for testnet, 2020-02-04T10:00:00(UTC)
 #endif
 
-#ifndef HARDFORK_1026_TIME
-// for testnet after this time fix staking_object expire check logic
-#define HARDFORK_1026_TIME (fc::time_point_sec( 1580810400 )) // for testnet, 2020-02-04T10:00:00(UTC)
-#endif
-
 #ifndef HARDFORK_1027_TIME
 // for testnet after this time other accounts do not have the authority to update staking and reduce vesting_balance_object
 #define HARDFORK_1027_TIME (fc::time_point_sec( 1582329600 )) // for testnet, 2020-02-22T00:00:00(UTC)
