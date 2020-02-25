@@ -110,6 +110,11 @@ void_result staking_update_evaluator::do_evaluate(const staking_update_operation
     FC_ASSERT(pre_wit_itor != witness_objects.end(), "The previous trust node no longer exists, ${id}",("id",stak_itor->trust_node));
     FC_ASSERT(pre_wit_itor->total_vote_weights >= (stak_itor->amount.amount * stak_itor->weight), "An error occurred in the old node-ticket statistics");
     
+    if(_db.head_block_time() > HARDFORK_1028_TIME){
+        // check updated to the same trust node
+        FC_ASSERT(stak_itor->trust_node != op.trust_node, "Cannot be updated to the same trust node");
+    }
+
     // T+1 mode
     FC_ASSERT(stak_itor->staking_days * SECONDS_PER_DAY > (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()), "staking expired");
     FC_ASSERT(stak_itor->is_valid == true, "staking is not valid");
