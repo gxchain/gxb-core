@@ -206,8 +206,8 @@ void abi_generator::handle_decl(const Decl* decl) { try {
   auto pair = ast_context->getSourceManager().getDecomposedLoc(decl->getLocation());
   auto code_buff = ast_context->getSourceManager().getBuffer(pair.first)->getBuffer().str();
   if(target_macro_info_param_ptr->contract_name == ""){
-    // if not found CONTRACT macro , use class **** public : contract regex to search
-    regex r(R"(class\s*([a-z0-9]*)\s*\:\s*public)");
+    // if not found CONTRACT macro and contract_name is "", use class **** public : contract regex to search
+    regex r(R"(class\s*(.+?)\s*\:\s*public)");
     smatch smatch;
     auto res = regex_search(code_buff, smatch, r);
     ABI_ASSERT( res );

@@ -333,6 +333,7 @@ namespace graphene {
                ABI_ASSERT( res );
 
                act.contract = remove_namespace(smatch[1].str());
+               act.macro_info_param.contract_name = act.contract;
 
                auto actions_str = smatch[2].str();
                boost::trim(actions_str);
