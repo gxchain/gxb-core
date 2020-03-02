@@ -110,8 +110,13 @@ void_result staking_update_evaluator::do_evaluate(const staking_update_operation
     FC_ASSERT(pre_wit_itor != witness_objects.end(), "The previous trust node no longer exists, ${id}",("id",stak_itor->trust_node));
     FC_ASSERT(pre_wit_itor->total_vote_weights >= (stak_itor->amount.amount * stak_itor->weight), "An error occurred in the old node-ticket statistics");
     
+    if(_db.head_block_time() > HARDFORK_1028_TIME){
+        // check updated to the same trust node
+        FC_ASSERT(stak_itor->trust_node != op.trust_node, "Cannot be updated to the same trust node");
+    }
+
     // T+1 mode
-    FC_ASSERT(stak_itor->staking_days * SECONDS_PER_DAY > (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()), "staking expired yet");
+    FC_ASSERT(stak_itor->staking_days * SECONDS_PER_DAY > (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()), "staking expired");
     FC_ASSERT(stak_itor->is_valid == true, "staking is not valid");
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -168,8 +173,9 @@ operation_result staking_claim_evaluator::do_apply(const staking_claim_operation
 
     const auto& staking_objects = _db.get_index_type<staking_index>().indices();
     auto stak_itor  = staking_objects.find(op.staking_id);
-    _db.adjust_balance(op.owner, stak_itor->amount); // adjust balance
+    asset ret_amount = stak_itor->amount;
+    _db.adjust_balance(stak_itor->owner, stak_itor->amount); // adjust balance
     _db.remove(*stak_itor);
-    return stak_itor->amount;
+    return ret_amount;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 } } // namespace graphene::chain
