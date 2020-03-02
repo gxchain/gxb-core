@@ -173,8 +173,9 @@ operation_result staking_claim_evaluator::do_apply(const staking_claim_operation
 
     const auto& staking_objects = _db.get_index_type<staking_index>().indices();
     auto stak_itor  = staking_objects.find(op.staking_id);
-    _db.adjust_balance(op.owner, stak_itor->amount); // adjust balance
+    asset ret_amount = stak_itor->amount;
+    _db.adjust_balance(stak_itor->owner, stak_itor->amount); // adjust balance
     _db.remove(*stak_itor);
-    return stak_itor->amount;
+    return ret_amount;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 } } // namespace graphene::chain
