@@ -1067,6 +1067,9 @@ bool application::is_finished_syncing() const
 
 void graphene::app::application::enable_plugin(const string& name)
 {
+   if(!my->_available_plugins[name]){
+      std::cerr<<"Error: Trying to load a plugin that doesn't exist, the plugin name is "<<" "<< name <<std::endl;
+   }
    FC_ASSERT(my->_available_plugins[name], "Unknown plugin '" + name + "'");
    my->_active_plugins[name] = my->_available_plugins[name];
    my->_active_plugins[name]->plugin_set_app(this);
