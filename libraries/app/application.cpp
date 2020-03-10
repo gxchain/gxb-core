@@ -957,6 +957,7 @@ void application::set_program_options(boost::program_options::options_descriptio
           "invalid file is found, it will be replaced with an example Genesis State.")
          ("replay-blockchain", "Rebuild object graph by replaying all blocks")
          ("fast-replay", "no sleep while replaying block blocks")
+         ("enable-network-node-api", "support network node api")
          ("resync-blockchain", "Delete all blocks and re-sync with network from scratch")
          ("force-validate", "Force validation of all transactions")
          ("log-file", "Output result to log file, not console, only works when config.ini not exists")
