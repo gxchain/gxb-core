@@ -742,6 +742,14 @@ std::map<std::string, full_account> database_api_impl::get_full_accounts( const 
       {
          acnt.cashback_balance = account->cashback_balance(_db);
       }
+      if (account->contract_call_cashback_vb)
+      {
+         acnt.contract_call_cashback_balance = account->contract_call_cashback_balance(_db);
+      }
+      if (account->staking_cashback_vb)
+      {
+         acnt.staking_cashback_balance = account->staking_cashback_balance(_db);
+      }
       // Add the account's proposals
       const auto& proposal_idx = _db.get_index_type<proposal_index>();
       const auto& pidx = dynamic_cast<const primary_index<proposal_index>&>(proposal_idx);
@@ -1007,6 +1015,20 @@ vector<vesting_balance_object> database_api_impl::get_vesting_balances( account_
    }
    FC_CAPTURE_AND_RETHROW( (account_id) );
 }
+vector<staking_object> database_api_impl::get_staking_objects( account_id_type account_id )const
+{
+    try
+   {
+      vector<staking_object> result;
+      auto staking_range = _db.get_index_type<staking_index>().indices().get<by_owner>().equal_range(account_id);
+      std::for_each(staking_range.first, staking_range.second,
+                    [&result](const staking_object& staking_obj) {
+                       result.emplace_back(staking_obj);
+                    });
+      return result;
+   }
+   FC_CAPTURE_AND_RETHROW( (account_id) );
+}
 
 vector<optional<asset_object>> database_api_impl::get_assets(const vector<asset_id_type>& asset_ids)const
 {
@@ -1250,6 +1272,30 @@ vector<account_id_type> database_api_impl::get_trust_nodes() const
         }
     }
     return result;
+}
+votes_records_result database_api_impl::get_staking_objects_by_witness(witness_id_type wit,staking_id_type start,uint32_t limit) const
+{
+    try
+   {
+      FC_ASSERT( limit <= 100 );
+      votes_records_result result;
+      const auto& trust_idx = _db.get_index_type<staking_index>().indices().get<by_trust_node>();
+      auto start_iter = trust_idx.lower_bound(boost::make_tuple(wit, start));
+      uint32_t count = 0;
+      for(auto iter = start_iter; ; iter++,count++ ){
+          if(iter == trust_idx.end()){
+            break;
+          }
+          if(count >=limit){
+            result.next_id = iter->id;
+            result.more = true;
+            break;
+          }
+          result.records.emplace_back(*iter);      
+      }
+      return result;
+   }
+   FC_CAPTURE_AND_RETHROW( (wit)(start)(limit) );
 }
 
 vector<optional<committee_member_object>> database_api_impl::get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const

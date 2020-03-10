@@ -278,6 +278,8 @@ namespace graphene { namespace chain {
           * Vesting balance which receives cashback_reward deposits.
           */
          optional<vesting_balance_id_type> cashback_vb;
+         optional<vesting_balance_id_type> contract_call_cashback_vb;
+         optional<vesting_balance_id_type> staking_cashback_vb;
 
          special_authority owner_special_authority = no_special_authority();
          special_authority active_special_authority = no_special_authority();
@@ -308,6 +310,20 @@ namespace graphene { namespace chain {
          {
             FC_ASSERT(cashback_vb);
             return db.get(*cashback_vb);
+         }
+
+         template<typename DB>
+         const vesting_balance_object& contract_call_cashback_balance(const DB& db)const
+         {
+            FC_ASSERT(contract_call_cashback_vb);
+            return db.get(*contract_call_cashback_vb);
+         }
+
+         template<typename DB>
+         const vesting_balance_object& staking_cashback_balance(const DB& db)const
+         {
+            FC_ASSERT(staking_cashback_vb);
+            return db.get(*staking_cashback_vb);
          }
 
          /// @return true if this is a contract account; false otherwise.
@@ -519,6 +535,8 @@ FC_REFLECT_DERIVED( graphene::chain::account_object,
                     (name)(vm_type)(vm_version)(code)(code_version)(abi)(owner)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
                     (whitelisted_accounts)(blacklisted_accounts)
                     (cashback_vb)
+                    (contract_call_cashback_vb)
+                    (staking_cashback_vb)
                     (owner_special_authority)(active_special_authority)
                     (top_n_control_flags)
                     (allowed_assets)

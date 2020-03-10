@@ -126,6 +126,26 @@
 #define HARDFORK_1024_TIME (fc::time_point_sec( 1556625600 )) // for testnet, 2019-04-30T12:00:00(UTC)
 #endif
 
+#ifndef HARDFORK_1025_TIME
+// for testnet after this time modify vote logic
+#define HARDFORK_1025_TIME (fc::time_point_sec( 1577088000 )) // for testnet, 2019-12-23T08:00:00(UTC)
+#endif
+
+#ifndef HARDFORK_1026_TIME
+// for testnet after this time fix staking_object expire check logic
+#define HARDFORK_1026_TIME (fc::time_point_sec( 1580810400 )) // for testnet, 2020-02-04T10:00:00(UTC)
+#endif
+
+#ifndef HARDFORK_1027_TIME
+// for testnet after this time other accounts do not have the authority to update staking and reduce vesting_balance_object
+#define HARDFORK_1027_TIME (fc::time_point_sec( 1582329600 )) // for testnet, 2020-02-22T00:00:00(UTC)
+#endif
+
+#ifndef HARDFORK_1028_TIME
+// for testnet after this time cannot be updated to the same trust node
+#define HARDFORK_1028_TIME (fc::time_point_sec( 1582848000 )) // for testnet, 2020-02-28T00:00:00(UTC)
+#endif
+
 // #413 Add operation to claim asset fees
 #ifndef HARDFORK_413_TIME
 #define HARDFORK_413_TIME (fc::time_point_sec( 1446652800 ))

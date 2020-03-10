@@ -137,6 +137,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<balance_object> get_balance_objects( const vector<address>& addrs )const;
       vector<asset> get_vested_balances( const vector<balance_id_type>& objs )const;
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
+      vector<staking_object> get_staking_objects( account_id_type account_id )const;
 
       // Assets
       vector<optional<asset_object>> get_assets(const vector<asset_id_type>& asset_ids)const;
@@ -152,6 +153,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       uint64_t get_witness_count()const;
 
       vector<account_id_type> get_trust_nodes() const;
+      votes_records_result get_staking_objects_by_witness(witness_id_type wit,staking_id_type start,uint32_t limit) const;
 
       // Committee members
       vector<optional<committee_member_object>> get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const;

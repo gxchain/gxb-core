@@ -95,7 +95,19 @@ const inter_contract_calling_params_t& database::get_inter_contract_calling_para
     static inter_contract_calling_params_t default_params;
     return default_params;
 }
+const vote_params_t& database::get_vote_params() const
+{
+    const chain_parameters& params = get_global_properties().parameters;
+    for (auto& ext : params.extensions) {
+        if (ext.which() == future_extensions::tag<vote_params_t>::value) {
+            return ext.get<vote_params_t>();
+        }
+    }
 
+    // return default value
+    static vote_params_t default_params;
+    return default_params;
+}
 const chain_property_object& database::get_chain_properties()const
 {
    return get( chain_property_id_type() );
