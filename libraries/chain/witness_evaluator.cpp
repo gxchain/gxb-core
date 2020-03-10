@@ -98,6 +98,61 @@ void_result witness_update_evaluator::do_apply(const witness_update_operation& o
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
+void_result witness_set_commission_evaluator::do_evaluate( const witness_set_commission_operation& op )
+{ try {
+	database& _db = db();
+	FC_ASSERT(_db.get(op.witness).witness_account == op.witness_account);
+   trust_node_pledge_helper::do_evaluate(_db, op);
+   FC_ASSERT(op.commission_rate >= 0 && op.commission_rate <= 1000);
+   auto &wit_itor = _db.get(op.witness);
+   int32_t delta_seconds = _db.head_block_time().sec_since_epoch() - wit_itor.commission_update_time.sec_since_epoch();
+   FC_ASSERT(std::fabs(delta_seconds) >= _db.get_vote_params().set_commission_interval, "the modification time is not yet up");
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result witness_set_commission_evaluator::do_apply(const witness_set_commission_operation& op, int32_t billed_cpu_time_us)
+{ try {
+   database& _db = db();
+   _db.modify(
+      _db.get(op.witness),
+      [&op,&_db]( witness_object& wit )
+      {
+         wit.commission_rate = op.commission_rate;
+         wit.commission_update_time = _db.head_block_time();
+      }
+   );
+
+	trust_node_pledge_helper::do_apply(_db, op);
+
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result witness_unbanned_evaluator::do_evaluate( const witness_unbanned_operation& op )
+{ try {
+	database& _db = db();
+   trust_node_pledge_helper::do_evaluate(_db, op);
+	FC_ASSERT(_db.get(op.witness).witness_account == op.witness_account);
+   FC_ASSERT(_db.get(op.witness).is_banned == true);
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result witness_unbanned_evaluator::do_apply(const witness_unbanned_operation& op, int32_t billed_cpu_time_us)
+{ try {
+   database& _db = db();
+   _db.modify(
+      _db.get(op.witness),
+      [&]( witness_object& wit )
+      {
+         wit.previous_missed = wit.total_missed;
+         wit.is_banned = false;
+      }
+   );
+
+	trust_node_pledge_helper::do_apply(_db, op);
+
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
 void_result trust_node_pledge_withdraw_evaluator::do_evaluate(const trust_node_pledge_withdraw_operation& op)
 { try {
    trust_node_pledge_helper::do_evaluate(db(), op);

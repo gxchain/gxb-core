@@ -41,6 +41,7 @@
 #include <graphene/chain/data_transaction_object.hpp>
 #include <graphene/app/database_api_common.hpp>
 #include <graphene/chain/pocs_object.hpp>
+#include <graphene/chain/transaction_entry_object.hpp>
 
 #include <fc/api.hpp>
 #include <fc/optional.hpp>
@@ -136,6 +137,8 @@ class database_api
        * @brief used to fetch an individual transaction.
        */
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
+
+      optional<processed_transaction> get_transaction_rows(transaction_id_type txid)const;
 
       /**
        * If the transaction has not expired, this method will return the transaction for the given ID or
@@ -288,6 +291,7 @@ class database_api
 
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
 
+      vector<staking_object> get_staking_objects( account_id_type account_id )const;
       /**
        * @brief Get the total number of transactions of the blockchain
        */
@@ -488,6 +492,11 @@ class database_api
        */
       vector<account_id_type> get_trust_nodes() const;
 
+      /**
+       * @brief Get a list of trust_nodes
+       */
+      votes_records_result get_staking_objects_by_witness(witness_id_type wit,staking_id_type start,uint32_t limit) const;
+
       ///////////////////////
       // Committee members //
       ///////////////////////
@@ -545,6 +554,9 @@ class database_api
 
       /// @brief Get a hexdump of the serialized binary form of a transaction
       std::string get_transaction_hex(const signed_transaction& trx)const;
+
+      /// @brief Get a hexdump of the serialized binary form of a unsigned transaction
+      std::string get_unsigned_transaction_hex(const transaction &trx) const;
 
       /// @brief Get a hexdump of the serialized binary form of a transaction
       std::string serialize_transaction(const signed_transaction& tx) const;
@@ -761,6 +773,7 @@ FC_API(graphene::app::database_api,
    (get_block)
    (get_block_by_id)
    (get_transaction)
+   (get_transaction_rows)
    (get_recent_transaction_by_id)
 
    // Globals
@@ -810,6 +823,7 @@ FC_API(graphene::app::database_api,
    (get_balance_objects)
    (get_vested_balances)
    (get_vesting_balances)
+   (get_staking_objects)
 
    // Assets
    (get_assets)
@@ -825,6 +839,7 @@ FC_API(graphene::app::database_api,
    (lookup_witness_accounts)
    (get_witness_count)
    (get_trust_nodes)
+   (get_staking_objects_by_witness)
 
    // Committee members
    (get_committee_members)
@@ -839,6 +854,7 @@ FC_API(graphene::app::database_api,
 
    // Authority / validation
    (get_transaction_hex)
+   (get_unsigned_transaction_hex)
    (get_required_signatures)
    (get_potential_signatures)
    (get_potential_address_signatures)

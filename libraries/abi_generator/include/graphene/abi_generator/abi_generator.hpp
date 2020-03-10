@@ -11,7 +11,7 @@
 #include <graphene/chain/abi_serializer.hpp>
 //#include <graphene/chain/protocol/types.hpp>
 #include <fc/io/json.hpp>
-
+#include <iostream>
 //clashes with something deep in the AST includes in clang 6 and possibly other versions of clang
 #pragma push_macro("N")
 #undef N
@@ -59,6 +59,14 @@ namespace graphene {
        FC_MULTILINE_MACRO_END \
       )
 
+    struct macro_info {
+        std::vector<string> macro_actions;  // macro ACTION list
+        std::vector<string> macro_payables; // macro PAYABLE list
+        std::vector<string> macro_tables;   // macro TABLE list
+        bool isfoundABImacro = false;       // is found GRAPHENERA_ABI(.....)
+        std::string source_path;            // source path
+        std::string contract_name;          // contract name
+    };
    /**
      * @brief Generates eosio::abi_def struct handling events from ASTConsumer
      */
@@ -75,6 +83,7 @@ namespace graphene {
          clang::ASTContext*     ast_context;
          string                 target_contract;
          vector<string>         target_actions;
+         macro_info*            target_macro_info_param_ptr;
 
       public:
 
@@ -88,6 +97,7 @@ namespace graphene {
          , output(nullptr)
          , compiler_instance(nullptr)
          , ast_context(nullptr)
+         , target_macro_info_param_ptr(nullptr)
          {}
 
          ~abi_generator() {}
@@ -134,7 +144,7 @@ namespace graphene {
           */
          void handle_tagdecl_definition(TagDecl* tag_decl);
 
-         void set_target_contract(const string& contract, const vector<string>& actions);
+         void set_target_contract(const string& contract, const vector<string>& actions, macro_info *macro_info_param_ptr);
 
       private:
          bool inspect_type_methods_for_actions(const Decl* decl);
@@ -188,6 +198,8 @@ namespace graphene {
          bool is_vector(const string& type_name);
          string add_vector(const clang::QualType& qt, size_t recursion_depth);
 
+         bool is_map(const clang::QualType& qt);
+         string add_map(const clang::QualType& qt, size_t recursion_depth);
          bool is_struct(const clang::QualType& qt);
          string add_struct(const clang::QualType& qt, string full_type_name, size_t recursion_depth);
 
@@ -200,6 +212,7 @@ namespace graphene {
          QualType get_vector_element_type(const clang::QualType& qt);
          string get_vector_element_type(const string& type_name);
 
+         std::vector<clang::QualType> get_map_element_type(const clang::QualType& qt);
          clang::QualType get_named_type_if_elaborated(const clang::QualType& qt);
 
          const clang::RecordDecl::field_range get_struct_fields(const clang::QualType& qt);
@@ -225,10 +238,11 @@ namespace graphene {
          string& contract;
          vector<string>& actions;
          const string& abi_context;
+         macro_info &macro_info_param;
 
          find_gxc_abi_macro_action(string& contract, vector<string>& actions, const string& abi_context
-            ): contract(contract),
-            actions(actions), abi_context(abi_context) {
+            , macro_info &macro_info_param): contract(contract),
+            actions(actions), abi_context(abi_context), macro_info_param(macro_info_param) {
          }
 
          struct callback_handler : public PPCallbacks {
@@ -262,13 +276,50 @@ namespace graphene {
 
                auto* id = token.getIdentifierInfo();
                if( id == nullptr ) return;
-               if( id->getName() != "GRAPHENE_ABI" ) return;
-
                const auto& sm = compiler_instance.getSourceManager();
                auto file_name = sm.getFilename(range.getBegin());
                if ( !act.abi_context.empty() && !file_name.startswith(act.abi_context) ) {
                   return;
                }
+               act.macro_info_param.source_path = file_name.str();
+
+               // add ACTION PAYABLE TABLE CONTRACT handle
+               clang::SourceLocation start(range.getBegin());
+               std::string na=id->getName().str();
+               auto macro_buffer = string(sm.getCharacterData(start));
+               auto filling_macro_info = [&](std::string macro_name,regex& r,std::vector<std::string>& lists){
+                   smatch smatch;
+                   auto res = regex_search(macro_buffer, smatch, r);
+                   ABI_ASSERT( res );
+                   auto smatch_name = remove_namespace(smatch[1].str());
+                   if(std::find(lists.begin(),lists.end(),smatch_name)==lists.end())
+                    lists.push_back(smatch_name);
+               };
+               if(na == "ACTION"){
+                   regex r(R"(ACTION\s*([a-z0-9\:]*)\W)");
+                   filling_macro_info(na,r,act.macro_info_param.macro_actions);
+                   return ;
+               }
+               else if(na == "PAYABLE"){
+                   regex r(R"(PAYABLE\s*([a-zA-Z0-9\:]*)\W)");
+                   filling_macro_info(na,r,act.macro_info_param.macro_payables);
+                   return ;
+               }
+               else if(na == "TABLE"){
+                   regex r(R"(TABLE\s*([a-z0-9\:]*)\W)");
+                   filling_macro_info(na,r,act.macro_info_param.macro_tables);
+                   return ;
+               }
+               else if(na == "CONTRACT"){
+                   regex r(R"(CONTRACT\s*([a-zA-Z0-9\:]*)\W)");
+                   smatch smatch;
+                   auto res = regex_search(macro_buffer, smatch, r);
+                   ABI_ASSERT( res );
+                   act.macro_info_param.contract_name = remove_namespace(smatch[1].str());
+                   return ;
+               }
+               if( id->getName() != "GRAPHENE_ABI" ) return;
+               act.macro_info_param.isfoundABImacro = true;
 
                ABI_ASSERT( md.getMacroInfo()->getNumArgs() == 2 );
 
@@ -282,6 +333,7 @@ namespace graphene {
                ABI_ASSERT( res );
 
                act.contract = remove_namespace(smatch[1].str());
+               act.macro_info_param.contract_name = act.contract;
 
                auto actions_str = smatch[2].str();
                boost::trim(actions_str);
@@ -312,12 +364,12 @@ namespace graphene {
       public:
 
          generate_abi_action(bool verbose, bool opt_sfs, string abi_context,
-                             abi_def& output, const string& contract, const vector<string>& actions) {
+                             abi_def& output, const string& contract, const vector<string>& actions, macro_info &macro_info_param) {
 
             abi_gen.set_output(output);
             abi_gen.set_verbose(verbose);
             abi_gen.set_abi_context(abi_context);
-            abi_gen.set_target_contract(contract, actions);
+            abi_gen.set_target_contract(contract, actions, &macro_info_param);
 
             if(opt_sfs)
                abi_gen.enable_optimizaton(abi_generator::OPT_SINGLE_FIELD_STRUCT);

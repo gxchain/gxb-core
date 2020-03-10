@@ -273,6 +273,7 @@ namespace graphene { namespace chain {
          const vm_cpu_limit_t                   get_cpu_limit() const;
          const trust_node_pledge_t              get_trust_node_pledge() const;
          const inter_contract_calling_params_t& get_inter_contract_calling_params() const;
+         const vote_params_t&                   get_vote_params() const;
 
          const bool                             get_contract_log_to_console() const { return contract_log_to_console; }
          void                                   set_contract_log_to_console(bool log_switch) { contract_log_to_console = log_switch; }
@@ -281,6 +282,8 @@ namespace graphene { namespace chain {
          const dynamic_global_property_object&  get_dynamic_global_properties()const;
          const node_property_object&            get_node_properties()const;
          const fee_schedule&                    current_fee_schedule()const;
+
+         asset                                  get_update_contract_fee( const operation& op, asset_id_type id );
 
          time_point_sec   head_block_time()const;
          uint32_t         head_block_num()const;
@@ -363,6 +366,8 @@ namespace graphene { namespace chain {
          void deposit_cashback(const account_object& acct, share_type amount, bool require_vesting = true);
          // to handle contract calling fees
          void deposit_contract_call_cashback(const account_object& acct, share_type amount);
+         // helper to handle staking rewards
+         void staking_cashback(const account_object& acct, share_type amount);
          // helper to handle witness pay
          void deposit_witness_pay(const witness_object& wit, share_type amount);
 
@@ -453,6 +458,7 @@ namespace graphene { namespace chain {
          void update_active_witnesses();
          void update_active_committee_members();
          void update_worker_votes();
+         void handling_expired_staking(const staking_object& staking_obj,const witness_id_type& witness_id);
 
          template<class... Types>
          void perform_account_maintenance(std::tuple<Types...> helpers);
@@ -514,6 +520,10 @@ namespace graphene { namespace chain {
         public:
            void           set_snapshot_dir(const fc::string& data_dir) { snapshot_dir = data_dir; }
            fc::string     get_snapshot_dir() const { return snapshot_dir; }
+         
+         // Current cycle witness node vote statistics
+        public:
+           map<witness_id_type,share_type>   _vote_statistics;
 
         private:
            fc::string                        snapshot_dir;

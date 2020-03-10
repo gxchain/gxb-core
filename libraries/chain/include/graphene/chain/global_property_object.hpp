@@ -51,7 +51,6 @@ namespace graphene { namespace chain {
          uint32_t                           next_available_vote_id = 0;
          vector<committee_member_id_type>   active_committee_members; // updated once per maintenance interval
          flat_set<witness_id_type>          active_witnesses; // updated once per maintenance interval
-         // n.b. witness scheduling is done by witness_schedule object
    };
 
    /**
@@ -109,6 +108,8 @@ namespace graphene { namespace chain {
 
          uint32_t last_irreversible_block_num = 0;
 
+         share_type        current_staking_reward_pool; 
+
          enum dynamic_flag_bits
          {
             /**
@@ -139,6 +140,7 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (recent_slots_filled)
                     (dynamic_flags)
                     (last_irreversible_block_num)
+                    (current_staking_reward_pool)
                   )
 
 FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::object),

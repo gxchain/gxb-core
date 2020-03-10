@@ -42,6 +42,7 @@
 #include <graphene/chain/second_hand_data_object.hpp>
 #include <graphene/app/database_api_common.hpp>
 #include <graphene/chain/pocs_object.hpp>
+#include <graphene/chain/transaction_entry_object.hpp>
 
 #include <fc/api.hpp>
 #include <fc/optional.hpp>
@@ -98,6 +99,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       optional<signed_block_with_info> get_block(uint32_t block_num)const;
       optional<signed_block_with_info> get_block_by_id(block_id_type block_id)const;
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
+      optional<processed_transaction> get_transaction_rows(transaction_id_type txid)const;
 
       // Globals
       chain_property_object get_chain_properties()const;
@@ -135,6 +137,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<balance_object> get_balance_objects( const vector<address>& addrs )const;
       vector<asset> get_vested_balances( const vector<balance_id_type>& objs )const;
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
+      vector<staking_object> get_staking_objects( account_id_type account_id )const;
 
       // Assets
       vector<optional<asset_object>> get_assets(const vector<asset_id_type>& asset_ids)const;
@@ -150,6 +153,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       uint64_t get_witness_count()const;
 
       vector<account_id_type> get_trust_nodes() const;
+      votes_records_result get_staking_objects_by_witness(witness_id_type wit,staking_id_type start,uint32_t limit) const;
 
       // Committee members
       vector<optional<committee_member_object>> get_committee_members(const vector<committee_member_id_type>& committee_member_ids)const;
@@ -177,6 +181,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Authority / validation
       std::string get_transaction_hex(const signed_transaction& trx)const;
+      std::string get_unsigned_transaction_hex(const transaction &trx) const;
       std::string serialize_transaction(const signed_transaction& trx) const;
       set<public_key_type> get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const;
       set<public_key_type> get_potential_signatures( const signed_transaction& trx )const;
