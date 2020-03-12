@@ -163,16 +163,26 @@ void_result staking_claim_evaluator::do_evaluate(const staking_claim_operation& 
     }
     // T+1 mode
     FC_ASSERT(stak_itor->staking_days * SECONDS_PER_DAY < (_db.head_block_time().sec_since_epoch() - stak_itor->create_date_time.sec_since_epoch()), "claim timepoint has not arrived yet");
-    FC_ASSERT(stak_itor->is_valid == false,"please wait for the dividend to end");
+    if(_db.get_vote_params().staking_mode_on == true){
+        FC_ASSERT(stak_itor->is_valid == false,"please wait for the dividend to end");
+        }
     return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 operation_result staking_claim_evaluator::do_apply(const staking_claim_operation& op, int32_t billed_cpu_time_us)
 { try {
     database& _db = db();
-
     const auto& staking_objects = _db.get_index_type<staking_index>().indices();
     auto stak_itor  = staking_objects.find(op.staking_id);
+    if(_db.get_vote_params().staking_mode_on == false){ 
+        const auto& witness_objects = _db.get_index_type<witness_index>().indices();
+        auto wit_obj_itor = witness_objects.find(stak_itor->trust_node);
+        _db.modify(*wit_obj_itor, [&](witness_object& obj) {
+         share_type total_vote_weights = stak_itor->amount.amount * stak_itor->weight;
+         share_type reduce_vote_weights = std::min(total_vote_weights, obj.total_vote_weights);
+         obj.total_vote_weights -= reduce_vote_weights;
+      });
+    }
     asset ret_amount = stak_itor->amount;
     _db.adjust_balance(stak_itor->owner, stak_itor->amount); // adjust balance
     _db.remove(*stak_itor);
