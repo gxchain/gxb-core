@@ -197,20 +197,62 @@ void database::deposit_contract_call_cashback(const account_object& acct, share_
 {
    if( amount == 0 )
       return;
-
-   optional<vesting_balance_id_type> new_vbid = deposit_lazy_vesting(
-       acct.cashback_vb,
-       amount,
-       get_inter_contract_calling_params().contract_basic_fee_vesting_period_seconds,
-       acct.id,
-       true);
-
-   if (new_vbid.valid()) {
-       modify(acct, [&](account_object &_acct) {
-           _acct.cashback_vb = *new_vbid;
-       });
+   if( head_block_time() > HARDFORK_1027_TIME ){
+       optional<vesting_balance_id_type> new_vbid = deposit_lazy_vesting(
+           acct.contract_call_cashback_vb,
+           amount,
+           get_inter_contract_calling_params().contract_basic_fee_vesting_period_seconds,
+           acct.id,
+           true);
+       if (new_vbid.valid()) {
+           modify(acct, [&](account_object &_acct) {
+               _acct.contract_call_cashback_vb = *new_vbid;
+           });
+       }
+   } else {
+       optional<vesting_balance_id_type> new_vbid = deposit_lazy_vesting(
+           acct.cashback_vb,
+           amount,
+           get_inter_contract_calling_params().contract_basic_fee_vesting_period_seconds,
+           acct.id,
+           true);
+       if (new_vbid.valid()) {
+           modify(acct, [&](account_object &_acct) {
+               _acct.cashback_vb = *new_vbid;
+           });
+       }
    }
-
+   return;
+}
+void database::staking_cashback(const account_object& acct, share_type amount)
+{
+   if( amount == 0 )
+      return;
+   if (head_block_time() > HARDFORK_1027_TIME) {
+       optional<vesting_balance_id_type> new_vbid = deposit_lazy_vesting(
+           acct.staking_cashback_vb,
+           amount,
+           get_vote_params().staking_rewards_vesting_seconds,
+           acct.id,
+           true);
+       if (new_vbid.valid()) {
+           modify(acct, [&](account_object &_acct) {
+               _acct.staking_cashback_vb = *new_vbid;
+           });
+       }
+   } else {
+       optional<vesting_balance_id_type> new_vbid = deposit_lazy_vesting(
+           acct.cashback_vb,
+           amount,
+           get_vote_params().staking_rewards_vesting_seconds,
+           acct.id,
+           true);
+       if (new_vbid.valid()) {
+           modify(acct, [&](account_object &_acct) {
+               _acct.cashback_vb = *new_vbid;
+           });
+       }
+   }
    return;
 }
 

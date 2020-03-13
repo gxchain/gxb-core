@@ -44,6 +44,24 @@ namespace graphene { namespace chain {
          void_result do_evaluate( const witness_update_operation& o );
          void_result do_apply(const witness_update_operation& o, int32_t billed_cpu_time_us = 0);
    };
+   
+   class witness_set_commission_evaluator : public evaluator<witness_set_commission_evaluator>
+   {
+      public:
+         typedef witness_set_commission_operation operation_type;
+
+         void_result do_evaluate( const witness_set_commission_operation& o );
+         void_result do_apply(const witness_set_commission_operation& o, int32_t billed_cpu_time_us = 0);
+   };
+
+   class witness_unbanned_evaluator : public evaluator<witness_unbanned_evaluator>
+   {
+      public:
+         typedef witness_unbanned_operation operation_type;
+
+         void_result do_evaluate( const witness_unbanned_operation& o );
+         void_result do_apply(const witness_unbanned_operation& o, int32_t billed_cpu_time_us = 0);
+   };
 
    class trust_node_pledge_withdraw_evaluator : public evaluator<trust_node_pledge_withdraw_evaluator>
    {

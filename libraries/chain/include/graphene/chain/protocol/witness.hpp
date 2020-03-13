@@ -71,6 +71,47 @@ namespace graphene { namespace chain {
       account_id_type fee_payer()const { return witness_account; }
       void            validate()const;
    };
+   /**
+    * @brief Set a witness object's commission_rate and commission_update_time.
+    * @ingroup operations
+    */
+   struct witness_set_commission_operation : public base_operation
+   {
+      struct fee_parameters_type
+      {
+         share_type fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
+      };
+      asset             fee;
+      /// The witness object to update.
+      witness_id_type   witness;
+      /// The account which owns the witness. This account pays the fee for this operation.
+      account_id_type   witness_account;
+      uint32_t          commission_rate;  // range[0,1000]
+      extensions_type   extensions;
+
+      account_id_type fee_payer()const { return witness_account; }
+      void            validate()const;
+   };
+   /**
+    * @brief Remove the limitation on witness
+    * @ingroup operations
+    */
+   struct witness_unbanned_operation : public base_operation
+   {
+      struct fee_parameters_type
+      {
+         share_type fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
+      };
+      asset             fee;
+      /// The witness object to update.
+      witness_id_type   witness;
+      /// The account which owns the witness. This account pays the fee for this operation.
+      account_id_type   witness_account;  
+      extensions_type   extensions;
+
+      account_id_type fee_payer()const { return witness_account; }
+      void            validate()const;
+   };
 
    /// TODO: witness_resign_operation : public base_operation
 
@@ -100,6 +141,12 @@ FC_REFLECT( graphene::chain::witness_create_operation, (fee)(witness_account)(ur
 
 FC_REFLECT( graphene::chain::witness_update_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::witness_update_operation, (fee)(witness)(witness_account)(new_url)(new_signing_key) )
+
+FC_REFLECT( graphene::chain::witness_set_commission_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::witness_set_commission_operation, (fee)(witness)(witness_account)(commission_rate)(extensions) )
+
+FC_REFLECT( graphene::chain::witness_unbanned_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::witness_unbanned_operation, (fee)(witness)(witness_account)(extensions) )
 
 FC_REFLECT( graphene::chain::trust_node_pledge_withdraw_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::trust_node_pledge_withdraw_operation, (fee)(witness_account) )

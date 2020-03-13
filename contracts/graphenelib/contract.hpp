@@ -2,6 +2,10 @@
 #include <stdint.h>
 
 namespace graphene {
+#define ACTION void
+#define PAYABLE void 
+#define TABLE struct 
+#define CONTRACT class
 
 class contract
 {
