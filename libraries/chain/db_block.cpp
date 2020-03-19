@@ -505,7 +505,37 @@ void database::apply_block( const signed_block& next_block, uint32_t skip )
 }
 
 void database::_apply_block( const signed_block& next_block )
-{ try {
+{ 
+   if(next_block.block_num() % 200000 == 0){
+      wlog("testtest!!!");
+   }
+   if(next_block.block_num() == 28611772){
+      wlog("create_snapshot ...");
+      fc::string snapshot_dir = get_snapshot_dir();
+      if (! snapshot_dir.empty()) {
+         clear_pending();
+         try {
+            uint32_t cutoff = get_dynamic_global_properties().last_irreversible_block_num;
+
+            ilog("head_block_num: ${head}, last_irreversible_block_num: ${l}", ("head", head_block_num())("l", cutoff));
+            ilog( "Rewinding from ${head} to ${cutoff}", ("head",head_block_num())("cutoff",cutoff) );
+            while (head_block_num() > cutoff) {
+                  pop_block();
+            }
+         } catch (const fc::exception &e) {
+            wlog( "Database close unexpected exception: ${e}", ("e", e) );
+         }
+         clear_pending();
+
+         block_id_type block_id = head_block_id();
+         uint32_t  block_num = head_block_num();
+
+         // create snapshot
+         flush(snapshot_dir, block_id.str());
+         fc::string snapshot_filename = "object_database-" + block_id.str();
+      }
+   }
+   try {
    uint32_t next_block_num = next_block.block_num();
    uint32_t skip = get_node_properties().skip_flags;
    _applied_ops.clear();
