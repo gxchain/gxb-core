@@ -525,6 +525,8 @@ class wallet_api
        */
       uint64_t                          get_asset_count() const;
 
+      uint64_t                          get_staking_count() const;
+
       /**
       * @brief get_data_transaction_product_costs
       * @param start
@@ -2281,6 +2283,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_commission_percent)
         (get_account_count)
         (get_asset_count)
+        (get_staking_count)
         (get_account_history)
         (get_account_history_by_operations)
         (get_irreversible_account_history)

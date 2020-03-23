@@ -889,6 +889,11 @@ uint64_t database_api_impl::get_account_count() const
    return _db.get_index_type<account_index>().indices().size();
 }
 
+uint64_t database_api_impl::get_staking_count() const
+{
+   return _db.get_index_type<staking_index>().indices().size();
+}
+
 uint64_t database_api_impl::get_asset_count() const
 {
    return _db.get_index_type<asset_index>().indices().size();

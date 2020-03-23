@@ -4114,6 +4114,12 @@
        return my->_remote_db->get_account_count();
     }
 
+    uint64_t wallet_api::get_staking_count() const
+    {
+       return my->_remote_db->get_staking_count();
+    }
+
+
     uint64_t wallet_api::get_asset_count() const
     {
        return my->_remote_db->get_asset_count();
