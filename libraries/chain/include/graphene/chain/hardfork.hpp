@@ -148,7 +148,7 @@
 
 #ifndef HARDFORK_1028_TIME
 // for testnet after this time cannot be updated to the same trust node
-#define HARDFORK_1028_TIME (fc::time_point_sec( 1582848000 )) // for testnet, 2020-02-28T00:00:00(UTC)
+#define HARDFORK_1028_TIME (fc::time_point_sec( 1584979200 )) // for testnet, 2020-03-24T00:00:00(UTC)
 #endif
 
 // #413 Add operation to claim asset fees
