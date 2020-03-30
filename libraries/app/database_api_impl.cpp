@@ -1286,6 +1286,9 @@ votes_records_result database_api_impl::get_staking_objects_by_witness(witness_i
           if(iter == trust_idx.end()){
             break;
           }
+          if(iter->trust_node != wit){
+            break;
+          }
           if(count >=limit){
             result.next_id = iter->id;
             result.more = true;
