@@ -232,21 +232,17 @@ namespace detail {
          auto login = std::make_shared<graphene::app::login_api>( std::ref(*_self) );
          login->enable_api("database_api");
          login->enable_api("network_broadcast_api");
+         login->enable_api("history_api");
          if( _options->count("enable-network-node-api") ){
             login->enable_api("network_node_api");
-         }
-          if( _options->count("enable-history-api") ){
-            login->enable_api("history_api");
          }
 
          wsc->register_api(login->database());
          wsc->register_api(fc::api<graphene::app::login_api>(login));
          wsc->register_api(login->network_broadcast());
+         wsc->register_api(login->history());
          if( _options->count("enable-network-node-api") ){
             wsc->register_api(login->network_node());
-         }
-         if( _options->count("enable-history-api") ){
-            wsc->register_api(login->history());
          }
          c->set_session_data( wsc );
 
