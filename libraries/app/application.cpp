@@ -232,6 +232,7 @@ namespace detail {
          auto login = std::make_shared<graphene::app::login_api>( std::ref(*_self) );
          login->enable_api("database_api");
          login->enable_api("network_broadcast_api");
+         login->enable_api("history_api");
          if( _options->count("enable-network-node-api") ){
             login->enable_api("network_node_api");
          }
@@ -239,6 +240,7 @@ namespace detail {
          wsc->register_api(login->database());
          wsc->register_api(fc::api<graphene::app::login_api>(login));
          wsc->register_api(login->network_broadcast());
+         wsc->register_api(login->history());
          if( _options->count("enable-network-node-api") ){
             wsc->register_api(login->network_node());
          }
@@ -958,6 +960,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("replay-blockchain", "Rebuild object graph by replaying all blocks")
          ("fast-replay", "no sleep while replaying block blocks")
          ("enable-network-node-api", "support network node api")
+         ("enable-history-api", "support history api")
          ("resync-blockchain", "Delete all blocks and re-sync with network from scratch")
          ("force-validate", "Force validation of all transactions")
          ("log-file", "Output result to log file, not console, only works when config.ini not exists")

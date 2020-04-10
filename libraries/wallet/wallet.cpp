@@ -2715,7 +2715,8 @@
            set<public_key_type> approving_key_set = _remote_db->get_required_signatures(tx, owned_keys);
 
            auto dyn_props = get_dynamic_global_properties();
-           tx.set_reference_block( dyn_props.head_block_id );
+           auto last_irreversible_block =  _remote_db->get_block(dyn_props.last_irreversible_block_num);
+           tx.set_reference_block(last_irreversible_block->block_id);
 
            // first, some bookkeeping, expire old items from _recently_generated_transactions
            // since transactions include the head block id, we just need the index for keeping transactions unique
