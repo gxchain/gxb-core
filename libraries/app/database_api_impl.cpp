@@ -499,6 +499,40 @@ optional<processed_transaction> database_api_impl::get_transaction_rows(transact
     return {};
 }
 
+uint64_t database_api_impl::get_transaction_rows_block(transaction_id_type txid)const
+{
+#ifdef QUERY_TXID_PLUGIN_HPP
+    auto &txid_index = _db.get_index_type<trx_entry_index>().indices().get<by_txid>();
+    auto itor = txid_index.find(txid);
+    if (itor == txid_index.end()) {
+        std::string txid_str(txid);
+        auto result = query_txid::query_txid_plugin::query_trx_by_id(txid_str);
+        if (result) {
+            const auto &trx_entry = *result;
+            auto opt_block = _db.fetch_block_by_number(trx_entry.block_num);
+            FC_ASSERT(opt_block);
+            FC_ASSERT(opt_block->transactions.size() > trx_entry.trx_in_block);
+            auto current_block_number = trx_entry.block_num;
+            return uint64_t(current_block_number);
+        }
+        return 0;
+    } else {
+        const auto &dpo = _db.get_dynamic_global_properties();
+        if (itor->block_num <= dpo.last_irreversible_block_num) {
+            const auto &trx_entry = *itor;
+            auto opt_block = _db.fetch_block_by_number(trx_entry.block_num);
+            FC_ASSERT(opt_block);
+            FC_ASSERT(opt_block->transactions.size() > trx_entry.trx_in_block);
+            auto current_block_number = trx_entry.block_num;
+            return uint64_t(current_block_number);
+        } else {
+            return 0;
+        }
+    }
+#endif
+    return 0;
+}
+
 global_property_object database_api_impl::get_global_properties()const
 {
    dlog("id=${id}................", ("id", global_property_id_type()));

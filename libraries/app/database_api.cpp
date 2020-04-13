@@ -155,6 +155,10 @@ optional<processed_transaction> database_api::get_transaction_rows(transaction_i
 {
    return my->get_transaction_rows(txid);
 }
+uint64_t database_api::get_transaction_rows_block(transaction_id_type txid)const
+{
+   return my->get_transaction_rows_block(txid);
+}
 
 optional<signed_transaction> database_api::get_recent_transaction_by_id( const transaction_id_type& id )const
 {
