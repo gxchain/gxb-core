@@ -499,11 +499,13 @@ optional<processed_transaction> database_api_impl::get_transaction_rows(transact
     return {};
 }
 
-uint64_t database_api_impl::get_transaction_rows_block(transaction_id_type txid)const
+fc::variant database_api_impl::get_transaction_by_txid(transaction_id_type txid)const
 {
 #ifdef QUERY_TXID_PLUGIN_HPP
     auto &txid_index = _db.get_index_type<trx_entry_index>().indices().get<by_txid>();
     auto itor = txid_index.find(txid);
+    fc::variant vresult;
+    std::pair<optional<processed_transaction> ,std::string> result_pair;
     if (itor == txid_index.end()) {
         std::string txid_str(txid);
         auto result = query_txid::query_txid_plugin::query_trx_by_id(txid_str);
@@ -512,10 +514,13 @@ uint64_t database_api_impl::get_transaction_rows_block(transaction_id_type txid)
             auto opt_block = _db.fetch_block_by_number(trx_entry.block_num);
             FC_ASSERT(opt_block);
             FC_ASSERT(opt_block->transactions.size() > trx_entry.trx_in_block);
-            auto current_block_number = trx_entry.block_num;
-            return uint64_t(current_block_number);
+            optional<processed_transaction> res = opt_block->transactions[trx_entry.trx_in_block];
+            result_pair.first = res;
+            result_pair.second = "block_number : "+std::to_string(trx_entry.block_num);
+            fc::to_variant(result_pair,vresult,GRAPHENE_MAX_NESTED_OBJECTS);
+            return vresult;
         }
-        return 0;
+        return {};
     } else {
         const auto &dpo = _db.get_dynamic_global_properties();
         if (itor->block_num <= dpo.last_irreversible_block_num) {
@@ -523,14 +528,17 @@ uint64_t database_api_impl::get_transaction_rows_block(transaction_id_type txid)
             auto opt_block = _db.fetch_block_by_number(trx_entry.block_num);
             FC_ASSERT(opt_block);
             FC_ASSERT(opt_block->transactions.size() > trx_entry.trx_in_block);
-            auto current_block_number = trx_entry.block_num;
-            return uint64_t(current_block_number);
+            optional<processed_transaction> res = opt_block->transactions[trx_entry.trx_in_block];
+            result_pair.first = res;
+            result_pair.second = "block_number : "+std::to_string(trx_entry.block_num);
+            fc::to_variant(result_pair,vresult,GRAPHENE_MAX_NESTED_OBJECTS);
+            return vresult;
         } else {
-            return 0;
+            return {};
         }
     }
 #endif
-    return 0;
+    return {};
 }
 
 global_property_object database_api_impl::get_global_properties()const
