@@ -505,7 +505,9 @@ fc::variant database_api_impl::get_transaction_by_txid(transaction_id_type txid)
     auto &txid_index = _db.get_index_type<trx_entry_index>().indices().get<by_txid>();
     auto itor = txid_index.find(txid);
     fc::variant vresult;
-    std::pair<optional<processed_transaction> ,std::string> result_pair;
+    std::pair<std::string,uint64_t>block_number_pair;
+    block_number_pair.first = "block_number :";
+    std::pair<optional<processed_transaction> ,std::pair> result_pair;
     if (itor == txid_index.end()) {
         std::string txid_str(txid);
         auto result = query_txid::query_txid_plugin::query_trx_by_id(txid_str);
@@ -516,7 +518,8 @@ fc::variant database_api_impl::get_transaction_by_txid(transaction_id_type txid)
             FC_ASSERT(opt_block->transactions.size() > trx_entry.trx_in_block);
             optional<processed_transaction> res = opt_block->transactions[trx_entry.trx_in_block];
             result_pair.first = res;
-            result_pair.second = "block_number : "+std::to_string(trx_entry.block_num);
+            block_number_pair.second = trx_entry.block_num;
+            result_pair.second = block_number_pair;
             fc::to_variant(result_pair,vresult,GRAPHENE_MAX_NESTED_OBJECTS);
             return vresult;
         }
@@ -530,7 +533,8 @@ fc::variant database_api_impl::get_transaction_by_txid(transaction_id_type txid)
             FC_ASSERT(opt_block->transactions.size() > trx_entry.trx_in_block);
             optional<processed_transaction> res = opt_block->transactions[trx_entry.trx_in_block];
             result_pair.first = res;
-            result_pair.second = "block_number : "+std::to_string(trx_entry.block_num);
+            block_number_pair.second = trx_entry.block_num;
+            result_pair.second = block_number_pair;
             fc::to_variant(result_pair,vresult,GRAPHENE_MAX_NESTED_OBJECTS);
             return vresult;
         } else {
