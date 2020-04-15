@@ -773,6 +773,7 @@ FC_API(graphene::app::database_api,
    (get_block_by_id)
    (get_transaction)
    (get_transaction_rows)
+   (get_transaction_by_txid)
    (get_recent_transaction_by_id)
 
    // Globals
