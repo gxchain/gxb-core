@@ -498,15 +498,11 @@ optional<processed_transaction> database_api_impl::get_transaction_rows(transact
 #endif
     return {};
 }
-
-fc::variant database_api_impl::get_transaction_by_txid(transaction_id_type txid)const
+exported_transaction database_api_impl::get_transaction_by_txid(transaction_id_type txid)const
 {
 #ifdef QUERY_TXID_PLUGIN_HPP
     auto &txid_index = _db.get_index_type<trx_entry_index>().indices().get<by_txid>();
     auto itor = txid_index.find(txid);
-    fc::variant vresult;
-    std::map<std::string,uint64_t>block_number_map;
-    std::pair<optional<processed_transaction> ,std::map<std::string,uint64_t> > result_pair;
     if (itor == txid_index.end()) {
         std::string txid_str(txid);
         auto result = query_txid::query_txid_plugin::query_trx_by_id(txid_str);
@@ -515,11 +511,8 @@ fc::variant database_api_impl::get_transaction_by_txid(transaction_id_type txid)
             auto opt_block = _db.fetch_block_by_number(trx_entry.block_num);
             FC_ASSERT(opt_block);
             FC_ASSERT(opt_block->transactions.size() > trx_entry.trx_in_block);
-            optional<processed_transaction> res = opt_block->transactions[trx_entry.trx_in_block];
-            result_pair.first = res;
-            block_number_map.insert(std::make_pair("block_number :" , trx_entry.block_num));
-            result_pair.second = block_number_map;
-            fc::to_variant(result_pair,vresult,GRAPHENE_MAX_NESTED_OBJECTS);
+            processed_transaction res = opt_block->transactions[trx_entry.trx_in_block];
+            exported_transaction vresult = {res,trx_entry.block_num};
             return vresult;
         }
         return {};
@@ -530,11 +523,8 @@ fc::variant database_api_impl::get_transaction_by_txid(transaction_id_type txid)
             auto opt_block = _db.fetch_block_by_number(trx_entry.block_num);
             FC_ASSERT(opt_block);
             FC_ASSERT(opt_block->transactions.size() > trx_entry.trx_in_block);
-            optional<processed_transaction> res = opt_block->transactions[trx_entry.trx_in_block];
-            result_pair.first = res;
-            block_number_map.insert(std::make_pair("block_number :" , trx_entry.block_num));
-            result_pair.second = block_number_map;
-            fc::to_variant(result_pair,vresult,GRAPHENE_MAX_NESTED_OBJECTS);
+            processed_transaction res = opt_block->transactions[trx_entry.trx_in_block];
+            exported_transaction vresult = {res,trx_entry.block_num};
             return vresult;
         } else {
             return {};

@@ -60,7 +60,6 @@ using namespace std;
 
 class database_api_impl;
 
-
 /**
  * @brief The database_api class implements the RPC API for the chain database.
  *
@@ -139,7 +138,7 @@ class database_api
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
 
       optional<processed_transaction> get_transaction_rows(transaction_id_type txid)const;
-      fc::variant get_transaction_by_txid(transaction_id_type txid)const;
+      exported_transaction get_transaction_by_txid(transaction_id_type txid)const;
       /**
        * If the transaction has not expired, this method will return the transaction for the given ID or
        * it will return NULL if it is not known.  Just because it is not known does not mean it wasn't
