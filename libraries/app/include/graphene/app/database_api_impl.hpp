@@ -71,7 +71,6 @@ struct cmp_pair_by_value {
        return lhs.second > rhs.second;
    }
 };
-
 class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 {
    public:
@@ -100,7 +99,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       optional<signed_block_with_info> get_block_by_id(block_id_type block_id)const;
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
       optional<processed_transaction> get_transaction_rows(transaction_id_type txid)const;
-
+      exported_transaction get_transaction_by_txid(transaction_id_type txid)const;
+      
       // Globals
       chain_property_object get_chain_properties()const;
       global_property_object get_global_properties()const;

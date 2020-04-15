@@ -221,6 +221,11 @@ namespace graphene { namespace chain {
 
       digest_type merkle_digest()const;
    };
+    struct exported_transaction  
+   {
+      processed_transaction transaction;
+      uint64_t block_number;
+   };
 
    /// @} transactions group
 
@@ -230,3 +235,4 @@ FC_REFLECT( graphene::chain::transaction, (ref_block_num)(ref_block_prefix)(expi
 // Note: not reflecting signees field for backward compatibility; in addition, it should not be in p2p messages
 FC_REFLECT_DERIVED( graphene::chain::signed_transaction, (graphene::chain::transaction), (signatures) )
 FC_REFLECT_DERIVED( graphene::chain::processed_transaction, (graphene::chain::signed_transaction), (operation_results) )
+FC_REFLECT( graphene::chain::exported_transaction, (transaction)(block_number)) 
