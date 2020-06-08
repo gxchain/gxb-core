@@ -46,6 +46,10 @@
 #include <graphene/query_txid/query_txid_plugin.hpp>
 #endif
 
+#ifdef QUERY_OP_PLUGIN_HPP
+#include <graphene/query_op/query_op_plugin.hpp>
+#endif
+
 #include <cctype>
 
 #include <cfenv>
@@ -532,6 +536,68 @@ exported_transaction database_api_impl::get_transaction_by_txid(transaction_id_t
     }
 #endif
     return {};
+}
+
+optional<account_history_operations>database_api_impl::get_account_relative_ops(account_id_type account_id,uint32_t start,uint32_t limit)const
+{
+#ifdef QUERY_OP_PLUGIN_HPP
+    try
+    {
+        FC_ASSERT( limit <= 100, "Only 100 operations can be queried at a time" );
+        FC_ASSERT( start >= 1 );
+        const auto& stats_obj = account_id(_db).statistics(_db);
+        auto number = stats_obj.total_ops;
+        vector<exported_operation> ops;
+        FC_ASSERT( number >= start);
+        auto end_number = std::max(start+limit-1, number);
+        auto &op_index = _db.get_index_type<op_entry_index>().indices().get<by_opindex>();
+        for(auto a = start; a <= end_number; a++){
+           std::string opindex = std::to_string(account_id.space_id)+"."+std::to_string(account_id.type_id)+"."+std::to_string(account_id.instance.value)+"_"
+														  +std::to_string(a); 
+           auto itor = op_index.find(opindex);
+           if(itor == op_index.end()){
+               auto result = query_op::query_op_plugin::query_op_by_index(opindex);
+               if(result){
+                   const auto &op_entry = *result;
+                   auto opt_block = _db.fetch_block_by_number(op_entry.block_num);
+                   FC_ASSERT(opt_block);
+                   FC_ASSERT(opt_block->transactions.size() > op_entry.trx_in_block);
+                   if(op_entry.is_virtual){
+                       exported_operation exp_op = {op_entry.op_index, 
+                         op_entry.virtual_op,
+                         op_entry.is_virtual};
+                       ops.push_back(exp_op);
+                   }else{
+                       exported_operation exp_op = {op_entry.op_index, 
+                         opt_block->transactions[op_entry.trx_in_block].operations[op_entry.op_in_trx],
+                         op_entry.is_virtual};
+                       ops.push_back(exp_op);
+                   }
+               }
+           }else{
+               const auto &op_entry = *itor;
+               auto opt_block = _db.fetch_block_by_number(op_entry.block_num);
+               FC_ASSERT(opt_block);
+               FC_ASSERT(opt_block->transactions.size() > op_entry.trx_in_block);
+               if(op_entry.is_virtual){
+                       exported_operation exp_op = {op_entry.op_index, 
+                         op_entry.virtual_op,
+                         op_entry.is_virtual};
+                       ops.push_back(exp_op);
+               }else{
+                       exported_operation exp_op = {op_entry.op_index, 
+                         opt_block->transactions[op_entry.trx_in_block].operations[op_entry.op_in_trx],
+                         op_entry.is_virtual};
+                       ops.push_back(exp_op);
+               }
+           }
+        }
+        account_history_operations res = {number,ops};
+        return res;
+    }
+    FC_CAPTURE_AND_RETHROW( (account_id)(start)(limit) );
+#endif
+return {};
 }
 
 global_property_object database_api_impl::get_global_properties()const

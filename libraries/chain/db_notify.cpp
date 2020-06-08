@@ -496,6 +496,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
               break;
              case impl_trx_entry_history_object_type:
               break;
+             case impl_op_entry_history_object_type:
+              break;
       }
 
    }
