@@ -160,6 +160,11 @@ exported_transaction database_api::get_transaction_by_txid(transaction_id_type t
    return my->get_transaction_by_txid(txid);
 }
 
+optional<account_history_operations>database_api::get_account_relative_ops(account_id_type account_id,uint32_t start,uint32_t limit)const
+{
+   return my->get_account_relative_ops(account_id, start, limit);
+}
+
 optional<signed_transaction> database_api::get_recent_transaction_by_id( const transaction_id_type& id )const
 {
    try {
