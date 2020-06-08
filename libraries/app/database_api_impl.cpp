@@ -549,9 +549,9 @@ optional<account_history_operations>database_api_impl::get_account_relative_ops(
         auto number = stats_obj.total_ops;
         vector<exported_operation> ops;
         FC_ASSERT( number >= start);
-        auto end_number = std::min(start+limit-1, number);
+        auto end_number = std::max(start+limit-1, number);
         auto &op_index = _db.get_index_type<op_entry_index>().indices().get<by_opindex>();
-        for(uint32_t a = start; a <= end_number; a++){
+        for(auto a = start; a <= end_number; a++){
            std::string opindex = std::to_string(account_id.space_id)+"."+std::to_string(account_id.type_id)+"."+std::to_string(account_id.instance.value)+"_"
 														  +std::to_string(a); 
            auto itor = op_index.find(opindex);

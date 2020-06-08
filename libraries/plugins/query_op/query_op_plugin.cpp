@@ -69,15 +69,12 @@ class query_op_plugin_impl
     std::string db_path = "op_entry.db";
     uint64_t limit_batch = 1000; //limit of leveldb batch
     primary_index< operation_history_index >* _oho_index;
+ 	 query_op_plugin &_self;
 
   private:
-    query_op_plugin &_self;
-
     fc::signal<void(const uint64_t)> sig_remove;
-    fc::signal<void(const account_id_type, const optional<operation_history_object>&)> sig_db_write;
-    
-    static leveldb::DB *leveldb;
-	void add_account_operation(const account_id_type account_id, const optional<operation_history_object> op);                              
+	 void add_account_operation(const account_id_type account_id, const optional<operation_history_object>& op);
+    static leveldb::DB *leveldb;                              
     void remove_op_index(const uint64_t op_entry_id); //Remove op_index in db
 };
 leveldb::DB *query_op_plugin_impl::leveldb = nullptr;
@@ -90,7 +87,6 @@ void query_op_plugin_impl::init()
         options.create_if_missing = true;
         leveldb::Status s = leveldb::DB::Open(options, db_path, &leveldb);
 
-        sig_db_write.connect([&](const account_id_type account_id, const optional<operation_history_object> op){add_account_operation(account_id,op);});
         sig_remove.connect([&](const uint64_t op_entry_id) { remove_op_index(op_entry_id); });
     }
     FC_LOG_AND_RETHROW()
@@ -152,7 +148,7 @@ void query_op_plugin_impl::update_account_operations(const signed_block &b)
       else{
          // add to the operation history index
          oho = create_oho();
-	  }
+		}
 
 		const operation_history_object& op = *o_op;
 
@@ -167,29 +163,27 @@ void query_op_plugin_impl::update_account_operations(const signed_block &b)
          graphene::chain::operation_get_impacted_accounts( op.op, impacted );
 
 		for( auto& a : other )
-          for( auto& item : a.account_auths )
+         for( auto& item : a.account_auths )
             impacted.insert( item.first );
 
 		if (!impacted.empty() && !oho.valid()) { oho = create_oho(); }
 
       for( auto& account_id : impacted )
          {
-            sig_db_write( account_id, oho );
+            add_account_operation( account_id, oho );
          }
 		if (! oho.valid())
          skip_oho_id();
-      operation_history_id_type remove_op_id = oho->id;
-	  db.remove( remove_op_id(db));
          
    }
 }
 
-void query_op_plugin_impl::add_account_operation(const account_id_type account_id, const optional<operation_history_object> op)
+void query_op_plugin_impl::add_account_operation(const account_id_type account_id, const optional<operation_history_object>& op)
 {
-   graphene::chain::database& db = database();
+	graphene::chain::database& db = database();
    const auto& stats_obj = account_id(db).statistics(db);
 
-   const auto& ath = db.create<op_entry_object>([&](op_entry_object& obj){
+	const auto& ath = db.create<op_entry_object>([&](op_entry_object& obj){
 		obj.block_num 			= op->block_num;
 		obj.trx_in_block 		= op->trx_in_block;
 		obj.op_in_trx  		    = op->op_in_trx;
@@ -206,6 +200,9 @@ void query_op_plugin_impl::add_account_operation(const account_id_type account_i
 	db.modify( stats_obj, [&]( account_statistics_object& obj ){
        obj.total_ops = ath.sequence;
    });
+	
+	operation_history_id_type remove_op_id = op->id;
+	db.remove( remove_op_id(db));
 
 	const auto &dpo = db.get_dynamic_global_properties();
 	uint64_t irr_num = dpo.last_irreversible_block_num;
@@ -213,10 +210,10 @@ void query_op_plugin_impl::add_account_operation(const account_id_type account_i
 	const auto &op_bn_idx = op_idx.get<by_blocknum>();
 	if (op_idx.begin() == op_idx.end()) return;
 	auto itor_begin = op_bn_idx.begin();
-    auto itor_end = op_bn_idx.lower_bound(irr_num);
-    auto number = std::distance(itor_begin,itor_end);
-    auto backupnum = number;
-    auto put_index = itor_begin->id.instance();
+   auto itor_end = op_bn_idx.lower_bound(irr_num);
+   auto number = std::distance(itor_begin,itor_end);
+   auto backupnum = number;
+   auto put_index = itor_begin->id.instance();
 	while (number > limit_batch) {
 		leveldb::WriteBatch batch;
 		auto itor_backup = itor_begin;
@@ -292,10 +289,10 @@ void query_op_plugin::plugin_initialize(const boost::program_options::variables_
     try {
         ilog("query_op plugin initialized");
         // Add the index of the op_entry_index object table to the database
+        database().add_index<primary_index<op_entry_index>>();
         // Respond to the apply_block signal
         database().applied_block.connect([&](const signed_block &b) { my->update_account_operations(b); });
-        my->_oho_index = database().add_index< primary_index< operation_history_index > >();
-        database().add_index<primary_index<op_entry_index>>();
+		  my->_oho_index = database().add_index< primary_index< operation_history_index > >();
         if (options.count("query-op-path")) {
             my->db_path = options["query-op-path"].as<std::string>();
             if (!fc::exists(my->db_path))
