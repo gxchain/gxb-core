@@ -148,7 +148,7 @@ void query_op_plugin_impl::update_account_operations(const signed_block &b)
       else{
          // add to the operation history index
          oho = create_oho();
-		}
+	  }
 
 		const operation_history_object& op = *o_op;
 
@@ -174,6 +174,8 @@ void query_op_plugin_impl::update_account_operations(const signed_block &b)
          }
 		if (! oho.valid())
          skip_oho_id();
+      operation_history_id_type remove_op_id = oho->id;
+	  db.remove( remove_op_id(db));
          
    }
 }
@@ -200,9 +202,6 @@ void query_op_plugin_impl::add_account_operation(const account_id_type account_i
 	db.modify( stats_obj, [&]( account_statistics_object& obj ){
        obj.total_ops = ath.sequence;
    });
-	
-	operation_history_id_type remove_op_id = op->id;
-	db.remove( remove_op_id(db));
 
 	const auto &dpo = db.get_dynamic_global_properties();
 	uint64_t irr_num = dpo.last_irreversible_block_num;
@@ -289,10 +288,10 @@ void query_op_plugin::plugin_initialize(const boost::program_options::variables_
     try {
         ilog("query_op plugin initialized");
         // Add the index of the op_entry_index object table to the database
-        database().add_index<primary_index<op_entry_index>>();
         // Respond to the apply_block signal
         database().applied_block.connect([&](const signed_block &b) { my->update_account_operations(b); });
-		  my->_oho_index = database().add_index< primary_index< operation_history_index > >();
+        my->_oho_index = database().add_index< primary_index< operation_history_index > >();
+        database().add_index<primary_index<op_entry_index>>();
         if (options.count("query-op-path")) {
             my->db_path = options["query-op-path"].as<std::string>();
             if (!fc::exists(my->db_path))
