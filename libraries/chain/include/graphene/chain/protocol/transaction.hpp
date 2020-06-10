@@ -229,7 +229,7 @@ namespace graphene { namespace chain {
    struct exported_operation
    {
       std::string op_index;
-      operation_result op;
+      operation op;
       bool is_virtual;
    };
    struct account_history_operations
