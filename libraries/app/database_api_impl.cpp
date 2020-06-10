@@ -542,7 +542,7 @@ uint32_t database_api_impl::get_account_total_relative_ops_number(account_id_typ
 {
 #ifdef QUERY_TXID_PLUGIN_HPP
     const auto& stats_obj = account_id(_db).statistics(_db);
-    auto result = stats_obj.total_ops
+    auto result = stats_obj.total_ops;
     return result;
 #endif
 return 0;
