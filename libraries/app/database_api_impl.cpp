@@ -538,6 +538,16 @@ exported_transaction database_api_impl::get_transaction_by_txid(transaction_id_t
     return {};
 }
 
+uint32_t database_api_impl::get_account_total_relative_ops_number(account_id_type account_id)
+{
+#ifdef QUERY_TXID_PLUGIN_HPP
+    const auto& stats_obj = account_id(_db).statistics(_db);
+    auto result = stats_obj.total_ops
+    return result;
+#endif
+return 0;
+}
+
 optional<account_history_operations>database_api_impl::get_account_relative_ops(account_id_type account_id,uint32_t start,uint32_t limit)const
 {
 #ifdef QUERY_OP_PLUGIN_HPP
