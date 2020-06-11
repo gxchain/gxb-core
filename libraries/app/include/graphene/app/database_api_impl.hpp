@@ -101,7 +101,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
       optional<processed_transaction> get_transaction_rows(transaction_id_type txid)const;
       exported_transaction get_transaction_by_txid(transaction_id_type txid)const;
-      uint32_t get_account_total_relative_ops_number(account_id_type account_id);
       optional<account_history_operations>get_account_relative_ops(account_id_type account_id,uint32_t start,uint32_t limit)const;
 
       // Globals

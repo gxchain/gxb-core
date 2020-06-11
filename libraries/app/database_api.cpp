@@ -160,11 +160,6 @@ exported_transaction database_api::get_transaction_by_txid(transaction_id_type t
    return my->get_transaction_by_txid(txid);
 }
 
-uint32_t database_api::get_account_total_relative_ops_number(account_id_type account_id)
-{
-   return my->get_account_total_relative_ops_number(account_id);
-}
-
 optional<account_history_operations>database_api::get_account_relative_ops(account_id_type account_id,uint32_t start,uint32_t limit)const
 {
    return my->get_account_relative_ops(account_id, start, limit);
