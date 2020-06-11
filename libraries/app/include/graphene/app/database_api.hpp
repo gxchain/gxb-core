@@ -140,7 +140,6 @@ class database_api
       optional<processed_transaction> get_transaction_rows(transaction_id_type txid)const;
       exported_transaction get_transaction_by_txid(transaction_id_type txid)const;
       optional<account_history_operations>get_account_relative_ops(account_id_type account_id,uint32_t start,uint32_t limit)const;
-      uint32_t get_account_total_relative_ops_number(account_id_type account_id);
       /**
        * If the transaction has not expired, this method will return the transaction for the given ID or
        * it will return NULL if it is not known.  Just because it is not known does not mean it wasn't
@@ -780,7 +779,6 @@ FC_API(graphene::app::database_api,
    (get_transaction_by_txid)
    (get_recent_transaction_by_id)
    (get_account_relative_ops)
-   (get_account_total_relative_ops_number)
 
    // Globals
    (get_chain_properties)
