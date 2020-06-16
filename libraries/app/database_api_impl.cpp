@@ -46,8 +46,8 @@
 #include <graphene/query_txid/query_txid_plugin.hpp>
 #endif
 
-#ifdef QUERY_OP_PLUGIN_HPP
-#include <graphene/query_op/query_op_plugin.hpp>
+#ifdef ACCOUNT_HISTORY_LEVELDB_PLUGIN_HPP
+#include <graphene/account_history_leveldb/account_history_leveldb_plugin.hpp>
 #endif
 
 #include <cctype>
@@ -540,7 +540,7 @@ exported_transaction database_api_impl::get_transaction_by_txid(transaction_id_t
 
 optional<account_history_operations>database_api_impl::get_account_relative_ops(account_id_type account_id,uint32_t start,uint32_t limit)const
 {
-#ifdef QUERY_OP_PLUGIN_HPP
+#ifdef ACCOUNT_HISTORY_LEVELDB_PLUGIN_HPP
     try
     {
         FC_ASSERT( limit <= 100, "Only 100 operations can be queried at a time" );
@@ -556,7 +556,7 @@ optional<account_history_operations>database_api_impl::get_account_relative_ops(
 														  +std::to_string(a); 
            auto itor = op_index.find(opindex);
            if(itor == op_index.end()){
-               auto result = query_op::query_op_plugin::query_op_by_index(opindex);
+               auto result = account_history_leveldb::account_history_leveldb_plugin::query_op_by_index(opindex);
                if(result){
                    const auto &op_entry = *result;
                    auto opt_block = _db.fetch_block_by_number(op_entry.block_num);

@@ -32,8 +32,8 @@
 #ifdef QUERY_TXID_PLUGIN_HPP
 #include <graphene/query_txid/query_txid_plugin.hpp>
 #endif
-#ifdef QUERY_OP_PLUGIN_HPP
-#include <graphene/query_op/query_op_plugin.hpp>
+#ifdef ACCOUNT_HISTORY_LEVELDB_PLUGIN_HPP
+#include <graphene/account_history_leveldb/account_history_leveldb_plugin.hpp>
 #endif
 #ifdef ELASTIC_SEARCH_PLUGIN_HPP
 #include <graphene/elasticsearch/elasticsearch_plugin.hpp>
@@ -96,8 +96,8 @@ int main(int argc, char** argv) {
 #ifdef QUERY_TXID_PLUGIN_HPP
       auto querytxid_plug = node->register_plugin<query_txid::query_txid_plugin>();
 #endif
-#ifdef QUERY_OP_PLUGIN_HPP
-      auto queryop_plug = node->register_plugin<query_op::query_op_plugin>();
+#ifdef ACCOUNT_HISTORY_LEVELDB_PLUGIN_HPP
+      auto queryop_plug = node->register_plugin<account_history_leveldb::account_history_leveldb_plugin>();
 #endif
 #ifdef ELASTIC_SEARCH_PLUGIN_HPP
       auto esearch_plug = node->register_plugin<elasticsearch::elasticsearch_plugin>();

@@ -4,19 +4,19 @@
 
 namespace graphene
 {
-namespace query_op
+namespace account_history_leveldb
 {
 
 using namespace chain;
 namespace detail
 {
-class query_op_plugin_impl;
+class account_history_leveldb_plugin_impl;
 }
-class query_op_plugin : public graphene::app::plugin
+class account_history_leveldb_plugin : public graphene::app::plugin
 {
   public:
-    query_op_plugin();
-    virtual ~query_op_plugin();
+    account_history_leveldb_plugin();
+    virtual ~account_history_leveldb_plugin();
 
     std::string plugin_name() const override;
 
@@ -29,9 +29,9 @@ class query_op_plugin : public graphene::app::plugin
 
     static optional<op_entry_object> query_op_by_index(std::string op_index);
 
-    friend class detail::query_op_plugin_impl;
+    friend class detail::account_history_leveldb_plugin_impl;
 
-    std::unique_ptr<detail::query_op_plugin_impl> my;
+    std::unique_ptr<detail::account_history_leveldb_plugin_impl> my;
 };
-} // namespace query_op
+} // namespace account_history_leveldb
 } // namespace graphene

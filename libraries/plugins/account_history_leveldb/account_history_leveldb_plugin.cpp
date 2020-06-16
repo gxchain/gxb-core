@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 #pragma once
-#include <graphene/query_op/query_op_plugin.hpp>
+#include <graphene/account_history_leveldb/account_history_leveldb_plugin.hpp>
 #include <fc/io/fstream.hpp>
 #include <graphene/chain/operation_entry_object.hpp>
 #include <queue>
@@ -43,19 +43,19 @@
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
 
-namespace graphene{ namespace query_op{
+namespace graphene{ namespace account_history_leveldb{
 
 namespace detail
 {
 using namespace leveldb;
-class query_op_plugin_impl
+class account_history_leveldb_plugin_impl
 {
   public:
-    query_op_plugin_impl(query_op_plugin &_plugin)
+    account_history_leveldb_plugin_impl(account_history_leveldb_plugin &_plugin)
         : _self(_plugin)
     {
     }
-    ~query_op_plugin_impl()
+    ~account_history_leveldb_plugin_impl()
     {
     }
 
@@ -68,10 +68,9 @@ class query_op_plugin_impl
     static optional<op_entry_object> query_op_by_index(std::string op_index);
     std::string db_path = "op_entry.db";
     uint64_t limit_batch = 1000; //limit of leveldb batch
-    primary_index< operation_history_index >* _oho_index;
 
   private:
-    query_op_plugin &_self;
+    account_history_leveldb_plugin &_self;
 
     fc::signal<void(const uint64_t)> sig_remove;
     fc::signal<void(const account_id_type, const optional<operation_history_object>&)> sig_db_write;
@@ -80,9 +79,9 @@ class query_op_plugin_impl
 	void add_account_operation(const account_id_type account_id, const optional<operation_history_object> op);                              
     void remove_op_index(const uint64_t op_entry_id); //Remove op_index in db
 };
-leveldb::DB *query_op_plugin_impl::leveldb = nullptr;
+leveldb::DB *account_history_leveldb_plugin_impl::leveldb = nullptr;
 
-void query_op_plugin_impl::init()
+void account_history_leveldb_plugin_impl::init()
 {
     try {
         //Create leveldb
@@ -95,7 +94,7 @@ void query_op_plugin_impl::init()
     }
     FC_LOG_AND_RETHROW()
 }
-optional<op_entry_object> query_op_plugin_impl::query_op_by_index(std::string op_index)
+optional<op_entry_object> account_history_leveldb_plugin_impl::query_op_by_index(std::string op_index)
 {
     try {
         if (leveldb == nullptr) return optional<op_entry_object>();
@@ -109,27 +108,16 @@ optional<op_entry_object> query_op_plugin_impl::query_op_by_index(std::string op
     FC_LOG_AND_RETHROW()
 }
 
-void query_op_plugin_impl::update_account_operations(const signed_block &b)
+void account_history_leveldb_plugin_impl::update_account_operations(const signed_block &b)
 {
 	graphene::chain::database& db = database();
 	const vector<optional< operation_history_object > >& hist = db.get_applied_operations();
-	bool is_first = true;
-	auto skip_oho_id = [&is_first,&db,this]() {
-		if( is_first && db._undo_db.enabled() ) 
-		{
-			db.remove( db.create<operation_history_object>( []( operation_history_object& obj) {} ) );
-			is_first = false;
-		}
-		else
-			_oho_index->use_next_id();
-	};
 
    for( const optional< operation_history_object >& o_op : hist )
    {
       optional<operation_history_object> oho;
 
       auto create_oho = [&]() {
-         is_first = false;
          return optional<operation_history_object>( db.create<operation_history_object>( [&]( operation_history_object& h )
          {
             if( o_op.valid() )
@@ -146,7 +134,6 @@ void query_op_plugin_impl::update_account_operations(const signed_block &b)
       
       if( !o_op.valid())
       {
-         skip_oho_id();
          continue;
       }
       else{
@@ -176,15 +163,13 @@ void query_op_plugin_impl::update_account_operations(const signed_block &b)
          {
             sig_db_write( account_id, oho );
          }
-		if (! oho.valid())
-         skip_oho_id();
       operation_history_id_type remove_op_id = oho->id;
 	  db.remove( remove_op_id(db));
          
    }
 }
 
-void query_op_plugin_impl::add_account_operation(const account_id_type account_id, const optional<operation_history_object> op)
+void account_history_leveldb_plugin_impl::add_account_operation(const account_id_type account_id, const optional<operation_history_object> op)
 {
    graphene::chain::database& db = database();
    const auto& stats_obj = account_id(db).statistics(db);
@@ -243,7 +228,7 @@ void query_op_plugin_impl::add_account_operation(const account_id_type account_i
 }
 
 
-void query_op_plugin_impl::remove_op_index(const uint64_t op_entry_id)
+void account_history_leveldb_plugin_impl::remove_op_index(const uint64_t op_entry_id)
 {
     try {
         graphene::chain::database &db = database();
@@ -263,41 +248,41 @@ void query_op_plugin_impl::remove_op_index(const uint64_t op_entry_id)
 }
 } // namespace detail
 
-// -----------------------------------query_op_plugin --------------------------------------
+// -----------------------------------account_history_leveldb_plugin --------------------------------------
 
-query_op_plugin::query_op_plugin()
-    : my(new detail::query_op_plugin_impl(*this))
+account_history_leveldb_plugin::account_history_leveldb_plugin()
+    : my(new detail::account_history_leveldb_plugin_impl(*this))
 {
 }
 
-query_op_plugin::~query_op_plugin()
+account_history_leveldb_plugin::~account_history_leveldb_plugin()
 {
 }
 
-std::string query_op_plugin::plugin_name() const
+std::string account_history_leveldb_plugin::plugin_name() const
 {
-    return "query_op";
+    return "account_history_leveldb";
 }
 
-void query_op_plugin::plugin_set_program_options(
+void account_history_leveldb_plugin::plugin_set_program_options(
     boost::program_options::options_description &cli,
     boost::program_options::options_description &cfg)
 {
-    cli.add_options()("query-op-path", boost::program_options::value<std::string>(), "Save the leveldb path of the accounts'operation history")("limit-batch", boost::program_options::value<uint64_t>(), "Number of records written to leveldb in batches");
+    cli.add_options()("account-history-leveldb-path", boost::program_options::value<std::string>(), "Save the leveldb path of the accounts'operation history")("limit-batch", boost::program_options::value<uint64_t>(), "Number of records written to leveldb in batches");
     cfg.add(cli);
 }
 
-void query_op_plugin::plugin_initialize(const boost::program_options::variables_map &options)
+void account_history_leveldb_plugin::plugin_initialize(const boost::program_options::variables_map &options)
 {
     try {
-        ilog("query_op plugin initialized");
+        ilog("account_history_leveldb plugin initialized");
         // Add the index of the op_entry_index object table to the database
         // Respond to the apply_block signal
         database().applied_block.connect([&](const signed_block &b) { my->update_account_operations(b); });
-        my->_oho_index = database().add_index< primary_index< operation_history_index > >();
+        database().add_index< primary_index< operation_history_index > >();
         database().add_index<primary_index<op_entry_index>>();
-        if (options.count("query-op-path")) {
-            my->db_path = options["query-op-path"].as<std::string>();
+        if (options.count("account-history-leveldb-path")) {
+            my->db_path = options["account-history-leveldb-path"].as<std::string>();
             if (!fc::exists(my->db_path))
                 fc::create_directories(my->db_path);
         }
@@ -310,14 +295,14 @@ void query_op_plugin::plugin_initialize(const boost::program_options::variables_
     FC_LOG_AND_RETHROW()
 }
 
-void query_op_plugin::plugin_startup()
+void account_history_leveldb_plugin::plugin_startup()
 {
 }
 
-optional<op_entry_object> query_op_plugin::query_op_by_index(std::string op_index)
+optional<op_entry_object> account_history_leveldb_plugin::query_op_by_index(std::string op_index)
 {
-    return detail::query_op_plugin_impl::query_op_by_index(op_index);
+    return detail::account_history_leveldb_plugin_impl::query_op_by_index(op_index);
 }
 
-} // namespace query_op
+} // namespace account_history_leveldb
 } // namespace graphene
