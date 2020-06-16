@@ -13,7 +13,7 @@ add_library( graphene_app
            )
 
 # need to link graphene_debug_witness because plugins aren't sufficiently isolated #246
-target_link_libraries( graphene_app graphene_account_history graphene_chain fc graphene_db graphene_net graphene_utilities graphene_debug_witness ${QUERY_TXID} ${QUERY_OP})
+target_link_libraries( graphene_app graphene_account_history graphene_chain fc graphene_db graphene_net graphene_utilities graphene_debug_witness ${QUERY_TXID} ${ACCOUNT_HISTORY_LEVELDB})
 target_include_directories( graphene_app
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
                             "${CMAKE_CURRENT_SOURCE_DIR}/../egenesis/include" )
