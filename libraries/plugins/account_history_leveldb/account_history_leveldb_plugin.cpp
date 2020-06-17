@@ -29,8 +29,9 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-#include <leveldb/db.h>
-#include <leveldb/write_batch.h>
+#include <rocksdb/db.h>
+#include <rocksdb/write_batch.h>
+#include <rocksdb/write_batch_base.h>
 #include <fc/signals.hpp>
 #include <graphene/chain/impacted.hpp>
 #include <graphene/chain/account_evaluator.hpp>
@@ -47,7 +48,7 @@ namespace graphene{ namespace account_history_leveldb{
 
 namespace detail
 {
-using namespace leveldb;
+using namespace ROCKSDB_NAMESPACE;
 class account_history_leveldb_plugin_impl
 {
   public:
@@ -75,19 +76,19 @@ class account_history_leveldb_plugin_impl
     fc::signal<void(const uint64_t)> sig_remove;
     fc::signal<void(const account_id_type, const optional<operation_history_object>&)> sig_db_write;
     
-    static leveldb::DB *leveldb;
+    static ROCKSDB_NAMESPACE::DB *rocksdb;
 	void add_account_operation(const account_id_type account_id, const optional<operation_history_object> op);                              
     void remove_op_index(const uint64_t op_entry_id); //Remove op_index in db
 };
-leveldb::DB *account_history_leveldb_plugin_impl::leveldb = nullptr;
+ROCKSDB_NAMESPACE::DB *account_history_leveldb_plugin_impl::rocksdb = nullptr;
 
 void account_history_leveldb_plugin_impl::init()
 {
     try {
         //Create leveldb
-        leveldb::Options options;
+        ROCKSDB_NAMESPACE::Options options;
         options.create_if_missing = true;
-        leveldb::Status s = leveldb::DB::Open(options, db_path, &leveldb);
+        ROCKSDB_NAMESPACE::Status s = ROCKSDB_NAMESPACE::DB::Open(options, db_path, &rocksdb);
 
         sig_db_write.connect([&](const account_id_type account_id, const optional<operation_history_object> op){add_account_operation(account_id,op);});
         sig_remove.connect([&](const uint64_t op_entry_id) { remove_op_index(op_entry_id); });
@@ -97,9 +98,9 @@ void account_history_leveldb_plugin_impl::init()
 optional<op_entry_object> account_history_leveldb_plugin_impl::query_op_by_index(std::string op_index)
 {
     try {
-        if (leveldb == nullptr) return optional<op_entry_object>();
+        if (rocksdb == nullptr) return optional<op_entry_object>();
         std::string value;
-        leveldb::Status s = leveldb->Get(leveldb::ReadOptions(), op_index, &value);
+        ROCKSDB_NAMESPACE::Status s = rocksdb->Get(ROCKSDB_NAMESPACE::ReadOptions(), op_index, &value);
         if (!s.ok()) return optional<op_entry_object>();
         std::vector<char> data(value.begin(), value.end());
         auto result = fc::raw::unpack<op_entry_object>(data);
@@ -203,7 +204,7 @@ void account_history_leveldb_plugin_impl::add_account_operation(const account_id
     auto backupnum = number;
     auto put_index = itor_begin->id.instance();
 	while (number > limit_batch) {
-		leveldb::WriteBatch batch;
+		ROCKSDB_NAMESPACE::WriteBatch batch;
 		auto itor_backup = itor_begin;
 		for (auto idx = 0; idx < limit_batch; idx++) {
 				auto serialize = fc::raw::pack(*itor_begin);
@@ -213,9 +214,9 @@ void account_history_leveldb_plugin_impl::add_account_operation(const account_id
 				itor_begin++;
 				if (itor_begin == itor_end) break;
 		}
-		leveldb::WriteOptions write_options;
+		ROCKSDB_NAMESPACE::WriteOptions write_options;
 		write_options.sync = true;
-		Status s = leveldb->Write(write_options, &batch);
+		Status s = rocksdb->Write(write_options, &batch);
 		if (!s.ok()) {
 				itor_begin = itor_backup;
 				put_index = itor_begin->id.instance();
