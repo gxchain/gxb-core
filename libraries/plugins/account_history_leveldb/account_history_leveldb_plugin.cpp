@@ -42,6 +42,7 @@
 #include <graphene/chain/transaction_evaluation_state.hpp>
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
+#include <boost/filesystem.hpp>
 
 namespace graphene{ namespace account_history_leveldb{
 
@@ -66,8 +67,8 @@ class account_history_leveldb_plugin_impl
     }
     void init();
     static optional<op_entry_object> query_op_by_index(std::string op_index);
-    std::string db_path = "op_entry.db";
-    uint64_t limit_batch = 1000; //limit of leveldb batch
+    std::string db_path = "witness_node_data_dir/op_entry.db";
+    uint64_t limit_batch = 500; //limit of leveldb batch
 
   private:
     account_history_leveldb_plugin &_self;
@@ -233,7 +234,7 @@ void account_history_leveldb_plugin_impl::remove_op_index(const uint64_t op_entr
     try {
         graphene::chain::database &db = database();
         const auto &op_idx = db.get_index_type<op_entry_index>().indices();
-        ilog("remove,${op_ent_id},bengin: ${begin},end: ${end}",("op_ent_id",op_entry_id)("begin",op_idx.begin()->id.instance())("end",op_idx.rbegin()->id.instance()));
+        //ilog("remove,${op_ent_id},bengin: ${begin},end: ${end}",("op_ent_id",op_entry_id)("begin",op_idx.begin()->id.instance())("end",op_idx.rbegin()->id.instance()));
         for (auto itor = op_idx.begin(); itor != op_idx.end();) {
             auto backup_itr = itor;
             ++itor;
@@ -281,6 +282,15 @@ void account_history_leveldb_plugin::plugin_initialize(const boost::program_opti
         database().applied_block.connect([&](const signed_block &b) { my->update_account_operations(b); });
         database().add_index< primary_index< operation_history_index > >();
         database().add_index<primary_index<op_entry_index>>();
+        fc::path data_dir;
+        if( options.count("data-dir") )
+        {
+            data_dir = options["data-dir"].as<boost::filesystem::path>();
+            if( data_dir.is_relative() )
+                data_dir = fc::current_path() / data_dir;
+            fc::path leveldb_path =  data_dir / "op_entry.db";
+             my->db_path = leveldb_path.preferred_string();
+        }
         if (options.count("account-history-leveldb-path")) {
             my->db_path = options["account-history-leveldb-path"].as<std::string>();
             if (!fc::exists(my->db_path))
@@ -289,6 +299,8 @@ void account_history_leveldb_plugin::plugin_initialize(const boost::program_opti
         if (options.count("limit-batch")) {
             my->limit_batch = options["limit-batch"].as<uint64_t>();
         }
+        if (!fc::exists(my->db_path))
+            fc::create_directories(my->db_path);
         // Initialize the plugin instance
         my->init();
     }
