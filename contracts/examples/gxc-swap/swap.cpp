@@ -57,7 +57,7 @@ class swap : public contract{
     ) {
         // 检查超时间.
         _check_deadline(deadline);
-        auto owner = get_trx_sender();
+        auto sender = get_trx_sender();
         // 检查asset_id.
         auto id1 = get_asset_id(coin1.c_str(), coin1.size());
         auto id2 = get_asset_id(coin2.c_str(), coin2.size());
@@ -69,7 +69,7 @@ class swap : public contract{
         auto pool_itr = pools.find(pool_index);
         // 如果交易对不存在对话则创建.
         if (pool_itr == pools.end()) {
-            pool_itr = pools.emplace(owner, [&](pool& p) {
+            pool_itr = pools.emplace(sender, [&](pool& p) {
                 p.index = pool_index;
                 p.balance1.asset_id = id1 < id2 ? id1 : id2;
                 p.balance1.amount = 0;
@@ -108,13 +108,13 @@ class swap : public contract{
             // 将最小流动性分配给黑洞账号.
             auto zero_bank_itr = banks.find(0);
             if (zero_bank_itr == banks.end()) {
-                zero_bank_itr = banks.emplace(owner, [&](bank& b) {
+                banks.emplace(sender, [&](bank& b) {
                     b.owner = 0;
                     b.liquid_bank[pool_index] = MINLIQUIDITY;
                 });
             }
             else {
-                banks.modify(*zero_bank_itr, owner, [&](bank& b) {
+                banks.modify(*zero_bank_itr, sender, [&](bank& b) {
                     b.liquid_bank[pool_index] = MINLIQUIDITY;
                 });
             }
@@ -125,7 +125,25 @@ class swap : public contract{
         }
         graphene_assert(lq > 0, "insufficient liquidity");
 
-        auto bank_itr = banks.find(owner);
+        // 修改接受者流动性代币的余额.
+        auto to_account_id = get_account_id(to.c_str(), to.size());
+        if (to_account_id != sender) {
+            graphene_assert(to_account_id != -1, "illegal account!");
+            auto to_bank_itr = banks.find(to_account_id);
+            if (to_bank_itr == banks.end()) {
+                banks.emplace(sender, [&](bank& b) {
+                    b.owner = to_account_id;
+                    b.liquid_bank[pool_index] = lq;
+                });
+            }
+            else {
+                banks.modify(*to_bank_itr, sender, [&](bank& b) {
+                    b.liquid_bank[pool_index] += lq;
+                });
+            }
+        }
+
+        auto bank_itr = banks.find(sender);
         graphene_assert(bank_itr != banks.end(), "missing user");
         auto asset1_itr = bank_itr->assert_bank.find(id1);
         auto asset2_itr = bank_itr->assert_bank.find(id2);
@@ -134,8 +152,8 @@ class swap : public contract{
             && asset1_itr->second >= amount1
             && asset2_itr->second >= amount2
             , "insufficient amount");
-        // 修改bank中的代币余额, 同时增加流动性代币.
-        banks.modify(*bank_itr, owner, [&](bank& b) {
+        // 修改bank中的代币余额.
+        banks.modify(*bank_itr, sender, [&](bank& b) {
             auto _asset1_itr = b.assert_bank.find(id1);
             auto _asset2_itr = b.assert_bank.find(id2);
             _asset1_itr->second -= amount1;
@@ -147,10 +165,12 @@ class swap : public contract{
                 b.assert_bank.erase(_asset2_itr);
             }
 
-            b.liquid_bank[pool_index] += lq;
+            if (to_account_id == sender) {
+                b.liquid_bank[pool_index] += lq;
+            }
         });
-        // 修改pool中的代币余额, 同时增加流动性代币.
-        pools.modify(*pool_itr, owner, [&](pool& p) {
+        // 修改pool中的代币余额, 同时增加流动性代币总量.
+        pools.modify(*pool_itr, sender, [&](pool& p) {
             p.balance1.amount += amount1;
             p.balance2.amount += amount2;
             p.total_lq += lq;
