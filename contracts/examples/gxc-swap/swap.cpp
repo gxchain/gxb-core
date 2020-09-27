@@ -76,6 +76,7 @@ class swap : public contract{
                 p.balance2.asset_id = id1 < id2 ? id2 : id1;
                 p.balance2.amount = 0;
                 p.total_lq = 0;
+                p.locked = 0;
             });
         }
         
@@ -189,9 +190,26 @@ class swap : public contract{
     }
 
     //@abi action
-    void managepool()
-    {
+    void managepool(std::string coin1, std::string coin2
+        , bool locked
+    ) {
+        //检查调用者是否为管理员
+        auto sender = get_trx_sender();
+        graphene_assert(sender == ADMINACCOUNT, "You do not have access to make pool configuration modifications.");
 
+        //检查交易对是否存在
+        auto id1 = get_asset_id(coin1.c_str(), coin1.size());
+        auto id2 = get_asset_id(coin2.c_str(), coin2.size());
+        graphene_assert(id1 != id2, "asset id can't be equal!");
+        auto pool_index = id1 < id2 ? ::graphenelib::string_to_name((std::to_string(id1) + "x" + std::to_string(id2)).c_str())
+            : ::graphenelib::string_to_name((std::to_string(id2) + "x" + std::to_string(id1)).c_str());
+        auto pool_itr = pools.find(pool_index);
+        graphene_assert( pool_itr != pools.end(), "The trading pair does not exist.");
+
+        //修改状态
+        pools.modify(pool_itr, sender, [&](pool& p) {
+            p.locked = locked;
+        });
     }
 
     private:
@@ -240,9 +258,10 @@ class swap : public contract{
         contract_asset balance2;
         std::string symbol;
         int64_t  total_lq;
+        bool locked;// 0为开放状态，1为解锁状态，待定
         
         uint64_t primary_key() const {return index;}
-        GRAPHENE_SERIALIZE(pool, (index)(balance1)(balance2)(symbol)(total_lq))
+        GRAPHENE_SERIALIZE(pool, (index)(balance1)(balance2)(symbol)(total_lq)(locked))
     };
     
     typedef graphene::multi_index<N(pool), pool> pool_index;
