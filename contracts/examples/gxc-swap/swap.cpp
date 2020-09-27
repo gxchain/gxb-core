@@ -255,13 +255,13 @@ class swap : public contract{
 
         std::vector<contract_asset> amounts{ static_cast<int>(path.size()) };
         amounts[0] = contract_asset{ amount_in, static_cast<uint64_t>(first_asset_id) };
-        for (auto i = 0; i < path.size(); i++ ){
+        for (auto i = 0; i < path.size() - 1; i++ ){
             auto pool_itr = pools.find(_make_pool_index(path[i], path[i+1]));
             graphene_assert(pool_itr != pools.end(), "The trading pair does not exist.");
             graphene_assert(!pool_itr->locked, "The trading pair has been locked.");
             const auto& current = amounts[i];
             amounts[i+1] = contract_asset{
-                _get_amount_in(current.amount
+                _get_amount_out(current.amount
                     , pool_itr->balance1.asset_id == current.asset_id ? pool_itr->balance2.amount : pool_itr->balance1.amount
                     , pool_itr->balance1.asset_id == current.asset_id ? pool_itr->balance1.amount : pool_itr->balance2.amount)
                 , pool_itr->balance1.asset_id == current.asset_id ? pool_itr->balance2.asset_id : pool_itr->balance1.asset_id};
@@ -396,7 +396,7 @@ class swap : public contract{
 
 
     //@abi action
-    void wthdraw(
+    void withdraw(
         std::string coin,
         std::string to,
         int64_t amount
@@ -501,6 +501,13 @@ class swap : public contract{
         return (numerator / denominator) + 1;
     }
 
+    inline static int64_t _get_amount_out(int64_t amount_in, int64_t balance_in, int64_t balance_out ){
+        graphene_assert(amount_in > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
+        __int128_t amountInWithFee = (__int128_t)amount_in * 997;
+        __int128_t numerator = amountInWithFee *  (__int128_t)balance_out;
+        __int128_t denominator = (__int128_t)balance_in * 1000 + amountInWithFee;
+        return (numerator / denominator);
+    }
     // 有待商榷.
     const int64_t MINLIQUIDITY = 100;
     const int64_t ADMINACCOUNT = 22;
@@ -537,4 +544,4 @@ class swap : public contract{
 
     pool_index pools;
 };
-GRAPHENE_ABI(swap, (deposit)(addlq)(rmlq)(swapetkfortk)(swaptkforetk)(wthdraw)(transferlq)(managepool))
+GRAPHENE_ABI(swap, (deposit)(addlq)(rmlq)(swapetkfortk)(swaptkforetk)(withdraw)(transferlq)(managepool))
