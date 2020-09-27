@@ -254,14 +254,41 @@ class swap : public contract{
 
 
     //@abi action
-    void wthdraw()
-    {
+    void wthdraw(
+        std::string coin,
+        std::string to,
+        int64_t amount
+    ) {
+        auto sender = get_trx_sender();
+        auto bank_itr = banks.find(sender);
+        graphene_assert(bank_itr != banks.end(), "missing user");
 
+        //检查用户余额是否足够
+        auto asset_id = get_asset_id(coin.c_str(), coin.size());
+        auto asset_itr = bank_itr->asset_bank.find(asset_id);
+
+        graphene_assert(asset_itr != bank_itr->asset_bank.end()
+            && asset_itr->second >= amount
+            , "insufficient amount");
+
+        banks.modify(bank_itr, sender, [&](bank& b) {
+            auto _asset_itr = b.asset_bank.find(asset_id);
+            _asset_itr->second -= amount;
+            if (_asset_itr->second == 0) {
+                b.asset_bank.erase(_asset_itr);
+            }
+        });        
+        //取回
+        auto to_id = get_account_id(to.c_str(), to.length());
+        withdraw_asset(_self, to_id, asset_id, amount);
     }
 
     //@abi action
-    void transferliquidity()
-    {
+    void transferliquidity(
+        std::string coin1, std::string coin2
+        , std::string to
+        , int64_t amount
+    ) {
 
     }
 
