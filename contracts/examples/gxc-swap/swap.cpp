@@ -253,7 +253,8 @@ class swap : public contract{
         auto first_asset_id = get_asset_id(first_asset_name.c_str(), first_asset_name.size());
         graphene_assert(first_asset_id != -1, "Invalid path");
 
-        std::vector<contract_asset> amounts{ static_cast<int>(path.size()) };
+        std::vector<contract_asset> amounts;
+        amounts.resize(path.size());
         amounts[0] = contract_asset{ amount_in, static_cast<uint64_t>(first_asset_id) };
         for (auto i = 0; i < path.size() - 1; i++ ){
             auto pool_itr = pools.find(_make_pool_index(path[i], path[i+1]));
