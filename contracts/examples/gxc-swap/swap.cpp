@@ -247,9 +247,80 @@ class swap : public contract{
     }
 
     //@abi action
-    void swaptokensforexacttokens()
-    {
+    void swaptokensforexacttokens(std::vector<std::string> path
+        , int64_t amount_out
+        , int64_t amount_in_max
+        , std::string to
+    ) {
+        auto sender = get_trx_sender();
+        graphene_assert(path.size() >= 2, "Invalid path");
+        
+        auto last_asset_name = path[path.size() - 1];
+        auto last_asset_id = get_asset_id(last_asset_name.c_str(), last_asset_name.size());
+        graphene_assert(last_asset_id != -1, "Invalid path");
 
+        std::vector<contract_asset> amounts{ static_cast<int>(path.size()) };
+        amounts[amounts.size() - 1] = contract_asset{ amount_out, static_cast<uint64_t>(last_asset_id) };
+        for (auto i = path.size() - 1; i > 0; i--) {
+            auto pool_itr = pools.find(_make_pool_index(path[i - 1], path[i]));
+            graphene_assert(pool_itr != pools.end(), "The trading pair does not exist.");
+            graphene_assert(!pool_itr->locked, "The trading pair has been locked.");
+            const auto& current = amounts[i];
+            amounts[i - 1] = contract_asset{
+                _get_amount_in(current.amount
+                    , pool_itr->balance1.asset_id == current.asset_id ? pool_itr->balance2.amount : pool_itr->balance1.amount
+                    , pool_itr->balance1.asset_id == current.asset_id ? pool_itr->balance1.amount : pool_itr->balance2.amount)
+                , pool_itr->balance1.asset_id == current.asset_id ? pool_itr->balance2.asset_id : pool_itr->balance1.asset_id };
+        }
+        graphene_assert(amounts[0].amount <= amount_in_max, "Insufficient amount");
+
+        // 增加接受者余额.
+        auto bank_itr = banks.find(sender);
+        graphene_assert(bank_itr != banks.end(), "Invalid sender");
+        auto to_account_id = get_account_id(to.c_str(), to.size());
+        if (sender != to_account_id) {
+            graphene_assert(to_account_id != -1, "illegal account!");
+            auto to_bank_itr = banks.find(to_account_id);
+            if (to_bank_itr == banks.end()) {
+                banks.emplace(sender, [&](bank& b) {
+                    b.owner = to_account_id;
+                    b.asset_bank[last_asset_id] = amount_out;
+                });
+            }
+            else {
+                banks.modify(*to_bank_itr, sender, [&](bank& b) {
+                    b.asset_bank[last_asset_id] += amount_out;
+                });
+            }
+        }
+
+        // 扣除调用者在bank中的余额.
+        banks.modify(*bank_itr, sender, [&](bank& b) {
+            auto asset_itr = b.asset_bank.find(amounts[0].asset_id);
+            graphene_assert(asset_itr != b.asset_bank.end() && asset_itr->second >= amounts[0].amount, "Insufficient amount");
+            asset_itr->second -= amounts[0].amount;
+
+            if (sender == to_account_id) {
+                b.asset_bank[last_asset_id] += amount_out;
+            }
+        });
+
+        // 依次更改每个pool中的资金数量.
+        for (std::size_t i = 0; i < path.size() - 1; i++) {
+            auto pool_itr = pools.find(_make_pool_index(path[i], path[i + 1]));
+            pools.modify(*pool_itr, sender, [&](pool& p) {
+                const auto& current = amounts[i];
+                const auto& next = amounts[i + 1];
+                auto& reduce_balance = p.balance1.asset_id == current.asset_id
+                    ? p.balance2
+                    : p.balance1;
+                auto& increase_balance = p.balance1.asset_id == current.asset_id
+                    ? p.balance1
+                    : p.balance2;
+                reduce_balance.amount -= next.amount;
+                increase_balance.amount += current.amount;
+            });
+        }
     }
 
 
@@ -322,6 +393,13 @@ class swap : public contract{
     inline static int64_t _quote(int64_t amount1, int64_t balance1, int64_t balance2) {
         graphene_assert(amount1 > 0 && balance1 > 0 && balance2 > 0, "amount or balance can't less than 1!");
         return int64_t((__int128_t)amount1 * (__int128_t)balance2 / (__int128_t)balance1);
+    }
+
+    inline static int64_t _get_amount_in(int64_t amount_out, int64_t balance_in, int64_t balance_out) {
+        graphene_assert(amount_out > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
+        __int128_t numerator = (__int128_t)balance_in * (__int128_t)balance_out * 1000;
+        __int128_t denominator = (balance_out - amount_out) * 997;
+        return (numerator / denominator) + 1;
     }
 
     // 有待商榷.
