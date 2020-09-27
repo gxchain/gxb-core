@@ -48,10 +48,8 @@ void addliquidity(
     std::string coin1, std::string coin2 // 交易对两种代币的名字.
     , int64_t amount1Desire, int64_t amount2Desire // 用户期望质押的两种代币的数量.
     , int64_t amount1Min, int64_t amount2Min // 用户设置的最小质押的两种代币的数量.
-    , uint64_t deadline // 超时时间.
     , std::string to // 接受流动性代币的账户.
 ) {
-    // 检查是否超时. 
     // 检查交易对是否存在, 如果不存在则调用create pair创建.
     // 检查pool是否被锁定.
     // 检查用户在bank中持有的代币是否足够.
@@ -73,10 +71,8 @@ void removeliquidity(
     std::string coin1, std::string coin2 // 交易对两种代币的名字.
     , int64_t lq // 希望赎回的流动性代币的数量.
     , int64_t amount1Min, int64_t amount2Min // 用户设置的希望获取的两种代币的最小数量.
-    , uint64_t deadline // 超时时间.
     , std::string to // 接受赎回代币的账户.
 ) {
-    // 检查是否超时. 
     // 检查交易对是否存在, 不存在则出错.
     // 检查pool是否被锁定.
     // 检查用户持有的lq代币是否足够.
@@ -97,10 +93,8 @@ void removeliquidity(
 void swapexacttokensfortokens(
     std::vector<std::string> path // 用户指定的交换路径.
     , int64_t amountOutMin // 用户设置的最小输出金额.
-    , uint64_t deadline // 超时时间.
     , std::string to // 接受交换代币的账户.
 ) {
-    // 检查是否超时.
     // 依次检查path[i], path[i + 1]的交易对是否存在并且没有被锁定.
     // 依次计算每一个交易对的交易结果, 并获取最终的amountOut.
     // 检查amountOut是否满足用户设置的条件.
@@ -117,10 +111,8 @@ void swaptokensforexacttokens(
     std::vector<std::string> path // 用户指定的交换路径.
     , int64_t amountOut // 用户指定的输出的代币的数量.
     , int64_t amountInMax // 用户设置的最大输入金额.
-    , uint64_t deadline // 超时时间.
     , std::string to // 接受交换代币的账户.
 ) {
-    // 检查是否超时.
     // 依次检查path[i], path[i + 1]的交易对是否存在并且没有被锁定.
     // 倒着计算每一个交易对的交易结果, 并获取最终的amountIn.
     // 检查amountIn是否满足用户设置的条件.
