@@ -246,14 +246,6 @@ class swap : public contract{
         , int64_t amountOutMin
         , std::string to
     ) {
-        for (int i = 0; i < path.size(); i++){
-            auto input = path[i];
-            auto output = path[i+1];
-            auto pool_index = _make_pool_index(input, output);
-            auto pool_itr = pools.find(pool_index);
-            graphene_assert(pool_itr != pools.end(), "The trading pair does not exist.");
-            auto amount = 
-        }
     }
 
     //@abi action
