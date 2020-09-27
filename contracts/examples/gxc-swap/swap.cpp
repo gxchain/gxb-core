@@ -330,7 +330,8 @@ class swap : public contract{
         auto last_asset_id = get_asset_id(last_asset_name.c_str(), last_asset_name.size());
         graphene_assert(last_asset_id != -1, "Invalid path");
 
-        std::vector<contract_asset> amounts{ static_cast<int>(path.size()) };
+        std::vector<contract_asset> amounts;
+        amounts.resize(path.size());
         amounts[amounts.size() - 1] = contract_asset{ amount_out, static_cast<uint64_t>(last_asset_id) };
         for (auto i = path.size() - 1; i > 0; i--) {
             auto pool_itr = pools.find(_make_pool_index(path[i - 1], path[i]));
@@ -496,7 +497,7 @@ class swap : public contract{
 
     inline static int64_t _get_amount_in(int64_t amount_out, int64_t balance_in, int64_t balance_out) {
         graphene_assert(amount_out > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
-        __int128_t numerator = (__int128_t)balance_in * (__int128_t)balance_out * 1000;
+        __int128_t numerator = (__int128_t)balance_in * (__int128_t)amount_out * 1000;
         __int128_t denominator = (balance_out - amount_out) * 997;
         return (numerator / denominator) + 1;
     }
