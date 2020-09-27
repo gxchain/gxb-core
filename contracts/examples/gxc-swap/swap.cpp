@@ -30,19 +30,19 @@ class swap : public contract{
         
         auto owner_iterator = banks.find(owner);
         if(owner_iterator == banks.end()) {
-            banks.emplace( owner, [&](auto &o) {
+            banks.emplace( owner, [&](bank &o) {
                 o.owner = owner;
-                o.assert_bank.insert(std::pair<uint64_t, int64_t>(asset_id,asset_amount));
+                o.asset_bank.insert(std::pair<uint64_t, int64_t>(asset_id,asset_amount));
             });
         } else {
-            auto assert_iterator = (*owner_iterator).assert_bank.find(asset_id);
-            if(assert_iterator == (*owner_iterator).assert_bank.end()){
+            auto assert_iterator = (*owner_iterator).asset_bank.find(asset_id);
+            if(assert_iterator == (*owner_iterator).asset_bank.end()){
                 banks.modify(owner_iterator, owner, [&](auto o){
-                    o.assert_bank.insert(std::pair<uint64_t, int64_t>(asset_id,asset_amount));
+                    o.asset_bank.insert(std::pair<uint64_t, int64_t>(asset_id,asset_amount));
                 });
             } else {
                 banks.modify(owner_iterator, owner, [&](auto o){
-                    o.assert_bank[asset_id] += asset_amount;
+                    o.asset_bank[asset_id] += asset_amount;
                 });    
             }
         }
@@ -52,11 +52,8 @@ class swap : public contract{
     void addliquidity(std::string coin1, std::string coin2
         , int64_t amount1Desire, int64_t amount2Desire
         , int64_t amount1Min, int64_t amount2Min
-        , uint64_t deadline
         , std::string to
     ) {
-        // 检查超时间.
-        _check_deadline(deadline);
         auto sender = get_trx_sender();
         // 检查asset_id.
         auto id1 = get_asset_id(coin1.c_str(), coin1.size());
@@ -78,6 +75,9 @@ class swap : public contract{
                 p.total_lq = 0;
                 p.locked = 0;
             });
+        }
+        else {
+            graphene_assert(!pool_itr->locked, "The trading pair has been locked.");
         }
         
         // 根据池内的资金数量计算可以质押的金额.
@@ -145,24 +145,24 @@ class swap : public contract{
 
         auto bank_itr = banks.find(sender);
         graphene_assert(bank_itr != banks.end(), "missing user");
-        auto asset1_itr = bank_itr->assert_bank.find(id1);
-        auto asset2_itr = bank_itr->assert_bank.find(id2);
-        graphene_assert(asset1_itr != bank_itr->assert_bank.end()
-            && asset2_itr != bank_itr->assert_bank.end()
+        auto asset1_itr = bank_itr->asset_bank.find(id1);
+        auto asset2_itr = bank_itr->asset_bank.find(id2);
+        graphene_assert(asset1_itr != bank_itr->asset_bank.end()
+            && asset2_itr != bank_itr->asset_bank.end()
             && asset1_itr->second >= amount1
             && asset2_itr->second >= amount2
             , "insufficient amount");
         // 修改bank中的代币余额.
         banks.modify(*bank_itr, sender, [&](bank& b) {
-            auto _asset1_itr = b.assert_bank.find(id1);
-            auto _asset2_itr = b.assert_bank.find(id2);
+            auto _asset1_itr = b.asset_bank.find(id1);
+            auto _asset2_itr = b.asset_bank.find(id2);
             _asset1_itr->second -= amount1;
             if (_asset1_itr->second == 0) {
-                b.assert_bank.erase(_asset1_itr);
+                b.asset_bank.erase(_asset1_itr);
             }
             _asset2_itr->second -= amount2;
             if (_asset2_itr->second == 0) {
-                b.assert_bank.erase(_asset2_itr);
+                b.asset_bank.erase(_asset2_itr);
             }
 
             if (to_account_id == sender) {
@@ -181,11 +181,8 @@ class swap : public contract{
     void removeliquidity(std::string coin1, std::string coin2
         , int64_t lq
         , int64_t amount1Min, int64_t amount2Min
-        , uint64_t deadline
         , std::string to
     ) {
-        // 检查超时间.
-        _check_deadline(deadline);
         auto sender = get_trx_sender();
         // 检查交易对是否存在.
         auto id1 = get_asset_id(coin1.c_str(), coin1.size());
@@ -210,14 +207,14 @@ class swap : public contract{
             if (to_bank_itr == banks.end()) {
                 banks.emplace(sender, [&](bank& b) {
                     b.owner = to_account_id;
-                    b.assert_bank[id1] = amount1;
-                    b.assert_bank[id2] = amount2;
+                    b.asset_bank[id1] = amount1;
+                    b.asset_bank[id2] = amount2;
                 });
             }
             else {
                 banks.modify(*to_bank_itr, sender, [&](bank& b) {
-                    b.assert_bank[id1] += amount1;
-                    b.assert_bank[id2] += amount2;
+                    b.asset_bank[id1] += amount1;
+                    b.asset_bank[id2] += amount2;
                 });
             }
         }
@@ -229,8 +226,8 @@ class swap : public contract{
             b.liquid_bank[pool_index] -= lq;
             
             if (sender == to_account_id) {
-                b.assert_bank[id1] += amount1;
-                b.assert_bank[id2] += amount2;
+                b.asset_bank[id1] += amount1;
+                b.asset_bank[id2] += amount2;
             }
         });
         // 扣除pool中的余额及流动性代币总量.
@@ -295,10 +292,6 @@ class swap : public contract{
             : ::graphenelib::string_to_name((std::to_string(id2) + "x" + std::to_string(id1)).c_str());
     }
 
-    inline static void _check_deadline(const uint64_t& deadline) {
-        graphene_assert(deadline >= get_head_block_time(), "expired!");
-    }
-
     inline static int64_t _quote(int64_t amount1, int64_t balance1, int64_t balance2) {
         graphene_assert(amount1 > 0 && balance1 > 0 && balance2 > 0, "amount or balance can't less than 1!");
         return int64_t((__int128_t)amount1 * (__int128_t)balance2 / (__int128_t)balance1);
@@ -311,12 +304,12 @@ class swap : public contract{
    //@abi table bank i64
     struct bank{
         uint64_t owner;
-        std::map<uint64_t, int64_t> assert_bank;
+        std::map<uint64_t, int64_t> asset_bank;
         std::map<uint64_t, int64_t> liquid_bank;
 
         uint64_t primary_key() const {return owner;}
 
-        GRAPHENE_SERIALIZE(bank, (owner)(assert_bank)(liquid_bank))
+        GRAPHENE_SERIALIZE(bank, (owner)(asset_bank)(liquid_bank))
     };
 
     typedef graphene::multi_index<N(bank), bank> bank_index;
