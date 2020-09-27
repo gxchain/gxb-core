@@ -61,7 +61,7 @@ class swap : public contract{
         // 检查asset_id.
         auto id1 = get_asset_id(coin1.c_str(), coin1.size());
         auto id2 = get_asset_id(coin2.c_str(), coin2.size());
-        graphene_assert(id1 != id2, "asset id can't be equal!");
+        graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, "illegal asset id!");
 
         // 计算pool_index.
         auto pool_index = id1 < id2 ? ::graphenelib::string_to_name((std::to_string(id1) + "x" + std::to_string(id2)).c_str())
@@ -198,13 +198,8 @@ class swap : public contract{
         graphene_assert(sender == ADMINACCOUNT, "You do not have access to make pool configuration modifications.");
 
         //检查交易对是否存在
-        auto id1 = get_asset_id(coin1.c_str(), coin1.size());
-        auto id2 = get_asset_id(coin2.c_str(), coin2.size());
-        graphene_assert(id1 != id2, "asset id can't be equal!");
-        auto pool_index = id1 < id2 ? ::graphenelib::string_to_name((std::to_string(id1) + "x" + std::to_string(id2)).c_str())
-            : ::graphenelib::string_to_name((std::to_string(id2) + "x" + std::to_string(id1)).c_str());
-        auto pool_itr = pools.find(pool_index);
-        graphene_assert( pool_itr != pools.end(), "The trading pair does not exist.");
+        auto pool_itr = pools.find(_make_pool_index(coin1, coin2));
+        graphene_assert(pool_itr != pools.end(), "The trading pair does not exist.");
 
         //修改状态
         pools.modify(pool_itr, sender, [&](pool& p) {
@@ -213,15 +208,13 @@ class swap : public contract{
     }
 
     private:
-    /*
     inline static uint64_t _make_pool_index(const std::string& coin1, const std::string& coin2) {
         auto id1 = get_asset_id(coin1.c_str(), coin1.size());
         auto id2 = get_asset_id(coin2.c_str(), coin2.size());
-        graphene_assert(id1 != id2, "asset id can't be equal!");
+        graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, "illegal asset id!");
         return id1 < id2 ? ::graphenelib::string_to_name((std::to_string(id1) + "x" + std::to_string(id2)).c_str())
             : ::graphenelib::string_to_name((std::to_string(id2) + "x" + std::to_string(id1)).c_str());
     }
-    */
 
     inline static void _check_deadline(const uint64_t& deadline) {
         graphene_assert(deadline >= get_head_block_time(), "expired!");
