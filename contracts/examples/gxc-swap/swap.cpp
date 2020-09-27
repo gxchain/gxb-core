@@ -241,9 +241,19 @@ class swap : public contract{
     
     //@abi action
     //@abi payable
-    void swapexacttokensfortokens()
-    {
-
+    void swapexacttokensfortokens(
+        std::vector<std::string> path
+        , int64_t amountOutMin
+        , std::string to
+    ) {
+        for (int i = 0; i < path.size(); i++){
+            auto input = path[i];
+            auto output = path[i+1];
+            auto pool_index = _make_pool_index(input, output);
+            auto pool_itr = pools.find(pool_index);
+            graphene_assert(pool_itr != pools.end(), "The trading pair does not exist.");
+            auto amount = 
+        }
     }
 
     //@abi action
@@ -289,7 +299,35 @@ class swap : public contract{
         , std::string to
         , int64_t amount
     ) {
+        auto sender = get_trx_sender();
+        auto pool_index = _make_pool_index(coin1, coin2);
+        auto pool_itr  = pools.find(pool_index);
+        graphene_assert( pool_itr != pools.end(),"illegal liquidty pair");
+        graphene_assert( pool_itr->locked == 0, "locked pair!");
 
+        auto to_account_id = get_account_id(to.c_str(), to.size());
+        graphene_assert(to_account_id != -1, "illegal account!");
+
+        auto sender_bank_itr = banks.find(sender);
+        auto bank_lp_itr = sender_bank_itr->liquid_bank.find(pool_index);
+        graphene_assert( sender_bank_itr != banks.end() 
+                         && bank_lp_itr != sender_bank_itr->liquid_bank.end() 
+                         && bank_lp_itr->second >= amount, "illegal amount!" );
+        auto to_bank_itr = banks.find(to_account_id);
+        if (to_bank_itr == banks.end()) {
+                banks.emplace(sender, [&](bank& b) {
+                    b.owner = to_account_id;
+                    b.liquid_bank[pool_index] = amount;
+                });
+        }
+        else {
+            banks.modify(to_bank_itr, sender, [&](bank& b) {
+                b.liquid_bank[pool_index] += amount;
+            });
+        }
+        banks.modify(sender_bank_itr, sender, [&](bank& b) {
+            b.liquid_bank[pool_index] -= amount;
+        });
     }
 
     //@abi action
