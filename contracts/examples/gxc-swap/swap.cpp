@@ -49,7 +49,7 @@ class swap : public contract{
     }
 
     //@abi action 
-    void addliquidity(std::string coin1, std::string coin2
+    void addlq(std::string coin1, std::string coin2
         , int64_t amount1_desired, int64_t amount2_desired
         , int64_t amount1_min, int64_t amount2_min
         , std::string to
@@ -178,7 +178,7 @@ class swap : public contract{
     }
 
     //@abi action
-    void removeliquidity(std::string coin1, std::string coin2
+    void rmlq(std::string coin1, std::string coin2
         , int64_t lq
         , int64_t amount1_min, int64_t amount2_min
         , std::string to
@@ -241,7 +241,7 @@ class swap : public contract{
     
     //@abi action
     //@abi payable
-    void swapexacttokensfortokens(
+    void swapetkfortk(
         std::vector<std::string> path
         , int64_t amountOutMin
         , std::string to
@@ -249,7 +249,7 @@ class swap : public contract{
     }
 
     //@abi action
-    void swaptokensforexacttokens(std::vector<std::string> path
+    void swaptkforetk(std::vector<std::string> path
         , int64_t amount_out
         , int64_t amount_in_max
         , std::string to
@@ -357,7 +357,7 @@ class swap : public contract{
     }
 
     //@abi action
-    void transferliquidity(
+    void transferlq(
         std::string coin1, std::string coin2
         , std::string to
         , int64_t amount
@@ -468,4 +468,4 @@ class swap : public contract{
 
     pool_index pools;
 };
-GRAPHENE_ABI(swap, (deposit)(addliquidity)(removeliquidity)(swapexacttokensfortokens)(swaptokensforexacttokens)(wthdraw)(transferliquidity)(managepool))
+GRAPHENE_ABI(swap, (deposit)(addlq)(rmlq)(swapetkfortk)(swaptkforetk)(wthdraw)(transferlq)(managepool))
