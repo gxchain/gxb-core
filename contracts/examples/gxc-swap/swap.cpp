@@ -24,24 +24,24 @@ class swap : public contract{
     //@abi action
     //@abi payable
     void deposit(){
-        uint64_t owner = get_trx_sender();
+        uint64_t sender = get_trx_sender();
         int64_t asset_amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
         
-        auto owner_iterator = banks.find(owner);
+        auto owner_iterator = banks.find(sender);
         if(owner_iterator == banks.end()) {
-            banks.emplace( owner, [&](bank &o) {
-                o.owner = owner;
+            banks.emplace( sender, [&](bank &o) {
+                o.owner = sender;
                 o.asset_bank.insert(std::pair<uint64_t, int64_t>(asset_id,asset_amount));
             });
         } else {
             auto assert_iterator = (*owner_iterator).asset_bank.find(asset_id);
             if(assert_iterator == (*owner_iterator).asset_bank.end()){
-                banks.modify(owner_iterator, owner, [&](auto o){
+                banks.modify(owner_iterator, sender, [&](auto& o){
                     o.asset_bank.insert(std::pair<uint64_t, int64_t>(asset_id,asset_amount));
                 });
             } else {
-                banks.modify(owner_iterator, owner, [&](auto o){
+                banks.modify(owner_iterator, sender, [&](auto& o){
                     o.asset_bank[asset_id] += asset_amount;
                 });    
             }
