@@ -3,6 +3,7 @@
 ### 静态变量
 
 ```c++
+const int64_t MINLIQUIDITY = 100; // 每个交易对的最小流动性.
 const int64_t ADMINACCOUNT = 22; // 管理员账号, 可以锁定或开启池.
 ```
 ---
@@ -11,7 +12,7 @@ const int64_t ADMINACCOUNT = 22; // 管理员账号, 可以锁定或开启池.
 - 用于记录每个交易对的当前代币余额, 以及该交易对流动性代币的总量.
 ```c++
 struct pool {
-    uint64_t index; // 主键, index = string_to_name(std::to_string(asset_id1) + "x" + std::to_string(asset_id2))
+    uint64_t index; // 主键, index 的前32位是交易对中资产id较小的资产的id, 后32位是id较大的资产的id.
     contract_asset balance1; // 第一种资产的余额.
     contract_asset balance2; // 第二种资产的余额.
     int64_t total_lq; // lq代币的总量.
@@ -29,11 +30,11 @@ typedef graphene::multi_index<N(pool), pool> pool_index;
 ```c++
 struct bank {
     uint64_t owner; // 记录拥有者.
-    std::map<uint64_t, int64_t> balances; // 各种资产的余额, key是asset_id, value是balance.
-    std::map<uint64_t, int64_t> lqs; // 各个交易对流动性代币的数量, key是pool的index, value是balance.
+    std::map<uint64_t, int64_t> asset_bank; // 各种资产的余额, key是asset_id, value是balance.
+    std::map<uint64_t, int64_t> liquid_bank; // 各个交易对流动性代币的数量, key是pool的index, value是balance.
 
     uint64_t primary_key() const {return owner;}
-    GRAPHENE_SERIALIZE(bank, (owner)(balances)(lqs))
+    GRAPHENE_SERIALIZE(bank, (owner)(asset_bank)(liquid_bank))
 };
 
 typedef graphene::multi_index<N(bank),bank> bank_index;
@@ -44,10 +45,10 @@ typedef graphene::multi_index<N(bank),bank> bank_index;
 - 向指定的交易对中质押流动性, gxc-swap将根据用户设置的参数, 从bank中扣除用户余额, 同时用户将获得对应交易对的流动性代币
 ```c++
 //@abi action
-void addliquidity(
+void addlq(
     std::string coin1, std::string coin2 // 交易对两种代币的名字.
-    , int64_t amount1Desire, int64_t amount2Desire // 用户期望质押的两种代币的数量.
-    , int64_t amount1Min, int64_t amount2Min // 用户设置的最小质押的两种代币的数量.
+    , int64_t amount1_desired, int64_t amount2_desired // 用户期望质押的两种代币的数量.
+    , int64_t amount1_min, int64_t amount2_min // 用户设置的最小质押的两种代币的数量.
     , std::string to // 接受流动性代币的账户.
 ) {
     // 检查交易对是否存在, 如果不存在则调用create pair创建.
@@ -67,10 +68,10 @@ void addliquidity(
 - 赎回指定交易对中指定数量的流动性, gxc-swap将根据用户设置的参数, 扣除用户对应交易对中流动性代币的数量, 同时在bank中增加用户的余额
 ```c++
 //@abi action
-void removeliquidity(
+void rmlq(
     std::string coin1, std::string coin2 // 交易对两种代币的名字.
     , int64_t lq // 希望赎回的流动性代币的数量.
-    , int64_t amount1Min, int64_t amount2Min // 用户设置的希望获取的两种代币的最小数量.
+    , int64_t amount1_min, int64_t amount2_min // 用户设置的希望获取的两种代币的最小数量.
     , std::string to // 接受赎回代币的账户.
 ) {
     // 检查交易对是否存在, 不存在则出错.
@@ -78,7 +79,7 @@ void removeliquidity(
     // 检查用户持有的lq代币是否足够.
     // 按比例计算用户可以赎回的两种代币的数量.
     // 检查是否满足用户设置的最小值.
-    // 在bank中增加用户对应代币的余额.
+    // 向接受用户转账赎回的代币.
     // 在pool中扣除对应代币的余额.
     // 在bank中扣除用户的lq代币.
     // 在pool中扣除lq代币的总量.
@@ -90,14 +91,14 @@ void removeliquidity(
 ```c++
 //@abi action
 //@abi payable
-void swapexacttokensfortokens(
+void swapetkfortk(
     std::vector<std::string> path // 用户指定的交换路径.
-    , int64_t amountOutMin // 用户设置的最小输出金额.
+    , int64_t amount_out_min // 用户设置的最小输出金额.
     , std::string to // 接受交换代币的账户.
 ) {
     // 依次检查path[i], path[i + 1]的交易对是否存在并且没有被锁定.
-    // 依次计算每一个交易对的交易结果, 并获取最终的amountOut.
-    // 检查amountOut是否满足用户设置的条件.
+    // 依次计算每一个交易对的交易结果, 并获取最终的amount_out.
+    // 检查amount_out是否满足用户设置的条件.
     // 依次变动每个pool中的金额.
     // 向用户转账.
 }
@@ -107,18 +108,18 @@ void swapexacttokensfortokens(
 - 指定输出金额以及交换路径, 换取其他代币
 ```c++
 //@abi action
+//@abi payable
 void swaptokensforexacttokens(
     std::vector<std::string> path // 用户指定的交换路径.
-    , int64_t amountOut // 用户指定的输出的代币的数量.
-    , int64_t amountInMax // 用户设置的最大输入金额.
+    , int64_t amount_out // 用户指定的输出的代币的数量.
     , std::string to // 接受交换代币的账户.
 ) {
-    // 依次检查path[i], path[i + 1]的交易对是否存在并且没有被锁定.
-    // 倒着计算每一个交易对的交易结果, 并获取最终的amountIn.
-    // 检查amountIn是否满足用户设置的条件.
-    // 检查用户bank中的余额是否大于amountIn.
-    // 扣除bank中用户的余额, 增加bank中用户的另一种资产的余额.
-    // 倒着变动每个pool中的金额.
+    // 依次检查path[i], path[i - 1]的交易对是否存在并且没有被锁定.
+    // 倒序计算每一个交易对的交易结果, 并获取最终的amount_in.
+    // 检查amount_in是否小于等于用户转账的金额.
+    // 将多余的金额转回调用者账户.
+    // 将交易出来的代币转向接受者账户.
+    // 倒序变动每个pool中的金额.
 }
 ```
 
@@ -151,7 +152,7 @@ void wthdraw(
 - 向其他用户转账流动性代币
 ```c++
 //@abi action
-void transferliquidity(
+void transferlq(
     std::string coin1, std::string coin2 // 交易对中的两种代币.
     , std::string to // 首款账户.
     , int64_t amount // 转账金额.
