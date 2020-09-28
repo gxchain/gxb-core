@@ -145,24 +145,22 @@ class swap : public contract{
 
         auto bank_itr = banks.find(sender);
         graphene_assert(bank_itr != banks.end(), "missing user");
-        auto asset1_itr = bank_itr->asset_bank.find(id1);
-        auto asset2_itr = bank_itr->asset_bank.find(id2);
-        graphene_assert(asset1_itr != bank_itr->asset_bank.end()
-            && asset2_itr != bank_itr->asset_bank.end()
-            && asset1_itr->second >= amount1
-            && asset2_itr->second >= amount2
-            , "insufficient amount");
         // 修改bank中的代币余额.
         banks.modify(*bank_itr, sender, [&](bank& b) {
-            auto _asset1_itr = b.asset_bank.find(id1);
-            auto _asset2_itr = b.asset_bank.find(id2);
-            _asset1_itr->second -= amount1;
-            if (_asset1_itr->second == 0) {
-                b.asset_bank.erase(_asset1_itr);
+            auto asset1_itr = b.asset_bank.find(id1);
+            auto asset2_itr = b.asset_bank.find(id2);
+            graphene_assert(asset1_itr != bank_itr->asset_bank.end()
+                && asset2_itr != bank_itr->asset_bank.end()
+                && asset1_itr->second >= amount1
+                && asset2_itr->second >= amount2
+                , "insufficient amount");
+            asset1_itr->second -= amount1;
+            if (asset1_itr->second == 0) {
+                b.asset_bank.erase(asset1_itr);
             }
-            _asset2_itr->second -= amount2;
-            if (_asset2_itr->second == 0) {
-                b.asset_bank.erase(_asset2_itr);
+            asset2_itr->second -= amount2;
+            if (asset2_itr->second == 0) {
+                b.asset_bank.erase(asset2_itr);
             }
 
             if (to_account_id == sender) {
