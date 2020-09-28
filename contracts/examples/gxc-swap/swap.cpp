@@ -61,8 +61,7 @@ class swap : public contract{
         graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, "illegal asset id!");
 
         // 计算pool_index.
-        auto pool_index = id1 < id2 ? ::graphenelib::string_to_name((std::to_string(id1) + "x" + std::to_string(id2)).c_str())
-            : ::graphenelib::string_to_name((std::to_string(id2) + "x" + std::to_string(id1)).c_str());
+        auto pool_index = _make_pool_index(coin1, coin2);
         auto pool_itr = pools.find(pool_index);
         // 如果交易对不存在对话则创建.
         if (pool_itr == pools.end()) {
@@ -422,12 +421,15 @@ class swap : public contract{
     }
 
     private:
+    
     inline static uint64_t _make_pool_index(const std::string& coin1, const std::string& coin2) {
         auto id1 = get_asset_id(coin1.c_str(), coin1.size());
         auto id2 = get_asset_id(coin2.c_str(), coin2.size());
         graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, "illegal asset id!");
-        return id1 < id2 ? ::graphenelib::string_to_name((std::to_string(id1) + "x" + std::to_string(id2)).c_str())
-            : ::graphenelib::string_to_name((std::to_string(id2) + "x" + std::to_string(id1)).c_str());
+        uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
+        uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
+        uint64_t number = (number1 << 32) + number2;
+        return number;
     }
 
     inline static int64_t _quote(int64_t amount1, int64_t balance1, int64_t balance2) {
