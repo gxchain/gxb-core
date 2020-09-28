@@ -185,11 +185,7 @@ class swap : public contract{
     ) {
         auto sender = get_trx_sender();
         // 检查交易对是否存在.
-        auto id1 = get_asset_id(coin1.c_str(), coin1.size());
-        auto id2 = get_asset_id(coin2.c_str(), coin2.size());
-        graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, "illegal asset id!");
-        auto pool_index = id1 < id2 ? ::graphenelib::string_to_name((std::to_string(id1) + "x" + std::to_string(id2)).c_str())
-            : ::graphenelib::string_to_name((std::to_string(id2) + "x" + std::to_string(id1)).c_str());
+        auto pool_index = _make_pool_index(coin1, coin2);
         auto pool_itr = pools.find(pool_index);
         graphene_assert(pool_itr != pools.end(), "The trading pair does not exist.");
         graphene_assert(!pool_itr->locked, "The trading pair has been locked.");
@@ -199,36 +195,18 @@ class swap : public contract{
         int64_t amount2 = (__int128_t)lq * (__int128_t)pool_itr->balance2.amount / (__int128_t)pool_itr->total_lq;
         graphene_assert(amount1 > 0 && amount2 > 0 && amount1 >= amount1_min && amount2 >= amount2_min, "Insufficient amount");
 
-        // 修改接受者流动性代币的余额.
+        // 向接受者转账.
         auto to_account_id = get_account_id(to.c_str(), to.size());
-        if (to_account_id != sender) {
-            graphene_assert(to_account_id != -1, "illegal account!");
-            auto to_bank_itr = banks.find(to_account_id);
-            if (to_bank_itr == banks.end()) {
-                banks.emplace(sender, [&](bank& b) {
-                    b.owner = to_account_id;
-                    b.asset_bank[id1] = amount1;
-                    b.asset_bank[id2] = amount2;
-                });
-            }
-            else {
-                banks.modify(*to_bank_itr, sender, [&](bank& b) {
-                    b.asset_bank[id1] += amount1;
-                    b.asset_bank[id2] += amount2;
-                });
-            }
-        }
+        graphene_assert(to_account_id != -1, "illegal account!");
+        withdraw_asset(_self, to_account_id, pool_itr->balance1.asset_id, amount1);
+        withdraw_asset(_self, to_account_id, pool_itr->balance2.asset_id, amount2);
+
         // 扣除bank中流动性代币的余额.
         auto bank_itr = banks.find(sender);
         graphene_assert(bank_itr != banks.end() , "Insufficient liquidity");
         banks.modify(*bank_itr, sender, [&](bank& b) {
             graphene_assert(b.liquid_bank[pool_index] >= lq, "Insufficient liquidity");
             b.liquid_bank[pool_index] -= lq;
-            
-            if (sender == to_account_id) {
-                b.asset_bank[id1] += amount1;
-                b.asset_bank[id2] += amount2;
-            }
         });
         // 扣除pool中的余额及流动性代币总量.
         pools.modify(*pool_itr, sender, [&](pool& p) {
