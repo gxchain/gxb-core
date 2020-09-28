@@ -216,10 +216,10 @@ class swap : public contract{
     }
     
     //@abi action
+    //@abi payable
     void swapetkfortk(
         std::vector<std::string> path
         , int64_t amount_out_min
-        , int64_t amount_in
         , std::string to
     ) {
         auto sender = get_trx_sender();
@@ -228,6 +228,10 @@ class swap : public contract{
         auto first_asset_name = path[0];
         auto first_asset_id = get_asset_id(first_asset_name.c_str(), first_asset_name.size());
         graphene_assert(first_asset_id != -1, "Invalid path");
+
+        int64_t amount_in = get_action_asset_amount();
+        uint64_t asset_in = get_action_asset_id();
+        graphene_assert(asset_in == first_asset_id, "Invalid path");
 
         std::vector<contract_asset> amounts;
         amounts.resize(path.size());
@@ -243,39 +247,14 @@ class swap : public contract{
                     , pool_itr->balance1.asset_id == current.asset_id ? pool_itr->balance1.amount : pool_itr->balance2.amount)
                 , pool_itr->balance1.asset_id == current.asset_id ? pool_itr->balance2.asset_id : pool_itr->balance1.asset_id};
         }
-        graphene_assert(amounts[amounts.size()-1].amount >= amount_out_min, "Insufficient amount");
 
-        // 增加接受者余额.
-        auto bank_itr = banks.find(sender);
-        graphene_assert(bank_itr != banks.end(), "Invalid sender");
+        // 向接受者转账.
+        const auto& last_amount = amounts[amounts.size()-1];
+        graphene_assert(last_amount.amount >= amount_out_min, "Insufficient amount");
         auto to_account_id = get_account_id(to.c_str(), to.size());
-        if (sender != to_account_id) {
-            graphene_assert(to_account_id != -1, "illegal account!");
-            auto to_bank_itr = banks.find(to_account_id);
-            if (to_bank_itr == banks.end()) {
-                banks.emplace(sender, [&](bank& b) {
-                    b.owner = to_account_id;
-                    b.asset_bank[first_asset_id] = amounts[amounts.size()-1].amount;
-                });
-            }
-            else {
-                banks.modify(*to_bank_itr, sender, [&](bank& b) {
-                    b.asset_bank[first_asset_id] += amounts[amounts.size()-1].amount;
-                });
-            }
-        }
-
-        // 扣除调用者在bank中的余额
-        banks.modify(bank_itr, sender, [&](bank& b) {
-            auto asset_itr = b.asset_bank.find(first_asset_id);
-            graphene_assert(asset_itr != b.asset_bank.end() && asset_itr->second >= amount_in, "Insufficient amount");
-            asset_itr->second -= amount_in;
-
-            if (sender == to_account_id) {
-                b.asset_bank[amounts[amounts.size() - 1].asset_id] += amounts[amounts.size() - 1].amount;
-            }
-        });
-
+        graphene_assert(to_account_id != -1, "illegal account!");
+        withdraw_asset(_self, to_account_id, last_amount.asset_id,last_amount.amount);
+        
         // 依次更改每个pool中的资金数量.
         for (auto i = 0; i < path.size() - 1; i++) {
             auto pool_itr = pools.find(_make_pool_index(path[i], path[i + 1]));
