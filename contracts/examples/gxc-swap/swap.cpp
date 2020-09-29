@@ -446,9 +446,9 @@ class swap : public contract{
 
     inline static int64_t _get_amount_out(int64_t amount_in, int64_t balance_in, int64_t balance_out ){
         graphene_assert(amount_in > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
-        __int128_t amountInWithFee = (__int128_t)amount_in * 997;
-        __int128_t numerator = amountInWithFee *  (__int128_t)balance_out;
-        __int128_t denominator = (__int128_t)balance_in * 1000 + amountInWithFee;
+        __int128_t amount_in_with_fee = (__int128_t)amount_in * 997;
+        __int128_t numerator = amount_in_with_fee *  (__int128_t)balance_out;
+        __int128_t denominator = (__int128_t)balance_in * 1000 + amount_in_with_fee;
         return (numerator / denominator);
     }
     // 有待商榷.
@@ -475,12 +475,11 @@ class swap : public contract{
         uint64_t index;
         contract_asset balance1;
         contract_asset balance2;
-        std::string symbol;
         int64_t  total_lq;
         bool locked;// 0为开放状态，1为解锁状态，待定
         
         uint64_t primary_key() const {return index;}
-        GRAPHENE_SERIALIZE(pool, (index)(balance1)(balance2)(symbol)(total_lq)(locked))
+        GRAPHENE_SERIALIZE(pool, (index)(balance1)(balance2)(total_lq)(locked))
     };
     
     typedef graphene::multi_index<N(pool), pool> pool_index;
