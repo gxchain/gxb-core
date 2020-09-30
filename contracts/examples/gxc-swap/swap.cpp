@@ -478,34 +478,32 @@ class swap : public contract{
     ) {
         graphene_assert(amount > 0, INVALID_PARAMS);
 
-        auto sender = get_trx_sender();
         auto pool_index = _make_pool_index(coin1, coin2);
         auto pool_itr  = pools.find(pool_index);
         graphene_assert(pool_itr != pools.end(), INVALID_TRADING_PAIR);
         graphene_assert(pool_itr->locked == 0, PAIR_LOCKED);
 
+        auto sender = get_trx_sender();
         auto to_account_id = get_account_id(to.c_str(), to.size());
         graphene_assert(to_account_id != -1, INVALID_TO_ACCOUNT);
-
-        auto sender_bank_itr = banks.find(sender);
-        auto bank_lp_itr = sender_bank_itr->liquid_bank.find(pool_index);
-        graphene_assert( sender_bank_itr != banks.end() 
-                         && bank_lp_itr != sender_bank_itr->liquid_bank.end() 
-                         && bank_lp_itr->second >= amount, INSUFFICIENT_AMOUNT);
         auto to_bank_itr = banks.find(to_account_id);
         if (to_bank_itr == banks.end()) {
-                banks.emplace(sender, [&](bank& b) {
-                    b.owner = to_account_id;
-                    b.liquid_bank[pool_index] = amount;
-                });
+            banks.emplace(sender, [&](bank& b) {
+                b.owner = to_account_id;
+                b.liquid_bank[pool_index] = amount;
+            });
         }
         else {
             banks.modify(to_bank_itr, sender, [&](bank& b) {
-                b.liquid_bank[pool_index] += amount;
+                b.liquid_bank[pool_index] = _safe_add(b.liquid_bank[pool_index], amount);
             });
         }
+
+        auto sender_bank_itr = banks.find(sender);
+        graphene_assert(sender_bank_itr != banks.end(), INVALID_SENDER_ACCOUNT);
         banks.modify(sender_bank_itr, sender, [&](bank& b) {
-            b.liquid_bank[pool_index] -= amount;
+            graphene_assert(b.liquid_bank[pool_index] >= amount, INSUFFICIENT_LIQUIDITY);
+            b.liquid_bank[pool_index] = _safe_sub(b.liquid_bank[pool_index], amount);
         });
     }
 
@@ -549,7 +547,7 @@ class swap : public contract{
         contract_asset balance1;
         contract_asset balance2;
         int64_t  total_lq;
-        bool locked;// 0为开放状态，1为解锁状态，待定
+        bool locked; // 0为解锁, 1为锁定.
         
         uint64_t primary_key() const {return index;}
         GRAPHENE_SERIALIZE(pool, (index)(balance1)(balance2)(total_lq)(locked))
