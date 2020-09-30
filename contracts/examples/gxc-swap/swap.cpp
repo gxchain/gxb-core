@@ -11,6 +11,62 @@
 
 using namespace graphene;
 
+inline static uint64_t _make_pool_index(const std::string& coin1, const std::string& coin2) {
+    auto id1 = get_asset_id(coin1.c_str(), coin1.size());
+    auto id2 = get_asset_id(coin2.c_str(), coin2.size());
+    graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, "illegal asset id!");
+    uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
+    uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
+    uint64_t number = (number1 << 32) + number2;
+    return number;
+}
+
+inline static int64_t _quote(int64_t amount1, int64_t balance1, int64_t balance2) {
+    graphene_assert(amount1 > 0 && balance1 > 0 && balance2 > 0, "amount or balance can't less than 1!");
+    return int64_t((__int128_t)amount1 * (__int128_t)balance2 / (__int128_t)balance1);
+}
+
+inline static int64_t _get_amount_in(int64_t amount_out, int64_t balance_in, int64_t balance_out) {
+    graphene_assert(amount_out > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
+    __int128_t numerator = (__int128_t)balance_in * (__int128_t)amount_out * 1000;
+    __int128_t denominator = (balance_out - amount_out) * 997;
+    return (numerator / denominator) + 1;
+}
+
+inline static int64_t _get_amount_out(int64_t amount_in, int64_t balance_in, int64_t balance_out ){
+    graphene_assert(amount_in > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
+    __int128_t amount_in_with_fee = (__int128_t)amount_in * 997;
+    __int128_t numerator = amount_in_with_fee *  (__int128_t)balance_out;
+    __int128_t denominator = (__int128_t)balance_in * 1000 + amount_in_with_fee;
+    return (numerator / denominator);
+}
+
+template<class T>
+inline static T _safe_add(const T& a, const T& b) {
+    T result = a + b;
+    graphene_assert(result >= a && result >= b, "Number overflow");
+    return result;
+}
+
+template<class T>
+inline static T _safe_sub(const T& a, const T& b) {
+    T result = a - b;
+    graphene_assert(a >= result, "Number overflow");
+    return result;
+}
+
+template<class T>
+inline static T _safe_mul(const T& a, const T& b) {
+    __int128_t result = static_cast<__int128_t>(a) * static_cast<__int128_t>(b);
+    graphene_assert((a != 0 && b !=0 && result >= a && result >= b) || a ==0 || b == 0, "Number overflow");
+    return static_cast<T>(result);
+}
+
+// 有待商榷.
+static const int64_t MINLIQUIDITY       = 100;
+static const int64_t ADMINACCOUNT       = 22;
+static const int64_t BLACKHOLEACCOUNT   = 3;
+
 class swap : public contract{
     public:
         swap(uint64_t account_id)
@@ -28,21 +84,21 @@ class swap : public contract{
         int64_t asset_amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
         
-        auto owner_iterator = banks.find(sender);
-        if(owner_iterator == banks.end()) {
+        auto bank_itr = banks.find(sender);
+        if(bank_itr == banks.end()) {
             banks.emplace( sender, [&](bank &o) {
                 o.owner = sender;
-                o.asset_bank.insert(std::pair<uint64_t, int64_t>(asset_id,asset_amount));
+                o.asset_bank.insert(std::pair<uint64_t, int64_t>(asset_id, asset_amount));
             });
         } else {
-            auto assert_iterator = (*owner_iterator).asset_bank.find(asset_id);
-            if(assert_iterator == (*owner_iterator).asset_bank.end()){
-                banks.modify(owner_iterator, sender, [&](auto& o){
-                    o.asset_bank.insert(std::pair<uint64_t, int64_t>(asset_id,asset_amount));
+            auto assert_iterator = bank_itr->asset_bank.find(asset_id);
+            if (assert_iterator == bank_itr->asset_bank.end()){
+                banks.modify(bank_itr, sender, [&](auto& o){
+                    o.asset_bank.insert(std::pair<uint64_t, int64_t>(asset_id, asset_amount));
                 });
             } else {
-                banks.modify(owner_iterator, sender, [&](auto& o){
-                    o.asset_bank[asset_id] += asset_amount;
+                banks.modify(bank_itr, sender, [&](auto& o){
+                    o.asset_bank[asset_id] = _safe_add(o.asset_bank[asset_id], asset_amount);
                 });    
             }
         }
@@ -61,9 +117,11 @@ class swap : public contract{
         graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, "illegal asset id!");
 
         // 计算pool_index.
-        auto pool_index = _make_pool_index(coin1, coin2);
+        uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
+        uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
+        uint64_t pool_index = (number1 << 32) + number2;
         auto pool_itr = pools.find(pool_index);
-        // 如果交易对不存在对话则创建.
+        // 如果交易对不存在的话则创建.
         if (pool_itr == pools.end()) {
             pool_itr = pools.emplace(sender, [&](pool& p) {
                 p.index = pool_index;
@@ -80,19 +138,21 @@ class swap : public contract{
         }
         
         // 根据池内的资金数量计算可以质押的金额.
-        int64_t amount1, amount2;
-        if (pool_itr->balance1.amount == 0 && pool_itr->balance2.amount == 0) {
+        const auto& balance1 = pool_itr->balance1.asset_id == id1 ? pool_itr->balance1 : pool_itr->balance2;
+        const auto& balance2 = pool_itr->balance2.asset_id == id2 ? pool_itr->balance2 : pool_itr->balance1;
+        int64_t amount1 = 0, amount2 = 0;
+        if (balance1.amount == 0 && balance2.amount == 0) {
             amount1 = amount1_desired;
             amount2 = amount2_desired;
         }
         else {
-            auto amount2_optimal = _quote(amount1_desired, pool_itr->balance1.amount, pool_itr->balance2.amount);
+            auto amount2_optimal = _quote(amount1_desired, balance1.amount, balance2.amount);
             if (amount2_optimal <= amount2_desired) {
                 graphene_assert(amount2_optimal >= amount2_min, "insufficient coin2 amount");
                 amount1 = amount1_desired;
                 amount2 = amount2_optimal;
             } else {
-                auto amount1_optimal = _quote(amount2_desired, pool_itr->balance2.amount, pool_itr->balance1.amount);
+                auto amount1_optimal = _quote(amount2_desired, balance2.amount, balance1.amount);
                 graphene_assert(amount1_optimal <= amount1_desired && amount1_optimal >= amount1_min, "insufficient coin1 amount");
                 amount1 = amount1_optimal;
                 amount2 = amount2_desired;
@@ -101,26 +161,26 @@ class swap : public contract{
         graphene_assert(amount1 > 0 && amount2 > 0, "insufficient amount");
 
         // 计算增加的流动性.
-        int64_t lq;
+        int64_t lq = 0;
         if (pool_itr->total_lq == 0) {
             lq = sqrt(amount1 * amount2) - MINLIQUIDITY;
             // 将最小流动性分配给黑洞账号.
-            auto zero_bank_itr = banks.find(0);
-            if (zero_bank_itr == banks.end()) {
+            auto black_hole_bank_itr = banks.find(BLACKHOLEACCOUNT);
+            if (black_hole_bank_itr == banks.end()) {
                 banks.emplace(sender, [&](bank& b) {
                     b.owner = 0;
                     b.liquid_bank[pool_index] = MINLIQUIDITY;
                 });
             }
             else {
-                banks.modify(*zero_bank_itr, sender, [&](bank& b) {
+                banks.modify(*black_hole_bank_itr, sender, [&](bank& b) {
                     b.liquid_bank[pool_index] = MINLIQUIDITY;
                 });
             }
         }
         else {
-            lq = std::min(amount1 * pool_itr->total_lq / pool_itr->balance1.amount
-                , amount2 * pool_itr->total_lq / pool_itr->balance2.amount);
+            lq = std::min(_safe_mul(amount1, pool_itr->total_lq) / balance1.amount
+                , _safe_mul(amount2, pool_itr->total_lq) / balance2.amount);
         }
         graphene_assert(lq > 0, "insufficient liquidity");
 
@@ -137,7 +197,7 @@ class swap : public contract{
             }
             else {
                 banks.modify(*to_bank_itr, sender, [&](bank& b) {
-                    b.liquid_bank[pool_index] += lq;
+                    b.liquid_bank[pool_index] = _safe_add(b.liquid_bank[pool_index], lq);
                 });
             }
         }
@@ -153,24 +213,24 @@ class swap : public contract{
                 && asset1_itr->second >= amount1
                 && asset2_itr->second >= amount2
                 , "insufficient amount");
-            asset1_itr->second -= amount1;
+            asset1_itr->second = _safe_sub(asset1_itr->second, amount1);
             if (asset1_itr->second == 0) {
                 b.asset_bank.erase(asset1_itr);
             }
-            asset2_itr->second -= amount2;
+            asset2_itr->second -= _safe_sub(asset2_itr->second, amount2);
             if (asset2_itr->second == 0) {
                 b.asset_bank.erase(asset2_itr);
             }
 
             if (to_account_id == sender) {
-                b.liquid_bank[pool_index] += lq;
+                b.liquid_bank[pool_index] = _safe_add(b.liquid_bank[pool_index], lq);
             }
         });
         // 修改pool中的代币余额, 同时增加流动性代币总量.
         pools.modify(*pool_itr, sender, [&](pool& p) {
-            p.balance1.amount += amount1;
-            p.balance2.amount += amount2;
-            p.total_lq = p.total_lq == 0 ? lq + MINLIQUIDITY : p.total_lq + lq;
+            p.balance1.amount = _safe_add(p.balance1.amount, amount1);
+            p.balance2.amount - _safe_add(p.balance2.amount, amount2);
+            p.total_lq = p.total_lq == 0 ? _safe_add(lq, MINLIQUIDITY) : _safe_add(p.total_lq, lq);
         });
     }
 
@@ -421,40 +481,6 @@ class swap : public contract{
     }
 
     private:
-    
-    inline static uint64_t _make_pool_index(const std::string& coin1, const std::string& coin2) {
-        auto id1 = get_asset_id(coin1.c_str(), coin1.size());
-        auto id2 = get_asset_id(coin2.c_str(), coin2.size());
-        graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, "illegal asset id!");
-        uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
-        uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
-        uint64_t number = (number1 << 32) + number2;
-        return number;
-    }
-
-    inline static int64_t _quote(int64_t amount1, int64_t balance1, int64_t balance2) {
-        graphene_assert(amount1 > 0 && balance1 > 0 && balance2 > 0, "amount or balance can't less than 1!");
-        return int64_t((__int128_t)amount1 * (__int128_t)balance2 / (__int128_t)balance1);
-    }
-
-    inline static int64_t _get_amount_in(int64_t amount_out, int64_t balance_in, int64_t balance_out) {
-        graphene_assert(amount_out > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
-        __int128_t numerator = (__int128_t)balance_in * (__int128_t)amount_out * 1000;
-        __int128_t denominator = (balance_out - amount_out) * 997;
-        return (numerator / denominator) + 1;
-    }
-
-    inline static int64_t _get_amount_out(int64_t amount_in, int64_t balance_in, int64_t balance_out ){
-        graphene_assert(amount_in > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
-        __int128_t amount_in_with_fee = (__int128_t)amount_in * 997;
-        __int128_t numerator = amount_in_with_fee *  (__int128_t)balance_out;
-        __int128_t denominator = (__int128_t)balance_in * 1000 + amount_in_with_fee;
-        return (numerator / denominator);
-    }
-    // 有待商榷.
-    const int64_t MINLIQUIDITY = 100;
-    const int64_t ADMINACCOUNT = 22;
-
    //@abi table bank i64
     struct bank{
         uint64_t owner;
