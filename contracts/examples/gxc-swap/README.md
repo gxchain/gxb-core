@@ -1,10 +1,14 @@
-# gxc-swap
+# swap
 
 ### 静态变量
 
 ```c++
-const int64_t MINLIQUIDITY = 100; // 每个交易对的最小流动性.
-const int64_t ADMINACCOUNT = 22; // 管理员账号, 可以锁定或开启池.
+static const int64_t MINLIQUIDITY       = 100;  // 最小流动性.
+static const int64_t ADMINACCOUNT       = 22;   // 管理员账户.
+static const int64_t BLACKHOLEACCOUNT   = 3;    // 黑洞账户.
+
+static const int64_t FEENUMERATOR       = 997;  // 手续费比例.
+static const int64_t FEEDENOMINATOR     = 1000;
 ```
 ---
 ### 数据结构
@@ -18,15 +22,21 @@ struct pool {
     int64_t total_lq; // lq代币的总量.
     bool locked; // 当前交易对是否被锁定, 如果被锁定则无法进行交易, 也无法质押或赎回流动性.
 
+    /*
+    * 流动性授权信息, key为allowance_index, value为授权的数量.
+    * 其中allowance_index的前32位为授权者的account_id, 后32位为被授权者的account_id.
+    */
+    std::map<uint64_t, int64_t> allowance;
+
     uint64_t primary_key() const { return index; }
-    GRAPHENE_SERIALIZE(pool, (index)(balance1)(balance2))
+    GRAPHENE_SERIALIZE(pool, (index)(balance1)(balance2)(total_lq)(locked)(allowance))
 };
 
 typedef graphene::multi_index<N(pool), pool> pool_index;
 ```
 
 #### 银行表
-- 用于记录用户充值的资产, 方便gxc-swap扣款.
+- 用于记录用户充值的资产, 方便swap扣款.
 ```c++
 struct bank {
     uint64_t owner; // 记录拥有者.
@@ -91,7 +101,7 @@ void rmlq(
 ```c++
 //@abi action
 //@abi payable
-void swapetkfortk(
+void swapa(
     std::vector<std::string> path // 用户指定的交换路径.
     , int64_t amount_out_min // 用户设置的最小输出金额.
     , std::string to // 接受交换代币的账户.
@@ -109,7 +119,7 @@ void swapetkfortk(
 ```c++
 //@abi action
 //@abi payable
-void swaptokensforexacttokens(
+void swapb(
     std::vector<std::string> path // 用户指定的交换路径.
     , int64_t amount_out // 用户指定的输出的代币的数量.
     , std::string to // 接受交换代币的账户.
@@ -148,13 +158,28 @@ void wthdraw(
 }
 ```
 
-#### 7. 转移流动性代币接口
+#### 7. 授权流动性代币接口
+- 授权别的用户可以从调用者的账户中转账流动性代币
+```c++
+//@abi action
+void approvelq(
+    std::string coin1, std::string coin2 // 交易对中的两种代币.
+    , std::string to // 授权账户.
+    , int64_t amount // 授权金额.
+) {
+    // 检查交易对是否存在.
+    // 检查pool是否被锁定.
+    // 将授权账户的授权金额改为传入的金额.
+}
+```
+
+#### 8. 转移流动性代币接口
 - 向其他用户转账流动性代币
 ```c++
 //@abi action
-void transferlq(
+void transferlqa(
     std::string coin1, std::string coin2 // 交易对中的两种代币.
-    , std::string to // 首款账户.
+    , std::string to // 收款账户.
     , int64_t amount // 转账金额.
 ) {
     // 检查交易对是否存在.
@@ -164,7 +189,26 @@ void transferlq(
 }
 ```
 
-#### 8. 管理资金池接口
+#### 9. 转移授权的流动性代币接口
+- 通过授权, 扣除指定用户的流动性代币余额, 转给另一个账户
+```c++
+//@abi action
+void transferlqb(
+    std::string coin1, std::string coin2 // 交易对中的两种代币.
+    , std::string from // 出款账户.
+    , std::string to // 收款账户.
+    , int64_t amount // 转账金额.
+) {
+    // 检查交易对是否存在.
+    // 检查pool是否被锁定.
+    // 检查调用者是否被出款账户授权, 并且授权数量足够.
+    // 扣除出款账户对调用者对授权.
+    // 检查出款用户的lq代币是否足够.
+    // 向指定用户转移lq代币.
+}
+```
+
+#### 10. 管理资金池接口
 - 管理资金池的状态, 调用者必须为管理员
 ```c++
 //@abi action
