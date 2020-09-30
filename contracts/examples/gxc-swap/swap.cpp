@@ -94,6 +94,7 @@ class swap : public contract{
         uint64_t sender = get_trx_sender();
         int64_t asset_amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
+        graphene_assert(asset_amount > 0 && asset_id > 0, "illegal params");
         
         auto bank_itr = banks.find(sender);
         if(bank_itr == banks.end()) {
@@ -326,6 +327,7 @@ class swap : public contract{
 
         int64_t amount_in = get_action_asset_amount();
         uint64_t asset_in = get_action_asset_id();
+        graphene_assert(amount_in > 0 && asset_in > 0, "illegal params");
         graphene_assert(asset_in == first_asset_id, "Invalid path");
 
         std::vector<contract_asset> amounts;
@@ -390,6 +392,7 @@ class swap : public contract{
 
         int64_t amount_in_max = get_action_asset_amount();
         uint64_t asset_in = get_action_asset_id();
+        graphene_assert(amount_in_max > 0 && asset_in > 0, "illegal params");
         graphene_assert(asset_in == first_asset_id, "Invalid path");
 
         std::vector<contract_asset> amounts;
