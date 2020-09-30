@@ -234,7 +234,7 @@ class swap : public contract{
             auto& _balance1 = p.balance1.asset_id == id1 ? p.balance1 : p.balance2;
             auto& _balance2 = p.balance2.asset_id == id2 ? p.balance2 : p.balance1;
             _balance1.amount = _safe_add(_balance1.amount, amount1);
-            _balance2.amount - _safe_add(_balance2.amount, amount2);
+            _balance2.amount = _safe_add(_balance2.amount, amount2);
             p.total_lq = p.total_lq == 0 ? _safe_add(lq, MINLIQUIDITY) : _safe_add(p.total_lq, lq);
         });
     }
@@ -294,8 +294,7 @@ class swap : public contract{
     
     //@abi action
     //@abi payable
-    void swapa(
-        std::vector<std::string> path
+    void swapa(std::vector<std::string> path
         , int64_t amount_out_min
         , std::string to
     ) {
@@ -417,8 +416,7 @@ class swap : public contract{
     }
 
     //@abi action
-    void withdraw(
-        std::string coin,
+    void withdraw(std::string coin,
         std::string to,
         int64_t amount
     ) {
@@ -426,22 +424,19 @@ class swap : public contract{
         auto bank_itr = banks.find(sender);
         graphene_assert(bank_itr != banks.end(), "missing user");
 
-        //检查用户余额是否足够
         auto asset_id = get_asset_id(coin.c_str(), coin.size());
-        auto asset_itr = bank_itr->asset_bank.find(asset_id);
-
-        graphene_assert(asset_itr != bank_itr->asset_bank.end()
-            && asset_itr->second >= amount
-            , "insufficient amount");
+        graphene_assert(asset_id != -1, "invalid asset id");
 
         banks.modify(bank_itr, sender, [&](bank& b) {
-            auto _asset_itr = b.asset_bank.find(asset_id);
-            _asset_itr->second -= amount;
-            if (_asset_itr->second == 0) {
-                b.asset_bank.erase(_asset_itr);
+            auto asset_itr = b.asset_bank.find(asset_id);
+            graphene_assert(asset_itr != b.asset_bank.end() && asset_itr->second >= amount, "Insufficient amount");
+            asset_itr->second = _safe_sub(asset_itr->second, amount);
+            if (asset_itr->second == 0) {
+                b.asset_bank.erase(asset_itr);
             }
-        });        
-        //取回
+        });
+
+        // 向接受者转账.
         auto to_id = get_account_id(to.c_str(), to.length());
         withdraw_asset(_self, to_id, asset_id, amount);
     }
