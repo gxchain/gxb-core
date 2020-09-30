@@ -516,39 +516,12 @@ class swap : public contract{
             graphene_assert(pool_itr != pools.end(), INVALID_TRADING_PAIR);
             graphene_assert(!pool_itr->locked, PAIR_LOCKED);
 
-            // 增加接受者余额.
             auto sender = get_trx_sender();
             auto to_account_id = get_account_id(to.c_str(), to.size());
             graphene_assert(to_account_id != -1, INVALID_TO_ACCOUNT);
-            auto to_bank_itr = banks.find(to_account_id);
-            if (to_bank_itr == banks.end()) {
-                banks.emplace(sender, [&](bank& b) {
-                    b.owner = to_account_id;
-                    b.liquid_bank[pool_index] = amount;
-                });
-            }
-            else {
-                banks.modify(to_bank_itr, sender, [&](bank& b) {
-                    b.liquid_bank[pool_index] = _safe_add(b.liquid_bank[pool_index], amount);
-                });
-            }
 
-            // 扣除发送者余额.
-            auto sender_bank_itr = banks.find(sender);
-            graphene_assert(sender_bank_itr != banks.end(), INVALID_SENDER_ACCOUNT);
-            bool remove = false;
-            banks.modify(sender_bank_itr, sender, [&](bank& b) {
-                auto lq_itr = b.liquid_bank.find(pool_index);
-                graphene_assert(lq_itr != b.liquid_bank.end() && lq_itr->second >= amount, INSUFFICIENT_LIQUIDITY);
-                lq_itr->second = _safe_sub(lq_itr->second, amount);
-                if (lq_itr->second == 0) {
-                    b.liquid_bank.erase(lq_itr);
-                    remove = b.asset_bank.empty() && b.liquid_bank.empty();
-                }
-            });
-            if (remove) {
-                banks.erase(sender_bank_itr);
-            }
+            // 进行转账.
+            _transferlq(sender, sender, to_account_id, pool_index, amount);
         }
 
         //@abi action
@@ -582,36 +555,8 @@ class swap : public contract{
                 }
             });
             
-            auto from_bank_itr = banks.find(from_account_id);
-            graphene_assert(from_bank_itr != banks.end(), INVALID_FROM_ACCOUNT);
-            bool remove = false;
-            // 扣除发送人的余额.
-            banks.modify(from_bank_itr, sender, [&](bank& b) {
-                auto lq_itr = b.liquid_bank.find(pool_index);
-                graphene_assert(lq_itr != b.liquid_bank.end() && lq_itr->second >= amount, INSUFFICIENT_LIQUIDITY);
-                lq_itr->second = _safe_sub(lq_itr->second, amount);
-                if (lq_itr->second == 0) {
-                    b.liquid_bank.erase(lq_itr);
-                    remove = b.asset_bank.empty() && b.liquid_bank.empty();
-                }
-            });
-            if (remove) {
-                banks.erase(from_bank_itr);
-            }
-
-            // 增加接受人的余额.
-            auto to_bank_itr = banks.find(to_account_id);
-            if (to_bank_itr == banks.end()) {
-                banks.emplace(sender, [&](bank& b) {
-                    b.owner = to_account_id;
-                    b.liquid_bank[pool_index] = amount;
-                });
-            }
-            else {
-                banks.modify(to_bank_itr, sender, [&](bank& b) {
-                    b.liquid_bank[pool_index] = _safe_add(b.liquid_bank[pool_index], amount);
-                });
-            }
+            // 进行转账.
+            _transferlq(sender, from_account_id, to_account_id, pool_index, amount);
         }
 
         //@abi action
@@ -633,6 +578,39 @@ class swap : public contract{
         }
 
     private:
+        void _transferlq(uint64_t payer, uint64_t from, uint64_t to, uint64_t pool_index, int64_t amount) {
+            // 增加接受者余额.
+            auto to_bank_itr = banks.find(to);
+            if (to_bank_itr == banks.end()) {
+                banks.emplace(payer, [&](bank& b) {
+                    b.owner = to;
+                    b.liquid_bank[pool_index] = amount;
+                });
+            }
+            else {
+                banks.modify(to_bank_itr, payer, [&](bank& b) {
+                    b.liquid_bank[pool_index] = _safe_add(b.liquid_bank[pool_index], amount);
+                });
+            }
+
+            // 扣除发送者余额.
+            auto from_bank_itr = banks.find(from);
+            graphene_assert(from_bank_itr != banks.end(), INVALID_SENDER_ACCOUNT);
+            bool remove = false;
+            banks.modify(from_bank_itr, payer, [&](bank& b) {
+                auto lq_itr = b.liquid_bank.find(pool_index);
+                graphene_assert(lq_itr != b.liquid_bank.end() && lq_itr->second >= amount, INSUFFICIENT_LIQUIDITY);
+                lq_itr->second = _safe_sub(lq_itr->second, amount);
+                if (lq_itr->second == 0) {
+                    b.liquid_bank.erase(lq_itr);
+                    remove = b.asset_bank.empty() && b.liquid_bank.empty();
+                }
+            });
+            if (remove) {
+                banks.erase(from_bank_itr);
+            }
+        }
+
         //@abi table bank i64
         struct bank {
             uint64_t owner;
