@@ -11,35 +11,12 @@
 
 using namespace graphene;
 
-inline static uint64_t _make_pool_index(const std::string& coin1, const std::string& coin2) {
-    auto id1 = get_asset_id(coin1.c_str(), coin1.size());
-    auto id2 = get_asset_id(coin2.c_str(), coin2.size());
-    graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, "illegal asset id!");
-    uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
-    uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
-    uint64_t number = (number1 << 32) + number2;
-    return number;
-}
-
-inline static int64_t _quote(int64_t amount1, int64_t balance1, int64_t balance2) {
-    graphene_assert(amount1 > 0 && balance1 > 0 && balance2 > 0, "amount or balance can't less than 1!");
-    return int64_t((__int128_t)amount1 * (__int128_t)balance2 / (__int128_t)balance1);
-}
-
-inline static int64_t _get_amount_in(int64_t amount_out, int64_t balance_in, int64_t balance_out) {
-    graphene_assert(amount_out > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
-    __int128_t numerator = (__int128_t)balance_in * (__int128_t)amount_out * 1000;
-    __int128_t denominator = (balance_out - amount_out) * 997;
-    return (numerator / denominator) + 1;
-}
-
-inline static int64_t _get_amount_out(int64_t amount_in, int64_t balance_in, int64_t balance_out ){
-    graphene_assert(amount_in > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
-    __int128_t amount_in_with_fee = (__int128_t)amount_in * 997;
-    __int128_t numerator = amount_in_with_fee *  (__int128_t)balance_out;
-    __int128_t denominator = (__int128_t)balance_in * 1000 + amount_in_with_fee;
-    return (numerator / denominator);
-}
+// 最小流动性.
+static const int64_t MINLIQUIDITY       = 100;
+// 管理员账户.
+static const int64_t ADMINACCOUNT       = 22;
+// 黑洞账户.
+static const int64_t BLACKHOLEACCOUNT   = 3;
 
 template<class T>
 inline static T _safe_add(const T& a, const T& b) {
@@ -58,16 +35,45 @@ inline static T _safe_sub(const T& a, const T& b) {
 template<class T>
 inline static T _safe_mul(const T& a, const T& b) {
     __int128_t result = static_cast<__int128_t>(a) * static_cast<__int128_t>(b);
-    graphene_assert((a != 0 && b !=0 && result >= a && result >= b) || a ==0 || b == 0, "Number overflow");
+    graphene_assert((a != 0 && b != 0 && result >= a && result >= b) || a == 0 || b == 0, "Number overflow");
     return static_cast<T>(result);
 }
 
-// 最小流动性.
-static const int64_t MINLIQUIDITY       = 100;
-// 管理员账户.
-static const int64_t ADMINACCOUNT       = 22;
-// 黑洞账户.
-static const int64_t BLACKHOLEACCOUNT   = 3;
+inline static uint64_t _make_pool_index(const std::string& coin1, const std::string& coin2) {
+    auto id1 = get_asset_id(coin1.c_str(), coin1.size());
+    auto id2 = get_asset_id(coin2.c_str(), coin2.size());
+    graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, "illegal asset id!");
+    uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
+    uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
+    uint64_t _number1 = number1 << 32;
+    graphene_assert(_number1 > number1, "Number overflow");
+    return  _safe_add(_number1, number2);
+}
+
+inline static int64_t _quote(int64_t amount1, int64_t balance1, int64_t balance2) {
+    graphene_assert(amount1 > 0 && balance1 > 0 && balance2 > 0, "amount or balance can't less than 1!");
+    return _safe_mul(amount1, balance2) / balance1;
+}
+
+inline static int64_t _get_amount_in(int64_t amount_out, int64_t balance_in, int64_t balance_out) {
+    graphene_assert(amount_out > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
+    __int128_t numerator = (__int128_t)balance_in * (__int128_t)amount_out * 1000;
+    graphene_assert(numerator >= balance_in && numerator >= amount_out && numerator >= 1000, "Number overflow");
+    __int128_t denominator = (balance_out - amount_out) * 997;
+    graphene_assert(denominator >= (balance_out - amount_out) && denominator >= 997, "Number overflow");
+    return _safe_add<int64_t>(numerator / denominator, 1);
+}
+
+inline static int64_t _get_amount_out(int64_t amount_in, int64_t balance_in, int64_t balance_out ){
+    graphene_assert(amount_in > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
+    __int128_t amount_in_with_fee = (__int128_t)amount_in * 997;
+    graphene_assert(amount_in_with_fee >= amount_in && amount_in >= 997, "Number overflow");
+    __int128_t numerator = amount_in_with_fee * (__int128_t)balance_out;
+    graphene_assert(numerator >= amount_in_with_fee && numerator >= balance_out, "Number overflow");
+    __int128_t denominator = (__int128_t)balance_in * 1000 + amount_in_with_fee;
+    graphene_assert(denominator >= balance_in && denominator >= amount_in_with_fee && denominator >= 1000, "Number overflow");
+    return (numerator / denominator);
+}
 
 class swap : public contract{
     public:
@@ -121,7 +127,9 @@ class swap : public contract{
         // 计算pool_index.
         uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
         uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
-        uint64_t pool_index = (number1 << 32) + number2;
+        uint64_t _number1 = number1 << 32;
+        graphene_assert(_number1 > number1, "Number overflow");
+        uint64_t pool_index = _safe_add(_number1, number2);
         auto pool_itr = pools.find(pool_index);
         // 如果交易对不存在的话则创建.
         if (pool_itr == pools.end()) {
@@ -254,7 +262,9 @@ class swap : public contract{
         // 计算pool_index.
         uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
         uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
-        uint64_t pool_index = (number1 << 32) + number2;
+        uint64_t _number1 = number1 << 32;
+        graphene_assert(_number1 > number1, "Number overflow");
+        uint64_t pool_index = _safe_add(_number1, number2);
         auto pool_itr = pools.find(pool_index);
         // 检查交易对是否存在.
         graphene_assert(pool_itr != pools.end(), "The trading pair does not exist.");
