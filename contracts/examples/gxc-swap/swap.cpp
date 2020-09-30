@@ -7,6 +7,7 @@
 #include <graphenelib/dispatcher.hpp>
 #include <map>
 #include <vector>
+#include <tuple>
 #include <math.h>
 
 #include "./message.hpp"
@@ -44,15 +45,19 @@ inline static T _safe_mul(const T& a, const T& b) {
     return static_cast<T>(result);
 }
 
+inline static uint64_t _make_index(const uint64_t& number1, const uint64_t& number2) {
+    uint64_t _number1 = number1 << 32;
+    graphene_assert(_number1 > number1, NUMBER_OVERFLOW);
+    return _safe_add(_number1, number2);
+}
+
 inline static uint64_t _make_pool_index(const std::string& coin1, const std::string& coin2) {
     auto id1 = get_asset_id(coin1.c_str(), coin1.size());
     auto id2 = get_asset_id(coin2.c_str(), coin2.size());
     graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, INVALID_TRADING_PAIR);
     uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
     uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
-    uint64_t _number1 = number1 << 32;
-    graphene_assert(_number1 > number1, NUMBER_OVERFLOW);
-    return _safe_add(_number1, number2);
+    return _make_index(number1, number2);
 }
 
 inline static int64_t _quote(int64_t amount1, int64_t balance1, int64_t balance2) {
@@ -472,17 +477,46 @@ class swap : public contract{
         }
 
         //@abi action
-        void transferlq(std::string coin1, std::string coin2
+        void approvelq(std::string coin1, std::string coin2
             , std::string to
             , int64_t amount
         ) {
             graphene_assert(amount > 0, INVALID_PARAMS);
 
+            // 检查交易对是否存在.
             auto pool_index = _make_pool_index(coin1, coin2);
             auto pool_itr  = pools.find(pool_index);
             graphene_assert(pool_itr != pools.end(), INVALID_TRADING_PAIR);
-            graphene_assert(pool_itr->locked == 0, PAIR_LOCKED);
+            graphene_assert(!pool_itr->locked, PAIR_LOCKED);
 
+            auto to_account_id = get_account_id(to.c_str(), to.size());
+            graphene_assert(to_account_id != -1, INVALID_TO_ACCOUNT);
+
+            // 增加调用者对接受者的授权.
+            auto sender = get_trx_sender();
+            pools.modify(pool_itr, sender, [&](pool& p) {
+                auto allowance_index = _make_index(sender, to_account_id);
+                p.allowance[allowance_index] = amount;
+                if (amount == 0) {
+                    p.allowance.erase(allowance_index);
+                }
+            });
+        }
+
+        //@abi action
+        void transferlqa(std::string coin1, std::string coin2
+            , std::string to
+            , int64_t amount
+        ) {
+            graphene_assert(amount > 0, INVALID_PARAMS);
+
+            // 检查交易对是否存在.
+            auto pool_index = _make_pool_index(coin1, coin2);
+            auto pool_itr  = pools.find(pool_index);
+            graphene_assert(pool_itr != pools.end(), INVALID_TRADING_PAIR);
+            graphene_assert(!pool_itr->locked, PAIR_LOCKED);
+
+            // 增加接受者余额.
             auto sender = get_trx_sender();
             auto to_account_id = get_account_id(to.c_str(), to.size());
             graphene_assert(to_account_id != -1, INVALID_TO_ACCOUNT);
@@ -499,12 +533,85 @@ class swap : public contract{
                 });
             }
 
+            // 扣除发送者余额.
             auto sender_bank_itr = banks.find(sender);
             graphene_assert(sender_bank_itr != banks.end(), INVALID_SENDER_ACCOUNT);
+            bool remove = false;
             banks.modify(sender_bank_itr, sender, [&](bank& b) {
-                graphene_assert(b.liquid_bank[pool_index] >= amount, INSUFFICIENT_LIQUIDITY);
-                b.liquid_bank[pool_index] = _safe_sub(b.liquid_bank[pool_index], amount);
+                auto lq_itr = b.liquid_bank.find(pool_index);
+                graphene_assert(lq_itr != b.liquid_bank.end() && lq_itr->second >= amount, INSUFFICIENT_LIQUIDITY);
+                lq_itr->second = _safe_sub(lq_itr->second, amount);
+                if (lq_itr->second == 0) {
+                    b.liquid_bank.erase(lq_itr);
+                    remove = b.asset_bank.empty() && b.liquid_bank.empty();
+                }
             });
+            if (remove) {
+                banks.erase(sender_bank_itr);
+            }
+        }
+
+        //@abi action
+        void transferlqb(std::string coin1, std::string coin2
+            , std::string from, std::string to
+            , int64_t amount
+        ) {
+            graphene_assert(amount > 0, INVALID_PARAMS);
+
+            // 检查交易对是否存在.
+            auto pool_index = _make_pool_index(coin1, coin2);
+            auto pool_itr  = pools.find(pool_index);
+            graphene_assert(pool_itr != pools.end(), INVALID_TRADING_PAIR);
+            graphene_assert(!pool_itr->locked, PAIR_LOCKED);
+
+            // 检查发送及接受人是否合法.
+            auto sender = get_trx_sender();
+            auto from_account_id = get_account_id(from.c_str(), from.size());
+            graphene_assert(from_account_id != -1, INVALID_FROM_ACCOUNT);
+            auto to_account_id = get_account_id(to.c_str(), to.size());
+            graphene_assert(to_account_id != -1, INVALID_TO_ACCOUNT);
+
+            // 扣除发送人对调用人的授权.
+            pools.modify(pool_itr, sender, [&](pool& p) {
+                auto allowance_index = _make_index(from_account_id, sender);
+                auto allowance_itr = p.allowance.find(allowance_index);
+                graphene_assert(allowance_itr != p.allowance.end() && allowance_itr->second >= amount, INSUFFICIENT_ALLOWANCE);
+                allowance_itr->second = _safe_sub(allowance_itr->second, amount);
+                if (allowance_itr->second == 0) {
+                    p.allowance.erase(allowance_itr);
+                }
+            });
+            
+            auto from_bank_itr = banks.find(from_account_id);
+            graphene_assert(from_bank_itr != banks.end(), INVALID_FROM_ACCOUNT);
+            bool remove = false;
+            // 扣除发送人的余额.
+            banks.modify(from_bank_itr, sender, [&](bank& b) {
+                auto lq_itr = b.liquid_bank.find(pool_index);
+                graphene_assert(lq_itr != b.liquid_bank.end() && lq_itr->second >= amount, INSUFFICIENT_LIQUIDITY);
+                lq_itr->second = _safe_sub(lq_itr->second, amount);
+                if (lq_itr->second == 0) {
+                    b.liquid_bank.erase(lq_itr);
+                    remove = b.asset_bank.empty() && b.liquid_bank.empty();
+                }
+            });
+            if (remove) {
+                banks.erase(from_bank_itr);
+            }
+
+            // 增加接受人的余额.
+            auto to_bank_itr = banks.find(to_account_id);
+            if (to_bank_itr == banks.end()) {
+                banks.emplace(sender, [&](bank& b) {
+                    b.owner = to_account_id;
+                    b.liquid_bank[pool_index] = amount;
+                });
+            }
+            else {
+                banks.modify(to_bank_itr, sender, [&](bank& b) {
+                    b.liquid_bank[pool_index] = _safe_add(b.liquid_bank[pool_index], amount);
+                });
+            }
         }
 
         //@abi action
@@ -527,12 +634,12 @@ class swap : public contract{
 
     private:
         //@abi table bank i64
-        struct bank{
+        struct bank {
             uint64_t owner;
             std::map<uint64_t, int64_t> asset_bank;
             std::map<uint64_t, int64_t> liquid_bank;
 
-            uint64_t primary_key() const {return owner;}
+            uint64_t primary_key() const { return owner; }
 
             GRAPHENE_SERIALIZE(bank, (owner)(asset_bank)(liquid_bank))
         };
@@ -542,19 +649,21 @@ class swap : public contract{
         bank_index banks;
 
         //@abi table pool i64
-        struct pool{
+        struct pool {
             uint64_t index;
             contract_asset balance1;
             contract_asset balance2;
             int64_t  total_lq;
             bool locked; // 0为解锁, 1为锁定.
+
+            std::map<uint64_t, int64_t> allowance;
             
             uint64_t primary_key() const { return index; }
-            GRAPHENE_SERIALIZE(pool, (index)(balance1)(balance2)(total_lq)(locked))
+            GRAPHENE_SERIALIZE(pool, (index)(balance1)(balance2)(total_lq)(locked)(allowance))
         };
         
         typedef graphene::multi_index<N(pool), pool> pool_index;
 
         pool_index pools;
 };
-GRAPHENE_ABI(swap, (deposit)(addlq)(rmlq)(swapa)(swapb)(withdraw)(transferlq)(managepool))
+GRAPHENE_ABI(swap, (deposit)(addlq)(rmlq)(swapa)(swapb)(withdraw)(managepool)(transferlqa)(transferlqb)(approvelq))
