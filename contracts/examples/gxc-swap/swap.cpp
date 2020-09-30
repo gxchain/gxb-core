@@ -59,11 +59,12 @@ inline static int64_t _quote(int64_t amount1, int64_t balance1, int64_t balance2
 }
 
 inline static int64_t _get_amount_in(int64_t amount_out, int64_t balance_in, int64_t balance_out) {
-    graphene_assert(amount_out > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
+    graphene_assert(amount_out > 0 && balance_in > 0 && balance_out > amount_out, "Insufficient liquidity or amount");
     __int128_t numerator = (__int128_t)balance_in * (__int128_t)amount_out * FEEDENOMINATOR;
     graphene_assert(numerator >= balance_in && numerator >= amount_out && numerator >= FEEDENOMINATOR, "Number overflow");
-    __int128_t denominator = (balance_out - amount_out) * FEENUMERATOR;
-    graphene_assert(denominator >= (balance_out - amount_out) && denominator >= FEENUMERATOR, "Number overflow");
+    __int128_t diff = _safe_sub(balance_out, amount_out);
+    __int128_t denominator = diff * FEENUMERATOR;
+    graphene_assert(denominator >= diff && denominator >= FEENUMERATOR, "Number overflow");
     return _safe_add<int64_t>(numerator / denominator, 1);
 }
 
