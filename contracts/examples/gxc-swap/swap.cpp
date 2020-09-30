@@ -17,6 +17,9 @@ static const int64_t MINLIQUIDITY       = 100;
 static const int64_t ADMINACCOUNT       = 22;
 // 黑洞账户.
 static const int64_t BLACKHOLEACCOUNT   = 3;
+// 手续费比例.
+static const int64_t FEENUMERATOR       = 997;
+static const int64_t FEEDENOMINATOR     = 1000;
 
 template<class T>
 inline static T _safe_add(const T& a, const T& b) {
@@ -47,7 +50,7 @@ inline static uint64_t _make_pool_index(const std::string& coin1, const std::str
     uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
     uint64_t _number1 = number1 << 32;
     graphene_assert(_number1 > number1, "Number overflow");
-    return  _safe_add(_number1, number2);
+    return _safe_add(_number1, number2);
 }
 
 inline static int64_t _quote(int64_t amount1, int64_t balance1, int64_t balance2) {
@@ -57,21 +60,21 @@ inline static int64_t _quote(int64_t amount1, int64_t balance1, int64_t balance2
 
 inline static int64_t _get_amount_in(int64_t amount_out, int64_t balance_in, int64_t balance_out) {
     graphene_assert(amount_out > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
-    __int128_t numerator = (__int128_t)balance_in * (__int128_t)amount_out * 1000;
-    graphene_assert(numerator >= balance_in && numerator >= amount_out && numerator >= 1000, "Number overflow");
-    __int128_t denominator = (balance_out - amount_out) * 997;
-    graphene_assert(denominator >= (balance_out - amount_out) && denominator >= 997, "Number overflow");
+    __int128_t numerator = (__int128_t)balance_in * (__int128_t)amount_out * FEEDENOMINATOR;
+    graphene_assert(numerator >= balance_in && numerator >= amount_out && numerator >= FEEDENOMINATOR, "Number overflow");
+    __int128_t denominator = (balance_out - amount_out) * FEENUMERATOR;
+    graphene_assert(denominator >= (balance_out - amount_out) && denominator >= FEENUMERATOR, "Number overflow");
     return _safe_add<int64_t>(numerator / denominator, 1);
 }
 
 inline static int64_t _get_amount_out(int64_t amount_in, int64_t balance_in, int64_t balance_out ){
     graphene_assert(amount_in > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
-    __int128_t amount_in_with_fee = (__int128_t)amount_in * 997;
-    graphene_assert(amount_in_with_fee >= amount_in && amount_in >= 997, "Number overflow");
+    __int128_t amount_in_with_fee = (__int128_t)amount_in * FEENUMERATOR;
+    graphene_assert(amount_in_with_fee >= amount_in && amount_in >= FEENUMERATOR, "Number overflow");
     __int128_t numerator = amount_in_with_fee * (__int128_t)balance_out;
     graphene_assert(numerator >= amount_in_with_fee && numerator >= balance_out, "Number overflow");
-    __int128_t denominator = (__int128_t)balance_in * 1000 + amount_in_with_fee;
-    graphene_assert(denominator >= balance_in && denominator >= amount_in_with_fee && denominator >= 1000, "Number overflow");
+    __int128_t denominator = (__int128_t)balance_in * FEEDENOMINATOR + amount_in_with_fee;
+    graphene_assert(denominator >= balance_in && denominator >= amount_in_with_fee && denominator >= FEEDENOMINATOR, "Number overflow");
     return (numerator / denominator);
 }
 
