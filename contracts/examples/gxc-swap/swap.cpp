@@ -62,9 +62,11 @@ inline static T _safe_mul(const T& a, const T& b) {
     return static_cast<T>(result);
 }
 
-// 有待商榷.
+// 最小流动性.
 static const int64_t MINLIQUIDITY       = 100;
+// 管理员账户.
 static const int64_t ADMINACCOUNT       = 22;
+// 黑洞账户.
 static const int64_t BLACKHOLEACCOUNT   = 3;
 
 class swap : public contract{
