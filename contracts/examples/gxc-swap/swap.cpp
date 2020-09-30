@@ -185,7 +185,7 @@ class swap : public contract{
             auto black_hole_bank_itr = banks.find(BLACKHOLEACCOUNT);
             if (black_hole_bank_itr == banks.end()) {
                 banks.emplace(sender, [&](bank& b) {
-                    b.owner = 0;
+                    b.owner = BLACKHOLEACCOUNT;
                     b.liquid_bank[pool_index] = MINLIQUIDITY;
                 });
             }
