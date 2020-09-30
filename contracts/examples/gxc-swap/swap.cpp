@@ -294,7 +294,7 @@ class swap : public contract{
     
     //@abi action
     //@abi payable
-    void swapetkfortk(
+    void swapa(
         std::vector<std::string> path
         , int64_t amount_out_min
         , std::string to
@@ -312,25 +312,22 @@ class swap : public contract{
 
         std::vector<contract_asset> amounts;
         amounts.resize(path.size());
-        amounts[0] = contract_asset{ amount_in, static_cast<uint64_t>(first_asset_id) };
-        for (auto i = 0; i < path.size() - 1; i++ ){
-            auto pool_itr = pools.find(_make_pool_index(path[i], path[i+1]));
+        amounts[0] = contract_asset{ amount_in, asset_in };
+        for (auto i = 0; i < path.size() - 1; i++ ) {
+            auto pool_itr = pools.find(_make_pool_index(path[i], path[i + 1]));
             graphene_assert(pool_itr != pools.end(), "The trading pair does not exist.");
             graphene_assert(!pool_itr->locked, "The trading pair has been locked.");
             const auto& current = amounts[i];
-            amounts[i+1] = contract_asset{
+            amounts[i + 1] = contract_asset{
                 _get_amount_out(current.amount
                     , pool_itr->balance1.asset_id == current.asset_id ? pool_itr->balance1.amount : pool_itr->balance2.amount
                     , pool_itr->balance1.asset_id == current.asset_id ? pool_itr->balance2.amount : pool_itr->balance1.amount)
                 , pool_itr->balance1.asset_id == current.asset_id ? pool_itr->balance2.asset_id : pool_itr->balance1.asset_id};
         }
 
-        // 向接受者转账.
-        const auto& last_amount = amounts[amounts.size()-1];
+        // 检查是否满足条件.
+        const auto& last_amount = amounts[amounts.size() - 1];
         graphene_assert(last_amount.amount >= amount_out_min, "Insufficient amount");
-        auto to_account_id = get_account_id(to.c_str(), to.size());
-        graphene_assert(to_account_id != -1, "illegal account!");
-        withdraw_asset(_self, to_account_id, last_amount.asset_id,last_amount.amount);
         
         // 依次更改每个pool中的资金数量.
         for (auto i = 0; i < path.size() - 1; i++) {
@@ -344,10 +341,14 @@ class swap : public contract{
                 auto& increase_balance = p.balance1.asset_id == current.asset_id
                     ? p.balance1
                     : p.balance2;
-                reduce_balance.amount -= next.amount;
-                increase_balance.amount += current.amount;
+                reduce_balance.amount = _safe_sub(reduce_balance.amount, next.amount);
+                increase_balance.amount = _safe_add(increase_balance.amount, current.amount);
             });
         }
+
+        // 向接受者转账.
+        auto to_account_id = get_account_id(to.c_str(), to.size());
+        withdraw_asset(_self, to_account_id, last_amount.asset_id,last_amount.amount);
     }
 
     //@abi action
@@ -530,4 +531,4 @@ class swap : public contract{
 
     pool_index pools;
 };
-GRAPHENE_ABI(swap, (deposit)(addlq)(rmlq)(swapetkfortk)(swaptkforetk)(withdraw)(transferlq)(managepool))
+GRAPHENE_ABI(swap, (deposit)(addlq)(rmlq)(swapa)(swaptkforetk)(withdraw)(transferlq)(managepool))
