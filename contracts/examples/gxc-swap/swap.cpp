@@ -121,6 +121,8 @@ class swap : public contract{
         , int64_t amount1_min, int64_t amount2_min
         , std::string to
     ) {
+        graphene_assert(amount1_desired > 0 && amount2_desired > 0 && amount1_min > 0 && amount2_min > 0, "illegal params");
+
         auto sender = get_trx_sender();
         // 检查asset_id.
         auto id1 = get_asset_id(coin1.c_str(), coin1.size());
@@ -256,6 +258,8 @@ class swap : public contract{
         , int64_t amount1_min, int64_t amount2_min
         , std::string to
     ) {
+        graphene_assert(lq > 0 && amount1_min > 0 && amount2_min > 0, "illegal params");
+
         auto sender = get_trx_sender();
         // 检查asset_id.
         auto id1 = get_asset_id(coin1.c_str(), coin1.size());
@@ -311,6 +315,8 @@ class swap : public contract{
         , int64_t amount_out_min
         , std::string to
     ) {
+        graphene_assert(amount_out_min > 0, "illegal params");
+
         auto sender = get_trx_sender();
         graphene_assert(path.size() >= 2, "Invalid path");
 
@@ -369,6 +375,8 @@ class swap : public contract{
         , int64_t amount_out
         , std::string to
     ) {
+        graphene_assert(amount_out > 0, "illegal params");
+
         auto sender = get_trx_sender();
         graphene_assert(path.size() >= 2, "Invalid path");
         
@@ -433,6 +441,8 @@ class swap : public contract{
         std::string to,
         int64_t amount
     ) {
+        graphene_assert(amount > 0, "illegal params");
+
         auto sender = get_trx_sender();
         auto bank_itr = banks.find(sender);
         graphene_assert(bank_itr != banks.end(), "missing user");
@@ -455,11 +465,12 @@ class swap : public contract{
     }
 
     //@abi action
-    void transferlq(
-        std::string coin1, std::string coin2
+    void transferlq(std::string coin1, std::string coin2
         , std::string to
         , int64_t amount
     ) {
+        graphene_assert(amount > 0, "illegal params");
+
         auto sender = get_trx_sender();
         auto pool_index = _make_pool_index(coin1, coin2);
         auto pool_itr  = pools.find(pool_index);
@@ -495,15 +506,15 @@ class swap : public contract{
     void managepool(std::string coin1, std::string coin2
         , bool locked
     ) {
-        //检查调用者是否为管理员
+        // 检查调用者是否为管理员.
         auto sender = get_trx_sender();
         graphene_assert(sender == ADMINACCOUNT, "You do not have access to make pool configuration modifications.");
 
-        //检查交易对是否存在
+        // 检查交易对是否存在.
         auto pool_itr = pools.find(_make_pool_index(coin1, coin2));
         graphene_assert(pool_itr != pools.end(), "The trading pair does not exist.");
 
-        //修改状态
+        // 修改状态.
         pools.modify(pool_itr, sender, [&](pool& p) {
             p.locked = locked;
         });
