@@ -138,14 +138,19 @@ class swap : public contract{
             auto asset_id = get_asset_id(coin.c_str(), coin.size());
             graphene_assert(asset_id != -1, INVALID_PARAMS);
 
+            bool remove = false;
             banks.modify(bank_itr, sender, [&](bank& b) {
                 auto asset_itr = b.asset_bank.find(asset_id);
                 graphene_assert(asset_itr != b.asset_bank.end() && asset_itr->second >= amount, INSUFFICIENT_AMOUNT);
                 asset_itr->second = _safe_sub(asset_itr->second, amount);
                 if (asset_itr->second == 0) {
                     b.asset_bank.erase(asset_itr);
+                    remove = b.asset_bank.empty() && b.liquid_bank.empty();
                 }
             });
+            if (remove) {
+                banks.erase(bank_itr);
+            }
 
             // 向接受者转账.
             auto to_id = get_account_id(to.c_str(), to.length());
@@ -169,9 +174,7 @@ class swap : public contract{
             // 计算pool_index.
             uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
             uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
-            uint64_t _number1 = number1 << 32;
-            graphene_assert(_number1 > number1, NUMBER_OVERFLOW);
-            uint64_t pool_index = _safe_add(_number1, number2);
+            uint64_t pool_index = _make_index(number1, number2);
             auto pool_itr = pools.find(pool_index);
             // 如果交易对不存在的话则创建.
             if (pool_itr == pools.end()) {
@@ -258,6 +261,7 @@ class swap : public contract{
             auto bank_itr = banks.find(sender);
             graphene_assert(bank_itr != banks.end(), INVALID_SENDER_ACCOUNT);
             // 修改bank中的代币余额.
+            bool remove = false;
             banks.modify(*bank_itr, sender, [&](bank& b) {
                 auto asset1_itr = b.asset_bank.find(id1);
                 auto asset2_itr = b.asset_bank.find(id2);
@@ -270,7 +274,7 @@ class swap : public contract{
                 if (asset1_itr->second == 0) {
                     b.asset_bank.erase(asset1_itr);
                 }
-                asset2_itr->second -= _safe_sub(asset2_itr->second, amount2);
+                asset2_itr->second = _safe_sub(asset2_itr->second, amount2);
                 if (asset2_itr->second == 0) {
                     b.asset_bank.erase(asset2_itr);
                 }
@@ -278,7 +282,12 @@ class swap : public contract{
                 if (to_account_id == sender) {
                     b.liquid_bank[pool_index] = _safe_add(b.liquid_bank[pool_index], lq);
                 }
+                remove = b.asset_bank.empty() && b.liquid_bank.empty();
             });
+            if (remove) {
+                banks.erase(bank_itr);
+            }
+
             // 修改pool中的代币余额, 同时增加流动性代币总量.
             pools.modify(*pool_itr, sender, [&](pool& p) {
                 auto& _balance1 = p.balance1.asset_id == id1 ? p.balance1 : p.balance2;
@@ -306,9 +315,7 @@ class swap : public contract{
             // 计算pool_index.
             uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
             uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
-            uint64_t _number1 = number1 << 32;
-            graphene_assert(_number1 > number1, NUMBER_OVERFLOW);
-            uint64_t pool_index = _safe_add(_number1, number2);
+            uint64_t pool_index = _make_index(number1, number2);
             auto pool_itr = pools.find(pool_index);
             // 检查交易对是否存在.
             graphene_assert(pool_itr != pools.end(), INVALID_TRADING_PAIR);
