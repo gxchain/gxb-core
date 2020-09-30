@@ -93,7 +93,7 @@ class swap : public contract{
 
     //@abi action
     //@abi payable
-    void deposit(){
+    void deposit() {
         uint64_t sender = get_trx_sender();
         int64_t asset_amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
@@ -117,6 +117,34 @@ class swap : public contract{
                 });    
             }
         }
+    }
+
+    //@abi action
+    void withdraw(std::string coin,
+        std::string to,
+        int64_t amount
+    ) {
+        graphene_assert(amount > 0, INVALID_PARAMS);
+
+        auto sender = get_trx_sender();
+        auto bank_itr = banks.find(sender);
+        graphene_assert(bank_itr != banks.end(), INVALID_SENDER_ACCOUNT);
+
+        auto asset_id = get_asset_id(coin.c_str(), coin.size());
+        graphene_assert(asset_id != -1, INVALID_PARAMS);
+
+        banks.modify(bank_itr, sender, [&](bank& b) {
+            auto asset_itr = b.asset_bank.find(asset_id);
+            graphene_assert(asset_itr != b.asset_bank.end() && asset_itr->second >= amount, INSUFFICIENT_AMOUNT);
+            asset_itr->second = _safe_sub(asset_itr->second, amount);
+            if (asset_itr->second == 0) {
+                b.asset_bank.erase(asset_itr);
+            }
+        });
+
+        // 向接受者转账.
+        auto to_id = get_account_id(to.c_str(), to.length());
+        withdraw_asset(_self, to_id, asset_id, amount);
     }
 
     //@abi action 
@@ -441,34 +469,6 @@ class swap : public contract{
         // 向接受者转账.
         auto to_account_id = get_account_id(to.c_str(), to.size());
         withdraw_asset(_self, to_account_id, static_cast<uint64_t>(last_asset_id), amount_out);
-    }
-
-    //@abi action
-    void withdraw(std::string coin,
-        std::string to,
-        int64_t amount
-    ) {
-        graphene_assert(amount > 0, INVALID_PARAMS);
-
-        auto sender = get_trx_sender();
-        auto bank_itr = banks.find(sender);
-        graphene_assert(bank_itr != banks.end(), INVALID_SENDER_ACCOUNT);
-
-        auto asset_id = get_asset_id(coin.c_str(), coin.size());
-        graphene_assert(asset_id != -1, INVALID_PARAMS);
-
-        banks.modify(bank_itr, sender, [&](bank& b) {
-            auto asset_itr = b.asset_bank.find(asset_id);
-            graphene_assert(asset_itr != b.asset_bank.end() && asset_itr->second >= amount, INSUFFICIENT_AMOUNT);
-            asset_itr->second = _safe_sub(asset_itr->second, amount);
-            if (asset_itr->second == 0) {
-                b.asset_bank.erase(asset_itr);
-            }
-        });
-
-        // 向接受者转账.
-        auto to_id = get_account_id(to.c_str(), to.length());
-        withdraw_asset(_self, to_id, asset_id, amount);
     }
 
     //@abi action
