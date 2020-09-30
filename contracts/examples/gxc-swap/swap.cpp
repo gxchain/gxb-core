@@ -496,11 +496,11 @@ class swap : public contract{
             graphene_assert(pool_itr != pools.end(), INVALID_TRADING_PAIR);
             graphene_assert(!pool_itr->locked, PAIR_LOCKED);
 
+            auto sender = get_trx_sender();
             auto to_account_id = get_account_id(to.c_str(), to.size());
-            graphene_assert(to_account_id != -1, INVALID_TO_ACCOUNT);
+            graphene_assert(to_account_id != -1 && to_account_id != sender, INVALID_TO_ACCOUNT);
 
             // 增加调用者对接受者的授权.
-            auto sender = get_trx_sender();
             pools.modify(pool_itr, sender, [&](pool& p) {
                 auto allowance_index = _make_index(sender, to_account_id);
                 p.allowance[allowance_index] = amount;
