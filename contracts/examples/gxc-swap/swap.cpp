@@ -488,7 +488,7 @@ class swap : public contract{
             , std::string to
             , int64_t amount
         ) {
-            graphene_assert(amount > 0, INVALID_PARAMS);
+            graphene_assert(amount >= 0, INVALID_PARAMS);
 
             // 检查交易对是否存在.
             auto pool_index = _make_pool_index(coin1, coin2);
