@@ -533,4 +533,4 @@ class swap : public contract{
 
     pool_index pools;
 };
-GRAPHENE_ABI(swap, (deposit)(addlq)(rmlq)(swapa)(swaptkforetk)(withdraw)(transferlq)(managepool))
+GRAPHENE_ABI(swap, (deposit)(addlq)(rmlq)(swapa)(swapb)(withdraw)(transferlq)(managepool))
