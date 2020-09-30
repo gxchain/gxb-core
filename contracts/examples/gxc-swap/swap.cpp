@@ -9,6 +9,8 @@
 #include <vector>
 #include <math.h>
 
+#include "./message.hpp"
+
 using namespace graphene;
 
 // 最小流动性.
@@ -24,58 +26,58 @@ static const int64_t FEEDENOMINATOR     = 1000;
 template<class T>
 inline static T _safe_add(const T& a, const T& b) {
     T result = a + b;
-    graphene_assert(result >= a && result >= b, "Number overflow");
+    graphene_assert(result >= a && result >= b, NUMBER_OVERFLOW);
     return result;
 }
 
 template<class T>
 inline static T _safe_sub(const T& a, const T& b) {
     T result = a - b;
-    graphene_assert(a >= result, "Number overflow");
+    graphene_assert(a >= result, NUMBER_OVERFLOW);
     return result;
 }
 
 template<class T>
 inline static T _safe_mul(const T& a, const T& b) {
     __int128_t result = static_cast<__int128_t>(a) * static_cast<__int128_t>(b);
-    graphene_assert((a != 0 && b != 0 && result >= a && result >= b) || a == 0 || b == 0, "Number overflow");
+    graphene_assert((a != 0 && b != 0 && result >= a && result >= b) || a == 0 || b == 0, NUMBER_OVERFLOW);
     return static_cast<T>(result);
 }
 
 inline static uint64_t _make_pool_index(const std::string& coin1, const std::string& coin2) {
     auto id1 = get_asset_id(coin1.c_str(), coin1.size());
     auto id2 = get_asset_id(coin2.c_str(), coin2.size());
-    graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, "illegal asset id!");
+    graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, INVALID_TRADING_PAIR);
     uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
     uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
     uint64_t _number1 = number1 << 32;
-    graphene_assert(_number1 > number1, "Number overflow");
+    graphene_assert(_number1 > number1, NUMBER_OVERFLOW);
     return _safe_add(_number1, number2);
 }
 
 inline static int64_t _quote(int64_t amount1, int64_t balance1, int64_t balance2) {
-    graphene_assert(amount1 > 0 && balance1 > 0 && balance2 > 0, "amount or balance can't less than 1!");
+    graphene_assert(amount1 > 0 && balance1 > 0 && balance2 > 0, INSUFFICIENT_AMOUNT);
     return _safe_mul(amount1, balance2) / balance1;
 }
 
 inline static int64_t _get_amount_in(int64_t amount_out, int64_t balance_in, int64_t balance_out) {
-    graphene_assert(amount_out > 0 && balance_in > 0 && balance_out > amount_out, "Insufficient liquidity or amount");
+    graphene_assert(amount_out > 0 && balance_in > 0 && balance_out > amount_out, INSUFFICIENT_AMOUNT);
     __int128_t numerator = (__int128_t)balance_in * (__int128_t)amount_out * FEEDENOMINATOR;
-    graphene_assert(numerator >= balance_in && numerator >= amount_out && numerator >= FEEDENOMINATOR, "Number overflow");
+    graphene_assert(numerator >= balance_in && numerator >= amount_out && numerator >= FEEDENOMINATOR, NUMBER_OVERFLOW);
     __int128_t diff = _safe_sub(balance_out, amount_out);
     __int128_t denominator = diff * FEENUMERATOR;
-    graphene_assert(denominator >= diff && denominator >= FEENUMERATOR, "Number overflow");
+    graphene_assert(denominator >= diff && denominator >= FEENUMERATOR, NUMBER_OVERFLOW);
     return _safe_add<int64_t>(numerator / denominator, 1);
 }
 
 inline static int64_t _get_amount_out(int64_t amount_in, int64_t balance_in, int64_t balance_out ){
-    graphene_assert(amount_in > 0 && balance_in > 0 && balance_out > 0, "Insufficient liquidity or amount");
+    graphene_assert(amount_in > 0 && balance_in > 0 && balance_out > 0, INSUFFICIENT_AMOUNT);
     __int128_t amount_in_with_fee = (__int128_t)amount_in * FEENUMERATOR;
-    graphene_assert(amount_in_with_fee >= amount_in && amount_in >= FEENUMERATOR, "Number overflow");
+    graphene_assert(amount_in_with_fee >= amount_in && amount_in >= FEENUMERATOR, NUMBER_OVERFLOW);
     __int128_t numerator = amount_in_with_fee * (__int128_t)balance_out;
-    graphene_assert(numerator >= amount_in_with_fee && numerator >= balance_out, "Number overflow");
+    graphene_assert(numerator >= amount_in_with_fee && numerator >= balance_out, NUMBER_OVERFLOW);
     __int128_t denominator = (__int128_t)balance_in * FEEDENOMINATOR + amount_in_with_fee;
-    graphene_assert(denominator >= balance_in && denominator >= amount_in_with_fee && denominator >= FEEDENOMINATOR, "Number overflow");
+    graphene_assert(denominator >= balance_in && denominator >= amount_in_with_fee && denominator >= FEEDENOMINATOR, NUMBER_OVERFLOW);
     return (numerator / denominator);
 }
 
@@ -95,7 +97,7 @@ class swap : public contract{
         uint64_t sender = get_trx_sender();
         int64_t asset_amount = get_action_asset_amount();
         uint64_t asset_id = get_action_asset_id();
-        graphene_assert(asset_amount > 0 && asset_id > 0, "illegal params");
+        graphene_assert(asset_amount > 0 && asset_id > 0, INVALID_PARAMS);
         
         auto bank_itr = banks.find(sender);
         if(bank_itr == banks.end()) {
@@ -123,19 +125,19 @@ class swap : public contract{
         , int64_t amount1_min, int64_t amount2_min
         , std::string to
     ) {
-        graphene_assert(amount1_desired > 0 && amount2_desired > 0 && amount1_min > 0 && amount2_min > 0, "illegal params");
+        graphene_assert(amount1_desired > 0 && amount2_desired > 0 && amount1_min > 0 && amount2_min > 0, INVALID_PARAMS);
 
         auto sender = get_trx_sender();
         // 检查asset_id.
         auto id1 = get_asset_id(coin1.c_str(), coin1.size());
         auto id2 = get_asset_id(coin2.c_str(), coin2.size());
-        graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, "illegal asset id!");
+        graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, INVALID_TRADING_PAIR);
 
         // 计算pool_index.
         uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
         uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
         uint64_t _number1 = number1 << 32;
-        graphene_assert(_number1 > number1, "Number overflow");
+        graphene_assert(_number1 > number1, NUMBER_OVERFLOW);
         uint64_t pool_index = _safe_add(_number1, number2);
         auto pool_itr = pools.find(pool_index);
         // 如果交易对不存在的话则创建.
@@ -151,7 +153,7 @@ class swap : public contract{
             });
         }
         else {
-            graphene_assert(!pool_itr->locked, "The trading pair has been locked.");
+            graphene_assert(!pool_itr->locked, PAIR_LOCKED);
         }
         
         // 根据池内的资金数量计算可以质押的金额.
@@ -165,17 +167,17 @@ class swap : public contract{
         else {
             auto amount2_optimal = _quote(amount1_desired, balance1.amount, balance2.amount);
             if (amount2_optimal <= amount2_desired) {
-                graphene_assert(amount2_optimal >= amount2_min, "insufficient coin2 amount");
+                graphene_assert(amount2_optimal >= amount2_min, INSUFFICIENT_AMOUNT);
                 amount1 = amount1_desired;
                 amount2 = amount2_optimal;
             } else {
                 auto amount1_optimal = _quote(amount2_desired, balance2.amount, balance1.amount);
-                graphene_assert(amount1_optimal <= amount1_desired && amount1_optimal >= amount1_min, "insufficient coin1 amount");
+                graphene_assert(amount1_optimal <= amount1_desired && amount1_optimal >= amount1_min, INSUFFICIENT_AMOUNT);
                 amount1 = amount1_optimal;
                 amount2 = amount2_desired;
             }
         }
-        graphene_assert(amount1 > 0 && amount2 > 0, "insufficient amount");
+        graphene_assert(amount1 > 0 && amount2 > 0, INSUFFICIENT_AMOUNT);
 
         // 计算增加的流动性.
         int64_t lq = 0;
@@ -196,16 +198,16 @@ class swap : public contract{
             }
         }
         else {
-            graphene_assert(balance1.amount > 0 && balance2.amount > 0, "insufficient amount");
+            graphene_assert(balance1.amount > 0 && balance2.amount > 0, INSUFFICIENT_AMOUNT);
             lq = std::min(_safe_mul(amount1, pool_itr->total_lq) / balance1.amount
                 , _safe_mul(amount2, pool_itr->total_lq) / balance2.amount);
         }
-        graphene_assert(lq > 0, "insufficient liquidity");
+        graphene_assert(lq > 0, INSUFFICIENT_LIQUIDITY);
 
         // 修改接受者流动性代币的余额.
         auto to_account_id = get_account_id(to.c_str(), to.size());
         if (to_account_id != sender) {
-            graphene_assert(to_account_id != -1, "illegal account!");
+            graphene_assert(to_account_id != -1, INVALID_TO_ACCOUNT);
             auto to_bank_itr = banks.find(to_account_id);
             if (to_bank_itr == banks.end()) {
                 banks.emplace(sender, [&](bank& b) {
@@ -221,7 +223,7 @@ class swap : public contract{
         }
 
         auto bank_itr = banks.find(sender);
-        graphene_assert(bank_itr != banks.end(), "missing user");
+        graphene_assert(bank_itr != banks.end(), INVALID_SENDER_ACCOUNT);
         // 修改bank中的代币余额.
         banks.modify(*bank_itr, sender, [&](bank& b) {
             auto asset1_itr = b.asset_bank.find(id1);
@@ -230,7 +232,7 @@ class swap : public contract{
                 && asset2_itr != bank_itr->asset_bank.end()
                 && asset1_itr->second >= amount1
                 && asset2_itr->second >= amount2
-                , "insufficient amount");
+                , INSUFFICIENT_AMOUNT);
             asset1_itr->second = _safe_sub(asset1_itr->second, amount1);
             if (asset1_itr->second == 0) {
                 b.asset_bank.erase(asset1_itr);
@@ -260,46 +262,47 @@ class swap : public contract{
         , int64_t amount1_min, int64_t amount2_min
         , std::string to
     ) {
-        graphene_assert(lq > 0 && amount1_min > 0 && amount2_min > 0, "illegal params");
+        graphene_assert(lq > 0 && amount1_min > 0 && amount2_min > 0, INVALID_PARAMS);
 
         auto sender = get_trx_sender();
         // 检查asset_id.
         auto id1 = get_asset_id(coin1.c_str(), coin1.size());
         auto id2 = get_asset_id(coin2.c_str(), coin2.size());
-        graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, "illegal asset id!");
+        graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, INVALID_TRADING_PAIR);
 
         // 计算pool_index.
         uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
         uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
         uint64_t _number1 = number1 << 32;
-        graphene_assert(_number1 > number1, "Number overflow");
+        graphene_assert(_number1 > number1, NUMBER_OVERFLOW);
         uint64_t pool_index = _safe_add(_number1, number2);
         auto pool_itr = pools.find(pool_index);
         // 检查交易对是否存在.
-        graphene_assert(pool_itr != pools.end(), "The trading pair does not exist.");
-        graphene_assert(!pool_itr->locked, "The trading pair has been locked.");
-        graphene_assert(pool_itr->total_lq > 0, "The trading pair has no liquidity.");
+        graphene_assert(pool_itr != pools.end(), INVALID_TRADING_PAIR);
+        graphene_assert(!pool_itr->locked, PAIR_LOCKED);
+        graphene_assert(pool_itr->total_lq > 0, INSUFFICIENT_LIQUIDITY);
 
         // 计算可以兑换的资产数量.
         const auto& balance1 = pool_itr->balance1.asset_id == id1 ? pool_itr->balance1 : pool_itr->balance2;
         const auto& balance2 = pool_itr->balance2.asset_id == id2 ? pool_itr->balance2 : pool_itr->balance1;
         int64_t amount1 = _safe_mul(lq, balance1.amount) / pool_itr->total_lq;
         int64_t amount2 = _safe_mul(lq, balance2.amount) / pool_itr->total_lq;
-        graphene_assert(amount1 > 0 && amount2 > 0 && amount1 >= amount1_min && amount2 >= amount2_min, "Insufficient amount");
+        graphene_assert(amount1 > 0 && amount2 > 0 && amount1 >= amount1_min && amount2 >= amount2_min, INSUFFICIENT_AMOUNT);
 
         // 扣除bank中流动性代币的余额.
         auto bank_itr = banks.find(sender);
-        graphene_assert(bank_itr != banks.end() , "Insufficient liquidity");
+        graphene_assert(bank_itr != banks.end() , INVALID_SENDER_ACCOUNT);
         banks.modify(*bank_itr, sender, [&](bank& b) {
             auto lq_itr = b.liquid_bank.find(pool_index);
-            graphene_assert(lq_itr != b.liquid_bank.end() && lq_itr->second >= lq, "Insufficient liquidity");
+            graphene_assert(lq_itr != b.liquid_bank.end() && lq_itr->second >= lq, INSUFFICIENT_LIQUIDITY);
             lq_itr->second = _safe_sub(lq_itr->second, lq);
         });
         // 扣除pool中的余额及流动性代币总量.
         pools.modify(*pool_itr, sender, [&](pool& p) {
             auto& _balance1 = p.balance1.asset_id == id1 ? p.balance1 : p.balance2;
             auto& _balance2 = p.balance2.asset_id == id2 ? p.balance2 : p.balance1;
-            graphene_assert(_balance1.amount > amount1 && _balance2.amount > amount2 && p.total_lq > lq, "Insufficient amount or liquidity");
+            graphene_assert(_balance1.amount > amount1 && _balance2.amount > amount2, INSUFFICIENT_AMOUNT);
+            graphene_assert(p.total_lq > lq, INSUFFICIENT_LIQUIDITY);
             _balance1.amount = _safe_sub(_balance1.amount, amount1);
             _balance2.amount = _safe_sub(_balance2.amount, amount2);
             p.total_lq = _safe_sub(p.total_lq, lq);
@@ -317,27 +320,27 @@ class swap : public contract{
         , int64_t amount_out_min
         , std::string to
     ) {
-        graphene_assert(amount_out_min > 0, "illegal params");
+        graphene_assert(amount_out_min > 0, INVALID_PARAMS);
 
         auto sender = get_trx_sender();
-        graphene_assert(path.size() >= 2, "Invalid path");
+        graphene_assert(path.size() >= 2, INVALID_PATH);
 
         auto first_asset_name = path[0];
         auto first_asset_id = get_asset_id(first_asset_name.c_str(), first_asset_name.size());
-        graphene_assert(first_asset_id != -1, "Invalid path");
+        graphene_assert(first_asset_id != -1, INVALID_PATH);
 
         int64_t amount_in = get_action_asset_amount();
         uint64_t asset_in = get_action_asset_id();
-        graphene_assert(amount_in > 0 && asset_in > 0, "illegal params");
-        graphene_assert(asset_in == first_asset_id, "Invalid path");
+        graphene_assert(amount_in > 0 && asset_in > 0, INVALID_PARAMS);
+        graphene_assert(asset_in == first_asset_id, INVALID_PATH);
 
         std::vector<contract_asset> amounts;
         amounts.resize(path.size());
         amounts[0] = contract_asset{ amount_in, asset_in };
         for (auto i = 0; i < path.size() - 1; i++ ) {
             auto pool_itr = pools.find(_make_pool_index(path[i], path[i + 1]));
-            graphene_assert(pool_itr != pools.end(), "The trading pair does not exist.");
-            graphene_assert(!pool_itr->locked, "The trading pair has been locked.");
+            graphene_assert(pool_itr != pools.end(), INVALID_TRADING_PAIR);
+            graphene_assert(!pool_itr->locked, PAIR_LOCKED);
             const auto& current = amounts[i];
             amounts[i + 1] = contract_asset{
                 _get_amount_out(current.amount
@@ -348,7 +351,7 @@ class swap : public contract{
 
         // 检查是否满足条件.
         const auto& last_amount = amounts[amounts.size() - 1];
-        graphene_assert(last_amount.amount >= amount_out_min, "Insufficient amount");
+        graphene_assert(last_amount.amount >= amount_out_min, INSUFFICIENT_AMOUNT);
         
         // 依次更改每个pool中的资金数量.
         for (auto i = 0; i < path.size() - 1; i++) {
@@ -378,31 +381,31 @@ class swap : public contract{
         , int64_t amount_out
         , std::string to
     ) {
-        graphene_assert(amount_out > 0, "illegal params");
+        graphene_assert(amount_out > 0, INVALID_PARAMS);
 
         auto sender = get_trx_sender();
-        graphene_assert(path.size() >= 2, "Invalid path");
+        graphene_assert(path.size() >= 2, INVALID_PATH);
         
         auto last_asset_name = path[path.size() - 1];
         auto last_asset_id = get_asset_id(last_asset_name.c_str(), last_asset_name.size());
-        graphene_assert(last_asset_id != -1, "Invalid path");
+        graphene_assert(last_asset_id != -1, INVALID_PATH);
 
         auto first_asset_name = path[0];
         auto first_asset_id = get_asset_id(first_asset_name.c_str(), first_asset_name.size());
-        graphene_assert(first_asset_id != -1, "Invalid path");
+        graphene_assert(first_asset_id != -1, INVALID_PATH);
 
         int64_t amount_in_max = get_action_asset_amount();
         uint64_t asset_in = get_action_asset_id();
-        graphene_assert(amount_in_max > 0 && asset_in > 0, "illegal params");
-        graphene_assert(asset_in == first_asset_id, "Invalid path");
+        graphene_assert(amount_in_max > 0 && asset_in > 0, INVALID_PARAMS);
+        graphene_assert(asset_in == first_asset_id, INVALID_PATH);
 
         std::vector<contract_asset> amounts;
         amounts.resize(path.size());
         amounts[amounts.size() - 1] = contract_asset{ amount_out, static_cast<uint64_t>(last_asset_id) };
         for (auto i = path.size() - 1; i > 0; i--) {
             auto pool_itr = pools.find(_make_pool_index(path[i - 1], path[i]));
-            graphene_assert(pool_itr != pools.end(), "The trading pair does not exist.");
-            graphene_assert(!pool_itr->locked, "The trading pair has been locked.");
+            graphene_assert(pool_itr != pools.end(), INVALID_TRADING_PAIR);
+            graphene_assert(!pool_itr->locked, PAIR_LOCKED);
             const auto& current = amounts[i];
             amounts[i - 1] = contract_asset{
                 _get_amount_in(current.amount
@@ -412,7 +415,7 @@ class swap : public contract{
         }
         // 检查是否满足条件.
         const auto& first_amount = amounts[0];
-        graphene_assert(first_amount.amount <= amount_in_max, "Insufficient amount");
+        graphene_assert(first_amount.amount <= amount_in_max, INSUFFICIENT_AMOUNT);
         // 转回剩余的金额.
         if (first_amount.amount < amount_in_max) {
             withdraw_asset(_self, sender, asset_in, _safe_sub(amount_in_max, first_amount.amount));
@@ -445,18 +448,18 @@ class swap : public contract{
         std::string to,
         int64_t amount
     ) {
-        graphene_assert(amount > 0, "illegal params");
+        graphene_assert(amount > 0, INVALID_PARAMS);
 
         auto sender = get_trx_sender();
         auto bank_itr = banks.find(sender);
-        graphene_assert(bank_itr != banks.end(), "missing user");
+        graphene_assert(bank_itr != banks.end(), INVALID_SENDER_ACCOUNT);
 
         auto asset_id = get_asset_id(coin.c_str(), coin.size());
-        graphene_assert(asset_id != -1, "invalid asset id");
+        graphene_assert(asset_id != -1, INVALID_PARAMS);
 
         banks.modify(bank_itr, sender, [&](bank& b) {
             auto asset_itr = b.asset_bank.find(asset_id);
-            graphene_assert(asset_itr != b.asset_bank.end() && asset_itr->second >= amount, "Insufficient amount");
+            graphene_assert(asset_itr != b.asset_bank.end() && asset_itr->second >= amount, INSUFFICIENT_AMOUNT);
             asset_itr->second = _safe_sub(asset_itr->second, amount);
             if (asset_itr->second == 0) {
                 b.asset_bank.erase(asset_itr);
@@ -473,22 +476,22 @@ class swap : public contract{
         , std::string to
         , int64_t amount
     ) {
-        graphene_assert(amount > 0, "illegal params");
+        graphene_assert(amount > 0, INVALID_PARAMS);
 
         auto sender = get_trx_sender();
         auto pool_index = _make_pool_index(coin1, coin2);
         auto pool_itr  = pools.find(pool_index);
-        graphene_assert( pool_itr != pools.end(),"illegal liquidty pair");
-        graphene_assert( pool_itr->locked == 0, "locked pair!");
+        graphene_assert(pool_itr != pools.end(), INVALID_TRADING_PAIR);
+        graphene_assert(pool_itr->locked == 0, PAIR_LOCKED);
 
         auto to_account_id = get_account_id(to.c_str(), to.size());
-        graphene_assert(to_account_id != -1, "illegal account!");
+        graphene_assert(to_account_id != -1, INVALID_TO_ACCOUNT);
 
         auto sender_bank_itr = banks.find(sender);
         auto bank_lp_itr = sender_bank_itr->liquid_bank.find(pool_index);
         graphene_assert( sender_bank_itr != banks.end() 
                          && bank_lp_itr != sender_bank_itr->liquid_bank.end() 
-                         && bank_lp_itr->second >= amount, "illegal amount!" );
+                         && bank_lp_itr->second >= amount, INSUFFICIENT_AMOUNT);
         auto to_bank_itr = banks.find(to_account_id);
         if (to_bank_itr == banks.end()) {
                 banks.emplace(sender, [&](bank& b) {
@@ -512,11 +515,11 @@ class swap : public contract{
     ) {
         // 检查调用者是否为管理员.
         auto sender = get_trx_sender();
-        graphene_assert(sender == ADMINACCOUNT, "You do not have access to make pool configuration modifications.");
+        graphene_assert(sender == ADMINACCOUNT, INVALID_SENDER_ACCOUNT);
 
         // 检查交易对是否存在.
         auto pool_itr = pools.find(_make_pool_index(coin1, coin2));
-        graphene_assert(pool_itr != pools.end(), "The trading pair does not exist.");
+        graphene_assert(pool_itr != pools.end(), INVALID_TRADING_PAIR);
 
         // 修改状态.
         pools.modify(pool_itr, sender, [&](pool& p) {
