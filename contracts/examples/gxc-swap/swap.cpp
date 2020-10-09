@@ -34,7 +34,7 @@ inline static T _safe_add(const T& a, const T& b) {
 template<class T>
 inline static T _safe_sub(const T& a, const T& b) {
     T result = a - b;
-    graphene_assert(a >= result, NUMBER_OVERFLOW);
+    graphene_assert(a >= result && result >= 0, NUMBER_OVERFLOW);
     return result;
 }
 
