@@ -503,7 +503,7 @@ class swap : public contract{
             , std::string to
             , int64_t amount
         ) {
-            graphene_assert(amount >= 0, INVALID_PARAMS);
+            graphene_assert(amount >= 0 || amount == -1, INVALID_PARAMS);
 
             // 检查交易对是否存在.
             auto pool_index = _make_pool_index(coin1, coin2);
@@ -567,7 +567,11 @@ class swap : public contract{
             graphene_assert(to_account_id != -1, INVALID_TO_ACCOUNT);
 
             // 扣除发送人对调用人的授权.
-            pools.modify(pool_itr, sender, [&](pool& p) {
+            auto allowance_index = _make_index(from_account_id, sender);
+            auto allowance_itr = pool_itr->allowance.find(allowance_index);
+            graphene_assert(allowance_itr != pool_itr->allowance.end(), INSUFFICIENT_ALLOWANCE);
+            if(allowance_itr->second != -1){
+                pools.modify(pool_itr, sender, [&](pool& p) {
                 auto allowance_index = _make_index(from_account_id, sender);
                 auto allowance_itr = p.allowance.find(allowance_index);
                 graphene_assert(allowance_itr != p.allowance.end() && allowance_itr->second >= amount, INSUFFICIENT_ALLOWANCE);
@@ -576,6 +580,7 @@ class swap : public contract{
                     p.allowance.erase(allowance_itr);
                 }
             });
+            }
             
             // 进行转账.
             _transferlq(sender, from_account_id, to_account_id, pool_index, amount);
