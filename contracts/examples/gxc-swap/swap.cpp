@@ -38,6 +38,14 @@ inline static T _safe_sub(const T& a, const T& b) {
     return result;
 }
 
+// 安全类型转化, 只在降精度时需要使用.
+template<class U, class T>
+inline static U _safe_convert(const T& t) {
+    U u = static_cast<T>(t);
+    graphene_assert(static_cast<T>(u) == t, NUMBER_OVERFLOW);
+    return u;
+}
+
 template<class T, class U = __int128_t>
 inline static T _quote(const T& value1, const T& total1, const T& total2) {
     graphene_assert(value1 > 0 && total1 > 0 && total2 > 0, NUMBER_OVERFLOW);
@@ -47,9 +55,7 @@ inline static T _quote(const T& value1, const T& total1, const T& total2) {
     U mul_result = large_value1 * large_total2;
     graphene_assert(mul_result >= large_value1 && mul_result >= large_total2, NUMBER_OVERFLOW);
     U large_result = mul_result / large_total1;
-    T result = static_cast<T>(large_result);
-    graphene_assert(static_cast<U>(result) == large_result, NUMBER_OVERFLOW);
-    return result;
+    return _safe_convert<T>(large_result);
 }
 
 inline static uint64_t _make_index(const uint64_t& number1, const uint64_t& number2) {
@@ -74,7 +80,7 @@ inline static int64_t _get_amount_in(int64_t amount_out, int64_t balance_in, int
     __int128_t diff = _safe_sub(balance_out, amount_out);
     __int128_t denominator = diff * FEENUMERATOR;
     graphene_assert(denominator >= diff && denominator >= FEENUMERATOR, NUMBER_OVERFLOW);
-    return _safe_add<int64_t>(numerator / denominator, 1);
+    return _safe_add<int64_t>(_safe_convert<int64_t>(numerator / denominator), 1);
 }
 
 inline static int64_t _get_amount_out(int64_t amount_in, int64_t balance_in, int64_t balance_out ){
@@ -85,7 +91,7 @@ inline static int64_t _get_amount_out(int64_t amount_in, int64_t balance_in, int
     graphene_assert(numerator >= amount_in_with_fee && numerator >= balance_out, NUMBER_OVERFLOW);
     __int128_t denominator = (__int128_t)balance_in * FEEDENOMINATOR + amount_in_with_fee;
     graphene_assert(denominator >= balance_in && denominator >= amount_in_with_fee && denominator >= FEEDENOMINATOR, NUMBER_OVERFLOW);
-    return (numerator / denominator);
+    return _safe_convert<int64_t>(numerator / denominator);
 }
 
 class swap : public contract{
@@ -220,7 +226,7 @@ class swap : public contract{
             // 计算增加的流动性.
             int64_t lq = 0;
             if (pool_itr->total_lq == 0) {
-                lq = _safe_sub((int64_t)sqrt(static_cast<__int128_t>(amount1) * static_cast<__int128_t>(amount2)), MINLIQUIDITY);
+                lq = _safe_sub<int64_t>(sqrt(static_cast<__int128_t>(amount1) * static_cast<__int128_t>(amount2)), MINLIQUIDITY);
                 // 将最小流动性分配给黑洞账号.
                 auto black_hole_bank_itr = banks.find(BLACKHOLEACCOUNT);
                 if (black_hole_bank_itr == banks.end()) {
