@@ -9,6 +9,5 @@
 #define INSUFFICIENT_AMOUNT                 "Insufficient amount."
 #define INSUFFICIENT_ALLOWANCE              "Insufficient allowance."
 #define INSUFFICIENT_LIQUIDITY              "Insufficient liquidity."
-#define INSUFFICIENT_LIQUIDITY_OR_AMOUNT    "Insufficient liquidity or amount."
 
 #define NUMBER_OVERFLOW                     "Number overflow."

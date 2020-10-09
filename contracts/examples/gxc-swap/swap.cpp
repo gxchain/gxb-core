@@ -38,11 +38,18 @@ inline static T _safe_sub(const T& a, const T& b) {
     return result;
 }
 
-template<class T>
-inline static T _safe_mul(const T& a, const T& b) {
-    __int128_t result = static_cast<__int128_t>(a) * static_cast<__int128_t>(b);
-    graphene_assert((a != 0 && b != 0 && result >= a && result >= b) || a == 0 || b == 0, NUMBER_OVERFLOW);
-    return static_cast<T>(result);
+template<class T, class U = __int128_t>
+inline static T _quote(const T& value1, const T& total1, const T& total2) {
+    graphene_assert(value1 > 0 && total1 > 0 && total2 > 0, NUMBER_OVERFLOW);
+    U large_value1 = static_cast<U>(value1);
+    U large_total1 = static_cast<U>(total1);
+    U large_total2 = static_cast<U>(total2);
+    U mul_result = large_value1 * large_total2;
+    graphene_assert(mul_result >= large_value1 && mul_result >= large_total2, NUMBER_OVERFLOW);
+    U large_result = mul_result / large_total1;
+    T result = static_cast<T>(large_value1);
+    graphene_assert(static_cast<U>(result) * large_total1 == mul_result, NUMBER_OVERFLOW);
+    return result;
 }
 
 inline static uint64_t _make_index(const uint64_t& number1, const uint64_t& number2) {
@@ -58,11 +65,6 @@ inline static uint64_t _make_pool_index(const std::string& coin1, const std::str
     uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
     uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
     return _make_index(number1, number2);
-}
-
-inline static int64_t _quote(int64_t amount1, int64_t balance1, int64_t balance2) {
-    graphene_assert(amount1 > 0 && balance1 > 0 && balance2 > 0, INSUFFICIENT_AMOUNT);
-    return _safe_mul(amount1, balance2) / balance1;
 }
 
 inline static int64_t _get_amount_in(int64_t amount_out, int64_t balance_in, int64_t balance_out) {
@@ -218,7 +220,7 @@ class swap : public contract{
             // 计算增加的流动性.
             int64_t lq = 0;
             if (pool_itr->total_lq == 0) {
-                lq = _safe_sub((int64_t)sqrt(_safe_mul(amount1, amount2)), MINLIQUIDITY);
+                lq = _safe_sub((int64_t)sqrt(static_cast<__int128_t>(amount1) * static_cast<__int128_t>(amount2)), MINLIQUIDITY);
                 // 将最小流动性分配给黑洞账号.
                 auto black_hole_bank_itr = banks.find(BLACKHOLEACCOUNT);
                 if (black_hole_bank_itr == banks.end()) {
@@ -235,8 +237,8 @@ class swap : public contract{
             }
             else {
                 graphene_assert(balance1.amount > 0 && balance2.amount > 0, INSUFFICIENT_AMOUNT);
-                lq = std::min(_safe_mul(amount1, pool_itr->total_lq) / balance1.amount
-                    , _safe_mul(amount2, pool_itr->total_lq) / balance2.amount);
+                lq = std::min(_quote(amount1, balance1.amount, pool_itr->total_lq)
+                    , _quote(amount2, balance2.amount, pool_itr->total_lq));
             }
             graphene_assert(lq > 0, INSUFFICIENT_LIQUIDITY);
 
@@ -325,8 +327,8 @@ class swap : public contract{
             // 计算可以兑换的资产数量.
             const auto& balance1 = pool_itr->balance1.asset_id == id1 ? pool_itr->balance1 : pool_itr->balance2;
             const auto& balance2 = pool_itr->balance2.asset_id == id2 ? pool_itr->balance2 : pool_itr->balance1;
-            int64_t amount1 = _safe_mul(lq, balance1.amount) / pool_itr->total_lq;
-            int64_t amount2 = _safe_mul(lq, balance2.amount) / pool_itr->total_lq;
+            int64_t amount1 = _quote(lq, pool_itr->total_lq, balance1.amount);
+            int64_t amount2 = _quote(lq, pool_itr->total_lq, balance2.amount);
             graphene_assert(amount1 > 0 && amount2 > 0 && amount1 >= amount1_min && amount2 >= amount2_min, INSUFFICIENT_AMOUNT);
 
             // 扣除bank中流动性代币的余额.
