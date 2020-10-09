@@ -47,8 +47,8 @@ inline static T _quote(const T& value1, const T& total1, const T& total2) {
     U mul_result = large_value1 * large_total2;
     graphene_assert(mul_result >= large_value1 && mul_result >= large_total2, NUMBER_OVERFLOW);
     U large_result = mul_result / large_total1;
-    T result = static_cast<T>(large_value1);
-    graphene_assert(static_cast<U>(result) * large_total1 == mul_result, NUMBER_OVERFLOW);
+    T result = static_cast<T>(large_result);
+    graphene_assert(static_cast<U>(result) == large_result, NUMBER_OVERFLOW);
     return result;
 }
 
