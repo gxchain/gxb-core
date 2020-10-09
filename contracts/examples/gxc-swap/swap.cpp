@@ -46,6 +46,11 @@ inline static U _safe_convert(const T& t) {
     return u;
 }
 
+template<class T, class U = int64_t>
+inline static U _safe_sqrt(const T& t) {
+    return static_cast<U>(sqrt(_safe_convert<double>(t)));
+}
+
 template<class T, class U = __int128_t>
 inline static T _quote(const T& value1, const T& total1, const T& total2) {
     graphene_assert(value1 > 0 && total1 > 0 && total2 > 0, NUMBER_OVERFLOW);
@@ -226,7 +231,9 @@ class swap : public contract{
             // 计算增加的流动性.
             int64_t lq = 0;
             if (pool_itr->total_lq == 0) {
-                lq = _safe_sub<int64_t>(sqrt(static_cast<__int128_t>(amount1) * static_cast<__int128_t>(amount2)), MINLIQUIDITY);
+                auto mul_result = amount1 * amount2;
+                graphene_assert(mul_result >= amount1 && mul_result >= amount2, NUMBER_OVERFLOW);
+                lq = _safe_sub<int64_t>(_safe_sqrt(mul_result), MINLIQUIDITY);
                 // 将最小流动性分配给黑洞账号.
                 auto black_hole_bank_itr = banks.find(BLACKHOLEACCOUNT);
                 if (black_hole_bank_itr == banks.end()) {
