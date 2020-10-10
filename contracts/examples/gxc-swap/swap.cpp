@@ -577,14 +577,14 @@ class swap : public contract{
             graphene_assert(allowance_itr != pool_itr->allowance.end(), INSUFFICIENT_ALLOWANCE);
             if(allowance_itr->second != -1){
                 pools.modify(pool_itr, sender, [&](pool& p) {
-                auto allowance_index = _make_index(from_account_id, sender);
-                auto allowance_itr = p.allowance.find(allowance_index);
-                graphene_assert(allowance_itr != p.allowance.end() && allowance_itr->second >= amount, INSUFFICIENT_ALLOWANCE);
-                allowance_itr->second = _safe_sub(allowance_itr->second, amount);
-                if (allowance_itr->second == 0) {
-                    p.allowance.erase(allowance_itr);
-                }
-            });
+                    auto allowance_index = _make_index(from_account_id, sender);
+                    auto allowance_itr = p.allowance.find(allowance_index);
+                    graphene_assert(allowance_itr != p.allowance.end() && allowance_itr->second >= amount, INSUFFICIENT_ALLOWANCE);
+                    allowance_itr->second = _safe_sub(allowance_itr->second, amount);
+                    if (allowance_itr->second == 0) {
+                        p.allowance.erase(allowance_itr);
+                    }
+                });
             }
             
             // 进行转账.
