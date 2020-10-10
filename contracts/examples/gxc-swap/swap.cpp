@@ -20,6 +20,8 @@ static const int64_t MINLIQUIDITY       = 100;
 static const int64_t ADMINACCOUNT       = 22;
 // 黑洞账户.
 static const int64_t BLACKHOLEACCOUNT   = 3;
+// 日志合约账户.
+static const int64_t LOGACCOUNT         = 5319;
 // 手续费比例.
 static const int64_t FEENUMERATOR       = 997;
 static const int64_t FEEDENOMINATOR     = 1000;
@@ -311,6 +313,9 @@ class swap : public contract{
                 _balance2.amount = _safe_add(_balance2.amount, amount2);
                 p.total_lq = p.total_lq == 0 ? _safe_add(lq, MINLIQUIDITY) : _safe_add(p.total_lq, lq);
             });
+
+            // 发送日志.
+            _emit_addlq_log(amount1, amount2, lq);
         }
 
         //@abi action
@@ -637,6 +642,18 @@ class swap : public contract{
                 banks.erase(from_bank_itr);
             }
         }
+
+        void _emit_addlq_log(int64_t amount1, int64_t amount2, int64_t lq) {
+            addlq_log_params params{ amount1, amount2, lq };
+            action log(LOGACCOUNT, N(addlq), std::move(params), _self);
+            log.send();
+        }
+
+        struct addlq_log_params {
+            int64_t amount1;
+            int64_t amount2;
+            int64_t lq;
+        };
 
         //@abi table bank i64
         struct bank {
