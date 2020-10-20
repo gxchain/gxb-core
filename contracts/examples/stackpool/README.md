@@ -4,7 +4,7 @@
 
 ```c++
 static const uint64_t POOLASSETID       = 1; // stackpool发放的奖励资产的id.
-static const uint64_t ADMINACCOUNTID    = 22; // 管理员账号id.
+static const uint64_t ADMINACCOUNT    = 22; // 管理员账号id.
 static const uint64_t DURATION          = 7 * 24 * 60 * 60; // 每次收益期的长度.
 ```
 ---
@@ -66,7 +66,7 @@ void withdraw(contract_asset asset) {
 - 从指定质押池中领取增发的奖励
 ```c++
 // @abi action
-void get_reward(uint64_t asset_id) {
+void getreward(uint64_t asset_id) {
     // 检查传入的资产id是否存在.
     // 检查当前时间是否大于池子的开始时间.
     // 调用_update_reward_per_token更新reward_per_token.
@@ -93,7 +93,7 @@ void exit(uint64_t asset_id) {
 // @abi action
 // @abi payable
 void notifyreward(uint64_t asset_id) {
-    // 检查调用者是否为ADMINACCOUNTID.
+    // 检查调用者是否为ADMINACCOUNT.
     // 获取转进来的资产的信息.
     // 检查池子是否存在.
     // 检查转账进来的资产是否是POOLASSETID.
@@ -121,7 +121,7 @@ void notifyreward(uint64_t asset_id) {
 ```c++
 // @abi action
 void newpool(uint64_t asset_id, int64_t start_time) {
-    // 检查调用者是否是ADMINACCOUNTID.
+    // 检查调用者是否是ADMINACCOUNT.
     // 检查资产是否不存在.
     // 向pool中插入一条新的记录.
 }
@@ -132,7 +132,7 @@ void newpool(uint64_t asset_id, int64_t start_time) {
 ```c++
 // @abi action
 void managepool(uint64_t asset_id, bool locked) {
-    // 检查调用者是否是ADMINACCOUNTID.
+    // 检查调用者是否是ADMINACCOUNT.
     // 检查资产是否存在.
     // 修改pool中记录的状态.
 }
