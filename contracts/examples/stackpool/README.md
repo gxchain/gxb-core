@@ -48,7 +48,7 @@ void stack() {
 }
 ```
 
-#### 2.质押流动性接口
+#### 2.质押接口(流动性代币)
 - 向指定质押池中质押流动性
 ```c++
 // @abi action
@@ -62,7 +62,7 @@ void stacklq(
 }
 ```
 
-#### 3.提现资产接口
+#### 3.提现接口
 - 从指定质押池中提现资金
 ```c++
 // @abi action
@@ -77,7 +77,7 @@ void withdraw(contract_asset asset) {
 }
 ```
 
-#### 4.提现流动性接口
+#### 4.提现接口(流动性代币)
 - 从指定质押池中提现资金
 ```c++
 // @abi action
@@ -104,18 +104,40 @@ void getreward(uint64_t asset_id) {
 }
 ```
 
-#### 6.退出接口
+#### 6.获取奖励接口(流动性代币)
+- 从指定流动性质押池中领取增发的奖励
+```c++
+// @abi action
+void getreward(std::string coin1, std::string coin2) {
+    // 根据coin1和coin2计算获得pool_id.
+    // 之后的逻辑同getreward, 可以复用.
+}
+```
+
+#### 7.退出接口
 - 从指定质押池中提现所有质押的金额, 同时领取所有增发的奖励
 ```c++
 // @abi action
 void exit(uint64_t asset_id) {
     // 检查传入的资产id是否存在.
     // 调用withdraw, 输入参数的asset_id为用户传入的值, amount为stack中用户的余额.
-    // 调用get_reward, 传入参数为asset_id.
+    // 调用getreward, 传入参数为asset_id.
 }
 ```
 
-#### 7.设置增发奖励接口
+#### 8.退出接口(流动性代币)
+- 从指定流动性质押池中提现所有质押的流动性, 同时领取所有增发的奖励
+```c++
+// @abi action
+void exitlq(std::string coin1, std::string coin2) {
+    // 根据coin1和coin2计算获得pool_id.
+    // 检查对应的池子是否存在.
+    // 调用withdrawlq, 输入参数中的amount为stack中用户的余额.
+    // 调用getrewardlq.
+}
+```
+
+#### 9.设置增发奖励接口
 - 设置指定质押池, 接口会在内部判断, 可能开启新的一轮收益期, 可能增加现在的收益期的增发金额, 也可能只是进行初始化
 ```c++
 // @abi action
@@ -144,7 +166,18 @@ void notifyreward(uint64_t asset_id) {
 }
 ```
 
-#### 8.新建质押池接口
+#### 10.设置增发奖励接口(流动性代币)
+- 设置指定流动性质押池
+```c++
+// @abi action
+// @abi payable
+void notifyrewardlq(std::string coin1, std::string coin2) {
+    // 根据coin1和coin2计算获得pool_id.
+    // 之后的逻辑同notifyreward相同, 可以复用.
+}
+```
+
+#### 11.新建质押池接口
 - 对指定资产新建一个质押池
 ```c++
 // @abi action
@@ -155,7 +188,17 @@ void newpool(uint64_t asset_id, int64_t start_time) {
 }
 ```
 
-#### 9.管理质押池接口
+#### 12.新建质押池接口(流动性代币)
+- 对指定流动性资产新建一个质押池
+```c++
+// @abi action
+void newpoollq(std::string coin1, std::string coin2, int64_t start_time) {
+    // 根据coin1和coin2计算获得pool_id.
+    // 之后的逻辑同newpool, 可以复用.
+}
+```
+
+#### 13.管理质押池接口
 - 管理员锁定或开启质押池, 锁定后新的资产不能进入, 但是可以提现及领取增发奖励
 ```c++
 // @abi action
@@ -163,5 +206,15 @@ void managepool(uint64_t asset_id, bool locked) {
     // 检查调用者是否是ADMINACCOUNT.
     // 检查资产是否存在.
     // 修改pool中记录的状态.
+}
+```
+
+#### 14.管理质押池接口(流动性代币)
+- 管理员流动性质押池
+```c++
+// @abi action
+void managepoollq(std::string coin1, std::string coin2, bool locked) {
+    // 根据coin1和coin2计算获得pool_id.
+    // 之后的逻辑同managepool, 可以复用.
 }
 ```
