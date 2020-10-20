@@ -26,8 +26,8 @@ struct pool {
     std::map<uint64_t, int64_t> reward; // 每个用户获得的增发奖励, key为userid, value为奖励的数量.
     std::map<uint64_t, int64_t> stake; // 每个用户质押资金的数量, key为userid, value为质押数量.
 
-    uint64_t primary_key() const { return asset_id; }
-    GRAPHENE_SERIALIZE(pool, (asset_id)(locked)(total_amount)(reward_rate)(reward_per_token)(start_time)(last_update_time)(period_finish)(last_reward_per_token)(reward)(stake))
+    uint64_t primary_key() const { return asset_or_pool; }
+    GRAPHENE_SERIALIZE(pool, (asset_or_pool)(locked)(total_amount)(reward_rate)(reward_per_token)(start_time)(last_update_time)(period_finish)(last_reward_per_token)(reward)(stake))
 };
 ```
 
