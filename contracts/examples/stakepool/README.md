@@ -3,7 +3,7 @@
 ### 静态变量
 
 ```c++
-static const uint64_t POOLASSETID   = 1; // stackpool发放的奖励资产的id.
+static const uint64_t POOLASSETID   = 1; // stakepool发放的奖励资产的id.
 static const uint64_t ADMINACCOUNT  = 22; // 管理员账号id.
 static const uint64_t SWAPACCOUNT   = 100; // swap账号地址.
 ```
@@ -46,7 +46,7 @@ void stake() {
     // 检查资产是否存在并且是否没有被锁定.
     // 检查当前时间是否大于池子的开始时间.
     // 调用_update_reward_per_token更新reward_per_token.
-    // 增加用户在stack中的余额.
+    // 增加用户在stake中的余额.
     // 增加池子的total_amount.
 }
 ```
@@ -58,7 +58,7 @@ void stake() {
 void stakelq(uint64_t asset_id, int64_t amount) {
     // 调用swap的transferlqb方法完成转账.
     // 根据coin1和coin2计算获得pool_id.
-    // 之后的逻辑和stack一致, 可以复用.
+    // 之后的逻辑和stake一致, 可以复用.
 }
 ```
 
@@ -70,8 +70,8 @@ void withdraw(uint64_t asset_id, int64_t amount) {
     // 检查资产是否存在.
     // 检查当前时间是否大于池子的开始时间.
     // 调用_update_reward_per_token更新reward_per_token.
-    // 判断用户stack中的余额是否充足.
-    // 减少用户在stack中的余额.
+    // 判断用户stake中的余额是否充足.
+    // 减少用户在stake中的余额.
     // 减少池子的total_amount.
     // 如果池子是流动性质押池则使用swap的transferlqa方法向用户转账, 否则直接withdraw.
 }
@@ -97,7 +97,7 @@ void getreward(uint64_t asset_id) {
 // @abi action
 void exit(uint64_t asset_id) {
     // 检查传入的资产id是否存在.
-    // 调用withdraw, 输入参数的asset_id为用户传入的值, amount为stack中用户的余额.
+    // 调用withdraw, 输入参数的asset_id为用户传入的值, amount为stake中用户的余额.
     // 调用getreward, 传入参数为asset_id.
 }
 ```
