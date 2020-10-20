@@ -4,7 +4,7 @@
 
 ```c++
 static const uint64_t POOLASSETID       = 1; // stackpool发放的奖励资产的id.
-static const uint64_t ADMINACCOUNT    = 22; // 管理员账号id.
+static const uint64_t ADMINACCOUNT      = 22; // 管理员账号id.
 static const uint64_t DURATION          = 7 * 24 * 60 * 60; // 每次收益期的长度.
 ```
 ---
