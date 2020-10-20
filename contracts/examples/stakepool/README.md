@@ -14,8 +14,11 @@ static const uint64_t SWAPACCOUNT   = 100; // swap账号地址.
 - 用于记录每种代币的信息.
 ```c++
 struct pool {
-    uint64_t asset_or_pool; // 质押池质押的资产id或swap中池子的id. (理论上两者会重复, 但这里不考虑)
+    uint64_t asset_id; // 质押池质押的资产id或swap中池子的id. (理论上两者会重复, 但这里不考虑)
     bool locked; // 是否被锁定.
+    bool is_lq; // 质押的是否是流动性.
+    std::string coin1; // 第一种代币的名称.
+    std::string coin2; // 第二种代币的名称.
     int64_t total_amount; // 总质押金额.
     int64_t reward_rate; // 单位时间可获得增发奖励的数量.
     int64_t reward_per_token; // 单位质押资产可获得的增发奖励的数量.
@@ -26,8 +29,8 @@ struct pool {
     std::map<uint64_t, int64_t> reward; // 每个用户获得的增发奖励, key为userid, value为奖励的数量.
     std::map<uint64_t, int64_t> stake; // 每个用户质押资金的数量, key为userid, value为质押数量.
 
-    uint64_t primary_key() const { return asset_or_pool; }
-    GRAPHENE_SERIALIZE(pool, (asset_or_pool)(locked)(total_amount)(reward_rate)(reward_per_token)(start_time)(last_update_time)(period_finish)(last_reward_per_token)(reward)(stake))
+    uint64_t primary_key() const { return asset_id; }
+    GRAPHENE_SERIALIZE(pool, (asset_id)(locked)(is_lq)(coin1)(coin2)(total_amount)(reward_rate)(reward_per_token)(start_time)(last_update_time)(period_finish)(last_reward_per_token)(reward)(stake))
 };
 ```
 
@@ -52,10 +55,7 @@ void stake() {
 - 向指定质押池中质押流动性
 ```c++
 // @abi action
-void stakelq(
-    std::string coin1, std::string coin2 // swap中两种资产的名称.
-    , int64_t amount // 需要质押的流动性的金额.
-) {
+void stakelq(uint64_t asset_id, int64_t amount) {
     // 调用swap的transferlqb方法完成转账.
     // 根据coin1和coin2计算获得pool_id.
     // 之后的逻辑和stack一致, 可以复用.
@@ -66,7 +66,7 @@ void stakelq(
 - 从指定质押池中提现资金
 ```c++
 // @abi action
-void withdraw(contract_asset asset) {
+void withdraw(uint64_t asset_id, int64_t amount) {
     // 检查资产是否存在.
     // 检查当前时间是否大于池子的开始时间.
     // 调用_update_reward_per_token更新reward_per_token.
@@ -77,20 +77,7 @@ void withdraw(contract_asset asset) {
 }
 ```
 
-#### 4.提现接口(流动性代币)
-- 从指定质押池中提现资金
-```c++
-// @abi action
-void withdrawlq(
-    std::string coin1, std::string coin2 // swap中两种资产的名称.
-    , int64_t amount // 需要提现的流动性的金额.
-) {
-    // 根据coin1和coin2计算获得pool_id.
-    // 之后的逻辑和withdraw一致, 可以复用, 只是转账的时候使用swap的transfer方法.
-}
-```
-
-#### 5.获取奖励接口
+#### 4.获取奖励接口
 - 从指定质押池中领取增发的奖励
 ```c++
 // @abi action
@@ -104,17 +91,7 @@ void getreward(uint64_t asset_id) {
 }
 ```
 
-#### 6.获取奖励接口(流动性代币)
-- 从指定流动性质押池中领取增发的奖励
-```c++
-// @abi action
-void getreward(std::string coin1, std::string coin2) {
-    // 根据coin1和coin2计算获得pool_id.
-    // 之后的逻辑同getreward, 可以复用.
-}
-```
-
-#### 7.退出接口
+#### 5.退出接口
 - 从指定质押池中提现所有质押的金额, 同时领取所有增发的奖励
 ```c++
 // @abi action
@@ -125,19 +102,7 @@ void exit(uint64_t asset_id) {
 }
 ```
 
-#### 8.退出接口(流动性代币)
-- 从指定流动性质押池中提现所有质押的流动性, 同时领取所有增发的奖励
-```c++
-// @abi action
-void exitlq(std::string coin1, std::string coin2) {
-    // 根据coin1和coin2计算获得pool_id.
-    // 检查对应的池子是否存在.
-    // 调用withdrawlq, 输入参数中的amount为stack中用户的余额.
-    // 调用getrewardlq.
-}
-```
-
-#### 9.设置增发奖励接口
+#### 6.设置增发奖励接口
 - 设置指定质押池, 接口会在内部判断, 可能开启新的一轮收益期, 可能增加现在的收益期的增发金额, 也可能只是进行初始化
 ```c++
 // @abi action
@@ -166,18 +131,7 @@ void notifyreward(uint64_t asset_id) {
 }
 ```
 
-#### 10.设置增发奖励接口(流动性代币)
-- 设置指定流动性质押池
-```c++
-// @abi action
-// @abi payable
-void notifyrewardlq(std::string coin1, std::string coin2) {
-    // 根据coin1和coin2计算获得pool_id.
-    // 之后的逻辑同notifyreward相同, 可以复用.
-}
-```
-
-#### 11.新建质押池接口
+#### 7.新建质押池接口
 - 对指定资产新建一个质押池
 ```c++
 // @abi action
@@ -188,17 +142,7 @@ void newpool(uint64_t asset_id, int64_t start_time) {
 }
 ```
 
-#### 12.新建质押池接口(流动性代币)
-- 对指定流动性资产新建一个质押池
-```c++
-// @abi action
-void newpoollq(std::string coin1, std::string coin2, int64_t start_time) {
-    // 根据coin1和coin2计算获得pool_id.
-    // 之后的逻辑同newpool, 可以复用.
-}
-```
-
-#### 13.管理质押池接口
+#### 8.管理质押池接口
 - 管理员锁定或开启质押池, 锁定后新的资产不能进入, 但是可以提现及领取增发奖励
 ```c++
 // @abi action
@@ -206,15 +150,5 @@ void managepool(uint64_t asset_id, bool locked) {
     // 检查调用者是否是ADMINACCOUNT.
     // 检查资产是否存在.
     // 修改pool中记录的状态.
-}
-```
-
-#### 14.管理质押池接口(流动性代币)
-- 管理员流动性质押池
-```c++
-// @abi action
-void managepoollq(std::string coin1, std::string coin2, bool locked) {
-    // 根据coin1和coin2计算获得pool_id.
-    // 之后的逻辑同managepool, 可以复用.
 }
 ```
