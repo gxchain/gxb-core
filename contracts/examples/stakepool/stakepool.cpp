@@ -7,6 +7,7 @@
 #include <graphenelib/system.h>
 #include <boost/hana/optional.hpp>
 
+#define INVALID_SENDER          "Invalid sender."
 #define INVALID_PARAMS          "Invalid params."
 #define INVALID_TRADING_PAIR    "Invalid trading pair."
 #define INVALID_ASSET           "Invalid asset, not supported."
@@ -50,20 +51,20 @@ inline static U _safe_convert(const T& t) {
     return u;
 }
 
-// inline static uint64_t _make_index(const uint64_t& number1, const uint64_t& number2) {
-//     uint64_t _number1 = number1 << 32;
-//     graphene_assert(_number1 > number1, NUMBER_OVERFLOW);
-//     return _safe_add(_number1, number2);
-// }
+inline static uint64_t _make_index(const uint64_t& number1, const uint64_t& number2) {
+    uint64_t _number1 = number1 << 32;
+    graphene_assert(_number1 > number1, NUMBER_OVERFLOW);
+    return _safe_add(_number1, number2);
+}
 
-// inline static uint64_t _make_pool_index(const std::string& coin1, const std::string& coin2) {
-//     auto id1 = get_asset_id(coin1.c_str(), coin1.size());
-//     auto id2 = get_asset_id(coin2.c_str(), coin2.size());
-//     graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, INVALID_TRADING_PAIR);
-//     uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
-//     uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
-//     return _make_index(number1, number2);
-// }
+inline static uint64_t _make_pool_index(const std::string& coin1, const std::string& coin2) {
+    auto id1 = get_asset_id(coin1.c_str(), coin1.size());
+    auto id2 = get_asset_id(coin2.c_str(), coin2.size());
+    graphene_assert(id1 != -1 && id2 != -1 && id1 != id2, INVALID_TRADING_PAIR);
+    uint64_t number1 = id1 < id2 ? (uint64_t)id1 : (uint64_t)id2; 
+    uint64_t number2 = id1 < id2 ? (uint64_t)id2 : (uint64_t)id1;
+    return _make_index(number1, number2);
+}
 
 class stakepool : public contract {
     public:
@@ -107,8 +108,48 @@ class stakepool : public contract {
         }
 
         // @abi action
-        void newpool(uint64_t asset_id, int64_t start_time, int64_t duration) {
-            
+        void newpool(uint64_t asset_id, int64_t start_time) {
+            auto sender = get_trx_sender();
+            graphene_assert(sender == ADMINACCOUNT, INVALID_SENDER);
+            graphene_assert(asset_id <= ASSETFLAG && start_time > 0, INVALID_PARAMS);
+            auto itr = pools.find(asset_id);
+            graphene_assert(itr == pools.end(), INVALID_PARAMS);
+            pools.emplace(sender, [&](pool& p) {
+                p.asset_id = asset_id;
+                p.locked = false;
+                p.is_lq = false;
+                p.total_amount = 0;
+                p.reward_rate = 0;
+                p.reward_per_token = 0;
+                p.start_time = start_time;
+                p.last_update_time = 0;
+                p.period_finish = 0;
+                p.duration = 0;
+            });
+        }
+
+        // @abi action
+        void newlqpool(std::string coin1, std::string coin2, int64_t start_time) {
+            auto sender = get_trx_sender();
+            graphene_assert(sender == ADMINACCOUNT, INVALID_SENDER);
+            graphene_assert(start_time > 0, INVALID_PARAMS);
+            auto asset_id = _make_pool_index(coin1, coin2);
+            auto itr = pools.find(asset_id);
+            graphene_assert(itr == pools.end(), INVALID_PARAMS);
+            pools.emplace(sender, [&](pool& p) {
+                p.asset_id = asset_id;
+                p.locked = false;
+                p.is_lq = true;
+                p.total_amount = 0;
+                p.reward_rate = 0;
+                p.reward_per_token = 0;
+                p.start_time = start_time;
+                p.last_update_time = 0;
+                p.period_finish = 0;
+                p.duration = 0;
+                p.coin1 = coin1;
+                p.coin2 = coin2;
+            });
         }
 
         // @abi action
