@@ -24,7 +24,7 @@ static const uint64_t POOLASSETID   = 1;
 static const uint64_t ADMINACCOUNT  = 22;
 static const uint64_t SWAPACCOUNT   = 100;
 
-static const uint64_t ASSETFLAG = 1ULL << 32;
+static const uint64_t ASSETFLAG     = 1ULL << 32;
 
 template<class T>
 inline static T _safe_add(const T& a, const T& b) {
@@ -198,8 +198,8 @@ class stakepool : public contract {
             }
             pools.modify(itr, sender, [&](pool& p){
                 _update_reward_per_token(p, sender);
-                p.total_amount += asset_amount;
-                p.stake[sender] += asset_amount;
+                p.total_amount = _safe_add(p.total_amount, asset_amount);
+                p.stake[sender] = _safe_add(p.stake[sender], asset_amount);
             });
         }
 
@@ -268,7 +268,7 @@ class stakepool : public contract {
             else {
                 auto current = get_head_block_time();
                 auto current_applicable = current < p.period_finish ? current : p.period_finish;
-                auto sep = current_applicable - p.last_update_time;
+                auto sep = _safe_sub(current_applicable, p.last_update_time);
                 if (sep > 0) {
                     auto reward_amount_of_sep = _safe_mul<__uint128_t>(sep, p.reward_rate);
                     p.reward_per_token = _safe_convert<int64_t>(reward_amount_of_sep / (__uint128_t)p.total_amount);
@@ -278,7 +278,8 @@ class stakepool : public contract {
                         const auto& const_p = p;
                         auto itr = const_p.stake.find(*sender);
                         if (itr != p.stake.cend()) {
-                            p.reward[*sender] += _safe_mul(itr->second, _safe_sub(p.reward_per_token, p.last_reward_per_token[*sender]));
+                            p.reward[*sender] = _safe_add(p.reward[*sender], _safe_mul(itr->second, _safe_sub(p.reward_per_token, p.last_reward_per_token[*sender])));
+                            p.last_reward_per_token[*sender] = p.reward_per_token;
                         }
                     }
                 }
