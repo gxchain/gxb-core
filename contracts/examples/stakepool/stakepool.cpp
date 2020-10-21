@@ -109,7 +109,7 @@ class stakepool : public contract {
             int64_t asset_amount = get_action_asset_amount();
             graphene_assert(sender == ADMINACCOUNT, INVALID_SENDER);
             graphene_assert(get_action_asset_id() == POOLASSETID && asset_amount > 0, INVALID_PARAMS);
-            
+
             auto itr = pools.find(asset_id);
             graphene_assert(itr != pools.end(), INVALID_PARAMS);
             pools.modify(itr, sender, [&](pool& p) {
@@ -257,21 +257,19 @@ class stakepool : public contract {
         typedef graphene::multi_index<N(pool), pool> pool_index;
         pool_index pools;
 
-        int64_t _get_current_time(const pool& p) {
-            auto current = get_head_block_time();
-            return current < p.period_finish ? current : p.period_finish;
-        }
-
         void _update_reward_per_token(pool& p, boost::hana::optional<uint64_t> sender = {}) {
             if (p.total_amount == 0) {
                 return;
             }
             else {
-                auto sep = _get_current_time(p) - p.last_update_time;
+                auto current = get_head_block_time();
+                auto current_applicable = current < p.period_finish ? current : p.period_finish;
+                auto sep = current_applicable - p.last_update_time;
                 if (sep > 0) {
                     auto reward_amount_of_sep = _safe_mul<__uint128_t>(sep, p.reward_rate);
                     p.reward_per_token = _safe_convert<int64_t>(reward_amount_of_sep / (__uint128_t)p.total_amount);
                     graphene_assert(p.reward_per_token > 0, NO_REWARD);
+                    p.last_update_time = current_applicable;
                     if (!boost::hana::is_nothing(sender)) {
                         const auto& const_p = p;
                         auto itr = const_p.stake.find(*sender);
