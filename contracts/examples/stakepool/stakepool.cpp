@@ -13,6 +13,8 @@
 #define INVALID_ASSET           "Invalid asset, not supported."
 #define NO_REWARD               "No available reward rate."
 #define NO_DURATION             "No available duration."
+#define NOT_STARTED             "The pool has not started."
+#define POOL_LOCKED             "The pool is locked."
 
 #define NUMBER_OVERFLOW         "Number overflow."
 
@@ -189,6 +191,8 @@ class stakepool : public contract {
         void _stake(uint64_t sender, uint64_t asset_id, int64_t asset_amount) {
             auto itr = pools.find(asset_id);
             graphene_assert(itr != pools.end(), INVALID_ASSET);
+            graphene_assert(itr->start_time <= get_head_block_time(), NOT_STARTED);
+            graphene_assert(!itr->locked, POOL_LOCKED);
             if (itr->is_lq) {
                 _transferlqb(itr->coin1, itr->coin2, sender, _self, asset_amount);
             }
