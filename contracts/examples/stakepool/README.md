@@ -30,7 +30,7 @@ struct pool {
     std::map<uint64_t, int64_t> stake; // 每个用户质押资金的数量, key为userid, value为质押数量.
 
     uint64_t primary_key() const { return asset_id; }
-    GRAPHENE_SERIALIZE(pool, (asset_id)(locked)(is_lq)(coin1)(coin2)(total_amount)(reward_rate)(reward_per_token)(start_time)(last_update_time)(period_finish)(last_reward_per_token)(reward)(stake))
+    GRAPHENE_SERIALIZE(pool, (asset_id)(locked)(is_lq)(coin1)(coin2)(total_amount)(reward_rate)(reward_per_token)(start_time)(last_update_time)(period_finish)(duration)(last_reward_per_token)(reward)(stake))
 };
 ```
 
