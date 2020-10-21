@@ -20,6 +20,8 @@ static const uint64_t POOLASSETID   = 1;
 static const uint64_t ADMINACCOUNT  = 22;
 static const uint64_t SWAPACCOUNT   = 100;
 
+static const uint64_t ASSETFLAG = 1ULL << 32;
+
 template<class T>
 inline static T _safe_add(const T& a, const T& b) {
     T result = a + b;
@@ -71,23 +73,16 @@ class stakepool : public contract {
         // @abi action
         // @abi payable
         void stake() {
-            uint64_t sender = get_trx_sender();
             int64_t asset_amount = get_action_asset_amount();
             uint64_t asset_id = get_action_asset_id();
             graphene_assert(asset_amount > 0 && asset_id > 0, INVALID_PARAMS);
-
-            auto itr = pools.find(asset_id);
-            graphene_assert(itr != pools.end(), INVALID_ASSET);
-            pools.modify(itr, sender, [&](pool& p){
-                _update_reward_per_token(p, sender);
-                p.total_amount += asset_amount;
-                p.stake[sender] += asset_amount;
-            });
+            _stake(get_trx_sender(), asset_id, asset_amount);
         }
 
         // @abi action
         void stakelq(uint64_t asset_id, int64_t amount) {
-            
+            graphene_assert(asset_id > ASSETFLAG && amount > 0, INVALID_PARAMS);
+            _stake(get_trx_sender(), asset_id, amount, true);
         }
 
         // @abi action
@@ -122,6 +117,19 @@ class stakepool : public contract {
         }
 
     private:
+        void _stake(uint64_t sender, uint64_t asset_id, int64_t asset_amount, bool transferlq = false) {
+            auto itr = pools.find(asset_id);
+            graphene_assert(itr != pools.end(), INVALID_ASSET);
+            if (transferlq) {
+                _transferlqb(itr->coin1, itr->coin2, sender, _self, asset_amount);
+            }
+            pools.modify(itr, sender, [&](pool& p){
+                _update_reward_per_token(p, sender);
+                p.total_amount += asset_amount;
+                p.stake[sender] += asset_amount;
+            });
+        }
+
         std::string _get_account_name(uint64_t id) {
             char data[65] = { 0 };
             graphene_assert(get_account_name_by_id(data, 65, id) == 0, "Unkonw account id.");
