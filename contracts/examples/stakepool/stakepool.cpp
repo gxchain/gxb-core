@@ -15,6 +15,7 @@
 #define NO_DURATION             "No available duration."
 #define NOT_STARTED             "The pool has not started."
 #define POOL_LOCKED             "The pool is locked."
+#define NO_REWARD_EXIST         "You have no reward."
 
 #define NUMBER_OVERFLOW         "Number overflow."
 
@@ -91,17 +92,48 @@ class stakepool : public contract {
 
         // @abi action
         void withdraw(uint64_t asset_id, int64_t amount) {
-            
+            graphene_assert(asset_id > 0 && amount > 0, INVALID_PARAMS);
+            auto sender = get_trx_sender();
+            auto itr = pools.find(asset_id);
+            graphene_assert(itr != pools.end(), INVALID_PARAMS);
+            auto current_time = get_head_block_time();
+            graphene_assert(current_time > itr->start_time, NOT_STARTED);
+            pools.modify(itr, sender, [&](auto &p){
+                _update_reward_per_token(p,sender);
+                p.total_amount = _safe_sub(p.total_amount, asset_amount);
+                p.stake[sender] = _safe_sub(p.stake[sender], asset_amount);
+            });
+            if(asset_id > ASSETFLAG){
+                _transferlqa(itr->coin1, itr->coin2, sender, amount);
+            } else {
+                withdraw_asset(_self, sender, asset_id, amount);
+            }
         }
 
         // @abi action
         void getreward(uint64_t asset_id) {
-            
+            auto sender = get_trx_sender();
+            auto itr = pools.find(asset_id);
+            graphene_assert(itr != pools.end(), INVALID_PARAMS);
+            auto current_time = get_head_block_time();
+            graphene_assert(current_time > itr->start_time, NOT_STARTED);
+            pools.modify(itr, sender, [&](auto &p){
+                _update_reward_per_token(p,sender);
+                graphene_assert(p.reward[sender] > 0, NO_REWARD_EXIST);
+                withdraw_asset(_self, sender, POOLASSETID, p.reward[sender]);
+                p.rewrad[sender] = 0;
+            });
         }
 
         // @abi action
         void exit(uint64_t asset_id) {
-            
+            auto sender = get_trx_sender();
+            auto itr = pools.find(asset_id);
+            graphene_assert(itr != pools.end(), INVALID_PARAMS);
+            auto stakeitr = itr->stake.find(sender);
+            graphene_assert(stakeitr != itr->stake.end(), INVALID_PARAMS);
+            withdraw(asset_id, stakeitr->second);
+            getreward(asset_id);
         }
 
         // @abi action
@@ -184,7 +216,13 @@ class stakepool : public contract {
 
         // @abi action
         void managepool(uint64_t asset_id, bool locked) {
-            
+            auto sender = get_trx_sender();
+            graphene_assert(sender == ADMINACCOUNT, INVALID_SENDER);
+            auto itr = pools.find(asset_id);
+            graphene_assert(itr != pools.end(), INVALID_ASSET);
+            pools.modify(itr, sender, [&] (auto& o){
+                o.locked = locked;
+            });
         }
 
     private:
