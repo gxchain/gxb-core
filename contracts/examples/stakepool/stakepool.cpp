@@ -101,8 +101,8 @@ class stakepool : public contract {
             graphene_assert(current_time > itr->start_time, NOT_STARTED);
             pools.modify(itr, sender, [&](auto &p){
                 _update_reward_per_token(p,sender);
-                p.total_amount = _safe_sub(p.total_amount, asset_amount);
-                p.stake[sender] = _safe_sub(p.stake[sender], asset_amount);
+                p.total_amount = _safe_sub(p.total_amount, amount);
+                p.stake[sender] = _safe_sub(p.stake[sender], amount);
             });
             if(asset_id > ASSETFLAG){
                 _transferlqa(itr->coin1, itr->coin2, sender, amount);
@@ -122,7 +122,7 @@ class stakepool : public contract {
                 _update_reward_per_token(p,sender);
                 graphene_assert(p.reward[sender] > 0, NO_REWARD_EXIST);
                 withdraw_asset(_self, sender, POOLASSETID, p.reward[sender]);
-                p.rewrad[sender] = 0;
+                p.reward[sender] = 0;
             });
         }
 
