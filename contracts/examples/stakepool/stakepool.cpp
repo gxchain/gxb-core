@@ -12,6 +12,7 @@
 #define INVALID_TRADING_PAIR    "Invalid trading pair."
 #define INVALID_ASSET           "Invalid asset, not supported."
 #define NO_REWARD               "No available reward rate."
+#define NO_DURATION             "No available duration."
 
 #define NUMBER_OVERFLOW         "Number overflow."
 
@@ -103,15 +104,42 @@ class stakepool : public contract {
 
         // @abi action
         // @abi payable
-        void notifyreward(uint64_t asset_id, int64_t new_duration) {
+        void notifyreward(uint64_t asset_id) {
+            auto sender = get_trx_sender();
+            int64_t asset_amount = get_action_asset_amount();
+            graphene_assert(sender == ADMINACCOUNT, INVALID_SENDER);
+            graphene_assert(get_action_asset_id() == POOLASSETID && asset_amount > 0, INVALID_PARAMS);
             
+            auto itr = pools.find(asset_id);
+            graphene_assert(itr != pools.end(), INVALID_PARAMS);
+            pools.modify(itr, sender, [&](pool& p) {
+                _update_reward_per_token(p);
+                auto current = get_head_block_time();
+                if (current > p.start_time) {
+                    if (current >= p.period_finish) {
+                        p.period_finish = _safe_mul(p.duration, _safe_add(_safe_sub(current, p.start_time) / p.duration, 1LL));
+                        p.reward_rate = asset_amount / _safe_sub(p.period_finish, current);
+                    }
+                    else {
+                        auto remain = _safe_sub(p.period_finish, current);
+                        p.reward_rate = _safe_add(_safe_mul(remain, p.reward_rate), asset_amount) / remain;
+                    }
+                    p.last_update_time = current;
+                }
+                else {
+                    p.reward_rate = asset_amount / p.duration;
+                    p.period_finish = _safe_add(current, p.duration);
+                    p.last_update_time = p.start_time;
+                }
+                graphene_assert(p.reward_rate > 0, NO_REWARD);
+            });
         }
 
         // @abi action
-        void newpool(uint64_t asset_id, int64_t start_time) {
+        void newpool(uint64_t asset_id, int64_t start_time, int64_t duration) {
             auto sender = get_trx_sender();
             graphene_assert(sender == ADMINACCOUNT, INVALID_SENDER);
-            graphene_assert(asset_id <= ASSETFLAG && start_time > 0, INVALID_PARAMS);
+            graphene_assert(asset_id <= ASSETFLAG && start_time > 0 && duration > 0, INVALID_PARAMS);
             auto itr = pools.find(asset_id);
             graphene_assert(itr == pools.end(), INVALID_PARAMS);
             pools.emplace(sender, [&](pool& p) {
@@ -124,15 +152,15 @@ class stakepool : public contract {
                 p.start_time = start_time;
                 p.last_update_time = 0;
                 p.period_finish = 0;
-                p.duration = 0;
+                p.duration = duration;
             });
         }
 
         // @abi action
-        void newlqpool(std::string coin1, std::string coin2, int64_t start_time) {
+        void newlqpool(std::string coin1, std::string coin2, int64_t start_time, int64_t duration) {
             auto sender = get_trx_sender();
             graphene_assert(sender == ADMINACCOUNT, INVALID_SENDER);
-            graphene_assert(start_time > 0, INVALID_PARAMS);
+            graphene_assert(start_time > 0 && duration > 0, INVALID_PARAMS);
             auto asset_id = _make_pool_index(coin1, coin2);
             auto itr = pools.find(asset_id);
             graphene_assert(itr == pools.end(), INVALID_PARAMS);
@@ -146,7 +174,7 @@ class stakepool : public contract {
                 p.start_time = start_time;
                 p.last_update_time = 0;
                 p.period_finish = 0;
-                p.duration = 0;
+                p.duration = duration;
                 p.coin1 = coin1;
                 p.coin2 = coin2;
             });
