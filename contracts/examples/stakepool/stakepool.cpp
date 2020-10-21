@@ -286,3 +286,5 @@ class stakepool : public contract {
             }
         }
 };
+
+GRAPHENE_ABI(stakepool, (stake)(stakelq)(withdraw)(getreward)(exit)(notifyreward)(newpool)(newlqpool)(managepool))
