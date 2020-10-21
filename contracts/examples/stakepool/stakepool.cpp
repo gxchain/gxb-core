@@ -45,7 +45,7 @@ inline static T _safe_sub(const T& a, const T& b) {
 template<class T>
 inline static T _safe_mul(const T& a, const T& b) {
     T result = a * b;
-    graphene_assert(result >= a && result >= b, NUMBER_OVERFLOW);
+    graphene_assert((result >= a && result >= b) || result == 0, NUMBER_OVERFLOW);
     return result;
 }
 
