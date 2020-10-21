@@ -83,7 +83,7 @@ class stakepool : public contract {
         // @abi action
         void stakelq(uint64_t asset_id, int64_t amount) {
             graphene_assert(asset_id > ASSETFLAG && amount > 0, INVALID_PARAMS);
-            _stake(get_trx_sender(), asset_id, amount, true);
+            _stake(get_trx_sender(), asset_id, amount);
         }
 
         // @abi action
@@ -158,10 +158,10 @@ class stakepool : public contract {
         }
 
     private:
-        void _stake(uint64_t sender, uint64_t asset_id, int64_t asset_amount, bool transferlq = false) {
+        void _stake(uint64_t sender, uint64_t asset_id, int64_t asset_amount) {
             auto itr = pools.find(asset_id);
             graphene_assert(itr != pools.end(), INVALID_ASSET);
-            if (transferlq) {
+            if (itr->is_lq) {
                 _transferlqb(itr->coin1, itr->coin2, sender, _self, asset_amount);
             }
             pools.modify(itr, sender, [&](pool& p){
