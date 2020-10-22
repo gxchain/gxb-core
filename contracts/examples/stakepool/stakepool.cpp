@@ -12,7 +12,6 @@
 #define INVALID_TRADING_PAIR    "Invalid trading pair."
 #define INVALID_ASSET           "Invalid asset, not supported."
 #define NO_REWARD               "No available reward rate."
-#define NO_DURATION             "No available duration."
 #define NOT_STARTED             "The pool has not started."
 #define POOL_LOCKED             "The pool is locked."
 #define INSUFFICIENT_REWARD     "Insufficient reward."
@@ -107,7 +106,7 @@ class stakepool : public contract {
                 if (stakeitr->second == 0) {
                     p.stake.erase(stakeitr);
                 }
-                
+
                 p.total_amount = _safe_sub(p.total_amount, amount);
             });
             if(itr->is_lq){
@@ -309,34 +308,28 @@ class stakepool : public contract {
         pool_index pools;
 
         void _update_reward_per_token(pool& p, boost::optional<uint64_t> sender = {}) {
-            if (p.total_amount == 0) {
-                return;
+            auto current = get_head_block_time();
+            auto current_applicable = current < p.period_finish ? current : p.period_finish;
+            if (p.total_amount != 0) {
+                auto reward_amount_of_sep = _safe_mul<__uint128_t>(_safe_mul<__uint128_t>(_safe_sub(current_applicable, p.last_update_time), p.reward_rate), ZOOMRATE);
+                p.reward_per_token = _safe_add(p.reward_per_token, _safe_convert<int64_t>(reward_amount_of_sep / (__uint128_t)p.total_amount));
+                graphene_assert(p.reward_per_token > 0, NO_REWARD);
             }
-            else {
-                auto current = get_head_block_time();
-                auto current_applicable = current < p.period_finish ? current : p.period_finish;
-                auto sep = _safe_sub(current_applicable, p.last_update_time);
-                if (sep > 0) {
-                    auto reward_amount_of_sep = _safe_mul<__uint128_t>(_safe_mul<__uint128_t>(sep, p.reward_rate), ZOOMRATE);
-                    p.reward_per_token = _safe_add(p.reward_per_token, _safe_convert<int64_t>(reward_amount_of_sep / (__uint128_t)p.total_amount));
-                    graphene_assert(p.reward_per_token > 0, NO_REWARD);
-                    p.last_update_time = current_applicable;
-                    if (sender) {
-                        const auto& const_p = p;
-                        auto itr = const_p.stake.find(*sender);
-                        if (itr != p.stake.cend()) {
-                            p.reward[*sender] = _safe_add(
-                                p.reward[*sender]
-                                , _safe_convert<int64_t>(
-                                    _safe_mul<__uint128_t>(
-                                        itr->second, _safe_sub(p.reward_per_token, p.last_reward_per_token[*sender])
-                                    )
-                                    / (__uint128_t)ZOOMRATE
-                                )
-                            );
-                            p.last_reward_per_token[*sender] = p.reward_per_token;
-                        }
-                    }
+            p.last_update_time = current_applicable;
+            if (sender) {
+                const auto& const_p = p;
+                auto itr = const_p.stake.find(*sender);
+                if (itr != p.stake.cend()) {
+                    p.reward[*sender] = _safe_add(
+                        p.reward[*sender]
+                        , _safe_convert<int64_t>(
+                            _safe_mul<__uint128_t>(
+                                itr->second, _safe_sub(p.reward_per_token, p.last_reward_per_token[*sender])
+                            )
+                            / (__uint128_t)ZOOMRATE
+                        )
+                    );
+                    p.last_reward_per_token[*sender] = p.reward_per_token;
                 }
             }
         }
