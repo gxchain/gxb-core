@@ -15,7 +15,7 @@
 #define NO_DURATION             "No available duration."
 #define NOT_STARTED             "The pool has not started."
 #define POOL_LOCKED             "The pool is locked."
-#define NO_REWARD_EXIST         "You have no reward."
+#define INSUFFICIENT_REWARD     "Insufficient reward."
 #define INSUFFICIENT_AMOUNT     "Insufficient amount."
 #define NUMBER_OVERFLOW         "Number overflow."
 
@@ -102,11 +102,12 @@ class stakepool : public contract {
             pools.modify(itr, sender, [&](pool &p){
                 _update_reward_per_token(p,sender);
                 auto stakeitr = p.stake.find(sender);
-                graphene_assert(stakeitr != p.stake.end() && stakeitr->second > 0, INSUFFICIENT_AMOUNT);
+                graphene_assert(stakeitr != p.stake.end() && stakeitr->second >= amount, INSUFFICIENT_AMOUNT);
                 stakeitr->second = _safe_sub(stakeitr->second, amount);
                 if (stakeitr->second == 0) {
                     p.stake.erase(stakeitr);
                 }
+                
                 p.total_amount = _safe_sub(p.total_amount, amount);
             });
             if(itr->is_lq){
@@ -125,9 +126,11 @@ class stakepool : public contract {
             graphene_assert(current_time > itr->start_time, NOT_STARTED);
             pools.modify(itr, sender, [&](auto &p){
                 _update_reward_per_token(p,sender);
-                graphene_assert(p.reward[sender] > 0, NO_REWARD_EXIST);
+                auto rewarditr = p.reward.find(sender);
+                graphene_assert(rewarditr != p.reward.end() && rewarditr->second > 0, INSUFFICIENT_REWARD);
+                p.reward.erase(rewarditr);
+
                 withdraw_asset(_self, sender, POOLASSETID, p.reward[sender]);
-                p.reward[sender] = 0;
             });
         }
 
