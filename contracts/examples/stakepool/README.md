@@ -3,9 +3,12 @@
 ### 静态变量
 
 ```c++
-static const uint64_t POOLASSETID   = 1; // stakepool发放的奖励资产的id.
-static const uint64_t ADMINACCOUNT  = 22; // 管理员账号id.
-static const uint64_t SWAPACCOUNT   = 100; // swap账号地址.
+static const uint64_t POOLASSETID   = 1; // stakepool增发资产的id.
+static const uint64_t ADMINACCOUNT  = 5280; // 管理员账户.
+static const uint64_t SWAPACCOUNT   = 5308; // swap合约账户.
+static const uint64_t ZOOMRATE      = 1000000000000; // 放大倍数(用于防止精度丢失).
+
+static const uint64_t ASSETFLAG     = 1ULL << 32; // 标志位, asset_id大于此数则认为是流动性代币.
 ```
 ---
 ### 数据结构
@@ -107,7 +110,7 @@ void exit(uint64_t asset_id) {
 ```c++
 // @abi action
 // @abi payable
-void notifyreward(uint64_t asset_id, int64_t new_duration) {
+void notifyreward(uint64_t asset_id) {
     // 检查调用者是否为ADMINACCOUNT.
     // 获取转进来的资产的信息.
     // 检查池子是否存在.
@@ -115,10 +118,10 @@ void notifyreward(uint64_t asset_id, int64_t new_duration) {
     // 调用_update_reward_per_token更新reward_per_token.
     // 如果当前时间大于池子开始的时间
     //   如果当前的时间大于等于池子本次收益结束的时间, 则开启一个新的收益周期.
-    //     以当前时间为起点, 开启一个新的收益周期, 时间长度为new_duration.
+    //     以当前时间为起点, 开启一个新的收益周期, 时间长度为duration.
     //     将period_finish变为新的收益周期的结束时间.
-    //     根据转进来的资产数量及new_duration计算单位时间内可以增发的数量reward_rate.
-    //     将池子的duration设置为new_duration.
+    //     根据转进来的资产数量及duration计算单位时间内可以增发的数量reward_rate.
+    //     将池子的duration设置为duration.
     //   如果当前时间小于池子本次收益结束的时间, 则增加此次收益周期的增发数量.
     //     根据当前的时间和本次收益结束的时间计算出剩下的时间.
     //     根据剩下的时间和上一次计算得到的reward_rate得出还没有增发的数量.
@@ -126,10 +129,10 @@ void notifyreward(uint64_t asset_id, int64_t new_duration) {
     //     根据剩余时间中应该增发的总量和剩下的时间计算出新的reward_rate.
     //   记录当前时间为last_update_time.
     // 如果当前时间小于等于池子开始的时间, 则认为这是一次初始化调用.
-    //   将池子的duration设置为new_duration.
-    //   将收益期结束时间设置为start_time + new_duration.
+    //   将池子的duration设置为duration.
+    //   将收益期结束时间设置为start_time + duration.
     //   记录start_time为last_update_time.
-    //   根据转入的金额及new_duration计算reward_rate.
+    //   根据转入的金额及duration计算reward_rate.
 }
 ```
 
@@ -140,12 +143,23 @@ void notifyreward(uint64_t asset_id, int64_t new_duration) {
 void newpool(uint64_t asset_id, int64_t start_time, int64_t duration) {
     // 检查调用者是否是ADMINACCOUNT.
     // 检查资产是否不存在.
-    // 判断asset_id是否大于2 ^ 32, 如果是则说明是流动性质押池, 还需要查询coin1及coin2.
     // 向pool中插入一条新的记录, 并记录所有信息.
 }
 ```
 
-#### 8.管理质押池接口
+#### 8.新建质押池接口
+- 对指定资产新建一个质押池
+```c++
+// @abi action
+void newlqpool(std::string coin1, std::string coin2, int64_t start_time, int64_t duration) {
+    // 检查调用者是否是ADMINACCOUNT.
+    // 检查资产是否不存在.
+    // 获取coin1, coin2对应的asset_id, 计算得到pool_index.
+    // 向pool中插入一条新的记录, 并记录所有信息.
+}
+```
+
+#### 9.管理质押池接口
 - 管理员锁定或开启质押池, 锁定后新的资产不能进入, 但是可以提现及领取增发奖励
 ```c++
 // @abi action
