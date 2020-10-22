@@ -319,11 +319,11 @@ class stakepool : public contract {
                         if (itr != p.stake.cend()) {
                             p.reward[*sender] = _safe_add(
                                 p.reward[*sender]
-                                , _safe_mul(
-                                    itr->second
-                                    , _safe_convert<int64_t>(
-                                        _safe_sub<uint64_t>(p.reward_per_token, p.last_reward_per_token[*sender]) / ZOOMRATE
+                                , _safe_convert<int64_t>(
+                                    _safe_mul<__uint128_t>(
+                                        itr->second, _safe_sub(p.reward_per_token, p.last_reward_per_token[*sender])
                                     )
+                                    / (__uint128_t)ZOOMRATE
                                 )
                             );
                             p.last_reward_per_token[*sender] = p.reward_per_token;
