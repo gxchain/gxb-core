@@ -16,7 +16,7 @@
 #define NOT_STARTED             "The pool has not started."
 #define POOL_LOCKED             "The pool is locked."
 #define NO_REWARD_EXIST         "You have no reward."
-
+#define INSUFFICIENT_AMOUNT     "Insufficient amount."
 #define NUMBER_OVERFLOW         "Number overflow."
 
 using namespace graphene;
@@ -99,12 +99,17 @@ class stakepool : public contract {
             graphene_assert(itr != pools.end(), INVALID_PARAMS);
             auto current_time = get_head_block_time();
             graphene_assert(current_time > itr->start_time, NOT_STARTED);
-            pools.modify(itr, sender, [&](auto &p){
+            pools.modify(itr, sender, [&](pool &p){
                 _update_reward_per_token(p,sender);
+                auto stakeitr = p.stake.find(sender);
+                graphene_assert(stakeitr != p.stake.end() && stakeitr->second > 0, INSUFFICIENT_AMOUNT);
+                stakeitr->second = _safe_sub(stakeitr->second, amount);
+                if (stakeitr->second == 0) {
+                    p.stake.erase(stakeitr);
+                }
                 p.total_amount = _safe_sub(p.total_amount, amount);
-                p.stake[sender] = _safe_sub(p.stake[sender], amount);
             });
-            if(asset_id > ASSETFLAG){
+            if(itr->is_lq){
                 _transferlqa(itr->coin1, itr->coin2, sender, amount);
             } else {
                 withdraw_asset(_self, sender, asset_id, amount);
