@@ -52,7 +52,7 @@ typedef graphene::multi_index<N(bank),bank> bank_index;
 ---
 ### 接口
 #### 1.质押流动性接口
-- 向指定的交易对中质押流动性, gxc-swap将根据用户设置的参数, 从bank中扣除用户余额, 同时用户将获得对应交易对的流动性代币
+- 向指定的交易对中质押流动性, swap将根据用户设置的参数, 从bank中扣除用户余额, 同时用户将获得对应交易对的流动性代币
 ```c++
 //@abi action
 void addlq(
@@ -75,7 +75,7 @@ void addlq(
 ```
 
 #### 2.赎回流动性接口
-- 赎回指定交易对中指定数量的流动性, gxc-swap将根据用户设置的参数, 扣除用户对应交易对中流动性代币的数量, 同时在bank中增加用户的余额
+- 赎回指定交易对中指定数量的流动性, swap将根据用户设置的参数, 扣除用户对应交易对中流动性代币的数量, 同时在bank中增加用户的余额
 ```c++
 //@abi action
 void rmlq(
@@ -102,7 +102,7 @@ void rmlq(
 //@abi action
 //@abi payable
 void swapa(
-    std::vector<std::string> path // 用户指定的交换路径.
+    std::string pathstr // 用户指定的交换路径, 以逗号隔开.
     , int64_t amount_out_min // 用户设置的最小输出金额.
     , std::string to // 接受交换代币的账户.
 ) {
@@ -120,7 +120,7 @@ void swapa(
 //@abi action
 //@abi payable
 void swapb(
-    std::vector<std::string> path // 用户指定的交换路径.
+    std::string pathstr // 用户指定的交换路径, 以逗号隔开.
     , int64_t amount_out // 用户指定的输出的代币的数量.
     , std::string to // 接受交换代币的账户.
 ) {
