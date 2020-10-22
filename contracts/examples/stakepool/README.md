@@ -147,8 +147,8 @@ void newpool(uint64_t asset_id, int64_t start_time, int64_t duration) {
 }
 ```
 
-#### 8.新建质押池接口
-- 对指定资产新建一个质押池
+#### 8.新建质押池接口(流动性代币)
+- 对指定流动性代币新建一个质押池
 ```c++
 // @abi action
 void newlqpool(std::string coin1, std::string coin2, int64_t start_time, int64_t duration) {
