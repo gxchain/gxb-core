@@ -376,19 +376,20 @@ class swap : public contract{
         
         //@abi action
         //@abi payable
-        void swapa(std::vector<std::string> path
+        void swapa(std::string pathstr
             , int64_t amount_out_min
             , std::string to
         ) {
             graphene_assert(amount_out_min > 0, INVALID_PARAMS);
 
-            auto sender = get_trx_sender();
-            graphene_assert(path.size() >= 2, INVALID_PATH);
+            std::vector<std::string> path;
+            _split_path(std::move(pathstr), path);
 
-            auto first_asset_name = path[0];
+            const auto& first_asset_name = path[0];
             auto first_asset_id = get_asset_id(first_asset_name.c_str(), first_asset_name.size());
             graphene_assert(first_asset_id != -1, INVALID_PATH);
 
+            auto sender = get_trx_sender();
             int64_t amount_in = get_action_asset_amount();
             uint64_t asset_in = get_action_asset_id();
             graphene_assert(amount_in > 0 && asset_in > 0, INVALID_PARAMS);
@@ -437,23 +438,24 @@ class swap : public contract{
 
         //@abi action
         //@abi payable
-        void swapb(std::vector<std::string> path
+        void swapb(std::string pathstr
             , int64_t amount_out
             , std::string to
         ) {
             graphene_assert(amount_out > 0, INVALID_PARAMS);
 
-            auto sender = get_trx_sender();
-            graphene_assert(path.size() >= 2, INVALID_PATH);
+            std::vector<std::string> path;
+            _split_path(std::move(pathstr), path);
             
-            auto last_asset_name = path[path.size() - 1];
+            const auto& last_asset_name = path[path.size() - 1];
             auto last_asset_id = get_asset_id(last_asset_name.c_str(), last_asset_name.size());
             graphene_assert(last_asset_id != -1, INVALID_PATH);
 
-            auto first_asset_name = path[0];
+            const auto& first_asset_name = path[0];
             auto first_asset_id = get_asset_id(first_asset_name.c_str(), first_asset_name.size());
             graphene_assert(first_asset_id != -1, INVALID_PATH);
 
+            auto sender = get_trx_sender();
             int64_t amount_in_max = get_action_asset_amount();
             uint64_t asset_in = get_action_asset_id();
             graphene_assert(amount_in_max > 0 && asset_in > 0, INVALID_PARAMS);
@@ -610,6 +612,18 @@ class swap : public contract{
         }
 
     private:
+        void _split_path(std::string&& pathstr, std::vector<std::string>& path) {
+            auto pos = pathstr.find(',');
+            while (pos != std::string::npos)
+            {
+                path.emplace_back(pathstr.substr(0, pos));
+                pathstr = pathstr.substr(pos + 1);
+                pos = pathstr.find(',');
+            }
+            path.emplace_back(std::move(pathstr));
+            graphene_assert(path.size() >= 2, INVALID_PATH);
+        }
+
         void _transferlq(uint64_t payer, uint64_t from, uint64_t to, uint64_t pool_index, int64_t amount) {
             // 增加接受者余额.
             auto to_bank_itr = banks.find(to);
