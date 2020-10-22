@@ -5,7 +5,7 @@
 #include <graphenelib/global.h>
 #include <graphenelib/multi_index.hpp>
 #include <graphenelib/system.h>
-#include <boost/hana/optional.hpp>
+#include <boost/optional.hpp>
 
 #define INVALID_SENDER          "Invalid sender."
 #define INVALID_PARAMS          "Invalid params."
@@ -300,7 +300,7 @@ class stakepool : public contract {
         typedef graphene::multi_index<N(pool), pool> pool_index;
         pool_index pools;
 
-        void _update_reward_per_token(pool& p, boost::hana::optional<uint64_t> sender = {}) {
+        void _update_reward_per_token(pool& p, boost::optional<uint64_t> sender = {}) {
             if (p.total_amount == 0) {
                 return;
             }
@@ -313,7 +313,7 @@ class stakepool : public contract {
                     p.reward_per_token = _safe_add(p.reward_per_token, _safe_convert<int64_t>(reward_amount_of_sep / (__uint128_t)p.total_amount));
                     graphene_assert(p.reward_per_token > 0, NO_REWARD);
                     p.last_update_time = current_applicable;
-                    if (!boost::hana::is_nothing(sender)) {
+                    if (sender) {
                         const auto& const_p = p;
                         auto itr = const_p.stake.find(*sender);
                         if (itr != p.stake.cend()) {
