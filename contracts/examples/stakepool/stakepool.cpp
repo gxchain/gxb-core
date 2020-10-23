@@ -118,9 +118,8 @@ class stakepool : public contract {
                 _update_reward_per_token(p,sender);
                 auto rewarditr = p.reward.find(sender);
                 graphene_assert(rewarditr != p.reward.end() && rewarditr->second > 0, INSUFFICIENT_REWARD);
+                withdraw_asset(_self, sender, POOLASSETID, rewarditr->second);
                 p.reward.erase(rewarditr);
-
-                withdraw_asset(_self, sender, POOLASSETID, p.reward[sender]);
             });
         }
 
