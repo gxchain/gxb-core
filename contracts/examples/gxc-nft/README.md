@@ -36,27 +36,19 @@ struct account
 ```
 
 ### 接口
-#### 1. 查询代币持有者
-- 根据_tokenId 返回代币持有者id
-```cpp
-//@abi action
-uint64_t ownerof(uint64_t tokenid){
-        //检查现token是否存在
-        //查找到token的owner并返回
-}
-```
-#### 2.mint创建token
+#### 1.mint创建token
 - mint创建一个token,并将其分发给用户
 ```cpp
 //@abi action
 void mint(uint64_t to, uint64_t tokenid, std::string tokenuri){
         //检查token是否已经存在
+        //检查是否有管理员权限
         //创建token，将其信息入tokens表
         //将token信息加入用户的收藏表中
 
 }
 ```
-#### 3.授权token的交易权
+#### 2.授权token的交易权
 - approve会授权其他的用户token的交易权
 ```cpp
 //@abi action
@@ -66,7 +58,7 @@ void approve(uint64_t tokenid, uint64_t to){
         //更改该token的交易权授权人，默认状态下为3，黑洞账户
 }
 ```
-#### 4.将一个用户所有权限授予另一个用户
+#### 3.将一个用户所有权限授予另一个用户
 - approveall允许用户将名下所有收藏的权限赋予另一个用户
 ```cpp
 //@abi action
@@ -75,7 +67,7 @@ void approveall(uint64_t to){
         //给用户授权
 }
 ```
-#### 5.移除所有权限
+#### 4.移除所有权限
 - appallremove可以让用户移除对另个用户的所有权限的授权
 ```cpp
 //@abi action
@@ -85,7 +77,7 @@ void appallremove(uint64_t to){
 }
 ```
   
-#### 6.交易代币
+#### 5.交易代币
 - transfer可以让拥有权限的用户交易一个代币
 ```cpp
 //@abi action
@@ -97,7 +89,7 @@ void transfer(uint64_t tokenid, uint64_t to){
         //加入现拥有者的收藏
 }       
 ```
-#### 7.销毁代币
+#### 6.销毁代币
 - burn销毁代币，代币存在，但无法进行任何的操作
 ```cpp
 //@abi action
@@ -109,4 +101,3 @@ void burn(uint64_t tokenid){
 }
 
 ```
-
