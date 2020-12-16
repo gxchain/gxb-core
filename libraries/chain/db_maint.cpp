@@ -739,7 +739,8 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       if(reward_total_weight != 0 ){
          for(const witness_object& wit : wits){
             if(!wit.is_banned && wit.is_valid){
-               share_type reward_pay = staking_awards_pools_bak * wit.total_vote_weights / reward_total_weight;
+               auto int128_reward_pay = static_cast<int128_t>(staking_awards_pools_bak.value) * static_cast<int128_t>(wit.total_vote_weights.value) / static_cast<int128_t>(reward_total_weight.value);
+               share_type reward_pay = static_cast<int64_t>(int128_reward_pay);
                reward_pay = std::min(reward_pay, dpo.current_staking_reward_pool);
                modify( dpo, [&]( dynamic_global_property_object& _dpo )
                {
