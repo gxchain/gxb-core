@@ -148,7 +148,7 @@
 
 #ifndef HARDFORK_1029_TIME
 
-#define HARDFORK_1029_TIME (fc::time_point_sec( 1608133197 )) // for mainnet, 2020-03-27T00:00:00(UTC)
+#define HARDFORK_1029_TIME (fc::time_point_sec( 1608133197 )) // for mainnet, 2020-12-16T15:39:57(UTC)
 #endif
 
 // #413 Add operation to claim asset fees
