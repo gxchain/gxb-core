@@ -151,6 +151,11 @@
 #define HARDFORK_1028_TIME (fc::time_point_sec( 1584979200 )) // for testnet, 2020-03-24T00:00:00(UTC)
 #endif
 
+#ifndef HARDFORK_1028_TIME
+// for testnet reserved for integer overflow bug
+#define HARDFORK_1029_TIME
+#endif
+
 // #413 Add operation to claim asset fees
 #ifndef HARDFORK_413_TIME
 #define HARDFORK_413_TIME (fc::time_point_sec( 1446652800 ))
