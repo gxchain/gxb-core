@@ -46,7 +46,7 @@ void snapshot_plugin::plugin_set_program_options(
          (OPT_BLOCK_NUM, bpo::value<uint32_t>(), "Block number after which to do a snapshot")
          (OPT_BLOCK_TIME, bpo::value<string>(), "Block time (ISO format) after which to do a snapshot")
          (OPT_DEST, bpo::value<string>(), "Pathname of JSON file where to store the snapshot")
-         (OPT_OBJECT_ARRAY, bpo::value<vector<string>>()->composing(), "The objects you want to export, Tuple of [space_id, type_id, object_id]")
+         (OPT_OBJECT_ARRAY, bpo::value<vector<string>>()->multitoken(), "The objects you want to export, Tuple of : space_id type_id object_id the * should be /* ")
          ;
    config_file_options.add(command_line_options);
 }
@@ -75,14 +75,12 @@ void snapshot_plugin::plugin_initialize(const boost::program_options::variables_
             snapshot_space_id = snapshot_object_array[0];
             snapshot_type_id  = snapshot_object_array[1];
             snapshot_object_id= snapshot_object_array[2];
-            ilog("0 the pragams are ${space}, ${type}, ${object}",("space",snapshot_object_array[0])("type",snapshot_object_array[1])("object",snapshot_object_array[2]));
          }
          catch ( fc::exception& e )
          {
              wlog("The snapshot-objects is malformed : ${ex}", ("ex",e.to_detail_string()));
          }
       }
-      ilog("1 the pragams are ${space}, ${type}, ${object}",("space",snapshot_space_id)("type",snapshot_type_id)("object",snapshot_object_id));
       database().applied_block.connect( [&]( const graphene::chain::signed_block& b ) {
          check_snapshot( b );
       });
@@ -99,7 +97,6 @@ void snapshot_plugin::plugin_shutdown() {}
 void snapshot_plugin::create_snapshot( const graphene::chain::database& db, const fc::path& dest )
 {
    ilog("snapshot plugin: creating snapshot");
-   ilog("2 the pragams are ${space}, ${type}, ${object}",("space",snapshot_space_id)("type",snapshot_type_id)("object",snapshot_object_id));
    fc::ofstream out;
    try
    {
@@ -163,12 +160,10 @@ void snapshot_plugin::create_snapshot( const graphene::chain::database& db, cons
          }
       }
    }  
-   ilog("3 the pragams are ${space1}, ${type1}, ${object1},${space2}, ${type2}, ${object2}",("space1",space_id_now)("type1",type_id_now)("object1",object_id_now)("space2",space_id_end)("type2",type_id_end)("object2",object_id));
    if(object_id == -1){
       for( ; space_id_begin <= space_id_end; space_id_begin++ ){
          for(uint32_t type_id_temp = type_id_begin; type_id_temp <= type_id_end; type_id_temp++)
          {
-            ilog("4 the pragams are ${space1}, ${type1}, ${object1},${space2}, ${type2}, ${object2}",("space1",space_id_begin)("type1",type_id_temp)("space2",space_id_end)("type2",type_id_end));
             try
             {
                db.get_index( (uint8_t)space_id_begin, (uint8_t)type_id_temp );
