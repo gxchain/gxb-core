@@ -46,7 +46,7 @@ void snapshot_plugin::plugin_set_program_options(
          (OPT_BLOCK_NUM, bpo::value<uint32_t>(), "Block number after which to do a snapshot")
          (OPT_BLOCK_TIME, bpo::value<string>(), "Block time (ISO format) after which to do a snapshot")
          (OPT_DEST, bpo::value<string>(), "Pathname of JSON file where to store the snapshot")
-         (OPT_OBJECT_ARRAY, bpo::value<vector<string>>(), "The objects you want to export, Tuple of [space_id, type_id, object_id]")
+         (OPT_OBJECT_ARRAY, bpo::value<vector<string>>()->composing(), "The objects you want to export, Tuple of [space_id, type_id, object_id]")
          ;
    config_file_options.add(command_line_options);
 }
@@ -69,18 +69,23 @@ void snapshot_plugin::plugin_initialize(const boost::program_options::variables_
       if( options.count(OPT_BLOCK_TIME) )
          snapshot_time = fc::time_point_sec::from_iso_string( options[OPT_BLOCK_TIME].as<std::string>() );
       if( options.count(OPT_OBJECT_ARRAY) ){
-         try{
-            const std::vector<std::string> snapshot_object_array = options[OPT_OBJECT_ARRAY].as<std::vector<std::string>>();
+         try
+         {
+            std::vector<std::string> snapshot_object_array = options[OPT_OBJECT_ARRAY].as<std::vector<std::string>>();
             snapshot_space_id = snapshot_object_array[0];
             snapshot_type_id  = snapshot_object_array[1];
             snapshot_object_id= snapshot_object_array[2];
-            ilog("0 the pragams are ${space}, ${type}, ${object}",("space",snapshot_object_array[0]),("type",snapshot_object_array[1]),("object",snapshot_object_array[2]));
-         }FC_LOG_AND_RETHROW()
+            ilog("0 the pragams are ${space}, ${type}, ${object}",("space",snapshot_object_array[0])("type",snapshot_object_array[1])("object",snapshot_object_array[2]));
+         }
+         catch ( fc::exception& e )
+         {
+             wlog("The snapshot-objects is malformed : ${ex}", ("ex",e.to_detail_string()));
+         }
       }
+      ilog("1 the pragams are ${space}, ${type}, ${object}",("space",snapshot_space_id)("type",snapshot_type_id)("object",snapshot_object_id));
       database().applied_block.connect( [&]( const graphene::chain::signed_block& b ) {
          check_snapshot( b );
       });
-      ilog("1 the pragams are ${space}, ${type}, ${object}",("space",snapshot_space_id),("type",snapshot_type_id),("object",snapshot_object_id));
    }
    else
       FC_ASSERT( !options.count("snapshot-to"), "Must specify snapshot-at-block or snapshot-at-time in addition to snapshot-to!" );
@@ -94,7 +99,7 @@ void snapshot_plugin::plugin_shutdown() {}
 void snapshot_plugin::create_snapshot( const graphene::chain::database& db, const fc::path& dest )
 {
    ilog("snapshot plugin: creating snapshot");
-   ilog("2 the pragams are ${space}, ${type}, ${object}",("space",snapshot_space_id),("type",snapshot_type_id),("object",snapshot_object_id));
+   ilog("2 the pragams are ${space}, ${type}, ${object}",("space",snapshot_space_id)("type",snapshot_type_id)("object",snapshot_object_id));
    fc::ofstream out;
    try
    {
@@ -158,24 +163,26 @@ void snapshot_plugin::create_snapshot( const graphene::chain::database& db, cons
          }
       }
    }  
-   ilog("3 the pragams are ${space1}, ${type1}, ${object1},${space2}, ${type2}, ${object2}",("space1",space_id_now),("type1",type_id_now),("object1",object_id_now),("space2",space_id_end),("type2",type_id_end),("object2",object_id));
+   ilog("3 the pragams are ${space1}, ${type1}, ${object1},${space2}, ${type2}, ${object2}",("space1",space_id_now)("type1",type_id_now)("object1",object_id_now)("space2",space_id_end)("type2",type_id_end)("object2",object_id));
    if(object_id == -1){
-      for( space_id_begin; space_id_begin <= space_id_end; space_id_begin++ )
-         for( type_id_begin; type_id_begin <= type_id_end; type_id_begin++ )
+      for( ; space_id_begin <= space_id_end; space_id_begin++ ){
+         for(uint32_t type_id_temp = type_id_begin; type_id_temp <= type_id_end; type_id_temp++)
          {
+            ilog("4 the pragams are ${space1}, ${type1}, ${object1},${space2}, ${type2}, ${object2}",("space1",space_id_begin)("type1",type_id_temp)("space2",space_id_end)("type2",type_id_end));
             try
             {
-               db.get_index( (uint8_t)space_id_begin, (uint8_t)type_id_begin );
+               db.get_index( (uint8_t)space_id_begin, (uint8_t)type_id_temp );
             }
             catch (fc::assert_exception& e)
             {
                continue;
             }
-            auto& index = db.get_index( (uint8_t)space_id_begin, (uint8_t)type_id_begin );
+            auto& index = db.get_index( (uint8_t)space_id_begin, (uint8_t)type_id_temp );
             index.inspect_all_objects( [&out]( const graphene::db::object& o ) {
                out << fc::json::to_string( o.to_variant() ) << '\n';
             });
          }
+      }
    } else {
          try
             {
