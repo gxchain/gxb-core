@@ -44,13 +44,16 @@ class snapshot_plugin : public graphene::app::plugin {
       virtual void plugin_initialize( const boost::program_options::variables_map& options ) override;
       virtual void plugin_startup() override;
       virtual void plugin_shutdown() override;
-
+      void create_snapshot( const graphene::chain::database& db, const fc::path& dest );
    private:
        void check_snapshot( const graphene::chain::signed_block& b);
 
        uint32_t           snapshot_block = -1, last_block = 0;
        fc::time_point_sec snapshot_time = fc::time_point_sec::maximum(), last_time = fc::time_point_sec(1);
        fc::path           dest;
+       std::string        snapshot_space_id = "*";
+       std::string        snapshot_type_id = "*";
+       std::string        snapshot_object_id = "*";
 };
 
 } } //graphene::snapshot_plugin
