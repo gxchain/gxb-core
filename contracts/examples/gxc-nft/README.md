@@ -14,13 +14,11 @@ struct token {
             uint64_t id;//主键，token的独特id，不能一样
             std::string name;//token的名字(#序号)
             std::string link;//token图片的链接
-            std::string desc;//对与token的描述
-            std::string series;//token的系列
-            uint64_t total;//token发行的总量
+            std::string extra;//token额外的属性
             uint64_t owner;//所有者
             uint64_t approve;//授权操作者
             uint64_t primary_key() const { return tokenid; }
-            GRAPHENE_SERIALIZE(token, (tokenid)(tokenname)(tokenlink)(tokendes)(tokenseries)(total)(owner)(approve))
+            GRAPHENE_SERIALIZE(token, (tokenid)(tokenname)(tokenlink)(extra)(owner)(approve))
         };
         typedef graphene::multi_index<N(token), token> token_index;
 

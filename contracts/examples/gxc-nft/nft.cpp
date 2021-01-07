@@ -26,7 +26,7 @@ class nft : public contract
     }
 
     //@abi action
-    void mint(uint64_t to, uint64_t tokenid, std::string tokenname, std::string tokenlink, std::string tokendes, std::string tokenseries, uint64_t total)
+    void mint(uint64_t to, uint64_t tokenid, std::string tokenname, std::string tokenlink, std::string extra)
     {
         auto sender = get_trx_sender();
         graphene_assert(sender == ADMINACCOUNT, "You do not have permission");
@@ -35,9 +35,7 @@ class nft : public contract
             t.tokenid = tokenid;
             t.tokenname = tokenname;
             t.tokenlink = tokenlink;
-            t.tokendes = tokendes;
-            t.tokenseries = tokenseries;
-            t.total = total;
+            t.extra = extra;
             t.owner = to;
             t.approve = BLACKHOLEACCOUNT;
         });
@@ -166,13 +164,11 @@ class nft : public contract
         uint64_t tokenid;
         std::string tokenname;
         std::string tokenlink;
-        std::string tokendes;
-        std::string tokenseries;
-        uint64_t total;
+        std::string extra;
         uint64_t owner;
         uint64_t approve;
         uint64_t primary_key() const { return tokenid; }
-        GRAPHENE_SERIALIZE(token, (tokenid)(tokenname)(tokenlink)(tokendes)(tokenseries)(total)(owner)(approve))
+        GRAPHENE_SERIALIZE(token, (tokenid)(tokenname)(tokenlink)(extra)(owner)(approve))
     };
     typedef graphene::multi_index<N(token), token> token_index;
     token_index tokens;
