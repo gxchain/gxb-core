@@ -102,10 +102,7 @@ class nft : public contract
         auto token_itr = tokens.find(tokenid);
         uint64_t owner = token_itr->owner;
         graphene_assert(owner == sender, "You do not have permission");
-        tokens.modify(*token_itr, sender, [&](auto &t) {
-            t.owner = BLACKHOLEACCOUNT;
-            t.approve = BLACKHOLEACCOUNT;
-        });
+        tokens.erase(token_itr);
         auto old_itr = accounts.find(owner);
         accounts.modify(*old_itr, sender, [&](auto &a) {
             a.tokenids.erase(tokenid);
