@@ -81,6 +81,9 @@ class nft : public contract
         auto new_itr = accounts.find(to);
         accounts.modify(*old_itr, sender, [&](auto &a) {
             a.tokenids.erase(tokenid);
+            if (a.tokenids.empty() && a.allowance.empty()) {
+                accounts.erase(old_itr);
+            }
         });
         if (new_itr == accounts.end()) {
             accounts.emplace(sender, [&](auto &a) {
@@ -106,6 +109,9 @@ class nft : public contract
         auto old_itr = accounts.find(owner);
         accounts.modify(*old_itr, sender, [&](auto &a) {
             a.tokenids.erase(tokenid);
+            if (a.tokenids.empty() && a.allowance.empty()) {
+                accounts.erase(old_itr);
+            }
         });
     }
 
@@ -128,6 +134,9 @@ class nft : public contract
         auto owner_itr = accounts.find(sender);
         accounts.modify(*owner_itr, sender, [&](auto &a) {
             a.allowance.erase(to);
+            if (a.tokenids.empty() && a.allowance.empty()) {
+                accounts.erase(old_itr);
+            }
         });
     }
 
