@@ -147,13 +147,13 @@ class nft : public contract
             return false;
         }
         auto approve_itr = account_itr->allowance.find(_operator);
-        return (approve_itr == account_itr->allowance.end() ? false : true);
+        return approve_itr != account_itr->allowance.end();
     }
 
     bool _exists(uint64_t tokenid)
     {
         auto token_itr = tokens.find(tokenid);
-        return (token_itr == tokens.end() ? false : true);
+        return token_itr != tokens.end();
     }
 
     //@abi table token i64
