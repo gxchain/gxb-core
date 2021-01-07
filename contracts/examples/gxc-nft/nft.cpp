@@ -5,10 +5,6 @@
 #include <graphenelib/global.h>
 #include <graphenelib/multi_index.hpp>
 #include <graphenelib/system.h>
-#include <map>
-#include <math.h>
-#include <set>
-#include <tuple>
 
 using namespace graphene;
 
@@ -135,7 +131,7 @@ class nft : public contract
         accounts.modify(*owner_itr, sender, [&](auto &a) {
             a.allowance.erase(to);
             if (a.tokenids.empty() && a.allowance.empty()) {
-                accounts.erase(old_itr);
+                accounts.erase(owner_itr);
             }
         });
     }
