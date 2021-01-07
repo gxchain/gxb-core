@@ -148,7 +148,9 @@ class nft : public contract
     bool _isallapprove(uint64_t owner, uint64_t _operator)
     {
         auto account_itr = accounts.find(owner);
-        graphene_assert(account_itr != accounts.end(), "The account does not have token");
+        if (account_itr != accounts.end()) {
+            return false;
+        }
         auto approve_itr = account_itr->allowance.find(_operator);
         return (approve_itr == account_itr->allowance.end() ? false : true);
     }
