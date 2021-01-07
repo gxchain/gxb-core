@@ -61,7 +61,7 @@ class nft : public contract
         graphene_assert(_exists(tokenid) == true, "The tokenid is not existed");
         auto token_itr = tokens.find(tokenid);
         auto owner = token_itr->owner;
-        graphene_assert(owner == sender || _isallapprove(owner, sender), "You do not have permission");
+        graphene_assert(owner == sender || _isallapproved(owner, sender), "You do not have permission");
         tokens.modify(*token_itr, sender, [&](auto &t) {
             t.approve = to;
         });
@@ -74,7 +74,7 @@ class nft : public contract
         graphene_assert(_exists(tokenid) == true, "The tokenid is not existed");
         auto token_itr = tokens.find(tokenid);
         uint64_t owner = token_itr->owner;
-        graphene_assert(owner == sender || _isallapprove(owner, sender) || _getapproved(tokenid) == sender, "You do not have permission");
+        graphene_assert(owner == sender || _isallapproved(owner, sender) || _isapproved(tokenid, sender), "You do not have permission");
         tokens.modify(*token_itr, sender, [&](auto &t) {
             t.owner = to;
             t.approve = BLACKHOLEACCOUNT;
@@ -118,7 +118,7 @@ class nft : public contract
     void approveall(uint64_t to)
     {
         auto sender = get_trx_sender();
-        graphene_assert(_isallapprove(sender, to) == false, "The account has been approved");
+        graphene_assert(_isallapproved(sender, to) == false, "The account has been approved");
         auto owner_itr = accounts.find(sender);
         accounts.modify(*owner_itr, sender, [&](auto &a) {
             a.allowance.insert(to);
@@ -129,7 +129,7 @@ class nft : public contract
     void appallremove(uint64_t to)
     {
         auto sender = get_trx_sender();
-        graphene_assert(_isallapprove(sender, to) == true, "The account has not been approved");
+        graphene_assert(_isallapproved(sender, to) == true, "The account has not been approved");
         auto owner_itr = accounts.find(sender);
         accounts.modify(*owner_itr, sender, [&](auto &a) {
             a.allowance.erase(to);
@@ -137,15 +137,15 @@ class nft : public contract
     }
 
   private:
-    uint64_t _getapproved(uint64_t tokenid)
+    bool _isapproved(uint64_t tokenid, uint64_t account)
     {
         graphene_assert(_exists(tokenid) == true, "The tokenid is not existed");
         auto token_itr = tokens.find(tokenid);
         uint64_t approveid = token_itr->approve;
-        return approveid;
+        return approveid == account;
     }
 
-    bool _isallapprove(uint64_t owner, uint64_t _operator)
+    bool _isallapproved(uint64_t owner, uint64_t _operator)
     {
         auto account_itr = accounts.find(owner);
         if (account_itr != accounts.end()) {
