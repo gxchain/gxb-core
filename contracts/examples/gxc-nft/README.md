@@ -11,11 +11,11 @@ static const int64_t BLACKHOLEACCOUNT   = 3;    // 黑洞账户.
 - 用于记录每一个独特的token的信息
 ```cpp
 struct token {
-            uint64_t tokenid;//主键，token的独特id，不能一样
-            std::string tokenname;//token的名字(#序号)
-            std::string tokenlink;//token图片的链接
-            std::string tokendes;//对与token的描述
-            std::string tokenseries;//token的系列
+            uint64_t id;//主键，token的独特id，不能一样
+            std::string name;//token的名字(#序号)
+            std::string link;//token图片的链接
+            std::string desc;//对与token的描述
+            std::string series;//token的系列
             uint64_t total;//token发行的总量
             uint64_t owner;//所有者
             uint64_t approve;//授权操作者

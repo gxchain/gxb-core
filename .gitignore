@@ -1,3 +1,8 @@
 .cproject
 .project
 .settings
+build
+.vscode
+*.abi
+*.wasm
+*.wast
