@@ -22,15 +22,15 @@ class nft : public contract
     }
 
     //@abi action
-    void mint(uint64_t to, uint64_t tokenid, std::string tokenname, std::string tokenlink, std::string extra)
+    void mint(uint64_t to, uint64_t id, std::string name, std::string link, std::string extra)
     {
         auto sender = get_trx_sender();
         graphene_assert(sender == ADMINACCOUNT, "You do not have permission");
-        graphene_assert(_exists(tokenid) == false, "The tokenid is existed");
+        graphene_assert(_exists(id) == false, "The id is existed");
         tokens.emplace(sender, [&](auto &t) {
-            t.tokenid = tokenid;
-            t.tokenname = tokenname;
-            t.tokenlink = tokenlink;
+            t.id = id;
+            t.name = name;
+            t.link = link;
             t.extra = extra;
             t.owner = to;
             t.approve = BLACKHOLEACCOUNT;
@@ -39,21 +39,21 @@ class nft : public contract
         if (account_itr == accounts.end()) {
             accounts.emplace(sender, [&](auto &a) {
                 a.owner = to;
-                a.tokenids.insert(tokenid);
+                a.ids.insert(id);
             });
         } else {
             accounts.modify(*account_itr, sender, [&](auto &a) {
-                a.tokenids.insert(tokenid);
+                a.ids.insert(id);
             });
         }
     }
 
     //@abi action
-    void approve(uint64_t tokenid, uint64_t to)
+    void approve(uint64_t id, uint64_t to)
     {
         auto sender = get_trx_sender();
-        graphene_assert(_exists(tokenid) == true, "The tokenid is not existed");
-        auto token_itr = tokens.find(tokenid);
+        graphene_assert(_exists(id) == true, "The id is not existed");
+        auto token_itr = tokens.find(id);
         auto owner = token_itr->owner;
         graphene_assert(owner == sender || _isallapproved(owner, sender), "You do not have permission");
         tokens.modify(*token_itr, sender, [&](auto &t) {
@@ -62,13 +62,13 @@ class nft : public contract
     }
 
     //@abi action
-    void transfer(uint64_t tokenid, uint64_t to)
+    void transfer(uint64_t id, uint64_t to)
     {
         auto sender = get_trx_sender();
-        graphene_assert(_exists(tokenid) == true, "The tokenid is not existed");
-        auto token_itr = tokens.find(tokenid);
+        graphene_assert(_exists(id) == true, "The id is not existed");
+        auto token_itr = tokens.find(id);
         uint64_t owner = token_itr->owner;
-        graphene_assert(owner == sender || _isallapproved(owner, sender) || _isapproved(tokenid, sender), "You do not have permission");
+        graphene_assert(owner == sender || _isallapproved(owner, sender) || _isapproved(id, sender), "You do not have permission");
         tokens.modify(*token_itr, sender, [&](auto &t) {
             t.owner = to;
             t.approve = BLACKHOLEACCOUNT;
@@ -76,39 +76,39 @@ class nft : public contract
         auto old_itr = accounts.find(owner);
         auto new_itr = accounts.find(to);
         accounts.modify(*old_itr, sender, [&](auto &a) {
-            a.tokenids.erase(tokenid);
-            if (a.tokenids.empty() && a.allowance.empty()) {
-                accounts.erase(old_itr);
-            }
+            a.ids.erase(id);
         });
+        if (old_itr->ids.empty() && old_itr->allowance.empty()) {
+            accounts.erase(old_itr);
+        }
         if (new_itr == accounts.end()) {
             accounts.emplace(sender, [&](auto &a) {
                 a.owner = to;
-                a.tokenids.insert(tokenid);
+                a.ids.insert(id);
             });
         } else {
             accounts.modify(*new_itr, sender, [&](auto &a) {
-                a.tokenids.insert(tokenid);
+                a.ids.insert(id);
             });
         }
     }
 
     //@abi action
-    void burn(uint64_t tokenid)
+    void burn(uint64_t id)
     {
         auto sender = get_trx_sender();
-        graphene_assert(_exists(tokenid) == true, "The tokenid is not existed");
-        auto token_itr = tokens.find(tokenid);
+        graphene_assert(_exists(id) == true, "The id is not existed");
+        auto token_itr = tokens.find(id);
         uint64_t owner = token_itr->owner;
         graphene_assert(owner == sender, "You do not have permission");
         tokens.erase(token_itr);
         auto old_itr = accounts.find(owner);
         accounts.modify(*old_itr, sender, [&](auto &a) {
-            a.tokenids.erase(tokenid);
-            if (a.tokenids.empty() && a.allowance.empty()) {
-                accounts.erase(old_itr);
-            }
+            a.ids.erase(id);
         });
+        if (old_itr->ids.empty() && old_itr->allowance.empty()) {
+            accounts.erase(old_itr);
+        }
     }
 
     //@abi action
@@ -126,21 +126,21 @@ class nft : public contract
     void appallremove(uint64_t to)
     {
         auto sender = get_trx_sender();
-        graphene_assert(_isallapproved(sender, to) == true, "The account has not been approved");
+        graphene_assert(_isallapproved(sender, to) == false, "The account has not been approved");
         auto owner_itr = accounts.find(sender);
         accounts.modify(*owner_itr, sender, [&](auto &a) {
             a.allowance.erase(to);
-            if (a.tokenids.empty() && a.allowance.empty()) {
-                accounts.erase(owner_itr);
-            }
         });
+        if (owner_itr->ids.empty() && owner_itr->allowance.empty()) {
+            accounts.erase(owner_itr);
+        }
     }
 
   private:
-    bool _isapproved(uint64_t tokenid, uint64_t account)
+    bool _isapproved(uint64_t id, uint64_t account)
     {
-        graphene_assert(_exists(tokenid) == true, "The tokenid is not existed");
-        auto token_itr = tokens.find(tokenid);
+        graphene_assert(_exists(id) == true, "The id is not existed");
+        auto token_itr = tokens.find(id);
         uint64_t approveid = token_itr->approve;
         return approveid == account;
     }
@@ -155,22 +155,22 @@ class nft : public contract
         return approve_itr != account_itr->allowance.end();
     }
 
-    bool _exists(uint64_t tokenid)
+    bool _exists(uint64_t id)
     {
-        auto token_itr = tokens.find(tokenid);
+        auto token_itr = tokens.find(id);
         return token_itr != tokens.end();
     }
 
     //@abi table token i64
     struct token {
-        uint64_t tokenid;
-        std::string tokenname;
-        std::string tokenlink;
+        uint64_t id;
+        std::string name;
+        std::string link;
         std::string extra;
         uint64_t owner;
         uint64_t approve;
-        uint64_t primary_key() const { return tokenid; }
-        GRAPHENE_SERIALIZE(token, (tokenid)(tokenname)(tokenlink)(extra)(owner)(approve))
+        uint64_t primary_key() const { return id; }
+        GRAPHENE_SERIALIZE(token, (id)(name)(link)(extra)(owner)(approve))
     };
     typedef graphene::multi_index<N(token), token> token_index;
     token_index tokens;
@@ -178,10 +178,10 @@ class nft : public contract
     //@abi table account i64
     struct account {
         uint64_t owner;
-        std::set<uint64_t> tokenids;
+        std::set<uint64_t> ids;
         std::set<uint64_t> allowance;
         uint64_t primary_key() const { return owner; }
-        GRAPHENE_SERIALIZE(account, (owner)(tokenids)(allowance))
+        GRAPHENE_SERIALIZE(account, (owner)(ids)(allowance))
     };
     typedef graphene::multi_index<N(account), account> account_index;
     account_index accounts;
