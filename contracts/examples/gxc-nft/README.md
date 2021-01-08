@@ -18,7 +18,7 @@ struct token {
             uint64_t owner;//所有者
             uint64_t approve;//授权操作者
             uint64_t primary_key() const { return tokenid; }
-            GRAPHENE_SERIALIZE(token, (tokenid)(tokenname)(tokenlink)(extra)(owner)(approve))
+            GRAPHENE_SERIALIZE(token, (id)(name)(link)(extra)(owner)(approve))
         };
         typedef graphene::multi_index<N(token), token> token_index;
 
@@ -30,20 +30,20 @@ struct token {
 struct account
         {
            uint64_t owner;//主键，用户的id
-           std::set<uint64_t> tokenids;//set，记录用户所有的tokenid
+           std::set<uint64_t> ids;//set，记录用户所有的tokenid
            std::set<uint64_t> allowance;//记录用户完全授权的信息
            uint64_t primary_key() const { return owner; }
-           GRAPHENE_SERIALIZE(account,(owner)(tokenids)(allowance))
+           GRAPHENE_SERIALIZE(account,(owner)(ids)(allowance))
         };
         typedef graphene::multi_index<N(account),account> account_index;
 ```
 
 ### 接口
 #### 1.mint创建token
-- mint创建一个token,并将其分发给用户
+- mint创建一个token,并将其分发给用户,须拥有管理员权限
 ```cpp
 //@abi action
-void mint(uint64_t to, uint64_t tokenid, std::string tokenuri){
+void mint(uint64_t to, uint64_t id, std::string name, std::string link, std::string extra)
         //检查token是否已经存在
         //检查是否有管理员权限
         //创建token，将其信息入tokens表
@@ -55,7 +55,7 @@ void mint(uint64_t to, uint64_t tokenid, std::string tokenuri){
 - approve会授权其他的用户token的交易权
 ```cpp
 //@abi action
-void approve(uint64_t tokenid, uint64_t to){
+void approve(uint64_t id, uint64_t to){
         //检查token是否存在
         //检查发送者是否被完全授权或者是否为拥有者
         //更改该token的交易权授权人，默认状态下为3，黑洞账户
@@ -84,7 +84,7 @@ void appallremove(uint64_t to){
 - transfer可以让拥有权限的用户交易一个代币
 ```cpp
 //@abi action
-void transfer(uint64_t tokenid, uint64_t to){
+void transfer(uint64_t id, uint64_t to){
         //检查token是否存在
         //检查发送者是否被完全授权或者是否为拥有者
         //移除前拥有者的授权权限，将其改为默认的3
@@ -96,7 +96,7 @@ void transfer(uint64_t tokenid, uint64_t to){
 - burn销毁代币，代币存在，但无法进行任何的操作
 ```cpp
 //@abi action
-void burn(uint64_t tokenid){
+void burn(uint64_t id){
         //检查代币是否存在
         //检查是否权限修改
         //将代币拥有者改为3黑洞账户
