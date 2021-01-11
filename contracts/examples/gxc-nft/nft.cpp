@@ -117,6 +117,7 @@ class nft : public contract
         auto sender = get_trx_sender();
         graphene_assert(_isallapproved(sender, to) == false, "The account has been approved");
         auto owner_itr = accounts.find(sender);
+        graphene_assert(owner_itr != accounts.end(), "the account do not have nft");
         accounts.modify(*owner_itr, sender, [&](auto &a) {
             a.allowance.insert(to);
         });
@@ -126,7 +127,7 @@ class nft : public contract
     void appallremove(uint64_t to)
     {
         auto sender = get_trx_sender();
-        graphene_assert(_isallapproved(sender, to) == false, "The account has not been approved");
+        graphene_assert(_isallapproved(sender, to) == true, "The account has not been approved");
         auto owner_itr = accounts.find(sender);
         accounts.modify(*owner_itr, sender, [&](auto &a) {
             a.allowance.erase(to);
