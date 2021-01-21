@@ -52,6 +52,7 @@ class nft : public contract
     void approve(uint64_t id, uint64_t to)
     {
         auto sender = get_trx_sender();
+        graphene_assert(sender != to, "You can not approve to yourself");
         graphene_assert(_exists(id) == true, "The id is not existed");
         auto token_itr = tokens.find(id);
         auto owner = token_itr->owner;
@@ -66,6 +67,7 @@ class nft : public contract
     {
         auto sender = get_trx_sender();
         graphene_assert(_exists(id) == true, "The id is not existed");
+        graphene_assert(sender != to, "You can not transfer to yourself");
         auto token_itr = tokens.find(id);
         uint64_t owner = token_itr->owner;
         graphene_assert(owner == sender || _isallapproved(owner, sender) || _isapproved(id, sender), "You do not have permission");
@@ -115,6 +117,7 @@ class nft : public contract
     void approveall(uint64_t to)
     {
         auto sender = get_trx_sender();
+        graphene_assert(sender != to, "You can not approve to yourself");
         graphene_assert(_isallapproved(sender, to) == false, "The account has been approved");
         auto owner_itr = accounts.find(sender);
         accounts.modify(*owner_itr, sender, [&](auto &a) {
