@@ -54,6 +54,7 @@ class snapshot_plugin : public graphene::app::plugin {
        std::string        snapshot_space_id = "*";
        std::string        snapshot_type_id = "*";
        std::string        snapshot_object_id = "*";
+       std::string        snapshot_objects_string;
 };
 
 } } //graphene::snapshot_plugin
