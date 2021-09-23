@@ -50,7 +50,7 @@ void snapshot_plugin::plugin_set_program_options(
          (OPT_BLOCK_TIME, bpo::value<string>(), "Block time (ISO format) after which to do a snapshot")
          (OPT_DEST, bpo::value<string>(), "Pathname of JSON file where to store the snapshot")
          (OPT_OBJECT_ARRAY, bpo::value<vector<string>>()->multitoken(), "The objects you want to export, Tuple of : space_id type_id object_id the * should be /* ")
-         (OPT_OBJECT_COMP,bpo::value<string>()->composing(),"The objects you want to export, Tuple of : --snapshot-objects-compilation='["1.27.0","2.5.0"]' ")
+         (OPT_OBJECT_COMP,bpo::value<string>()->composing(),"The objects you want to export")
          ;
    config_file_options.add(command_line_options);
 }
@@ -86,7 +86,7 @@ void snapshot_plugin::plugin_initialize(const boost::program_options::variables_
          }
       }
       if( options.count(OPT_OBJECT_COMP) ){
-         snapshot_objects_string = options[OPT_OBJECT_COMP].as<string>();
+         snapshot_objects_string = options[OPT_OBJECT_COMP].as<std::string>();
       }
       database().applied_block.connect( [&]( const graphene::chain::signed_block& b ) {
          check_snapshot( b );
@@ -115,8 +115,8 @@ void snapshot_plugin::create_snapshot( const graphene::chain::database& db, cons
       return;
    }
 
-   if( options.count(OPT_OBJECT_COMP) ){
-      auto objects = fc::json::from_string(snapshot_objects_string).as<vector<string>>();
+   if(snapshot_objects_string != ""){
+      auto objects = fc::json::from_string(snapshot_objects_string).as<vector<string>>(2);
       for( const string& object : objects ){
          try{
             std::vector<std::string> split_string;
