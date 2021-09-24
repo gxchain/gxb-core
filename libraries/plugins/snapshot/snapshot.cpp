@@ -125,7 +125,7 @@ void snapshot_plugin::create_snapshot( const graphene::chain::database& db, cons
             auto type_id = std::stoi(split_string[1]);
             auto& index = db.get_index( (uint8_t)space_id, (uint8_t)type_id);
             index.inspect_all_objects( [&out]( const graphene::db::object& o ) {
-               out << fc::json::to_string( o.to_variant() ) << '\n';
+               out << fc::json::to_string( o.to_variant() ) <<  ","  << '\r\n';
             });
          } catch(fc::exception& e) {
             wlog("The snapshot-objects is malformed : ${ex}", ("ex",e.to_detail_string()) );
@@ -199,7 +199,7 @@ void snapshot_plugin::create_snapshot( const graphene::chain::database& db, cons
                }
                auto& index = db.get_index( (uint8_t)space_id_begin, (uint8_t)type_id_temp );
                index.inspect_all_objects( [&out]( const graphene::db::object& o ) {
-                  out << fc::json::to_string( o.to_variant() ) << '\n';
+                  out << fc::json::to_string( o.to_variant() ) << "," << '\r\n';
                });
             }
          }
@@ -215,7 +215,7 @@ void snapshot_plugin::create_snapshot( const graphene::chain::database& db, cons
                auto& index = db.get_index( (uint8_t)space_id_begin, (uint8_t)type_id_begin );
                graphene::chain::object_id_type snapshot_object = {(uint8_t)space_id_begin, (uint8_t)type_id_begin, (uint64_t)object_id};
                auto index_object = index.find(snapshot_object);
-               out << fc::json::to_string( index_object->to_variant() ) << '\n';
+               out << fc::json::to_string(index_object->to_variant()) << "," << '\r\n';
       }
    }
    out.close();
