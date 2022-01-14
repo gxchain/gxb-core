@@ -24,45 +24,48 @@
 namespace graphene { namespace chain {
 
 void_result staking_create_evaluator::do_evaluate(const staking_create_operation& op)
-{ try {
-    database& _db = db();
-    // gxc assets
-    FC_ASSERT(op.amount.asset_id == GRAPHENE_GXS_ASSET, "staking asset must be GXC");
-    FC_ASSERT(op.amount <= _db.get_balance(op.owner, GRAPHENE_GXS_ASSET), "account balance not enough");
-    FC_ASSERT(op.amount.amount >= _db.get_vote_params().min_staking_amount, "staking amount must > ${amount}",("amount",_db.get_vote_params().min_staking_amount));
+{
+    FC_ASSERT(true,"staking operation was banned");
+//  try {
+//     database& _db = db();
+//     // gxc assets
+//     FC_ASSERT(op.amount.asset_id == GRAPHENE_GXS_ASSET, "staking asset must be GXC");
+//     FC_ASSERT(op.amount <= _db.get_balance(op.owner, GRAPHENE_GXS_ASSET), "account balance not enough");
+//     FC_ASSERT(op.amount.amount >= _db.get_vote_params().min_staking_amount, "staking amount must > ${amount}",("amount",_db.get_vote_params().min_staking_amount));
 
-    // Check the staking time, such as 7 days, 30 days, 60 days, 90 days, with global parameters
+//     // Check the staking time, such as 7 days, 30 days, 60 days, 90 days, with global parameters
 
-    const chain_parameters& chain_params = _db.get_global_properties().parameters;
-    vector< pair<string, staking_weight_t> > params;
-    for (auto& ext : chain_params.extensions) {
-        if (ext.which() == future_extensions::tag<staking_params_t>::value) {
-            params = ext.get<staking_params_t>().params;
-            break;
-        }
-    }
-    FC_ASSERT(!params.empty(), "no staking weight params");
-    auto iter_param = find_if(params.begin(), params.end(), [&](pair<string, staking_weight_t> p) {
-        return p.first == op.program_id;
-    });
-    FC_ASSERT(iter_param != params.end(), "program_id invalid");
-    FC_ASSERT(iter_param->second.is_valid, "program_id offline");
-    FC_ASSERT(iter_param->second.weight == op.weight, "input weight invalid");
+//     const chain_parameters& chain_params = _db.get_global_properties().parameters;
+//     vector< pair<string, staking_weight_t> > params;
+//     for (auto& ext : chain_params.extensions) {
+//         if (ext.which() == future_extensions::tag<staking_params_t>::value) {
+//             params = ext.get<staking_params_t>().params;
+//             break;
+//         }
+//     }
+//     FC_ASSERT(!params.empty(), "no staking weight params");
+//     auto iter_param = find_if(params.begin(), params.end(), [&](pair<string, staking_weight_t> p) {
+//         return p.first == op.program_id;
+//     });
+//     FC_ASSERT(iter_param != params.end(), "program_id invalid");
+//     FC_ASSERT(iter_param->second.is_valid, "program_id offline");
+//     FC_ASSERT(iter_param->second.weight == op.weight, "input weight invalid");
 
-    uint32_t staking_days = iter_param->second.staking_days;
-    FC_ASSERT(staking_days == op.staking_days, "input staking days invalid");
+//     uint32_t staking_days = iter_param->second.staking_days;
+//     FC_ASSERT(staking_days == op.staking_days, "input staking days invalid");
 
-    auto staking_ranges = _db.get_index_type<staking_index>().indices().get<by_owner>().equal_range(op.owner);
-    FC_ASSERT(std::distance(staking_ranges.first, staking_ranges.second) < _db.get_vote_params().max_staking_count, "mortgages have reached their maximum number");
+//     auto staking_ranges = _db.get_index_type<staking_index>().indices().get<by_owner>().equal_range(op.owner);
+//     FC_ASSERT(std::distance(staking_ranges.first, staking_ranges.second) < _db.get_vote_params().max_staking_count, "mortgages have reached their maximum number");
 
-    // check trust_node account
-    const auto& witness_objects = _db.get_index_type<witness_index>().indices();
-    auto wit_obj_itor = witness_objects.find(op.trust_node);
-    FC_ASSERT(wit_obj_itor != witness_objects.end(), "nonexistent trust node account ${id}",("id",op.trust_node));
-    FC_ASSERT(wit_obj_itor->is_valid == true, "invalid trust node account ${id}",("id",op.trust_node));
+//     // check trust_node account
+//     const auto& witness_objects = _db.get_index_type<witness_index>().indices();
+//     auto wit_obj_itor = witness_objects.find(op.trust_node);
+//     FC_ASSERT(wit_obj_itor != witness_objects.end(), "nonexistent trust node account ${id}",("id",op.trust_node));
+//     FC_ASSERT(wit_obj_itor->is_valid == true, "invalid trust node account ${id}",("id",op.trust_node));
 
-    return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+//     return void_result();
+// } FC_CAPTURE_AND_RETHROW( (op) ) 
+}
 
 object_id_type staking_create_evaluator::do_apply(const staking_create_operation& op, int32_t billed_cpu_time_us)
 { try {
