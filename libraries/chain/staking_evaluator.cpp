@@ -26,7 +26,7 @@ namespace graphene { namespace chain {
 void_result staking_create_evaluator::do_evaluate(const staking_create_operation& op)
 {
  try {
-     FC_ASSERT(true,"staking operation was banned");
+     FC_ASSERT(false,"staking operation was banned");
 //     database& _db = db();
 //     // gxc assets
 //     FC_ASSERT(op.amount.asset_id == GRAPHENE_GXS_ASSET, "staking asset must be GXC");
