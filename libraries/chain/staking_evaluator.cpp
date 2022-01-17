@@ -25,8 +25,8 @@ namespace graphene { namespace chain {
 
 void_result staking_create_evaluator::do_evaluate(const staking_create_operation& op)
 {
-    FC_ASSERT(true,"staking operation was banned");
-//  try {
+ try {
+     FC_ASSERT(true,"staking operation was banned");
 //     database& _db = db();
 //     // gxc assets
 //     FC_ASSERT(op.amount.asset_id == GRAPHENE_GXS_ASSET, "staking asset must be GXC");
@@ -64,7 +64,7 @@ void_result staking_create_evaluator::do_evaluate(const staking_create_operation
 //     FC_ASSERT(wit_obj_itor->is_valid == true, "invalid trust node account ${id}",("id",op.trust_node));
 
 //     return void_result();
-// } FC_CAPTURE_AND_RETHROW( (op) ) 
+} FC_CAPTURE_AND_RETHROW( (op) ) 
 }
 
 object_id_type staking_create_evaluator::do_apply(const staking_create_operation& op, int32_t billed_cpu_time_us)
