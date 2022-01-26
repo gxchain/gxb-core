@@ -62,7 +62,7 @@ namespace graphene { namespace app {
     {
        dlog("received trx message ${trx}",("trx",trx));
        for (const auto& op : trx.operations){
-           FC_ASSERT(op.which() != operation::tag<staking_create_operation>::value, 'Staking on GXChain1.0 is not available anymore, please stake on REI Network');
+           FC_ASSERT(op.which() == operation::tag<staking_create_operation>::value,"Staking on GXChain1.0 is not available anymore, please stake on REI Network");
        }
        trx.validate();
        _app.chain_database()->push_transaction(trx);// evaluatet trx
@@ -73,9 +73,9 @@ namespace graphene { namespace app {
 
     fc::variant network_broadcast_api::broadcast_transaction_synchronous(const signed_transaction& trx)
     {
-        for (const auto &op : trx.operations) {
-            FC_ASSERT(op.which() != operation::tag<staking_create_operation>::value, 'Staking on GXChain1.0 is not available anymore, please stake on REI Network');
-        }
+        for (const auto& op : trx.operations){
+           FC_ASSERT(op.which() == operation::tag<staking_create_operation>::value,"Staking on GXChain1.0 is not available anymore, please stake on REI Network");
+       }
        fc::promise<fc::variant>::ptr prom( new fc::promise<fc::variant>() );
        broadcast_transaction_with_callback( [=]( const fc::variant& v ){
         prom->set_value(v);
@@ -93,9 +93,9 @@ namespace graphene { namespace app {
 
     void network_broadcast_api::broadcast_transaction_with_callback(confirmation_callback cb, const signed_transaction& trx)
     {
-       for (const auto& op : trx.operations){
-           FC_ASSERT(op.which() != operation::tag<staking_create_operation>::value, 'Staking on GXChain1.0 is not available anymore, please stake on REI Network');
-       }
+        for (const auto &op : trx.operations) {
+            FC_ASSERT(op.which() == operation::tag<staking_create_operation>::value, "Staking on GXChain1.0 is not available anymore, please stake on REI Network");
+        }
        trx.validate();
        _callbacks[trx.id()] = cb;
        _app.chain_database()->push_transaction(trx);
